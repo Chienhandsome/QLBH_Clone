@@ -39,9 +39,7 @@ public class MainFrame extends JFrame {
         mainTabbedPane = new JTabbedPane(JTabbedPane.TOP, JTabbedPane.SCROLL_TAB_LAYOUT);
         mainTabbedPane.setFont(new Font("Segoe UI", Font.BOLD, 12));
 
-        mainTabbedPane.addTab("Lưu vết hoạt động", createWelcomePanel());
-        mainTabbedPane.addTab("Quản lý xuất kho", new QuanLyXuatKhoPanel());
-        mainTabbedPane.setSelectedIndex(1);
+//        mainTabbedPane.setSelectedIndex(1);
 
         add(mainTabbedPane, BorderLayout.CENTER);
 
@@ -55,30 +53,45 @@ public class MainFrame extends JFrame {
 
         // 1. HỆ THỐNG
         JMenu mHeThong = new JMenu("HỆ THỐNG");
-        JMenuItem miDoiMK = new JMenuItem("Đổi mật khẩu");
-        JMenuItem miCSDL = new JMenuItem("Cấu hình CSDL");
+
+        // Submenu Cơ sở dữ liệu
+        JMenu mCSDL = new JMenu("Cơ sở dữ liệu");
+        JMenuItem miTaoMoi = new JMenuItem("Tạo mới");
+        JMenuItem miSaoLuu = new JMenuItem("Sao lưu");
+        JMenuItem miPhucHoi = new JMenuItem("Phục hồi");
+        mCSDL.add(miTaoMoi);
+        mCSDL.add(miSaoLuu);
+        mCSDL.add(miPhucHoi);
+
+        JMenuItem miDoiMK = new JMenuItem("Đổi mk");
         JMenuItem miDangXuat = new JMenuItem("Đăng xuất");
         JMenuItem miThoat = new JMenuItem("Thoát");
 
-        miCSDL.addActionListener(e -> new DatabaseConfigDialog(this).setVisible(true));
         miDangXuat.addActionListener(e -> onLogout());
         miThoat.addActionListener(e -> System.exit(0));
 
+        mHeThong.add(mCSDL);
         mHeThong.add(miDoiMK);
-        mHeThong.add(miCSDL);
-        mHeThong.addSeparator();
         mHeThong.add(miDangXuat);
         mHeThong.add(miThoat);
 
         // 2. HOẠT ĐỘNG
         JMenu mHoatDong = new JMenu("HOẠT ĐỘNG");
-        mHoatDong.add(new JMenuItem("DM Cửa hàng"));
-        mHoatDong.add(new JMenuItem("DM Mặt hàng"));
-        mHoatDong.add(new JMenuItem("DM Khách hàng"));
-        mHoatDong.addSeparator();
-        mHoatDong.add(new JMenuItem("Báo giá KH"));
+        mHoatDong.add(new JMenuItem("DM cửa hàng"));
+        mHoatDong.add(new JMenuItem("DM mặt hàng"));
+        mHoatDong.add(new JMenuItem("DM khách hàng"));
+        mHoatDong.add(new JMenuItem("Gửi tin nhắn kh"));
+        mHoatDong.add(new JMenuItem("DM đợt khuyến mãi"));
+        mHoatDong.add(new JMenuItem("KH thân thiết"));
+        mHoatDong.add(new JMenuItem("Báo giá kh"));
         mHoatDong.add(new JMenuItem("Khách đặt hàng"));
         mHoatDong.add(new JMenuItem("Hóa đơn bán hàng"));
+        mHoatDong.add(new JMenuItem("QL bán hàng"));
+        mHoatDong.add(new JMenuItem("Lưu vết hoạt động"));
+        mHoatDong.add(new JMenuItem("Thống kê doanh thu"));
+        mHoatDong.add(new JMenuItem("Thống kê mặt hàng bán"));
+        mHoatDong.add(new JMenuItem("Tổng hợp KQKD"));
+        mHoatDong.add(new JMenuItem("Chi tiết hoạt động ngày"));
 
         // 3. KHO HÀNG
         JMenu mKhoHang = new JMenu("KHO HÀNG");
@@ -149,14 +162,14 @@ public class MainFrame extends JFrame {
         bar.setBackground(AppColors.RIBBON_BG);
         bar.setBorder(new MatteBorder(0, 0, 1, 0, AppColors.BORDER_BLUE));
 
-        JButton btnHoaDon = createToolButton("🧾 Hóa đơn");
-        JButton btnQLBanHang = createToolButton("🛒 Quản lý bán hàng");
-        JButton btnTKDoanhThu = createToolButton("📈 Thống kê doanh thu");
-        JButton btnTKMatHang = createToolButton("📦 Thống kê mặt hàng bán");
-        JButton btnTongHopKQKD = createToolButton("📊 Tổng hợp KQKD");
-        JButton btnTonKho = createToolButton("🏢 Tồn kho");
-        JButton btnNhanVien = createToolButton("👥 Nhân viên");
-        JButton btnThoat = createToolButton("❌ Thoát");
+        JButton btnHoaDon = createToolButton("Hóa đơn");
+        JButton btnQLBanHang = createToolButton("Quản lý bán hàng");
+        JButton btnTKDoanhThu = createToolButton("Thống kê doanh thu");
+        JButton btnTKMatHang = createToolButton("Thống kê mặt hàng bán");
+        JButton btnTongHopKQKD = createToolButton("Tổng hợp KQKD");
+        JButton btnTonKho = createToolButton("Tồn kho");
+        JButton btnNhanVien = createToolButton("Nhân viên");
+        JButton btnThoat = createToolButton("Thoát");
 
         btnNhanVien.addActionListener(e -> new NhanVienDialog(this).setVisible(true));
         btnThoat.addActionListener(e -> System.exit(0));

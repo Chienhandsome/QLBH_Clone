@@ -24,7 +24,7 @@ public class StatusPanel extends JPanel {
         setBackground(AppColors.STATUS_BAR_BG);
 
         // Phía trái: Bản quyền / Thông báo
-        lblTrial = new JLabel("⚠️ Phiên bản dùng thử, hết hạn trong 20 ngày.");
+        lblTrial = new JLabel("Phiên bản dùng thử, hết hạn trong 20 ngày.");
         lblTrial.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         add(lblTrial, BorderLayout.WEST);
 
@@ -32,9 +32,9 @@ public class StatusPanel extends JPanel {
         JPanel rightPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 0));
         rightPanel.setOpaque(false);
 
-        lblDatabase = new JLabel("🗄️ CSDL: DEMO.FDB");
-        lblUser = new JLabel("👤 Tài khoản: " + (user != null ? user.getName() : "Admin"));
-        lblInputMethod = new JLabel("☑️ Gõ tiếng Việt: Telex");
+        lblDatabase = new JLabel("CSDL: DEMO.FDB");
+        lblUser = new JLabel("Tài khoản: " + (user != null ? user.getName() : "Admin"));
+        lblInputMethod = new JLabel("Gõ tiếng Việt: Telex");
 
         lblDatabase.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         lblUser.setFont(new Font("Segoe UI", Font.PLAIN, 12));

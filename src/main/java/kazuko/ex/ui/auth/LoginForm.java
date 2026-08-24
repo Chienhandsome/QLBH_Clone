@@ -56,9 +56,8 @@ public class LoginForm extends JFrame {
         }
         add(topBannerPanel, BorderLayout.NORTH);
 
-        // 3. Khung thân chính (Màu nền xanh nhạt đặc trưng)
+        // 3. Khung thân chính
         JPanel centerPanel = new JPanel(new GridBagLayout());
-        centerPanel.setBackground(AppColors.PRIMARY_LIGHT_BLUE);
         centerPanel.setBorder(new EmptyBorder(12, 18, 10, 18));
 
         GridBagConstraints gbc = new GridBagConstraints();
@@ -171,7 +170,6 @@ public class LoginForm extends JFrame {
 
         // 4. Khung chân trang (Buttons)
         JPanel bottomPanel = new JPanel(new BorderLayout());
-        bottomPanel.setBackground(AppColors.PRIMARY_LIGHT_BLUE);
         bottomPanel.setBorder(new CompoundBorder(
                 new MatteBorder(1, 0, 0, 0, AppColors.BORDER_SEPARATOR),
                 new EmptyBorder(10, 20, 14, 20)
