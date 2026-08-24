@@ -63,7 +63,7 @@ public class MainFrame extends JFrame {
         mCSDL.add(miSaoLuu);
         mCSDL.add(miPhucHoi);
 
-        JMenuItem miDoiMK = new JMenuItem("Đổi mk");
+        JMenuItem miDoiMK = new JMenuItem("Đổi mật khẩu");
         JMenuItem miDangXuat = new JMenuItem("Đăng xuất");
         JMenuItem miThoat = new JMenuItem("Thoát");
 
@@ -77,60 +77,80 @@ public class MainFrame extends JFrame {
 
         // 2. HOẠT ĐỘNG
         JMenu mHoatDong = new JMenu("HOẠT ĐỘNG");
-        mHoatDong.add(new JMenuItem("DM cửa hàng"));
-        mHoatDong.add(new JMenuItem("DM mặt hàng"));
-        mHoatDong.add(new JMenuItem("DM khách hàng"));
-        mHoatDong.add(new JMenuItem("Gửi tin nhắn kh"));
-        mHoatDong.add(new JMenuItem("DM đợt khuyến mãi"));
-        mHoatDong.add(new JMenuItem("KH thân thiết"));
-        mHoatDong.add(new JMenuItem("Báo giá kh"));
+        mHoatDong.add(new JMenuItem("Danh mục cửa hàng"));
+        mHoatDong.add(new JMenuItem("Danh mục mặt hàng"));
+        mHoatDong.add(new JMenuItem("Danh mục khách hàng"));
+        mHoatDong.add(new JMenuItem("Gửi tin nhắn khách hàng"));
+        mHoatDong.add(new JMenuItem("Danh mục đợt khuyến mãi"));
+        mHoatDong.add(new JMenuItem("Khách hàng thân thiết"));
+        mHoatDong.add(new JMenuItem("Báo giá khách hàng"));
         mHoatDong.add(new JMenuItem("Khách đặt hàng"));
         mHoatDong.add(new JMenuItem("Hóa đơn bán hàng"));
-        mHoatDong.add(new JMenuItem("QL bán hàng"));
+        mHoatDong.add(new JMenuItem("Quản lý bán hàng"));
         mHoatDong.add(new JMenuItem("Lưu vết hoạt động"));
         mHoatDong.add(new JMenuItem("Thống kê doanh thu"));
         mHoatDong.add(new JMenuItem("Thống kê mặt hàng bán"));
-        mHoatDong.add(new JMenuItem("Tổng hợp KQKD"));
+        mHoatDong.add(new JMenuItem("Tổng hợp kết quả kinh doanh"));
         mHoatDong.add(new JMenuItem("Chi tiết hoạt động ngày"));
 
         // 3. KHO HÀNG
         JMenu mKhoHang = new JMenu("KHO HÀNG");
-        JMenuItem miXuatKho = new JMenuItem("Quản lý xuất kho");
+        JMenuItem miXuatKho = new JMenuItem("Xuất kho");
         miXuatKho.addActionListener(e -> openTab("Quản lý xuất kho", new QuanLyXuatKhoPanel()));
-        mKhoHang.add(new JMenuItem("DM Kho hàng"));
-        mKhoHang.add(new JMenuItem("DM Nhà cung cấp"));
-        mKhoHang.addSeparator();
+
+        mKhoHang.add(new JMenuItem("Danh mục kho hàng"));
+        mKhoHang.add(new JMenuItem("Danh mục nhà cung cấp"));
+        mKhoHang.add(new JMenuItem("Đặt hàng nhà cung cấp"));
         mKhoHang.add(new JMenuItem("Nhập hàng vào kho"));
         mKhoHang.add(miXuatKho);
         mKhoHang.add(new JMenuItem("Chuyển kho"));
         mKhoHang.add(new JMenuItem("Kiểm kê kho"));
+        mKhoHang.add(new JMenuItem("Tính lại giá vốn"));
         mKhoHang.add(new JMenuItem("Tồn kho"));
+        mKhoHang.add(new JMenuItem("Tồn nhiều kho"));
 
         // 4. QUỸ
         JMenu mQuy = new JMenu("QUỸ");
-        mQuy.add(new JMenuItem("Phiếu thu"));
-        mQuy.add(new JMenuItem("Phiếu chi"));
+        mQuy.add(new JMenuItem("Danh mục lý do thu chi"));
+        mQuy.add(new JMenuItem("Danh mục tài khoản ngân hàng"));
+        mQuy.add(new JMenuItem("Tạo phiếu thu"));
+        mQuy.add(new JMenuItem("Tạo phiếu chi"));
+        mQuy.add(new JMenuItem("Danh mục phiếu thu"));
+        mQuy.add(new JMenuItem("Danh mục phiếu chi"));
         mQuy.add(new JMenuItem("Tồn quỹ"));
 
         // 5. CÔNG NỢ
         JMenu mCongNo = new JMenu("CÔNG NỢ");
-        mCongNo.add(new JMenuItem("Công nợ Khách hàng"));
-        mCongNo.add(new JMenuItem("Công nợ Nhà cung cấp"));
+        mCongNo.add(new JMenuItem("Công nợ khách hàng"));
+        mCongNo.add(new JMenuItem("Công nợ nhà cung cấp"));
 
         // 6. NHÂN SỰ
         JMenu mNhanSu = new JMenu("NHÂN SỰ");
-        JMenuItem miNhanVien = new JMenuItem("Danh mục Nhân viên");
+        JMenuItem miNhanVien = new JMenuItem("Danh mục nhân viên");
         miNhanVien.addActionListener(e -> new NhanVienDialog(this).setVisible(true));
         mNhanSu.add(miNhanVien);
-        mNhanSu.add(new JMenuItem("Ca làm việc"));
+        mNhanSu.add(new JMenuItem("Danh mục ca làm việc"));
+        mNhanSu.add(new JMenuItem("Tạm ứng lương"));
+        mNhanSu.add(new JMenuItem("Thưởng phạt"));
         mNhanSu.add(new JMenuItem("Chấm công"));
         mNhanSu.add(new JMenuItem("Tính lương"));
 
         // 7. QUẢN TRỊ
         JMenu mQuanTri = new JMenu("QUẢN TRỊ");
-        mQuanTri.add(new JMenuItem("Người dùng & Phân quyền"));
+        mQuanTri.add(new JMenuItem("Thư viện ảnh"));
+
+        // Submenu: Dữ liệu ban đầu
+        JMenu mDuLieuBanDau = new JMenu("Dữ liệu ban đầu");
+        mDuLieuBanDau.add(new JMenuItem("Công nợ khách hàng ban đầu"));
+        mDuLieuBanDau.add(new JMenuItem("Công nợ nhà cung cấp ban đầu"));
+        mDuLieuBanDau.add(new JMenuItem("Tồn kho ban đầu"));
+        mQuanTri.add(mDuLieuBanDau);
+
         mQuanTri.add(new JMenuItem("Chỉ tiêu doanh thu"));
-        mQuanTri.add(new JMenuItem("Cấu hình hệ thống"));
+        mQuanTri.add(new JMenuItem("Xóa dữ liệu"));
+        mQuanTri.add(new JMenuItem("Công cụ nhà phát triển"));
+        mQuanTri.add(new JMenuItem("Người dùng và phân quyền"));
+        mQuanTri.add(new JMenuItem("Cấu hình toàn hệ thống"));
 
         // 8. BÁO CÁO
         JMenu mBaoCao = new JMenu("BÁO CÁO");
@@ -141,7 +161,7 @@ public class MainFrame extends JFrame {
 
         // 9. TRỢ GIÚP
         JMenu mTroGiup = new JMenu("TRỢ GIÚP");
-        mTroGiup.add(new JMenuItem("Đăng ký bản quyền"));
+        mTroGiup.add(new JMenuItem("Đăng kí bản quyền"));
         mTroGiup.add(new JMenuItem("Thông tin phần mềm"));
 
         menuBar.add(mHeThong);
@@ -162,14 +182,14 @@ public class MainFrame extends JFrame {
         bar.setBackground(AppColors.RIBBON_BG);
         bar.setBorder(new MatteBorder(0, 0, 1, 0, AppColors.BORDER_BLUE));
 
-        JButton btnHoaDon = createToolButton("Hóa đơn");
-        JButton btnQLBanHang = createToolButton("Quản lý bán hàng");
-        JButton btnTKDoanhThu = createToolButton("Thống kê doanh thu");
-        JButton btnTKMatHang = createToolButton("Thống kê mặt hàng bán");
-        JButton btnTongHopKQKD = createToolButton("Tổng hợp KQKD");
-        JButton btnTonKho = createToolButton("Tồn kho");
-        JButton btnNhanVien = createToolButton("Nhân viên");
-        JButton btnThoat = createToolButton("Thoát");
+        JButton btnHoaDon = createToolButton("🧾 Hóa đơn");
+        JButton btnQLBanHang = createToolButton("🛒 Quản lý bán hàng");
+        JButton btnTKDoanhThu = createToolButton("📈 Thống kê doanh thu");
+        JButton btnTKMatHang = createToolButton("📦 Thống kê mặt hàng bán");
+        JButton btnTongHopKQKD = createToolButton("📊 Tổng hợp KQKD");
+        JButton btnTonKho = createToolButton("🏢 Tồn kho");
+        JButton btnNhanVien = createToolButton("👥 Nhân viên");
+        JButton btnThoat = createToolButton("❌ Thoát");
 
         btnNhanVien.addActionListener(e -> new NhanVienDialog(this).setVisible(true));
         btnThoat.addActionListener(e -> System.exit(0));
