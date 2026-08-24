@@ -182,14 +182,14 @@ public class MainFrame extends JFrame {
         bar.setBackground(AppColors.RIBBON_BG);
         bar.setBorder(new MatteBorder(0, 0, 1, 0, AppColors.BORDER_BLUE));
 
-        JButton btnHoaDon = createToolButton("🧾 Hóa đơn");
-        JButton btnQLBanHang = createToolButton("🛒 Quản lý bán hàng");
-        JButton btnTKDoanhThu = createToolButton("📈 Thống kê doanh thu");
-        JButton btnTKMatHang = createToolButton("📦 Thống kê mặt hàng bán");
-        JButton btnTongHopKQKD = createToolButton("📊 Tổng hợp KQKD");
-        JButton btnTonKho = createToolButton("🏢 Tồn kho");
-        JButton btnNhanVien = createToolButton("👥 Nhân viên");
-        JButton btnThoat = createToolButton("❌ Thoát");
+        JButton btnHoaDon = createToolButton("Hóa đơn");
+        JButton btnQLBanHang = createToolButton("Quản lý bán hàng");
+        JButton btnTKDoanhThu = createToolButton("Thống kê doanh thu");
+        JButton btnTKMatHang = createToolButton("Thống kê mặt hàng bán");
+        JButton btnTongHopKQKD = createToolButton("Tổng hợp KQKD");
+        JButton btnTonKho = createToolButton("Tồn kho");
+        JButton btnNhanVien = createToolButton("Nhân viên");
+        JButton btnThoat = createToolButton("Thoát");
 
         btnNhanVien.addActionListener(e -> new NhanVienDialog(this).setVisible(true));
         btnThoat.addActionListener(e -> System.exit(0));
