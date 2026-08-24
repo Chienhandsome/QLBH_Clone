@@ -1,6 +1,7 @@
 package kazuko.ex.ui.common;
 
 import kazuko.ex.model.system.SUser;
+import kazuko.ex.util.AppColors;
 
 import javax.swing.*;
 import javax.swing.border.CompoundBorder;
@@ -17,13 +18,13 @@ public class StatusPanel extends JPanel {
     public StatusPanel(SUser user) {
         setLayout(new BorderLayout());
         setBorder(new CompoundBorder(
-                new MatteBorder(1, 0, 0, 0, new Color(200, 200, 200)),
+                new MatteBorder(1, 0, 0, 0, AppColors.BORDER_GRAY),
                 new EmptyBorder(4, 10, 4, 10)
         ));
-        setBackground(new Color(245, 247, 250));
+        setBackground(AppColors.STATUS_BAR_BG);
 
         // Phía trái: Bản quyền / Thông báo
-        lblTrial = new JLabel("⚠️ Phiên bản đầy đủ - Đang hoạt động");
+        lblTrial = new JLabel("⚠️ Phiên bản dùng thử, hết hạn trong 20 ngày.");
         lblTrial.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         add(lblTrial, BorderLayout.WEST);
 

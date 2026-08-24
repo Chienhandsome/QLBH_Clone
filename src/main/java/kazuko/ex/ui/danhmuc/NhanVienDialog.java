@@ -2,6 +2,7 @@ package kazuko.ex.ui.danhmuc;
 
 import kazuko.ex.dao.UserDAO;
 import kazuko.ex.model.system.SUser;
+import kazuko.ex.util.AppColors;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -27,8 +28,8 @@ public class NhanVienDialog extends JDialog {
 
         // Header Panel: Icon & Mô tả (giống ảnh 2)
         JPanel headerPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 12));
-        headerPanel.setBackground(Color.WHITE);
-        headerPanel.setBorder(new MatteBorder(0, 0, 1, 0, new Color(220, 220, 220)));
+        headerPanel.setBackground(AppColors.WHITE);
+        headerPanel.setBorder(new MatteBorder(0, 0, 1, 0, AppColors.BORDER_GRAY));
 
         JLabel lblIcon = new JLabel("📝");
         lblIcon.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 32));
@@ -51,7 +52,8 @@ public class NhanVienDialog extends JDialog {
         JButton btnTrash = new JButton("🗑️ Thùng rác");
 
         btnAdd.setFont(new Font("Segoe UI", Font.BOLD, 12));
-        btnAdd.setForeground(new Color(0, 120, 60));
+        btnAdd.setForeground(AppColors.SUCCESS_GREEN);
+        btnDelete.setForeground(AppColors.DANGER_RED);
 
         toolBar.add(btnAdd);
         toolBar.add(btnDelete);

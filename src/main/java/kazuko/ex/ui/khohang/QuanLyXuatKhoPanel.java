@@ -4,11 +4,11 @@ import kazuko.ex.dao.DonHangDAO;
 import kazuko.ex.dao.KhoHangDAO;
 import kazuko.ex.model.banhang.DonHang;
 import kazuko.ex.model.danhmuc.KhoHang;
+import kazuko.ex.util.AppColors;
 import kazuko.ex.util.CurrencyUtil;
 import kazuko.ex.util.DateUtil;
 
 import javax.swing.*;
-import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.MatteBorder;
 import javax.swing.border.TitledBorder;
@@ -38,7 +38,6 @@ public class QuanLyXuatKhoPanel extends JPanel {
     private void initComponents() {
         setLayout(new BorderLayout());
 
-        // Chia đôi màn hình: Trái (Bộ lọc & Cây kho) - Phải (Bảng dữ liệu phiếu xuất)
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
         splitPane.setDividerLocation(230);
         splitPane.setContinuousLayout(true);
@@ -73,7 +72,6 @@ public class QuanLyXuatKhoPanel extends JPanel {
 
         leftPanel.add(filterBox, BorderLayout.NORTH);
 
-        // Cây danh sách kho hàng (TreeView)
         treeKho = new JTree();
         treeKho.setRootVisible(true);
         JScrollPane treeScroll = new JScrollPane(treeKho);
@@ -85,10 +83,9 @@ public class QuanLyXuatKhoPanel extends JPanel {
         JPanel rightPanel = new JPanel(new BorderLayout());
         rightPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
 
-        // Thanh công cụ thao tác trên đầu bảng (Toolbar)
         JPanel toolBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 4));
-        toolBar.setBackground(new Color(240, 243, 248));
-        toolBar.setBorder(new MatteBorder(0, 0, 1, 0, new Color(210, 215, 225)));
+        toolBar.setBackground(AppColors.TOOLBAR_BG);
+        toolBar.setBorder(new MatteBorder(0, 0, 1, 0, AppColors.BORDER_BLUE));
 
         toolBar.add(new JLabel("Lọc (F3):"));
         txtLoc = new JTextField(12);
@@ -101,8 +98,9 @@ public class QuanLyXuatKhoPanel extends JPanel {
         JButton btnPrint = new JButton("🖨️ In");
         JButton btnTong = new JButton("∑ Tổng");
 
-        btnAdd.setForeground(new Color(0, 120, 60));
+        btnAdd.setForeground(AppColors.SUCCESS_GREEN);
         btnAdd.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        btnDelete.setForeground(AppColors.DANGER_RED);
 
         toolBar.add(btnAdd);
         toolBar.add(btnEdit);
@@ -113,7 +111,6 @@ public class QuanLyXuatKhoPanel extends JPanel {
 
         rightPanel.add(toolBar, BorderLayout.NORTH);
 
-        // Bảng dữ liệu
         String[] columns = {
                 "Ngày", "Kho xuất", "Nhân viên xuất", "Tổng cộng", "Số phiếu",
                 "Tiền giảm giá", "Tỉ lệ giảm", "Tiền hàng", "Cửa hàng", "Còn lại", "Thanh toán", "Tài khoản NH"
@@ -127,7 +124,6 @@ public class QuanLyXuatKhoPanel extends JPanel {
         tablePhieuXuat = new JTable(tableModel);
         tablePhieuXuat.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
 
-        // Căn phải các cột số tiền
         DefaultTableCellRenderer rightRenderer = new DefaultTableCellRenderer();
         rightRenderer.setHorizontalAlignment(SwingConstants.RIGHT);
         tablePhieuXuat.getColumnModel().getColumn(3).setCellRenderer(rightRenderer);
@@ -139,7 +135,6 @@ public class QuanLyXuatKhoPanel extends JPanel {
         JScrollPane tableScroll = new JScrollPane(tablePhieuXuat);
         rightPanel.add(tableScroll, BorderLayout.CENTER);
 
-        // Tab thông tin chi tiết ở đáy bảng
         JTabbedPane bottomTabs = new JTabbedPane();
         bottomTabs.setPreferredSize(new Dimension(100, 140));
         bottomTabs.addTab("Thông tin", new JPanel());
@@ -152,7 +147,6 @@ public class QuanLyXuatKhoPanel extends JPanel {
         splitPane.setRightComponent(rightPanel);
         add(splitPane, BorderLayout.CENTER);
 
-        // Sự kiện chọn cây kho
         treeKho.addTreeSelectionListener(e -> {
             DefaultMutableTreeNode node = (DefaultMutableTreeNode) treeKho.getLastSelectedPathComponent();
             if (node != null && node.getUserObject() instanceof KhoHang) {
@@ -165,7 +159,6 @@ public class QuanLyXuatKhoPanel extends JPanel {
     }
 
     public void loadData() {
-        // Nạp cây kho
         DefaultMutableTreeNode root = new DefaultMutableTreeNode("📁 Tất cả");
         List<KhoHang> listKho = khoHangDAO.getAll();
 
@@ -179,7 +172,6 @@ public class QuanLyXuatKhoPanel extends JPanel {
         root.add(new DefaultMutableTreeNode("🗑️ Thùng rác"));
         treeKho.setModel(new DefaultTreeModel(root));
 
-        // Nạp phiếu xuất
         loadPhieuXuat(null);
     }
 

@@ -1,6 +1,7 @@
 package kazuko.ex.config;
 
 import com.formdev.flatlaf.FlatLightLaf;
+import kazuko.ex.util.AppColors;
 
 import javax.swing.*;
 import java.awt.*;
@@ -12,7 +13,7 @@ public class AppTheme {
             FlatLightLaf.setup();
 
             // Tinh chỉnh màu sắc chủ đạo xanh dương (Office Blue) giống Krypton Toolkit
-            UIManager.put("Component.accentColor", new Color(0, 102, 204));
+            UIManager.put("Component.accentColor", AppColors.PRIMARY_BLUE);
             UIManager.put("Button.arc", 6);
             UIManager.put("Component.arc", 6);
             UIManager.put("ProgressBar.arc", 6);

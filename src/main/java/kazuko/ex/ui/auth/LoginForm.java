@@ -4,6 +4,7 @@ import kazuko.ex.config.DatabaseConnection;
 import kazuko.ex.model.system.SUser;
 import kazuko.ex.service.AuthService;
 import kazuko.ex.ui.main.MainFrame;
+import kazuko.ex.util.AppColors;
 
 import javax.swing.*;
 import javax.swing.border.CompoundBorder;
@@ -38,28 +39,26 @@ public class LoginForm extends JFrame {
 
         // 2. Banner trên đầu
         JPanel topBannerPanel = new JPanel(new BorderLayout());
-        topBannerPanel.setBackground(Color.WHITE);
-        topBannerPanel.setBorder(new MatteBorder(0, 0, 1, 0, new Color(180, 200, 225)));
+        topBannerPanel.setBackground(AppColors.WHITE);
+        topBannerPanel.setBorder(new MatteBorder(0, 0, 1, 0, AppColors.BORDER_BLUE));
+
         URL bannerUrl = getClass().getResource("/banner.png");
         if (bannerUrl != null) {
             JLabel lblBanner = new JLabel(new ImageIcon(bannerUrl));
             lblBanner.setHorizontalAlignment(SwingConstants.CENTER);
             topBannerPanel.add(lblBanner, BorderLayout.CENTER);
         } else {
-            // Fallback nếu chưa load được ảnh
             JLabel lblBannerText = new JLabel("PHẦN MỀM QUẢN LÝ CỬA HÀNG", SwingConstants.CENTER);
             lblBannerText.setFont(new Font("Segoe UI", Font.BOLD, 18));
-            lblBannerText.setForeground(new Color(0, 102, 204));
+            lblBannerText.setForeground(AppColors.PRIMARY_BLUE);
             lblBannerText.setPreferredSize(new Dimension(460, 90));
             topBannerPanel.add(lblBannerText, BorderLayout.CENTER);
         }
         add(topBannerPanel, BorderLayout.NORTH);
 
-        // 3. Khung thân chính (Màu nền xanh nhạt đặc trưng Office/Krypton)
-//        Color bgBlue = new Color(202, 221, 243); // #CADDF3
-
+        // 3. Khung thân chính (Màu nền xanh nhạt đặc trưng)
         JPanel centerPanel = new JPanel(new GridBagLayout());
-//        centerPanel.setBackground(bgBlue);
+        centerPanel.setBackground(AppColors.PRIMARY_LIGHT_BLUE);
         centerPanel.setBorder(new EmptyBorder(12, 18, 10, 18));
 
         GridBagConstraints gbc = new GridBagConstraints();
@@ -77,7 +76,7 @@ public class LoginForm extends JFrame {
         } else {
             lblLogo = new JLabel("TÂN AN PHÁT", SwingConstants.CENTER);
             lblLogo.setFont(new Font("Segoe UI", Font.BOLD, 16));
-            lblLogo.setForeground(new Color(230, 80, 0));
+            lblLogo.setForeground(AppColors.WARNING_ORANGE);
         }
         lblLogo.setAlignmentX(Component.LEFT_ALIGNMENT);
         leftBox.add(lblLogo);
@@ -91,7 +90,7 @@ public class LoginForm extends JFrame {
 
         JLabel lblDbLink = new JLabel("<html><u>Cơ sở dữ liệu:</u></html>");
         lblDbLink.setFont(new Font("Segoe UI", Font.BOLD, 12));
-        lblDbLink.setForeground(new Color(0, 51, 204));
+        lblDbLink.setForeground(AppColors.TEXT_LINK);
         lblDbLink.setCursor(new Cursor(Cursor.HAND_CURSOR));
         lblDbLink.addMouseListener(new MouseAdapter() {
             @Override
@@ -104,7 +103,7 @@ public class LoginForm extends JFrame {
 
         lblDbName = new JLabel("DEMO");
         lblDbName.setFont(new Font("Segoe UI", Font.BOLD, 12));
-        lblDbName.setForeground(new Color(40, 40, 40));
+        lblDbName.setForeground(AppColors.TEXT_DARK);
 
         dbPanel.add(lblDbLink);
         dbPanel.add(lblDbName);
@@ -124,7 +123,7 @@ public class LoginForm extends JFrame {
         // 1. Người dùng
         JLabel lblUser = new JLabel("Người dùng:");
         lblUser.setFont(new Font("Segoe UI", Font.BOLD, 13));
-        lblUser.setForeground(new Color(20, 20, 20));
+        lblUser.setForeground(AppColors.TEXT_DARK);
         gbc.gridx = 2; gbc.gridy = 0;
         gbc.anchor = GridBagConstraints.EAST;
         centerPanel.add(lblUser, gbc);
@@ -140,7 +139,7 @@ public class LoginForm extends JFrame {
         // 2. Mật khẩu
         JLabel lblPass = new JLabel("Mật khẩu:");
         lblPass.setFont(new Font("Segoe UI", Font.BOLD, 13));
-        lblPass.setForeground(new Color(20, 20, 20));
+        lblPass.setForeground(AppColors.TEXT_DARK);
         gbc.gridx = 2; gbc.gridy = 1;
         gbc.anchor = GridBagConstraints.EAST;
         centerPanel.add(lblPass, gbc);
@@ -172,9 +171,9 @@ public class LoginForm extends JFrame {
 
         // 4. Khung chân trang (Buttons)
         JPanel bottomPanel = new JPanel(new BorderLayout());
-//        bottomPanel.setBackground(bgBlue);
+        bottomPanel.setBackground(AppColors.PRIMARY_LIGHT_BLUE);
         bottomPanel.setBorder(new CompoundBorder(
-                new MatteBorder(1, 0, 0, 0, new Color(175, 200, 230)),
+                new MatteBorder(1, 0, 0, 0, AppColors.BORDER_SEPARATOR),
                 new EmptyBorder(10, 20, 14, 20)
         ));
 
@@ -190,8 +189,8 @@ public class LoginForm extends JFrame {
         btnLogin.setFont(new Font("Segoe UI", Font.PLAIN, 13));
         btnCancel.setFont(new Font("Segoe UI", Font.PLAIN, 13));
 
-        btnLogin.setBackground(Color.WHITE);
-        btnCancel.setBackground(Color.WHITE);
+        btnLogin.setBackground(AppColors.WHITE);
+        btnCancel.setBackground(AppColors.WHITE);
 
         btnLogin.addActionListener(e -> onLogin());
         btnCancel.addActionListener(e -> System.exit(0));

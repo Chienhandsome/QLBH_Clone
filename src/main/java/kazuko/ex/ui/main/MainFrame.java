@@ -6,9 +6,9 @@ import kazuko.ex.ui.auth.LoginForm;
 import kazuko.ex.ui.common.StatusPanel;
 import kazuko.ex.ui.danhmuc.NhanVienDialog;
 import kazuko.ex.ui.khohang.QuanLyXuatKhoPanel;
+import kazuko.ex.util.AppColors;
 
 import javax.swing.*;
-import javax.swing.border.EmptyBorder;
 import javax.swing.border.MatteBorder;
 import java.awt.*;
 
@@ -28,10 +28,10 @@ public class MainFrame extends JFrame {
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
 
-        // 1. Menu Bar trên cùng (HỆ THỐNG, HOẠT ĐỘNG, KHO HÀNG, QUỸ, CÔNG NỢ, NHÂN SỰ, QUẢN TRỊ, BÁO CÁO, TRỢ GIÚP)
+        // 1. Menu Bar trên cùng
         setJMenuBar(createTopMenuBar());
 
-        // 2. Toolbar Ribbon chứa các nút thao tác nhanh (Hóa đơn, Quản lý bán hàng, Doanh thu, Tồn kho, Báo cáo...)
+        // 2. Toolbar Ribbon chứa các nút thao tác nhanh
         JPanel topToolBar = createRibbonToolBar();
         add(topToolBar, BorderLayout.NORTH);
 
@@ -39,10 +39,9 @@ public class MainFrame extends JFrame {
         mainTabbedPane = new JTabbedPane(JTabbedPane.TOP, JTabbedPane.SCROLL_TAB_LAYOUT);
         mainTabbedPane.setFont(new Font("Segoe UI", Font.BOLD, 12));
 
-        // Mở sẵn 2 Tab mẫu giống hệt ảnh 1
         mainTabbedPane.addTab("Lưu vết hoạt động", createWelcomePanel());
         mainTabbedPane.addTab("Quản lý xuất kho", new QuanLyXuatKhoPanel());
-        mainTabbedPane.setSelectedIndex(1); // Mặc định focus vào tab Quản lý xuất kho
+        mainTabbedPane.setSelectedIndex(1);
 
         add(mainTabbedPane, BorderLayout.CENTER);
 
@@ -147,8 +146,8 @@ public class MainFrame extends JFrame {
 
     private JPanel createRibbonToolBar() {
         JPanel bar = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 4));
-        bar.setBackground(new Color(235, 240, 248));
-        bar.setBorder(new MatteBorder(0, 0, 1, 0, new Color(205, 215, 230)));
+        bar.setBackground(AppColors.RIBBON_BG);
+        bar.setBorder(new MatteBorder(0, 0, 1, 0, AppColors.BORDER_BLUE));
 
         JButton btnHoaDon = createToolButton("🧾 Hóa đơn");
         JButton btnQLBanHang = createToolButton("🛒 Quản lý bán hàng");
@@ -178,7 +177,7 @@ public class MainFrame extends JFrame {
         JButton btn = new JButton(text);
         btn.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         btn.setFocusPainted(false);
-        btn.setBackground(Color.WHITE);
+        btn.setBackground(AppColors.WHITE);
         return btn;
     }
 
