@@ -11,6 +11,10 @@ import kazuko.ex.util.AppColors;
 import javax.swing.*;
 import javax.swing.border.MatteBorder;
 import java.awt.*;
+import java.awt.event.InputEvent;
+import java.awt.event.KeyEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.net.URL;
 
 public class MainFrame extends JFrame {
@@ -25,7 +29,20 @@ public class MainFrame extends JFrame {
     private void initComponents() {
         setTitle("PHẦN MỀM QUẢN LÝ BÁN HÀNG");
         setWindowIcon();
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                onExit();
+            }
+        });
+
+        // Phím nóng Ctrl + G mở nhanh danh sách menu
+        getRootPane().registerKeyboardAction(
+                e -> openQuickSearchDialog(),
+                KeyStroke.getKeyStroke(KeyEvent.VK_G, InputEvent.CTRL_DOWN_MASK),
+                JComponent.WHEN_IN_FOCUSED_WINDOW
+        );
         setSize(1280, 760);
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
@@ -70,7 +87,7 @@ public class MainFrame extends JFrame {
         JMenuItem miThoat = new JMenuItem("Thoát");
 
         miDangXuat.addActionListener(e -> onLogout());
-        miThoat.addActionListener(e -> System.exit(0));
+        miThoat.addActionListener(e -> onExit());
 
         mHeThong.add(mCSDL);
         mHeThong.add(miDoiMK);
@@ -180,30 +197,47 @@ public class MainFrame extends JFrame {
     }
 
     private JPanel createRibbonToolBar() {
-        JPanel bar = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 4));
+        JPanel bar = new JPanel(new BorderLayout());
         bar.setBackground(AppColors.RIBBON_BG);
         bar.setBorder(new MatteBorder(0, 0, 1, 0, AppColors.BORDER_BLUE));
+
+        JPanel leftPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
+        leftPanel.setOpaque(false);
 
         JButton btnHoaDon = createToolButton("Hóa đơn");
         JButton btnQLBanHang = createToolButton("Quản lý bán hàng");
         JButton btnTKDoanhThu = createToolButton("Thống kê doanh thu");
         JButton btnTKMatHang = createToolButton("Thống kê mặt hàng bán");
+        JButton btnChiTietHD = createToolButton("Chi tiết hoạt động");
         JButton btnTongHopKQKD = createToolButton("Tổng hợp KQKD");
         JButton btnTonKho = createToolButton("Tồn kho");
-        JButton btnNhanVien = createToolButton("Nhân viên");
+        JButton btnGhiChu = createToolButton("Ghi chú");
+        JButton btnBaoCao = createToolButton("Báo cáo");
         JButton btnThoat = createToolButton("Thoát");
 
-        btnNhanVien.addActionListener(e -> new NhanVienDialog(this).setVisible(true));
-        btnThoat.addActionListener(e -> System.exit(0));
+        btnThoat.addActionListener(e -> onExit());
 
-        bar.add(btnHoaDon);
-        bar.add(btnQLBanHang);
-        bar.add(btnTKDoanhThu);
-        bar.add(btnTKMatHang);
-        bar.add(btnTongHopKQKD);
-        bar.add(btnTonKho);
-        bar.add(btnNhanVien);
-        bar.add(btnThoat);
+        leftPanel.add(btnHoaDon);
+        leftPanel.add(btnQLBanHang);
+        leftPanel.add(btnTKDoanhThu);
+        leftPanel.add(btnTKMatHang);
+        leftPanel.add(btnChiTietHD);
+        leftPanel.add(btnTongHopKQKD);
+        leftPanel.add(btnTonKho);
+        leftPanel.add(btnGhiChu);
+        leftPanel.add(btnBaoCao);
+        leftPanel.add(btnThoat);
+
+        JPanel rightPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 4));
+        rightPanel.setOpaque(false);
+
+        JButton btnMoNhanh = createToolButton("Mở nhanh");
+        btnMoNhanh.setToolTipText("Tìm kiếm và mở nhanh chức năng (Ctrl + G)");
+        btnMoNhanh.addActionListener(e -> openQuickSearchDialog());
+        rightPanel.add(btnMoNhanh);
+
+        bar.add(leftPanel, BorderLayout.WEST);
+        bar.add(rightPanel, BorderLayout.EAST);
 
         return bar;
     }
@@ -236,6 +270,57 @@ public class MainFrame extends JFrame {
     private void onLogout() {
         this.dispose();
         SwingUtilities.invokeLater(() -> new LoginForm().setVisible(true));
+    }
+
+    private void onExit() {
+        int confirm = JOptionPane.showConfirmDialog(
+                this,
+                "Bạn có chắc chắn muốn thoát khỏi chương trình?",
+                "Xác nhận thoát",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.QUESTION_MESSAGE
+        );
+        if (confirm == JOptionPane.YES_OPTION) {
+            System.exit(0);
+        }
+    }
+
+    private void openQuickSearchDialog() {
+        QuickSearchDialog dialog = new QuickSearchDialog(this, this::handleQuickAction);
+        dialog.setVisible(true);
+    }
+
+    private void handleQuickAction(String action) {
+        if (action == null) return;
+        switch (action) {
+            case "DANH MỤC NHÂN VIÊN":
+                new NhanVienDialog(this).setVisible(true);
+                break;
+            case "CẤU HÌNH CƠ SỞ DỮ LIỆU":
+            case "CƠ SỞ DỮ LIỆU - CẤU HÌNH":
+                new DatabaseConfigDialog(this).setVisible(true);
+                break;
+            case "QUẢN LÝ XUẤT KHO":
+            case "XUẤT KHO":
+                openTab("Quản lý xuất kho", new QuanLyXuatKhoPanel());
+                break;
+            case "ĐĂNG XUẤT":
+                onLogout();
+                break;
+            case "THOÁT":
+                onExit();
+                break;
+            default:
+                openTab(action, createPlaceholderPanel(action));
+                break;
+        }
+    }
+
+    private JPanel createPlaceholderPanel(String title) {
+        JPanel panel = new JPanel(new GridBagLayout());
+        JLabel label = new JLabel("<html><center><h3>" + title + "</h3><p style='color:gray;'>Chức năng đang mở trong phiên làm việc.</p></center></html>");
+        panel.add(label);
+        return panel;
     }
 
     private void setWindowIcon() {
