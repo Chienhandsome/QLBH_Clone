@@ -4,6 +4,7 @@ import kazuko.ex.dao.CuaHangDAO;
 import kazuko.ex.model.danhmuc.CuaHang;
 import kazuko.ex.util.IconHelper;
 
+import java.sql.SQLException;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.MatteBorder;
@@ -236,7 +237,19 @@ public class CuaHangTrashDialog extends JDialog {
         );
 
         if (confirm == JOptionPane.YES_OPTION) {
-            cuaHangDAO.deletePermanently(selected.getId());
+            try {
+                boolean ok = cuaHangDAO.deletePermanently(selected.getId());
+                if (ok) {
+                    JOptionPane.showMessageDialog(this, "Đã xóa vĩnh viễn '" + selected.getName() + "' thành công!", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+                }
+            } catch (SQLException ex) {
+                JOptionPane.showMessageDialog(this,
+                        "Không thể xóa vĩnh viễn do ràng buộc quan hệ trong cơ sở dữ liệu Firebird:\n" +
+                        "Cửa hàng này đang có dữ liệu liên kết (Đơn hàng, Kho hàng, Nhân viên...).\n" +
+                        "Chi tiết: " + ex.getMessage(),
+                        "Lỗi ràng buộc dữ liệu",
+                        JOptionPane.ERROR_MESSAGE);
+            }
             loadTrashTree();
             if (onDataChanged != null) {
                 onDataChanged.run();

@@ -286,7 +286,6 @@ public class CuaHangDialog extends JDialog {
         if (selected != null && selected.isFolder()) {
             newStore.setParentId(selected.getId());
         }
-        newStore.setCode("CH" + (System.currentTimeMillis() % 1000));
         newStore.setMauHoaDon("Mẫu 54 mm x 2 dòng");
 
         List<CuaHang> stores = cuaHangDAO.getAllActive();
@@ -363,6 +362,10 @@ public class CuaHangDialog extends JDialog {
             return;
         }
 
+        if (selected.isSeparator()) {
+            return;
+        }
+
         int confirm = JOptionPane.showConfirmDialog(
                 this,
                 "Bạn có chắc chắn muốn chuyển '" + selected.getName() + "' vào Thùng rác không?",
@@ -372,7 +375,13 @@ public class CuaHangDialog extends JDialog {
         );
 
         if (confirm == JOptionPane.YES_OPTION) {
-            cuaHangDAO.moveToTrash(selected.getId());
+            if (selected.getId() != null && selected.getId().equals(cuaHangDAO.getDefaultStoreId())) {
+                cuaHangDAO.setDefaultStoreId(null);
+            }
+            boolean success = cuaHangDAO.moveToTrash(selected.getId());
+            if (success) {
+                JOptionPane.showMessageDialog(this, "Đã chuyển '" + selected.getName() + "' vào Thùng rác!", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+            }
             loadTreeData();
             loadDefaultStoreComboBox();
         }
