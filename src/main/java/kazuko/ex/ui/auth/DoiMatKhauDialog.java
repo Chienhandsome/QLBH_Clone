@@ -3,6 +3,7 @@ package kazuko.ex.ui.auth;
 import kazuko.ex.model.system.SUser;
 import kazuko.ex.service.AuthService;
 import kazuko.ex.util.AppColors;
+import kazuko.ex.util.IconHelper;
 
 import javax.swing.*;
 import javax.swing.border.CompoundBorder;
@@ -38,8 +39,7 @@ public class DoiMatKhauDialog extends JDialog {
         headerPanel.setBackground(Color.WHITE);
         headerPanel.setBorder(new MatteBorder(0, 0, 1, 0, new Color(185, 205, 230)));
 
-        JLabel lblLockIcon = new JLabel("🔒");
-        lblLockIcon.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 24));
+        JLabel lblLockIcon = new JLabel(IconHelper.getIcon("btnUserPass.Icon.png", 26, 26));
         headerPanel.add(lblLockIcon);
 
         String accountName = (currentUser != null && currentUser.getName() != null && !currentUser.getName().isEmpty())

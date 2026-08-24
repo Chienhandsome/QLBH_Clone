@@ -145,9 +145,9 @@ public class DatabaseConfigDialog extends JDialog {
 
         boolean ok = DatabaseConnection.testConnection(ip, port, dbPath, user, pass);
         if (ok) {
-            JOptionPane.showMessageDialog(this, "✅ Kết nối tới CSDL thành công!", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Kết nối tới CSDL thành công!", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
         } else {
-            JOptionPane.showMessageDialog(this, "❌ Không thể kết nối tới CSDL! Vui lòng kiểm tra lại IP/Port/File CSDL.", "Lỗi kết nối", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Không thể kết nối tới CSDL! Vui lòng kiểm tra lại IP/Port/File CSDL.", "Lỗi kết nối", JOptionPane.ERROR_MESSAGE);
         }
     }
 

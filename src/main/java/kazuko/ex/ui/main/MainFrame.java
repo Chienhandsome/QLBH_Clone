@@ -6,9 +6,11 @@ import kazuko.ex.ui.auth.DatabaseConfigDialog;
 import kazuko.ex.ui.auth.DoiMatKhauDialog;
 import kazuko.ex.ui.auth.LoginForm;
 import kazuko.ex.ui.common.StatusPanel;
+import kazuko.ex.ui.danhmuc.CuaHangDialog;
 import kazuko.ex.ui.danhmuc.NhanVienDialog;
 import kazuko.ex.ui.khohang.QuanLyXuatKhoPanel;
 import kazuko.ex.util.AppColors;
+import kazuko.ex.util.IconHelper;
 
 import javax.swing.*;
 import javax.swing.border.MatteBorder;
@@ -102,7 +104,10 @@ public class MainFrame extends JFrame {
 
         // 2. HOẠT ĐỘNG
         JMenu mHoatDong = new JMenu("HOẠT ĐỘNG");
-        mHoatDong.add(new JMenuItem("Danh mục cửa hàng"));
+        JMenuItem miCuaHang = new JMenuItem("Danh mục cửa hàng");
+        miCuaHang.addActionListener(e -> new CuaHangDialog(this).setVisible(true));
+
+        mHoatDong.add(miCuaHang);
         mHoatDong.add(new JMenuItem("Danh mục mặt hàng"));
         mHoatDong.add(new JMenuItem("Danh mục khách hàng"));
         mHoatDong.add(new JMenuItem("Gửi tin nhắn khách hàng"));
@@ -238,6 +243,7 @@ public class MainFrame extends JFrame {
         rightPanel.setOpaque(false);
 
         JButton btnMoNhanh = createToolButton("Mở nhanh");
+        btnMoNhanh.setIcon(IconHelper.getIcon("tsbQuickOpen.Image.png", 16, 16));
         btnMoNhanh.setToolTipText("Tìm kiếm và mở nhanh chức năng (Ctrl + G)");
         btnMoNhanh.addActionListener(e -> openQuickSearchDialog());
         rightPanel.add(btnMoNhanh);
@@ -311,6 +317,10 @@ public class MainFrame extends JFrame {
         switch (action) {
             case "DANH MỤC NHÂN VIÊN":
                 new NhanVienDialog(this).setVisible(true);
+                break;
+            case "DANH MỤC CỬA HÀNG":
+            case "CỬA HÀNG":
+                new CuaHangDialog(this).setVisible(true);
                 break;
             case "CẤU HÌNH CƠ SỞ DỮ LIỆU":
             case "CƠ SỞ DỮ LIỆU - CẤU HÌNH":

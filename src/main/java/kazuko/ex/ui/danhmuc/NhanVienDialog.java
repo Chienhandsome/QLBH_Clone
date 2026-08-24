@@ -3,6 +3,7 @@ package kazuko.ex.ui.danhmuc;
 import kazuko.ex.dao.UserDAO;
 import kazuko.ex.model.system.SUser;
 import kazuko.ex.util.AppColors;
+import kazuko.ex.util.IconHelper;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -26,13 +27,12 @@ public class NhanVienDialog extends JDialog {
     private void initComponents() {
         setLayout(new BorderLayout());
 
-        // Header Panel: Icon & Mô tả (giống ảnh 2)
+        // Header Panel: Icon & Mô tả
         JPanel headerPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 12));
         headerPanel.setBackground(AppColors.WHITE);
         headerPanel.setBorder(new MatteBorder(0, 0, 1, 0, AppColors.BORDER_GRAY));
 
-        JLabel lblIcon = new JLabel("📝");
-        lblIcon.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 32));
+        JLabel lblIcon = new JLabel(IconHelper.getIcon("Folder2.png", 32, 32));
         JLabel lblDesc = new JLabel("<html><b>Cho phép bạn quản lý và chỉnh sửa danh mục nhân viên</b></html>");
         lblDesc.setFont(new Font("Segoe UI", Font.PLAIN, 13));
 
@@ -46,10 +46,10 @@ public class NhanVienDialog extends JDialog {
 
         // Toolbar: Thêm mới, Xóa, Chỉnh sửa, Thùng rác
         JPanel toolBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
-        JButton btnAdd = new JButton("➕ Thêm mới ▾");
-        JButton btnDelete = new JButton("❌ Xóa");
-        JButton btnEdit = new JButton("✏️ Chỉnh sửa");
-        JButton btnTrash = new JButton("🗑️ Thùng rác");
+        JButton btnAdd = new JButton("Thêm mới ▾", IconHelper.getIcon("plus.png", 16, 16));
+        JButton btnDelete = new JButton("Xóa", IconHelper.getIcon("cross.png", 16, 16));
+        JButton btnEdit = new JButton("Chỉnh sửa", IconHelper.getIcon("pencil.png", 16, 16));
+        JButton btnTrash = new JButton("Thùng rác", IconHelper.getIcon("RecycleBin.png", 16, 16));
 
         btnAdd.setFont(new Font("Segoe UI", Font.BOLD, 12));
         btnAdd.setForeground(AppColors.SUCCESS_GREEN);
@@ -72,7 +72,7 @@ public class NhanVienDialog extends JDialog {
         topBox.add(defaultValPanel, BorderLayout.SOUTH);
         centerPanel.add(topBox, BorderLayout.NORTH);
 
-        // Danh sách nhân viên (JList có icon)
+        // Danh sách nhân viên (JList có icon users.png)
         listModel = new DefaultListModel<>();
         listNhanVien = new JList<>(listModel);
         listNhanVien.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -82,7 +82,8 @@ public class NhanVienDialog extends JDialog {
                 JLabel label = (JLabel) super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
                 if (value instanceof SUser) {
                     SUser u = (SUser) value;
-                    label.setText("  👤  " + u.getName());
+                    label.setIcon(IconHelper.getIcon("users.png", 16, 16));
+                    label.setText(" " + u.getName());
                     label.setFont(new Font("Segoe UI", Font.PLAIN, 13));
                 }
                 return label;

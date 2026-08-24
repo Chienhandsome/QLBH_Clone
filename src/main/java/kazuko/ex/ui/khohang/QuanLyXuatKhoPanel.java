@@ -7,6 +7,7 @@ import kazuko.ex.model.danhmuc.KhoHang;
 import kazuko.ex.util.AppColors;
 import kazuko.ex.util.CurrencyUtil;
 import kazuko.ex.util.DateUtil;
+import kazuko.ex.util.IconHelper;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -15,6 +16,7 @@ import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.DefaultTreeModel;
 import java.awt.*;
 import java.util.Date;
@@ -39,44 +41,52 @@ public class QuanLyXuatKhoPanel extends JPanel {
         setLayout(new BorderLayout());
 
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
-        splitPane.setDividerLocation(230);
-        splitPane.setContinuousLayout(true);
+        splitPane.setDividerLocation(200);
+        splitPane.setDividerSize(5);
 
-        // ==================== KHUNG TRÁI: BỘ LỌC KHO ====================
+        // ==================== KHUNG TRÁI: CÂY KHO HÀNG ====================
         JPanel leftPanel = new JPanel(new BorderLayout());
-        leftPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
-
-        JPanel filterBox = new JPanel(new GridBagLayout());
-        filterBox.setBorder(new TitledBorder("Kho hàng"));
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.insets = new Insets(3, 4, 3, 4);
-
-        gbc.gridx = 0; gbc.gridy = 0;
-        filterBox.add(new JLabel("Từ:"), gbc);
-        JTextField txtTuNgay = new JTextField(DateUtil.formatDate(new Date(System.currentTimeMillis() - 30L*24*3600*1000)));
-        gbc.gridx = 1; gbc.gridy = 0;
-        filterBox.add(txtTuNgay, gbc);
-
-        gbc.gridx = 0; gbc.gridy = 1;
-        filterBox.add(new JLabel("Đến:"), gbc);
-        JTextField txtDenNgay = new JTextField(DateUtil.formatDate(new Date()));
-        gbc.gridx = 1; gbc.gridy = 1;
-        filterBox.add(txtDenNgay, gbc);
-
-        gbc.gridx = 0; gbc.gridy = 2;
-        filterBox.add(new JLabel("Kho xuất:"), gbc);
-        cbKhoXuat = new JComboBox<>();
-        gbc.gridx = 1; gbc.gridy = 2;
-        filterBox.add(cbKhoXuat, gbc);
-
-        leftPanel.add(filterBox, BorderLayout.NORTH);
+        leftPanel.setBorder(new TitledBorder("Kho hàng"));
 
         treeKho = new JTree();
-        treeKho.setRootVisible(true);
+        treeKho.setCellRenderer(new DefaultTreeCellRenderer() {
+            @Override
+            public Component getTreeCellRendererComponent(JTree tree, Object value, boolean sel, boolean expanded, boolean leaf, int row, boolean hasFocus) {
+                JLabel label = (JLabel) super.getTreeCellRendererComponent(tree, value, sel, expanded, leaf, row, hasFocus);
+                if (value instanceof DefaultMutableTreeNode) {
+                    Object userObj = ((DefaultMutableTreeNode) value).getUserObject();
+                    if ("Tất cả".equals(userObj)) {
+                        label.setText("Tất cả");
+                        label.setIcon(IconHelper.getIcon("Folder.png", 16, 16));
+                    } else if ("Thùng rác".equals(userObj)) {
+                        label.setText("Thùng rác");
+                        label.setIcon(IconHelper.getIcon("RecycleBin.png", 16, 16));
+                    } else if (userObj instanceof KhoHang) {
+                        label.setIcon(IconHelper.getIcon("1282529873_objects.png", 16, 16));
+                    }
+                }
+                return label;
+            }
+        });
         JScrollPane treeScroll = new JScrollPane(treeKho);
         leftPanel.add(treeScroll, BorderLayout.CENTER);
 
+        // Khung lọc ngày & kho xuất
+        JPanel filterPanel = new JPanel(new GridLayout(4, 1, 4, 4));
+        filterPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
+
+        cbKhoXuat = new JComboBox<>();
+        filterPanel.add(new JLabel("Kho xuất:"));
+        filterPanel.add(cbKhoXuat);
+
+        JButton btnLoc = new JButton("Xem dữ liệu", IconHelper.getIcon("Search43.png", 16, 16));
+        btnLoc.addActionListener(e -> {
+            KhoHang sel = (KhoHang) cbKhoXuat.getSelectedItem();
+            loadPhieuXuat(sel != null ? sel.getId() : null);
+        });
+        filterPanel.add(btnLoc);
+
+        leftPanel.add(filterPanel, BorderLayout.SOUTH);
         splitPane.setLeftComponent(leftPanel);
 
         // ==================== KHUNG PHẢI: BẢNG PHIẾU XUẤT ====================
@@ -91,12 +101,12 @@ public class QuanLyXuatKhoPanel extends JPanel {
         txtLoc = new JTextField(12);
         toolBar.add(txtLoc);
 
-        JButton btnAdd = new JButton("➕ Thêm mới (Insert)");
-        JButton btnEdit = new JButton("✏️ Chỉnh sửa (F4)");
-        JButton btnDelete = new JButton("❌ Xóa (Del)");
-        JButton btnExcel = new JButton("📊 Xuất excel");
-        JButton btnPrint = new JButton("🖨️ In");
-        JButton btnTong = new JButton("∑ Tổng");
+        JButton btnAdd = new JButton("Thêm mới (Insert)", IconHelper.getIcon("plus.png", 16, 16));
+        JButton btnEdit = new JButton("Chỉnh sửa (F4)", IconHelper.getIcon("pencil.png", 16, 16));
+        JButton btnDelete = new JButton("Xóa (Del)", IconHelper.getIcon("cross.png", 16, 16));
+        JButton btnExcel = new JButton("Xuất excel", IconHelper.getIcon("export_excel.png", 16, 16));
+        JButton btnPrint = new JButton("In", IconHelper.getIcon("print-16.png", 16, 16));
+        JButton btnTong = new JButton("Tổng", IconHelper.getIcon("Statistic16.png", 16, 16));
 
         btnAdd.setForeground(AppColors.SUCCESS_GREEN);
         btnAdd.setFont(new Font("Segoe UI", Font.BOLD, 12));
@@ -159,7 +169,7 @@ public class QuanLyXuatKhoPanel extends JPanel {
     }
 
     public void loadData() {
-        DefaultMutableTreeNode root = new DefaultMutableTreeNode("📁 Tất cả");
+        DefaultMutableTreeNode root = new DefaultMutableTreeNode("Tất cả");
         List<KhoHang> listKho = khoHangDAO.getAll();
 
         cbKhoXuat.removeAllItems();
@@ -169,7 +179,7 @@ public class QuanLyXuatKhoPanel extends JPanel {
             root.add(new DefaultMutableTreeNode(kho));
             cbKhoXuat.addItem(kho);
         }
-        root.add(new DefaultMutableTreeNode("🗑️ Thùng rác"));
+        root.add(new DefaultMutableTreeNode("Thùng rác"));
         treeKho.setModel(new DefaultTreeModel(root));
 
         loadPhieuXuat(null);

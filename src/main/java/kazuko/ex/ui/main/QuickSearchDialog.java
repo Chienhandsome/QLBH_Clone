@@ -1,6 +1,7 @@
 package kazuko.ex.ui.main;
 
 import kazuko.ex.util.AppColors;
+import kazuko.ex.util.IconHelper;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -166,8 +167,8 @@ public class QuickSearchDialog extends JDialog {
         bottomPanel.setBackground(new Color(225, 235, 248));
         bottomPanel.setBorder(new LineBorder(new Color(190, 210, 230), 1, true));
 
-        JButton btnOpen = new JButton("Mở");
-        JButton btnCancel = new JButton("Hủy bỏ");
+        JButton btnOpen = new JButton("Mở", IconHelper.getIcon("btnOpen.Image.png", 14, 14));
+        JButton btnCancel = new JButton("Hủy bỏ", IconHelper.getIcon("cross.png", 14, 14));
 
         btnOpen.setPreferredSize(new Dimension(85, 28));
         btnCancel.setPreferredSize(new Dimension(85, 28));
@@ -195,21 +196,21 @@ public class QuickSearchDialog extends JDialog {
             public void changedUpdate(DocumentEvent e) { filterList(); }
         });
 
-        // Phím điều hướng từ ô tìm kiếm xuống danh sách
+        // Điều hướng phím mũi tên Lên/Xuống từ ô tìm kiếm sang JList
         txtSearch.addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
                 if (e.getKeyCode() == KeyEvent.VK_DOWN) {
-                    int index = listFunctions.getSelectedIndex();
-                    if (index < listModel.getSize() - 1) {
-                        listFunctions.setSelectedIndex(index + 1);
-                        listFunctions.ensureIndexIsVisible(index + 1);
+                    int nextIdx = Math.min(listFunctions.getSelectedIndex() + 1, listModel.getSize() - 1);
+                    if (nextIdx >= 0) {
+                        listFunctions.setSelectedIndex(nextIdx);
+                        listFunctions.ensureIndexIsVisible(nextIdx);
                     }
                 } else if (e.getKeyCode() == KeyEvent.VK_UP) {
-                    int index = listFunctions.getSelectedIndex();
-                    if (index > 0) {
-                        listFunctions.setSelectedIndex(index - 1);
-                        listFunctions.ensureIndexIsVisible(index - 1);
+                    int prevIdx = Math.max(listFunctions.getSelectedIndex() - 1, 0);
+                    if (prevIdx < listModel.getSize()) {
+                        listFunctions.setSelectedIndex(prevIdx);
+                        listFunctions.ensureIndexIsVisible(prevIdx);
                     }
                 } else if (e.getKeyCode() == KeyEvent.VK_ENTER) {
                     executeSelection();
@@ -236,13 +237,14 @@ public class QuickSearchDialog extends JDialog {
             }
         });
 
-        // Phím ESC để đóng dialog
+        // Phím ESC đóng hộp thoại
         getRootPane().registerKeyboardAction(
                 e -> dispose(),
                 KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0),
                 JComponent.WHEN_IN_FOCUSED_WINDOW
         );
 
+        // Enter kích hoạt nút Mở
         getRootPane().setDefaultButton(btnOpen);
     }
 
@@ -281,8 +283,9 @@ public class QuickSearchDialog extends JDialog {
         @Override
         public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
             JLabel label = (JLabel) super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-            label.setBorder(new EmptyBorder(5, 8, 5, 8));
-            label.setText("  " + value.toString());
+            label.setBorder(new EmptyBorder(4, 6, 4, 6));
+            label.setIcon(IconHelper.getIcon("1282529873_objects.png", 14, 14));
+            label.setText(" " + value.toString());
 
             if (isSelected) {
                 label.setBackground(new Color(0, 120, 215));
