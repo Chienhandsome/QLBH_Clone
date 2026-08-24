@@ -1,6 +1,7 @@
 package kazuko.ex.ui.main;
 
 import kazuko.ex.model.system.SUser;
+import kazuko.ex.service.AuthService;
 import kazuko.ex.ui.auth.DatabaseConfigDialog;
 import kazuko.ex.ui.auth.DoiMatKhauDialog;
 import kazuko.ex.ui.auth.LoginForm;
@@ -75,7 +76,7 @@ public class MainFrame extends JFrame {
         JMenu mHeThong = new JMenu("HỆ THỐNG");
 
         // Submenu Cơ sở dữ liệu
-        JMenu mCSDL = new JMenu("Cơ sở dữ liệu");
+        JMenu mCSDL = new JMenu("Cơ sở dữ liệu...");
         JMenuItem miTaoMoi = new JMenuItem("Tạo mới");
         JMenuItem miSaoLuu = new JMenuItem("Sao lưu");
         JMenuItem miPhucHoi = new JMenuItem("Phục hồi");
@@ -83,9 +84,12 @@ public class MainFrame extends JFrame {
         mCSDL.add(miSaoLuu);
         mCSDL.add(miPhucHoi);
 
-        JMenuItem miDoiMK = new JMenuItem("Đổi mật khẩu");
-        JMenuItem miDangXuat = new JMenuItem("Đăng xuất");
-        JMenuItem miThoat = new JMenuItem("Thoát");
+        JMenuItem miDoiMK = new JMenuItem("Đổi mật khẩu đăng nhập");
+        JMenuItem miDangXuat = new JMenuItem("Đăng xuất khỏi hệ thống");
+        JMenuItem miThoat = new JMenuItem("Thoát khỏi hệ thống");
+
+        miDangXuat.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_L, InputEvent.CTRL_DOWN_MASK | InputEvent.SHIFT_DOWN_MASK));
+        miThoat.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Q, InputEvent.CTRL_DOWN_MASK));
 
         miDoiMK.addActionListener(e -> new DoiMatKhauDialog(this, currentUser).setVisible(true));
         miDangXuat.addActionListener(e -> onLogout());
@@ -270,8 +274,18 @@ public class MainFrame extends JFrame {
     }
 
     private void onLogout() {
-        this.dispose();
-        SwingUtilities.invokeLater(() -> new LoginForm().setVisible(true));
+        int confirm = JOptionPane.showConfirmDialog(
+                this,
+                "Bạn có chắc chắn muốn đăng xuất khỏi hệ thống không?",
+                "Xác nhận đăng xuất",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.QUESTION_MESSAGE
+        );
+        if (confirm == JOptionPane.YES_OPTION) {
+            AuthService.logout();
+            this.dispose();
+            SwingUtilities.invokeLater(() -> new LoginForm(true).setVisible(true));
+        }
     }
 
     private void onExit() {

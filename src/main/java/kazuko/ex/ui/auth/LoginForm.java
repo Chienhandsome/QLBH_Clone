@@ -3,6 +3,7 @@ package kazuko.ex.ui.auth;
 import kazuko.ex.config.DatabaseConnection;
 import kazuko.ex.model.system.SUser;
 import kazuko.ex.service.AuthService;
+import kazuko.ex.service.AuthService.AuthResult;
 import kazuko.ex.ui.main.MainFrame;
 import kazuko.ex.util.AppColors;
 
@@ -12,10 +13,14 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.border.MatteBorder;
 import java.awt.*;
 import java.awt.event.*;
-import java.io.File;
+import java.io.*;
 import java.net.URL;
+import java.util.List;
+import java.util.Properties;
 
 public class LoginForm extends JFrame {
+    private static final String PREFS_FILE = "user_prefs.properties";
+
     private JComboBox<String> cbUsername;
     private JPasswordField txtPassword;
     private JCheckBox chkRememberPass;
@@ -24,8 +29,14 @@ public class LoginForm extends JFrame {
     private final AuthService authService = new AuthService();
 
     public LoginForm() {
+        this(false);
+    }
+
+    public LoginForm(boolean skipAutoLogin) {
         initComponents();
         loadDatabaseName();
+        loadUserList();
+        loadSavedPreferences(skipAutoLogin);
     }
 
     private void initComponents() {
@@ -97,6 +108,7 @@ public class LoginForm extends JFrame {
                 DatabaseConfigDialog dialog = new DatabaseConfigDialog(LoginForm.this);
                 dialog.setVisible(true);
                 loadDatabaseName();
+                loadUserList();
             }
         });
 
@@ -194,14 +206,18 @@ public class LoginForm extends JFrame {
         btnCancel.addActionListener(e -> System.exit(0));
 
         // Nhấn Enter để đăng nhập
-        txtPassword.addKeyListener(new KeyAdapter() {
+        KeyAdapter enterListener = new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
                 if (e.getKeyCode() == KeyEvent.VK_ENTER) {
                     onLogin();
                 }
             }
-        });
+        };
+        txtPassword.addKeyListener(enterListener);
+        if (cbUsername.getEditor() != null && cbUsername.getEditor().getEditorComponent() != null) {
+            cbUsername.getEditor().getEditorComponent().addKeyListener(enterListener);
+        }
 
         btnGroup.add(btnLogin);
         btnGroup.add(btnCancel);
@@ -235,20 +251,86 @@ public class LoginForm extends JFrame {
         lblDbName.setText(dbName);
     }
 
+    private void loadUserList() {
+        try {
+            List<SUser> users = authService.getAllUsers();
+            if (users != null && !users.isEmpty()) {
+                cbUsername.removeAllItems();
+                for (SUser u : users) {
+                    if (u.getUsername() != null && !u.getUsername().trim().isEmpty()) {
+                        cbUsername.addItem(u.getUsername().trim());
+                    }
+                }
+            }
+        } catch (Exception ignored) {}
+    }
+
+    private void loadSavedPreferences(boolean skipAutoLogin) {
+        File file = new File(PREFS_FILE);
+        if (file.exists()) {
+            try (InputStream in = new FileInputStream(file)) {
+                Properties prop = new Properties();
+                prop.load(in);
+
+                String savedUser = prop.getProperty("user.last_username");
+                String remember = prop.getProperty("user.remember_pass", "true");
+                String autologin = prop.getProperty("user.auto_login", "false");
+                String savedPass = prop.getProperty("user.password", "");
+
+                if (savedUser != null && !savedUser.isEmpty()) {
+                    cbUsername.setSelectedItem(savedUser);
+                }
+
+                chkRememberPass.setSelected("true".equalsIgnoreCase(remember));
+                chkAutoLogin.setSelected("true".equalsIgnoreCase(autologin));
+
+                if (chkRememberPass.isSelected() && !savedPass.isEmpty()) {
+                    txtPassword.setText(savedPass);
+                }
+
+                if (!skipAutoLogin && chkAutoLogin.isSelected() && savedUser != null && !savedUser.isEmpty()) {
+                    SwingUtilities.invokeLater(this::onLogin);
+                }
+            } catch (Exception e) {
+                System.err.println("Lỗi nạp cấu hình đăng nhập: " + e.getMessage());
+            }
+        }
+    }
+
+    private void savePreferences(String username, String password) {
+        try (OutputStream out = new FileOutputStream(PREFS_FILE)) {
+            Properties prop = new Properties();
+            prop.setProperty("user.last_username", username);
+            prop.setProperty("user.remember_pass", String.valueOf(chkRememberPass.isSelected()));
+            prop.setProperty("user.auto_login", String.valueOf(chkAutoLogin.isSelected()));
+
+            if (chkRememberPass.isSelected()) {
+                prop.setProperty("user.password", password);
+            } else {
+                prop.setProperty("user.password", "");
+            }
+
+            prop.store(out, "User Login Preferences");
+        } catch (Exception e) {
+            System.err.println("Lỗi lưu cấu hình đăng nhập: " + e.getMessage());
+        }
+    }
+
     private void onLogin() {
         String username = cbUsername.getSelectedItem() != null ? cbUsername.getSelectedItem().toString().trim() : "";
         String password = new String(txtPassword.getPassword());
 
-        SUser user = authService.login(username, password);
-        if (user != null) {
+        AuthResult result = authService.authenticate(username, password);
+        if (result.isSuccess() && result.getUser() != null) {
+            savePreferences(username, password);
             this.dispose();
             SwingUtilities.invokeLater(() -> {
-                MainFrame mainFrame = new MainFrame(user);
+                MainFrame mainFrame = new MainFrame(result.getUser());
                 mainFrame.setVisible(true);
             });
         } else {
             JOptionPane.showMessageDialog(this,
-                    "Tên đăng nhập hoặc mật khẩu không chính xác!",
+                    result.getMessage(),
                     "Đăng nhập thất bại",
                     JOptionPane.ERROR_MESSAGE);
         }

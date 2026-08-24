@@ -12,6 +12,15 @@ import java.util.List;
 public class UserDAO extends BaseDAO {
 
     public SUser findByUsername(String username) {
+        try {
+            return findByUsernameChecked(username);
+        } catch (SQLException e) {
+            System.err.println("Lỗi tìm người dùng theo username: " + e.getMessage());
+            return null;
+        }
+    }
+
+    public SUser findByUsernameChecked(String username) throws SQLException {
         String sql = "SELECT ID, USERNAME, NAME, PASSWORD, EMAIL, ISADMIN, SGROUPUSERID FROM SUSER WHERE UPPER(TRIM(USERNAME)) = UPPER(?)";
         try (Connection conn = getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -21,8 +30,6 @@ public class UserDAO extends BaseDAO {
                     return mapResultSetToUser(rs);
                 }
             }
-        } catch (SQLException e) {
-            System.err.println("Lỗi tìm người dùng theo username: " + e.getMessage());
         }
         return null;
     }
