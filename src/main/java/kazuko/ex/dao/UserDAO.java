@@ -27,6 +27,19 @@ public class UserDAO extends BaseDAO {
         return null;
     }
 
+    public boolean updatePassword(String userId, String newPassword) {
+        String sql = "UPDATE SUSER SET PASSWORD = ? WHERE ID = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, newPassword);
+            ps.setString(2, userId);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("Lỗi cập nhật mật khẩu: " + e.getMessage());
+            return false;
+        }
+    }
+
     public List<SUser> getAll() {
         List<SUser> list = new ArrayList<>();
         String sql = "SELECT ID, USERNAME, NAME, PASSWORD, EMAIL, ISADMIN, SGROUPUSERID FROM SUSER ORDER BY NAME";

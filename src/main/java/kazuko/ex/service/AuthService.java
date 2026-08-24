@@ -25,6 +25,20 @@ public class AuthService {
         return null;
     }
 
+    public boolean changePassword(SUser user, String oldPassword, String newPassword) {
+        if (user == null) return false;
+        String currentPass = user.getPassword() != null ? user.getPassword().trim() : "";
+        String inputOld = oldPassword != null ? oldPassword.trim() : "";
+        if (!currentPass.isEmpty() && !currentPass.equals(inputOld)) {
+            return false;
+        }
+        boolean ok = userDAO.updatePassword(user.getId(), newPassword != null ? newPassword.trim() : "");
+        if (ok) {
+            user.setPassword(newPassword != null ? newPassword.trim() : "");
+        }
+        return ok;
+    }
+
     public static SUser getCurrentUser() {
         return currentUser;
     }

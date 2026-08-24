@@ -2,6 +2,7 @@ package kazuko.ex.ui.main;
 
 import kazuko.ex.model.system.SUser;
 import kazuko.ex.ui.auth.DatabaseConfigDialog;
+import kazuko.ex.ui.auth.DoiMatKhauDialog;
 import kazuko.ex.ui.auth.LoginForm;
 import kazuko.ex.ui.common.StatusPanel;
 import kazuko.ex.ui.danhmuc.NhanVienDialog;
@@ -86,6 +87,7 @@ public class MainFrame extends JFrame {
         JMenuItem miDangXuat = new JMenuItem("Đăng xuất");
         JMenuItem miThoat = new JMenuItem("Thoát");
 
+        miDoiMK.addActionListener(e -> new DoiMatKhauDialog(this, currentUser).setVisible(true));
         miDangXuat.addActionListener(e -> onLogout());
         miThoat.addActionListener(e -> onExit());
 
@@ -303,6 +305,9 @@ public class MainFrame extends JFrame {
             case "QUẢN LÝ XUẤT KHO":
             case "XUẤT KHO":
                 openTab("Quản lý xuất kho", new QuanLyXuatKhoPanel());
+                break;
+            case "ĐỔI MẬT KHẨU":
+                new DoiMatKhauDialog(this, currentUser).setVisible(true);
                 break;
             case "ĐĂNG XUẤT":
                 onLogout();
