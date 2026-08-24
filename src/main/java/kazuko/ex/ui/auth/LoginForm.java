@@ -40,7 +40,6 @@ public class LoginForm extends JFrame {
         JPanel topBannerPanel = new JPanel(new BorderLayout());
         topBannerPanel.setBackground(Color.WHITE);
         topBannerPanel.setBorder(new MatteBorder(0, 0, 1, 0, new Color(180, 200, 225)));
-
         URL bannerUrl = getClass().getResource("/banner.png");
         if (bannerUrl != null) {
             JLabel lblBanner = new JLabel(new ImageIcon(bannerUrl));
@@ -57,10 +56,10 @@ public class LoginForm extends JFrame {
         add(topBannerPanel, BorderLayout.NORTH);
 
         // 3. Khung thân chính (Màu nền xanh nhạt đặc trưng Office/Krypton)
-        Color bgBlue = new Color(202, 221, 243); // #CADDF3
+//        Color bgBlue = new Color(202, 221, 243); // #CADDF3
 
         JPanel centerPanel = new JPanel(new GridBagLayout());
-        centerPanel.setBackground(bgBlue);
+//        centerPanel.setBackground(bgBlue);
         centerPanel.setBorder(new EmptyBorder(12, 18, 10, 18));
 
         GridBagConstraints gbc = new GridBagConstraints();
@@ -173,7 +172,7 @@ public class LoginForm extends JFrame {
 
         // 4. Khung chân trang (Buttons)
         JPanel bottomPanel = new JPanel(new BorderLayout());
-        bottomPanel.setBackground(bgBlue);
+//        bottomPanel.setBackground(bgBlue);
         bottomPanel.setBorder(new CompoundBorder(
                 new MatteBorder(1, 0, 0, 0, new Color(175, 200, 230)),
                 new EmptyBorder(10, 20, 14, 20)
