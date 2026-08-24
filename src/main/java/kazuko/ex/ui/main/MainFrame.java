@@ -11,6 +11,7 @@ import kazuko.ex.util.AppColors;
 import javax.swing.*;
 import javax.swing.border.MatteBorder;
 import java.awt.*;
+import java.net.URL;
 
 public class MainFrame extends JFrame {
     private final SUser currentUser;
@@ -22,7 +23,8 @@ public class MainFrame extends JFrame {
     }
 
     private void initComponents() {
-        setTitle("Thanh Tools - Hệ Thống Quản Lý Bán Hàng & Kho (v5.0 Clone)");
+        setTitle("PHẦN MỀM QUẢN LÝ BÁN HÀNG");
+        setWindowIcon();
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(1280, 760);
         setLocationRelativeTo(null);
@@ -234,5 +236,12 @@ public class MainFrame extends JFrame {
     private void onLogout() {
         this.dispose();
         SwingUtilities.invokeLater(() -> new LoginForm().setVisible(true));
+    }
+
+    private void setWindowIcon() {
+        URL logoUrl = getClass().getResource("/logo.png");
+        if (logoUrl != null) {
+            setIconImage(new ImageIcon(logoUrl).getImage());
+        }
     }
 }
