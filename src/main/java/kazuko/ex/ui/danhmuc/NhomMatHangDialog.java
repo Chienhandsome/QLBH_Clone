@@ -132,7 +132,7 @@ public class NhomMatHangDialog extends JDialog {
         lblAnh.setBounds(325, 12, 30, 24);
         formPanel.add(lblAnh);
 
-        String[] iconOptions = {"asterisk-yellow.png", "Folder.png", "Tree.png", "Barcode.png"};
+        String[] iconOptions = {"1282529873_objects.png", "asterisk-yellow.png", "Folder.png", "Tree.png", "Barcode.png"};
         cbIcon = new JComboBox<>(iconOptions);
         cbIcon.setBounds(358, 12, 70, 24);
         cbIcon.setRenderer(new DefaultListCellRenderer() {

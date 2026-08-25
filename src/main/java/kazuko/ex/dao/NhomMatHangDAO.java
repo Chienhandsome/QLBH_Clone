@@ -363,7 +363,7 @@ public class NhomMatHangDAO extends BaseDAO {
         } else if (nh.isSeparator()) {
             nh.setIconName(null);
         } else {
-            nh.setIconName("Folder.png");
+            nh.setIconName("1282529873_objects.png");
         }
         return nh;
     }

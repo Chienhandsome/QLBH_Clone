@@ -8,7 +8,7 @@ public class NhomMatHang {
     private String parentId;
     private boolean folder = false;
     private boolean separator = false;
-    private String iconName = "Folder.png";
+    private String iconName = "1282529873_objects.png";
     private int sortOrder = 0;
     private int status = 1; // 1: Active, -1: In trash
     private Integer itemType = 0; // 0: Item, 1: Folder, 2: Separator

@@ -121,7 +121,7 @@ public class NhomMatHangTrashDialog extends JDialog {
                             label.setIcon(IconHelper.getIcon("Folder.png", 16, 16));
                         } else {
                             label.setText(nh.getName());
-                            String icon = nh.getIconName() != null ? nh.getIconName() : "Folder.png";
+                            String icon = nh.getIconName() != null ? nh.getIconName() : "1282529873_objects.png";
                             label.setIcon(IconHelper.getIcon(icon, 16, 16));
                         }
                     }
