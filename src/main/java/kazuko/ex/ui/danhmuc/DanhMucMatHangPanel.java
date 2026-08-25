@@ -153,6 +153,27 @@ public class DanhMucMatHangPanel extends JPanel {
             }
         });
 
+        // Double click vào nhóm mặt hàng để mở hộp thoại chỉnh sửa
+        treeNhomHang.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() == 2) {
+                    TreePath path = treeNhomHang.getPathForLocation(e.getX(), e.getY());
+                    if (path != null) {
+                        DefaultMutableTreeNode node = (DefaultMutableTreeNode) path.getLastPathComponent();
+                        if (node.getUserObject() instanceof NhomMatHang) {
+                            NhomMatHang nh = (NhomMatHang) node.getUserObject();
+                            NhomMatHangDialog dialog = new NhomMatHangDialog(DanhMucMatHangPanel.this, nh, () -> {
+                                loadNhomTree();
+                                loadTableData(currentSelectedNhom, txtSearch.getText().trim());
+                            });
+                            dialog.setVisible(true);
+                        }
+                    }
+                }
+            }
+        });
+
         JScrollPane treeScroll = new JScrollPane(treeNhomHang);
         treeScroll.setBorder(null);
         leftPanel.add(treeScroll, BorderLayout.CENTER);

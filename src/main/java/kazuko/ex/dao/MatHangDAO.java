@@ -126,6 +126,33 @@ public class MatHangDAO extends BaseDAO {
         return tryInsertToDb(mh);
     }
 
+    public String generateNextProductCode(String prefix) {
+        if (prefix == null || prefix.trim().isEmpty()) {
+            prefix = "MH";
+        }
+        prefix = prefix.trim();
+        String prefixUpper = prefix.toUpperCase();
+        int maxIndex = 0;
+
+        for (MatHang mh : getAll()) {
+            if (mh.getCode() != null) {
+                String code = mh.getCode().trim();
+                if (code.toUpperCase().startsWith(prefixUpper)) {
+                    String suffix = code.substring(prefix.length()).trim();
+                    try {
+                        int num = Integer.parseInt(suffix);
+                        if (num > maxIndex) {
+                            maxIndex = num;
+                        }
+                    } catch (NumberFormatException ignored) {}
+                }
+            }
+        }
+
+        int nextIndex = maxIndex + 1;
+        return prefix + String.format("%03d", nextIndex);
+    }
+
     public boolean update(MatHang mh) {
         if (mh == null || mh.getId() == null) return false;
         mh.setTimeModified(new Timestamp(System.currentTimeMillis()));

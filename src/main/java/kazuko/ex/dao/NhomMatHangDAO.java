@@ -15,7 +15,7 @@ public class NhomMatHangDAO extends BaseDAO {
     static {
         // Mock dữ liệu nhóm hàng phong phú chuẩn theo giao diện
         String[][] defaultData = {
-                {"N1", "AST", "Âm sắc thuốc", "asterisk-yellow.png"},
+                {"N1", "am", "ẫm sắc thuốc", "asterisk-yellow.png"},
                 {"N2", "ANO", "Anova", "asterisk-yellow.png"},
                 {"N3", "AC", "ANY COOK", "asterisk-yellow.png"},
                 {"N4", "BAI", "Bài", "Folder.png"},
@@ -60,13 +60,37 @@ public class NhomMatHangDAO extends BaseDAO {
         };
 
         for (String[] row : defaultData) {
-            MEMORY_CATEGORIES.add(new NhomMatHang(row[0], row[1], row[2], row[3]));
+            NhomMatHang nh = new NhomMatHang(row[0], row[1], row[2], row[3]);
+            if ("N1".equals(row[0])) {
+                nh.setKhongChoPhepGiamGia(true);
+            }
+            MEMORY_CATEGORIES.add(nh);
         }
+    }
+
+    private static String getEffectiveUserId() {
+        if (AuthService.getCurrentUser() != null && AuthService.getCurrentUser().getId() != null && !AuthService.getCurrentUser().getId().trim().isEmpty()) {
+            return AuthService.getCurrentUser().getId().trim();
+        }
+        return "4f1466a0-0756-4ba9-afa8-053b96ca7569";
     }
 
     public List<NhomMatHang> getAll() {
         List<NhomMatHang> dbList = tryLoadFromDb();
         if (dbList != null && !dbList.isEmpty()) {
+            // Đồng bộ thêm các nhóm trong MEMORY_CATEGORIES nếu chưa có trong DB
+            for (NhomMatHang memNh : MEMORY_CATEGORIES) {
+                boolean found = false;
+                for (NhomMatHang dbNh : dbList) {
+                    if (memNh.getId().equals(dbNh.getId()) || (memNh.getName() != null && memNh.getName().equalsIgnoreCase(dbNh.getName()))) {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    dbList.add(memNh);
+                }
+            }
             return dbList;
         }
         return new ArrayList<>(MEMORY_CATEGORIES);
@@ -85,28 +109,44 @@ public class NhomMatHangDAO extends BaseDAO {
         if (nh.getId() == null || nh.getId().trim().isEmpty()) {
             nh.setId(UUID.randomUUID().toString());
         }
-        MEMORY_CATEGORIES.add(nh);
-        return tryInsertToDb(nh);
+        if (nh.getCode() == null || nh.getCode().trim().isEmpty()) {
+            nh.setCode(nh.getName() != null && nh.getName().length() >= 2 ? nh.getName().substring(0, 2).toUpperCase() : "NH");
+        }
+
+        // Cập nhật bộ nhớ cache
+        boolean exists = false;
+        for (int i = 0; i < MEMORY_CATEGORIES.size(); i++) {
+            if (nh.getId().equals(MEMORY_CATEGORIES.get(i).getId())) {
+                MEMORY_CATEGORIES.set(i, nh);
+                exists = true;
+                break;
+            }
+        }
+        if (!exists) {
+            MEMORY_CATEGORIES.add(0, nh);
+        }
+
+        tryInsertToDb(nh);
+        return true;
     }
 
     public boolean update(NhomMatHang nh) {
         if (nh == null || nh.getId() == null) return false;
-        boolean memFound = false;
         for (int i = 0; i < MEMORY_CATEGORIES.size(); i++) {
             if (nh.getId().equals(MEMORY_CATEGORIES.get(i).getId())) {
                 MEMORY_CATEGORIES.set(i, nh);
-                memFound = true;
                 break;
             }
         }
-        boolean dbOk = tryUpdateToDb(nh);
-        return dbOk || memFound;
+        tryUpdateToDb(nh);
+        return true;
     }
 
     public boolean delete(String id) {
         if (id == null) return false;
         MEMORY_CATEGORIES.removeIf(n -> id.equals(n.getId()));
-        return tryDeleteFromDb(id);
+        tryDeleteFromDb(id);
+        return true;
     }
 
     private List<NhomMatHang> tryLoadFromDb() {
@@ -131,16 +171,44 @@ public class NhomMatHangDAO extends BaseDAO {
     }
 
     private boolean tryInsertToDb(NhomMatHang nh) {
-        String sql = "INSERT INTO DNHOMMATHANG (ID, CODE, NAME, NOTE) VALUES (?, ?, ?, ?)";
+        // Chiến lược 1: Thử insert với đầy đủ các cột chuẩn Firebird (STATUS, USERCREATEDID, TIMECREATED)
+        String sqlFull = "INSERT INTO DNHOMMATHANG (ID, CODE, NAME, NOTE, STATUS, USERCREATEDID, TIMECREATED) VALUES (?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+             PreparedStatement ps = conn.prepareStatement(sqlFull)) {
             ps.setString(1, nh.getId());
-            ps.setString(2, nh.getCode() != null ? nh.getCode() : "NH" + (System.currentTimeMillis() % 1000));
-            ps.setString(3, nh.getName() != null ? nh.getName() : "Nhóm mới");
+            ps.setString(2, nh.getCode());
+            ps.setString(3, nh.getName());
             ps.setString(4, nh.getGhiChu() != null ? nh.getGhiChu() : "");
+            ps.setInt(5, 30);
+            ps.setString(6, getEffectiveUserId());
+            ps.setTimestamp(7, new Timestamp(System.currentTimeMillis()));
             return ps.executeUpdate() > 0;
-        } catch (Exception e) {
-            return false;
+        } catch (Exception e1) {
+            // Chiến lược 2: Thử insert với STATUS
+            String sqlStatus = "INSERT INTO DNHOMMATHANG (ID, CODE, NAME, NOTE, STATUS) VALUES (?, ?, ?, ?, ?)";
+            try (Connection conn = getConnection();
+                 PreparedStatement ps = conn.prepareStatement(sqlStatus)) {
+                ps.setString(1, nh.getId());
+                ps.setString(2, nh.getCode());
+                ps.setString(3, nh.getName());
+                ps.setString(4, nh.getGhiChu() != null ? nh.getGhiChu() : "");
+                ps.setInt(5, 30);
+                return ps.executeUpdate() > 0;
+            } catch (Exception e2) {
+                // Chiến lược 3: Thử insert cơ bản
+                String sqlBasic = "INSERT INTO DNHOMMATHANG (ID, CODE, NAME, NOTE) VALUES (?, ?, ?, ?)";
+                try (Connection conn = getConnection();
+                     PreparedStatement ps = conn.prepareStatement(sqlBasic)) {
+                    ps.setString(1, nh.getId());
+                    ps.setString(2, nh.getCode());
+                    ps.setString(3, nh.getName());
+                    ps.setString(4, nh.getGhiChu() != null ? nh.getGhiChu() : "");
+                    return ps.executeUpdate() > 0;
+                } catch (Exception e3) {
+                    System.err.println("Lỗi insert DNHOMMATHANG vào CSDL: " + e3.getMessage());
+                    return false;
+                }
+            }
         }
     }
 
@@ -150,10 +218,11 @@ public class NhomMatHangDAO extends BaseDAO {
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, nh.getCode());
             ps.setString(2, nh.getName());
-            ps.setString(3, nh.getGhiChu());
+            ps.setString(3, nh.getGhiChu() != null ? nh.getGhiChu() : "");
             ps.setString(4, nh.getId());
             return ps.executeUpdate() > 0;
         } catch (Exception e) {
+            System.err.println("Lỗi update DNHOMMATHANG vào CSDL: " + e.getMessage());
             return false;
         }
     }

@@ -218,6 +218,28 @@ public class MatHangEditDialog extends JDialog {
             cbDonViTinh.setSelectedItem(selectedDvt);
         }
 
+        // Event khi đổi Nhóm hàng -> Tự gen mã theo quy tắc và áp dụng quy định giảm giá
+        cbNhomHang.addActionListener(e -> {
+            NhomMatHang nh = (NhomMatHang) cbNhomHang.getSelectedItem();
+            if (nh != null) {
+                if (currentItem.getId() == null) {
+                    String prefix = nh.getCode() != null && !nh.getCode().trim().isEmpty() ? nh.getCode().trim() : "MH";
+                    txtCode.setText(matHangDAO.generateNextProductCode(prefix));
+                }
+                if (nh.isKhongChoPhepGiamGia()) {
+                    txtGiamGiaPt.setText("0");
+                    txtGiamGiaPt.setEnabled(false);
+                    txtGiamGiaTien.setText("0");
+                    txtGiamGiaTien.setEnabled(false);
+                    txtGiamGiaPt.setToolTipText("Nhóm này không cho phép giảm giá khi bán hàng");
+                } else {
+                    txtGiamGiaPt.setEnabled(true);
+                    txtGiamGiaTien.setEnabled(true);
+                    txtGiamGiaPt.setToolTipText(null);
+                }
+            }
+        });
+
         // Load fields
         if (currentItem.getId() != null) {
             txtCode.setText(currentItem.getCode());
@@ -230,7 +252,9 @@ public class MatHangEditDialog extends JDialog {
             chkKhongInCheBien.setSelected(currentItem.isKhongInCheBien());
             chkBanNhanh.setSelected(currentItem.isBanNhanh());
         } else {
-            txtCode.setText("MH" + (System.currentTimeMillis() % 10000));
+            NhomMatHang nh = (NhomMatHang) cbNhomHang.getSelectedItem();
+            String prefix = nh != null && nh.getCode() != null && !nh.getCode().trim().isEmpty() ? nh.getCode().trim() : "MH";
+            txtCode.setText(matHangDAO.generateNextProductCode(prefix));
         }
     }
 

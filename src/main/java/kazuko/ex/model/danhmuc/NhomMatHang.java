@@ -9,6 +9,7 @@ public class NhomMatHang {
     private String iconName = "Folder.png";
     private int sortOrder = 0;
     private int status = 1;
+    private boolean khongChoPhepGiamGia = false;
 
     public NhomMatHang() {}
 
@@ -48,6 +49,9 @@ public class NhomMatHang {
 
     public int getStatus() { return status; }
     public void setStatus(int status) { this.status = status; }
+
+    public boolean isKhongChoPhepGiamGia() { return khongChoPhepGiamGia; }
+    public void setKhongChoPhepGiamGia(boolean khongChoPhepGiamGia) { this.khongChoPhepGiamGia = khongChoPhepGiamGia; }
 
     @Override
     public String toString() {
