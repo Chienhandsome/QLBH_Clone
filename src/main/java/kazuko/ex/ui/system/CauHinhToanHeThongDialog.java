@@ -7,7 +7,6 @@ import kazuko.ex.util.IconHelper;
 import javax.print.PrintService;
 import javax.print.PrintServiceLookup;
 import javax.swing.*;
-import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.MatteBorder;
 import javax.swing.event.DocumentEvent;
@@ -50,6 +49,57 @@ public class CauHinhToanHeThongDialog extends JDialog {
 
     // Tab 3: Số phiếu (Non-editable JTextFields)
     private final Map<String, JTextField> voucherFields = new LinkedHashMap<>();
+
+    // Tab 4: Bán hàng
+    private JCheckBox chkChoPhepTrungTenKhachHang;
+    private JCheckBox chkChoPhepNhapGiamGia;
+    private JTextField txtMacDinhGiamGiaPt;
+    private JCheckBox chkBanHangDungDauDocMaVach;
+    private JTextField txtSoLanIn;
+    private JCheckBox chkHienThiCuaSoNhapSoLuong;
+    private JCheckBox chkChoPhepThayDoiNgay;
+    private JCheckBox chkCoPhiVanChuyen;
+    private JCheckBox chkCoThueSuat;
+    private JTextField txtMacDinhThueSuat;
+    private JCheckBox chkBatBuocNhapKhachHang;
+    private JCheckBox chkBatBuocNhapNVBH;
+    private JCheckBox chkChoPhepInTamTinh;
+    private JCheckBox chkBatBuocDoiTraTheoDon;
+    private JTextField txtSoNgayChoPhepDoiTra;
+    private JCheckBox chkHienThiAnhSanPham;
+    private JCheckBox chkKichHoatKhuyenMaiTuDong;
+    private JCheckBox chkHienThiMatHangKhuyenMai;
+    private JCheckBox chkCoGiaoHang;
+    private JCheckBox chkSuDungGiaTheoKhach;
+    private JCheckBox chkSuDungGiamGiaMacDinh;
+    private JTextField txtLamTronTien;
+
+    // Tab 5: Thanh toán
+    private JCheckBox chkCoThanhToanVoucher;
+    private JCheckBox chkChoPhepKhachNo;
+    private JCheckBox chkLuaChonVoucherTuDanhSach;
+    private JCheckBox chkSuDungTheTraTruoc;
+    private JCheckBox chkSuDungDiemTichLuyDeThanhToan;
+    private JTextField txtQuyDoi1DiemSangTien;
+    private JCheckBox chkCoThanhToanThe;
+    private JCheckBox chkCoThanhToanChuyenKhoan;
+
+    // Tab 6: Tích điểm
+    private JTextField txtDoanhSoTuongUng1Diem;
+    private JComboBox<String> cbCachTinhDiem;
+    private JCheckBox chkTuDongNangCapThanhVien;
+    private JCheckBox chkHienThiDiemKhachHang;
+    private JCheckBox chkKhongTichDiemNeuCoKhuyenMai;
+
+    // Tab 7: Kho hàng
+    private JCheckBox chkChoPhepNhapMotMatHangNhieuLan;
+    private JCheckBox chkBatBuocChonNhanVienNhapKho;
+    private JCheckBox chkBatBuocChonNhaCungCapNhapKho;
+    private JCheckBox chkSuDung2DonViTinh;
+    private JCheckBox chkTuDongTinhGiaVon;
+    private JCheckBox chkNhapKhoBangDauDocMaVach;
+    private JComboBox<String> cbGiaSuDungKhiChuyenXuatKho;
+    private JCheckBox chkSuDungChucNangSanXuat;
 
     public CauHinhToanHeThongDialog(Frame parent) {
         super(parent, "CẤU HÌNH TOÀN HỆ THỐNG", true);
@@ -97,10 +147,16 @@ public class CauHinhToanHeThongDialog extends JDialog {
         pnlCardContainer.add(createTabThongTinChinh(), "Thông tin chung");
         pnlCardContainer.add(createTabMayIn(), "Máy in");
         pnlCardContainer.add(createTabSoPhieu(), "Số phiếu");
+        pnlCardContainer.add(createTabBanHang(), "Bán hàng");
+        pnlCardContainer.add(createTabThanhToan(), "Thanh toán");
+        pnlCardContainer.add(createTabTichDiem(), "Tích điểm");
+        pnlCardContainer.add(createTabKhoHang(), "Kho hàng");
 
         // Placeholder cards for other categories
         for (MenuItem item : allMenuItems) {
-            if (!"Thông tin chung".equals(item.name) && !"Máy in".equals(item.name) && !"Số phiếu".equals(item.name)) {
+            if (!"Thông tin chung".equals(item.name) && !"Máy in".equals(item.name) && !"Số phiếu".equals(item.name)
+                    && !"Bán hàng".equals(item.name) && !"Thanh toán".equals(item.name) && !"Tích điểm".equals(item.name)
+                    && !"Kho hàng".equals(item.name)) {
                 pnlCardContainer.add(createPlaceholderCard(item.name), item.name);
             }
         }
@@ -430,6 +486,7 @@ public class CauHinhToanHeThongDialog extends JDialog {
             startY += rowGap;
         }
 
+        panel.setPreferredSize(new Dimension(580, startY + 20));
         JScrollPane scrollPane = new JScrollPane(panel);
         scrollPane.setBorder(null);
         JPanel container = new JPanel(new BorderLayout());
@@ -437,9 +494,6 @@ public class CauHinhToanHeThongDialog extends JDialog {
         return container;
     }
 
-    /**
-     * Nhận diện và lấy danh sách tất cả các máy in đang kết nối với thiết bị (OS)
-     */
     private String[] getAvailablePrinters() {
         List<String> list = new ArrayList<>();
         list.add(""); // Lựa chọn rỗng / mặc định đầu tiên
@@ -456,7 +510,6 @@ public class CauHinhToanHeThongDialog extends JDialog {
             }
         } catch (Exception ignored) {}
 
-        // Fallback options phổ biến nếu hệ thống chưa nhận diện được
         if (list.size() <= 1) {
             list.add("Microsoft Print to PDF");
             list.add("Fax");
@@ -491,8 +544,8 @@ public class CauHinhToanHeThongDialog extends JDialog {
 
             JTextField txt = new JTextField();
             txt.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-            txt.setEditable(false); // Không thể edit trực tiếp
-            txt.setBackground(new Color(250, 252, 255)); // Nền sáng chỉ đọc
+            txt.setEditable(false);
+            txt.setBackground(new Color(250, 252, 255));
             txt.setBounds(190, startY, 340, fieldH);
             panel.add(txt);
             voucherFields.put(type, txt);
@@ -508,6 +561,7 @@ public class CauHinhToanHeThongDialog extends JDialog {
             startY += rowGap;
         }
 
+        panel.setPreferredSize(new Dimension(580, startY + 20));
         JScrollPane scrollPane = new JScrollPane(panel);
         scrollPane.setBorder(null);
         JPanel container = new JPanel(new BorderLayout());
@@ -521,6 +575,459 @@ public class CauHinhToanHeThongDialog extends JDialog {
             targetField.setText(newPattern);
         });
         dialog.setVisible(true);
+    }
+
+    // ==================== TAB 4: BÁN HÀNG ====================
+    private JPanel createTabBanHang() {
+        JPanel panel = new JPanel(null);
+        panel.setBackground(Color.WHITE);
+
+        int startY = 12;
+        int fieldH = 22;
+        int rowGap = 26;
+
+        // 1. Cho phép trùng tên khách hàng (Default: true)
+        chkChoPhepTrungTenKhachHang = new JCheckBox("Cho phép trùng tên khách hàng", true);
+        chkChoPhepTrungTenKhachHang.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        chkChoPhepTrungTenKhachHang.setOpaque(false);
+        chkChoPhepTrungTenKhachHang.setBounds(20, startY, 280, fieldH);
+        panel.add(chkChoPhepTrungTenKhachHang);
+
+        // 2. Cho phép nhập giảm giá & Mặc định giảm giá (%) (Default: true / 0)
+        startY += rowGap;
+        chkChoPhepNhapGiamGia = new JCheckBox("Cho phép nhập giảm giá", true);
+        chkChoPhepNhapGiamGia.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        chkChoPhepNhapGiamGia.setOpaque(false);
+        chkChoPhepNhapGiamGia.setBounds(20, startY, 230, fieldH);
+        panel.add(chkChoPhepNhapGiamGia);
+
+        JLabel lblGiamGiaPt = new JLabel("Mặc định giảm giá (%)");
+        lblGiamGiaPt.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblGiamGiaPt.setBounds(290, startY, 140, fieldH);
+        panel.add(lblGiamGiaPt);
+
+        txtMacDinhGiamGiaPt = new JTextField("0");
+        txtMacDinhGiamGiaPt.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        txtMacDinhGiamGiaPt.setBounds(440, startY, 65, fieldH);
+        panel.add(txtMacDinhGiamGiaPt);
+
+        // 3. Bán hàng dùng đầu đọc mã vạch (Default: true)
+        startY += rowGap;
+        chkBanHangDungDauDocMaVach = new JCheckBox("Bán hàng dùng đầu đọc mã vạch", true);
+        chkBanHangDungDauDocMaVach.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        chkBanHangDungDauDocMaVach.setOpaque(false);
+        chkBanHangDungDauDocMaVach.setBounds(20, startY, 280, fieldH);
+        panel.add(chkBanHangDungDauDocMaVach);
+
+        // 4. Số lần in (Default: 1)
+        startY += rowGap;
+        JLabel lblSoLanIn = new JLabel("Số lần in");
+        lblSoLanIn.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblSoLanIn.setBounds(25, startY, 100, fieldH);
+        panel.add(lblSoLanIn);
+
+        txtSoLanIn = new JTextField("1");
+        txtSoLanIn.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        txtSoLanIn.setBounds(150, startY, 65, fieldH);
+        panel.add(txtSoLanIn);
+
+        // 5. Hiển thị cửa sổ nhập số lượng khi quét mã vạch (Default: false)
+        startY += rowGap;
+        chkHienThiCuaSoNhapSoLuong = new JCheckBox("Hiển thị cửa sổ nhập số lượng khi quét mã vạch", false);
+        chkHienThiCuaSoNhapSoLuong.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        chkHienThiCuaSoNhapSoLuong.setOpaque(false);
+        chkHienThiCuaSoNhapSoLuong.setBounds(20, startY, 340, fieldH);
+        panel.add(chkHienThiCuaSoNhapSoLuong);
+
+        // 6. Cho phép thay đổi ngày trên hóa đơn (Default: true)
+        startY += rowGap;
+        chkChoPhepThayDoiNgay = new JCheckBox("Cho phép thay đổi ngày trên hóa đơn", true);
+        chkChoPhepThayDoiNgay.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        chkChoPhepThayDoiNgay.setOpaque(false);
+        chkChoPhepThayDoiNgay.setBounds(20, startY, 340, fieldH);
+        panel.add(chkChoPhepThayDoiNgay);
+
+        // 7. Có phí vận chuyển & Có thuế suất (Default: false / false)
+        startY += rowGap;
+        chkCoPhiVanChuyen = new JCheckBox("Có phí vận chuyển", false);
+        chkCoPhiVanChuyen.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        chkCoPhiVanChuyen.setOpaque(false);
+        chkCoPhiVanChuyen.setBounds(20, startY, 200, fieldH);
+        panel.add(chkCoPhiVanChuyen);
+
+        chkCoThueSuat = new JCheckBox("Có thuế suất", false);
+        chkCoThueSuat.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        chkCoThueSuat.setOpaque(false);
+        chkCoThueSuat.setBounds(290, startY, 150, fieldH);
+        panel.add(chkCoThueSuat);
+
+        // 8. Mặc định thuế suất (Default: 0)
+        startY += rowGap;
+        JLabel lblThueSuat = new JLabel("Mặc định thuế suất");
+        lblThueSuat.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblThueSuat.setBounds(25, startY, 120, fieldH);
+        panel.add(lblThueSuat);
+
+        txtMacDinhThueSuat = new JTextField("0");
+        txtMacDinhThueSuat.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        txtMacDinhThueSuat.setBounds(150, startY, 65, fieldH);
+        panel.add(txtMacDinhThueSuat);
+
+        // 9. Bắt buộc nhập khách hàng (Default: false)
+        startY += rowGap;
+        chkBatBuocNhapKhachHang = new JCheckBox("Bắt buộc nhập khách hàng", false);
+        chkBatBuocNhapKhachHang.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        chkBatBuocNhapKhachHang.setOpaque(false);
+        chkBatBuocNhapKhachHang.setBounds(20, startY, 300, fieldH);
+        panel.add(chkBatBuocNhapKhachHang);
+
+        // 10. Bắt buộc nhập nhân viên bán hàng (Default: false)
+        startY += rowGap;
+        chkBatBuocNhapNVBH = new JCheckBox("Bắt buộc nhập nhân viên bán hàng", false);
+        chkBatBuocNhapNVBH.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        chkBatBuocNhapNVBH.setOpaque(false);
+        chkBatBuocNhapNVBH.setBounds(20, startY, 300, fieldH);
+        panel.add(chkBatBuocNhapNVBH);
+
+        // 11. Cho phép in tạm tính (Default: true)
+        startY += rowGap;
+        chkChoPhepInTamTinh = new JCheckBox("Cho phép in tạm tính", true);
+        chkChoPhepInTamTinh.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        chkChoPhepInTamTinh.setOpaque(false);
+        chkChoPhepInTamTinh.setBounds(20, startY, 300, fieldH);
+        panel.add(chkChoPhepInTamTinh);
+
+        // 12. Bắt buộc đổi trả hàng theo đơn & Số ngày cho phép đổi trả (Default: true / 7)
+        startY += rowGap;
+        chkBatBuocDoiTraTheoDon = new JCheckBox("Bắt buộc đổi trả hàng theo đơn", true);
+        chkBatBuocDoiTraTheoDon.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        chkBatBuocDoiTraTheoDon.setOpaque(false);
+        chkBatBuocDoiTraTheoDon.setBounds(20, startY, 240, fieldH);
+        panel.add(chkBatBuocDoiTraTheoDon);
+
+        JLabel lblSoNgayDoiTra = new JLabel("Số ngày cho phép đổi trả");
+        lblSoNgayDoiTra.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblSoNgayDoiTra.setBounds(290, startY, 150, fieldH);
+        panel.add(lblSoNgayDoiTra);
+
+        txtSoNgayChoPhepDoiTra = new JTextField("7");
+        txtSoNgayChoPhepDoiTra.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        txtSoNgayChoPhepDoiTra.setBounds(440, startY, 65, fieldH);
+        panel.add(txtSoNgayChoPhepDoiTra);
+
+        // 13. Hiển thị ảnh sản phẩm trong giao diện bán hàng (Default: true)
+        startY += rowGap;
+        chkHienThiAnhSanPham = new JCheckBox("Hiển thị ảnh sản phẩm trong giao diện bán hàng", true);
+        chkHienThiAnhSanPham.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        chkHienThiAnhSanPham.setOpaque(false);
+        chkHienThiAnhSanPham.setBounds(20, startY, 350, fieldH);
+        panel.add(chkHienThiAnhSanPham);
+
+        // 14. Kích hoạt khuyến mại tự động (Default: true)
+        startY += rowGap;
+        chkKichHoatKhuyenMaiTuDong = new JCheckBox("Kích hoạt khuyến mại tự động", true);
+        chkKichHoatKhuyenMaiTuDong.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        chkKichHoatKhuyenMaiTuDong.setOpaque(false);
+        chkKichHoatKhuyenMaiTuDong.setBounds(20, startY, 350, fieldH);
+        panel.add(chkKichHoatKhuyenMaiTuDong);
+
+        // 15. Hiển thị mặt hàng khuyến mại khi thanh toán (Default: true)
+        startY += rowGap;
+        chkHienThiMatHangKhuyenMai = new JCheckBox("Hiển thị mặt hàng khuyến mại khi thanh toán", true);
+        chkHienThiMatHangKhuyenMai.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        chkHienThiMatHangKhuyenMai.setOpaque(false);
+        chkHienThiMatHangKhuyenMai.setBounds(20, startY, 350, fieldH);
+        panel.add(chkHienThiMatHangKhuyenMai);
+
+        // 16. Có giao hàng (Default: false)
+        startY += rowGap;
+        chkCoGiaoHang = new JCheckBox("Có giao hàng", false);
+        chkCoGiaoHang.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        chkCoGiaoHang.setOpaque(false);
+        chkCoGiaoHang.setBounds(20, startY, 300, fieldH);
+        panel.add(chkCoGiaoHang);
+
+        // 17. Sử dụng giá theo khách (Default: false)
+        startY += rowGap;
+        chkSuDungGiaTheoKhach = new JCheckBox("Sử dụng giá theo khách", false);
+        chkSuDungGiaTheoKhach.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        chkSuDungGiaTheoKhach.setOpaque(false);
+        chkSuDungGiaTheoKhach.setBounds(20, startY, 300, fieldH);
+        panel.add(chkSuDungGiaTheoKhach);
+
+        // 18. Sử dụng giảm giá mặc định theo mặt hàng (Default: true)
+        startY += rowGap;
+        chkSuDungGiamGiaMacDinh = new JCheckBox("Sử dụng giảm giá mặc định theo mặt hàng", true);
+        chkSuDungGiamGiaMacDinh.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        chkSuDungGiamGiaMacDinh.setOpaque(false);
+        chkSuDungGiamGiaMacDinh.setBounds(20, startY, 350, fieldH);
+        panel.add(chkSuDungGiamGiaMacDinh);
+
+        // 19. Làm tròn tiền & (0: không làm tròn) (Default: "1,000")
+        startY += rowGap;
+        JLabel lblLamTron = new JLabel("Làm tròn tiền");
+        lblLamTron.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblLamTron.setBounds(25, startY, 120, fieldH);
+        panel.add(lblLamTron);
+
+        txtLamTronTien = new JTextField("1,000");
+        txtLamTronTien.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        txtLamTronTien.setBounds(150, startY, 65, fieldH);
+        panel.add(txtLamTronTien);
+
+        startY += 20;
+        JLabel lblSubNote = new JLabel("(0: không làm tròn)");
+        lblSubNote.setFont(new Font("Segoe UI", Font.ITALIC, 11));
+        lblSubNote.setForeground(new Color(100, 100, 100));
+        lblSubNote.setBounds(150, startY, 150, 18);
+        panel.add(lblSubNote);
+
+        panel.setPreferredSize(new Dimension(580, startY + 40));
+        JScrollPane scrollPane = new JScrollPane(panel);
+        scrollPane.setBorder(null);
+        JPanel container = new JPanel(new BorderLayout());
+        container.add(scrollPane, BorderLayout.CENTER);
+        return container;
+    }
+
+    // ==================== TAB 5: THANH TOÁN (Ảnh 1) ====================
+    private JPanel createTabThanhToan() {
+        JPanel panel = new JPanel(null);
+        panel.setBackground(Color.WHITE);
+
+        int startY = 15;
+        int fieldH = 22;
+        int rowGap = 28;
+
+        // 1. Có thanh toán voucher (Default: false)
+        chkCoThanhToanVoucher = new JCheckBox("Có thanh toán voucher", false);
+        chkCoThanhToanVoucher.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        chkCoThanhToanVoucher.setOpaque(false);
+        chkCoThanhToanVoucher.setBounds(20, startY, 280, fieldH);
+        panel.add(chkCoThanhToanVoucher);
+
+        // 2. Cho phép khách nợ (Default: false)
+        startY += rowGap;
+        chkChoPhepKhachNo = new JCheckBox("Cho phép khách nợ", false);
+        chkChoPhepKhachNo.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        chkChoPhepKhachNo.setOpaque(false);
+        chkChoPhepKhachNo.setBounds(20, startY, 280, fieldH);
+        panel.add(chkChoPhepKhachNo);
+
+        // 3. Lựa chọn voucher từ danh sách (Default: false)
+        startY += rowGap;
+        chkLuaChonVoucherTuDanhSach = new JCheckBox("Lựa chọn voucher từ danh sách", false);
+        chkLuaChonVoucherTuDanhSach.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        chkLuaChonVoucherTuDanhSach.setOpaque(false);
+        chkLuaChonVoucherTuDanhSach.setBounds(20, startY, 280, fieldH);
+        panel.add(chkLuaChonVoucherTuDanhSach);
+
+        // 4. Sử dụng thẻ trả trước (Default: false)
+        startY += rowGap;
+        chkSuDungTheTraTruoc = new JCheckBox("Sử dụng thẻ trả trước", false);
+        chkSuDungTheTraTruoc.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        chkSuDungTheTraTruoc.setOpaque(false);
+        chkSuDungTheTraTruoc.setBounds(20, startY, 280, fieldH);
+        panel.add(chkSuDungTheTraTruoc);
+
+        // 5. Sử dụng điểm tích lũy để thanh toán (Default: false)
+        startY += rowGap;
+        chkSuDungDiemTichLuyDeThanhToan = new JCheckBox("Sử dụng điểm tích lũy để thanh toán", false);
+        chkSuDungDiemTichLuyDeThanhToan.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        chkSuDungDiemTichLuyDeThanhToan.setOpaque(false);
+        chkSuDungDiemTichLuyDeThanhToan.setBounds(20, startY, 300, fieldH);
+        panel.add(chkSuDungDiemTichLuyDeThanhToan);
+
+        // 6. Quy đổi 1 điểm sang tiền (Default: "1,000")
+        startY += rowGap;
+        JLabel lblQuyDoiDiem = new JLabel("Quy đổi 1 điểm sang tiền");
+        lblQuyDoiDiem.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblQuyDoiDiem.setBounds(25, startY, 160, fieldH);
+        panel.add(lblQuyDoiDiem);
+
+        txtQuyDoi1DiemSangTien = new JTextField("1,000");
+        txtQuyDoi1DiemSangTien.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        txtQuyDoi1DiemSangTien.setBounds(190, startY, 75, fieldH);
+        panel.add(txtQuyDoi1DiemSangTien);
+
+        // 7. Có thanh toán thẻ (Default: true)
+        startY += rowGap;
+        chkCoThanhToanThe = new JCheckBox("Có thanh toán thẻ", true);
+        chkCoThanhToanThe.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        chkCoThanhToanThe.setOpaque(false);
+        chkCoThanhToanThe.setBounds(20, startY, 280, fieldH);
+        panel.add(chkCoThanhToanThe);
+
+        // 8. Có thanh toán chuyển khoản (Default: false)
+        startY += rowGap;
+        chkCoThanhToanChuyenKhoan = new JCheckBox("Có thanh toán chuyển khoản", false);
+        chkCoThanhToanChuyenKhoan.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        chkCoThanhToanChuyenKhoan.setOpaque(false);
+        chkCoThanhToanChuyenKhoan.setBounds(20, startY, 280, fieldH);
+        panel.add(chkCoThanhToanChuyenKhoan);
+
+        panel.setPreferredSize(new Dimension(580, startY + 40));
+        JScrollPane scrollPane = new JScrollPane(panel);
+        scrollPane.setBorder(null);
+        JPanel container = new JPanel(new BorderLayout());
+        container.add(scrollPane, BorderLayout.CENTER);
+        return container;
+    }
+
+    // ==================== TAB 6: TÍCH ĐIỂM (Ảnh 2 & 3) ====================
+    private JPanel createTabTichDiem() {
+        JPanel panel = new JPanel(null);
+        panel.setBackground(Color.WHITE);
+
+        int startY = 15;
+        int fieldH = 24;
+        int rowGap = 30;
+
+        // 1. Doanh số tương ứng với 1 điểm (Default: "20,000")
+        JLabel lblDoanhSo = new JLabel("Doanh số tương ứng với 1 điểm");
+        lblDoanhSo.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblDoanhSo.setBounds(25, startY, 190, fieldH);
+        panel.add(lblDoanhSo);
+
+        txtDoanhSoTuongUng1Diem = new JTextField("20,000");
+        txtDoanhSoTuongUng1Diem.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        txtDoanhSoTuongUng1Diem.setBounds(225, startY, 80, fieldH);
+        panel.add(txtDoanhSoTuongUng1Diem);
+
+        // 2. Cách tính điểm (Dropdown: Điểm được tính trên từng hóa đơn / tổng doanh số)
+        startY += rowGap;
+        JLabel lblCachTinh = new JLabel("Cách tính điểm");
+        lblCachTinh.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblCachTinh.setBounds(25, startY, 190, fieldH);
+        panel.add(lblCachTinh);
+
+        cbCachTinhDiem = new JComboBox<>(new String[]{
+                "Điểm được tính trên từng hóa đơn",
+                "Điểm được tính trên tổng doanh số"
+        });
+        cbCachTinhDiem.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        cbCachTinhDiem.setBounds(225, startY, 320, fieldH);
+        panel.add(cbCachTinhDiem);
+
+        // 3. Tự động nâng cấp thành viên khi đạt hạn mức (Default: true)
+        startY += rowGap + 4;
+        chkTuDongNangCapThanhVien = new JCheckBox("Tự động nâng cấp thành viên khi đạt hạn mức", true);
+        chkTuDongNangCapThanhVien.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        chkTuDongNangCapThanhVien.setOpaque(false);
+        chkTuDongNangCapThanhVien.setBounds(225, startY, 350, fieldH);
+        panel.add(chkTuDongNangCapThanhVien);
+
+        // 4. Hiển thị điểm của khách hàng trên hóa đơn (Default: true)
+        startY += rowGap;
+        chkHienThiDiemKhachHang = new JCheckBox("Hiển thị điểm của khách hàng trên hóa đơn", true);
+        chkHienThiDiemKhachHang.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        chkHienThiDiemKhachHang.setOpaque(false);
+        chkHienThiDiemKhachHang.setBounds(225, startY, 350, fieldH);
+        panel.add(chkHienThiDiemKhachHang);
+
+        // 5. Không tích điểm nếu có khuyến mại (Default: false)
+        startY += rowGap;
+        chkKhongTichDiemNeuCoKhuyenMai = new JCheckBox("Không tích điểm nếu có khuyến mại", false);
+        chkKhongTichDiemNeuCoKhuyenMai.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        chkKhongTichDiemNeuCoKhuyenMai.setOpaque(false);
+        chkKhongTichDiemNeuCoKhuyenMai.setBounds(225, startY, 350, fieldH);
+        panel.add(chkKhongTichDiemNeuCoKhuyenMai);
+
+        panel.setPreferredSize(new Dimension(580, startY + 40));
+        JScrollPane scrollPane = new JScrollPane(panel);
+        scrollPane.setBorder(null);
+        JPanel container = new JPanel(new BorderLayout());
+        container.add(scrollPane, BorderLayout.CENTER);
+        return container;
+    }
+
+    // ==================== TAB 7: KHO HÀNG (Ảnh 1 & 2) ====================
+    private JPanel createTabKhoHang() {
+        JPanel panel = new JPanel(null);
+        panel.setBackground(Color.WHITE);
+
+        int startY = 15;
+        int fieldH = 22;
+        int rowGap = 28;
+
+        // 1. Cho phép nhập một mặt hàng nhiều lần trong phiếu (Default: false)
+        chkChoPhepNhapMotMatHangNhieuLan = new JCheckBox("Cho phép nhập một mặt hàng nhiều lần trong phiếu", false);
+        chkChoPhepNhapMotMatHangNhieuLan.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        chkChoPhepNhapMotMatHangNhieuLan.setOpaque(false);
+        chkChoPhepNhapMotMatHangNhieuLan.setBounds(20, startY, 380, fieldH);
+        panel.add(chkChoPhepNhapMotMatHangNhieuLan);
+
+        // 2. Bắt buộc chọn nhân viên trong nhập kho (Default: false)
+        startY += rowGap;
+        chkBatBuocChonNhanVienNhapKho = new JCheckBox("Bắt buộc chọn nhân viên trong nhập kho", false);
+        chkBatBuocChonNhanVienNhapKho.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        chkBatBuocChonNhanVienNhapKho.setOpaque(false);
+        chkBatBuocChonNhanVienNhapKho.setBounds(20, startY, 380, fieldH);
+        panel.add(chkBatBuocChonNhanVienNhapKho);
+
+        // 3. Bắt buộc chọn nhà cung cấp trong nhập kho (Default: false)
+        startY += rowGap;
+        chkBatBuocChonNhaCungCapNhapKho = new JCheckBox("Bắt buộc chọn nhà cung cấp trong nhập kho", false);
+        chkBatBuocChonNhaCungCapNhapKho.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        chkBatBuocChonNhaCungCapNhapKho.setOpaque(false);
+        chkBatBuocChonNhaCungCapNhapKho.setBounds(20, startY, 380, fieldH);
+        panel.add(chkBatBuocChonNhaCungCapNhapKho);
+
+        // 4. Sử dụng 2 đơn vị tính (Default: false)
+        startY += rowGap;
+        chkSuDung2DonViTinh = new JCheckBox("Sử dụng 2 đơn vị tính", false);
+        chkSuDung2DonViTinh.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        chkSuDung2DonViTinh.setOpaque(false);
+        chkSuDung2DonViTinh.setBounds(20, startY, 380, fieldH);
+        panel.add(chkSuDung2DonViTinh);
+
+        // 5. Tự động tính giá vốn (Default: true)
+        startY += rowGap;
+        chkTuDongTinhGiaVon = new JCheckBox("Tự động tính giá vốn", true);
+        chkTuDongTinhGiaVon.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        chkTuDongTinhGiaVon.setOpaque(false);
+        chkTuDongTinhGiaVon.setBounds(20, startY, 380, fieldH);
+        panel.add(chkTuDongTinhGiaVon);
+
+        // 6. Nhập kho bằng đầu đọc mã vạch (Default: true)
+        startY += rowGap;
+        chkNhapKhoBangDauDocMaVach = new JCheckBox("Nhập kho bằng đầu đọc mã vạch", true);
+        chkNhapKhoBangDauDocMaVach.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        chkNhapKhoBangDauDocMaVach.setOpaque(false);
+        chkNhapKhoBangDauDocMaVach.setBounds(20, startY, 380, fieldH);
+        panel.add(chkNhapKhoBangDauDocMaVach);
+
+        // 7. Giá sử dụng khi chuyển xuất kho (Dropdown: Giá bán / Giá nhập / Giá vốn - Default: Giá vốn)
+        startY += rowGap;
+        JLabel lblGiaXuat = new JLabel("Giá sử dụng khi chuyển xuất kho");
+        lblGiaXuat.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblGiaXuat.setBounds(25, startY, 200, fieldH);
+        panel.add(lblGiaXuat);
+
+        cbGiaSuDungKhiChuyenXuatKho = new JComboBox<>(new String[]{
+                "Giá bán",
+                "Giá nhập",
+                "Giá vốn"
+        });
+        cbGiaSuDungKhiChuyenXuatKho.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        cbGiaSuDungKhiChuyenXuatKho.setSelectedItem("Giá vốn");
+        cbGiaSuDungKhiChuyenXuatKho.setBounds(230, startY, 300, fieldH);
+        panel.add(cbGiaSuDungKhiChuyenXuatKho);
+
+        // 8. Sử dụng chức năng sản xuất (Default: false)
+        startY += rowGap;
+        chkSuDungChucNangSanXuat = new JCheckBox("Sử dụng chức năng sản xuất", false);
+        chkSuDungChucNangSanXuat.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        chkSuDungChucNangSanXuat.setOpaque(false);
+        chkSuDungChucNangSanXuat.setBounds(20, startY, 380, fieldH);
+        panel.add(chkSuDungChucNangSanXuat);
+
+        panel.setPreferredSize(new Dimension(580, startY + 40));
+        JScrollPane scrollPane = new JScrollPane(panel);
+        scrollPane.setBorder(null);
+        JPanel container = new JPanel(new BorderLayout());
+        container.add(scrollPane, BorderLayout.CENTER);
+        return container;
     }
 
     private JPanel createPlaceholderCard(String title) {
@@ -583,6 +1090,57 @@ public class CauHinhToanHeThongDialog extends JDialog {
             String val = currentConfig.getVoucherRules().get(entry.getKey());
             entry.getValue().setText(val != null ? val : "");
         }
+
+        // Tab 4: Bán hàng
+        chkChoPhepTrungTenKhachHang.setSelected(currentConfig.isChoPhepTrungTenKhachHang());
+        chkChoPhepNhapGiamGia.setSelected(currentConfig.isChoPhepNhapGiamGia());
+        txtMacDinhGiamGiaPt.setText(String.valueOf(currentConfig.getMacDinhGiamGiaPt()));
+        chkBanHangDungDauDocMaVach.setSelected(currentConfig.isBanHangDungDauDocMaVach());
+        txtSoLanIn.setText(String.valueOf(currentConfig.getSoLanIn()));
+        chkHienThiCuaSoNhapSoLuong.setSelected(currentConfig.isHienThiCuaSoNhapSoLuongKhiQuet());
+        chkChoPhepThayDoiNgay.setSelected(currentConfig.isChoPhepThayDoiNgayTrenHoaDon());
+        chkCoPhiVanChuyen.setSelected(currentConfig.isCoPhiVanChuyen());
+        chkCoThueSuat.setSelected(currentConfig.isCoThueSuat());
+        txtMacDinhThueSuat.setText(String.valueOf(currentConfig.getMacDinhThueSuat()));
+        chkBatBuocNhapKhachHang.setSelected(currentConfig.isBatBuocNhapKhachHang());
+        chkBatBuocNhapNVBH.setSelected(currentConfig.isBatBuocNhapNhanVienBanHang());
+        chkChoPhepInTamTinh.setSelected(currentConfig.isChoPhepInTamTinh());
+        chkBatBuocDoiTraTheoDon.setSelected(currentConfig.isBatBuocDoiTraHangTheoDon());
+        txtSoNgayChoPhepDoiTra.setText(String.valueOf(currentConfig.getSoNgayChoPhepDoiTra()));
+        chkHienThiAnhSanPham.setSelected(currentConfig.isHienThiAnhSanPhamTrongGiaoDien());
+        chkKichHoatKhuyenMaiTuDong.setSelected(currentConfig.isKichHoatKhuyenMaiTuDong());
+        chkHienThiMatHangKhuyenMai.setSelected(currentConfig.isHienThiMatHangKhuyenMaiKhiThanhToan());
+        chkCoGiaoHang.setSelected(currentConfig.isCoGiaoHang());
+        chkSuDungGiaTheoKhach.setSelected(currentConfig.isSuDungGiaTheoKhach());
+        chkSuDungGiamGiaMacDinh.setSelected(currentConfig.isSuDungGiamGiaMacDinhTheoMatHang());
+        txtLamTronTien.setText(currentConfig.getLamTronTien());
+
+        // Tab 5: Thanh toán
+        chkCoThanhToanVoucher.setSelected(currentConfig.isCoThanhToanVoucher());
+        chkChoPhepKhachNo.setSelected(currentConfig.isChoPhepKhachNo());
+        chkLuaChonVoucherTuDanhSach.setSelected(currentConfig.isLuaChonVoucherTuDanhSach());
+        chkSuDungTheTraTruoc.setSelected(currentConfig.isSuDungTheTraTruoc());
+        chkSuDungDiemTichLuyDeThanhToan.setSelected(currentConfig.isSuDungDiemTichLuyDeThanhToan());
+        txtQuyDoi1DiemSangTien.setText(currentConfig.getQuyDoi1DiemSangTien());
+        chkCoThanhToanThe.setSelected(currentConfig.isCoThanhToanThe());
+        chkCoThanhToanChuyenKhoan.setSelected(currentConfig.isCoThanhToanChuyenKhoan());
+
+        // Tab 6: Tích điểm
+        txtDoanhSoTuongUng1Diem.setText(currentConfig.getDoanhSoTuongUng1Diem());
+        cbCachTinhDiem.setSelectedItem(currentConfig.getCachTinhDiem());
+        chkTuDongNangCapThanhVien.setSelected(currentConfig.isTuDongNangCapThanhVien());
+        chkHienThiDiemKhachHang.setSelected(currentConfig.isHienThiDiemKhachHangTrenHoaDon());
+        chkKhongTichDiemNeuCoKhuyenMai.setSelected(currentConfig.isKhongTichDiemNeuCoKhuyenMai());
+
+        // Tab 7: Kho hàng
+        chkChoPhepNhapMotMatHangNhieuLan.setSelected(currentConfig.isChoPhepNhapMotMatHangNhieuLan());
+        chkBatBuocChonNhanVienNhapKho.setSelected(currentConfig.isBatBuocChonNhanVienNhapKho());
+        chkBatBuocChonNhaCungCapNhapKho.setSelected(currentConfig.isBatBuocChonNhaCungCapNhapKho());
+        chkSuDung2DonViTinh.setSelected(currentConfig.isSuDung2DonViTinh());
+        chkTuDongTinhGiaVon.setSelected(currentConfig.isTuDongTinhGiaVon());
+        chkNhapKhoBangDauDocMaVach.setSelected(currentConfig.isNhapKhoBangDauDocMaVach());
+        cbGiaSuDungKhiChuyenXuatKho.setSelectedItem(currentConfig.getGiaSuDungKhiChuyenXuatKho());
+        chkSuDungChucNangSanXuat.setSelected(currentConfig.isSuDungChucNangSanXuat());
     }
 
     private void onSave() {
@@ -608,6 +1166,57 @@ public class CauHinhToanHeThongDialog extends JDialog {
         for (var entry : voucherFields.entrySet()) {
             currentConfig.getVoucherRules().put(entry.getKey(), entry.getValue().getText().trim());
         }
+
+        // Tab 4: Bán hàng
+        currentConfig.setChoPhepTrungTenKhachHang(chkChoPhepTrungTenKhachHang.isSelected());
+        currentConfig.setChoPhepNhapGiamGia(chkChoPhepNhapGiamGia.isSelected());
+        try { currentConfig.setMacDinhGiamGiaPt(Integer.parseInt(txtMacDinhGiamGiaPt.getText().trim())); } catch (Exception ignored) {}
+        currentConfig.setBanHangDungDauDocMaVach(chkBanHangDungDauDocMaVach.isSelected());
+        try { currentConfig.setSoLanIn(Integer.parseInt(txtSoLanIn.getText().trim())); } catch (Exception ignored) {}
+        currentConfig.setHienThiCuaSoNhapSoLuongKhiQuet(chkHienThiCuaSoNhapSoLuong.isSelected());
+        currentConfig.setChoPhepThayDoiNgayTrenHoaDon(chkChoPhepThayDoiNgay.isSelected());
+        currentConfig.setCoPhiVanChuyen(chkCoPhiVanChuyen.isSelected());
+        currentConfig.setCoThueSuat(chkCoThueSuat.isSelected());
+        try { currentConfig.setMacDinhThueSuat(Integer.parseInt(txtMacDinhThueSuat.getText().trim())); } catch (Exception ignored) {}
+        currentConfig.setBatBuocNhapKhachHang(chkBatBuocNhapKhachHang.isSelected());
+        currentConfig.setBatBuocNhapNhanVienBanHang(chkBatBuocNhapNVBH.isSelected());
+        currentConfig.setChoPhepInTamTinh(chkChoPhepInTamTinh.isSelected());
+        currentConfig.setBatBuocDoiTraHangTheoDon(chkBatBuocDoiTraTheoDon.isSelected());
+        try { currentConfig.setSoNgayChoPhepDoiTra(Integer.parseInt(txtSoNgayChoPhepDoiTra.getText().trim())); } catch (Exception ignored) {}
+        currentConfig.setHienThiAnhSanPhamTrongGiaoDien(chkHienThiAnhSanPham.isSelected());
+        currentConfig.setKichHoatKhuyenMaiTuDong(chkKichHoatKhuyenMaiTuDong.isSelected());
+        currentConfig.setHienThiMatHangKhuyenMaiKhiThanhToan(chkHienThiMatHangKhuyenMai.isSelected());
+        currentConfig.setCoGiaoHang(chkCoGiaoHang.isSelected());
+        currentConfig.setSuDungGiaTheoKhach(chkSuDungGiaTheoKhach.isSelected());
+        currentConfig.setSuDungGiamGiaMacDinhTheoMatHang(chkSuDungGiamGiaMacDinh.isSelected());
+        currentConfig.setLamTronTien(txtLamTronTien.getText().trim());
+
+        // Tab 5: Thanh toán
+        currentConfig.setCoThanhToanVoucher(chkCoThanhToanVoucher.isSelected());
+        currentConfig.setChoPhepKhachNo(chkChoPhepKhachNo.isSelected());
+        currentConfig.setLuaChonVoucherTuDanhSach(chkLuaChonVoucherTuDanhSach.isSelected());
+        currentConfig.setSuDungTheTraTruoc(chkSuDungTheTraTruoc.isSelected());
+        currentConfig.setSuDungDiemTichLuyDeThanhToan(chkSuDungDiemTichLuyDeThanhToan.isSelected());
+        currentConfig.setQuyDoi1DiemSangTien(txtQuyDoi1DiemSangTien.getText().trim());
+        currentConfig.setCoThanhToanThe(chkCoThanhToanThe.isSelected());
+        currentConfig.setCoThanhToanChuyenKhoan(chkCoThanhToanChuyenKhoan.isSelected());
+
+        // Tab 6: Tích điểm
+        currentConfig.setDoanhSoTuongUng1Diem(txtDoanhSoTuongUng1Diem.getText().trim());
+        currentConfig.setCachTinhDiem(cbCachTinhDiem.getSelectedItem() != null ? cbCachTinhDiem.getSelectedItem().toString() : "Điểm được tính trên từng hóa đơn");
+        currentConfig.setTuDongNangCapThanhVien(chkTuDongNangCapThanhVien.isSelected());
+        currentConfig.setHienThiDiemKhachHangTrenHoaDon(chkHienThiDiemKhachHang.isSelected());
+        currentConfig.setKhongTichDiemNeuCoKhuyenMai(chkKhongTichDiemNeuCoKhuyenMai.isSelected());
+
+        // Tab 7: Kho hàng
+        currentConfig.setChoPhepNhapMotMatHangNhieuLan(chkChoPhepNhapMotMatHangNhieuLan.isSelected());
+        currentConfig.setBatBuocChonNhanVienNhapKho(chkBatBuocChonNhanVienNhapKho.isSelected());
+        currentConfig.setBatBuocChonNhaCungCapNhapKho(chkBatBuocChonNhaCungCapNhapKho.isSelected());
+        currentConfig.setSuDung2DonViTinh(chkSuDung2DonViTinh.isSelected());
+        currentConfig.setTuDongTinhGiaVon(chkTuDongTinhGiaVon.isSelected());
+        currentConfig.setNhapKhoBangDauDocMaVach(chkNhapKhoBangDauDocMaVach.isSelected());
+        currentConfig.setGiaSuDungKhiChuyenXuatKho(cbGiaSuDungKhiChuyenXuatKho.getSelectedItem() != null ? cbGiaSuDungKhiChuyenXuatKho.getSelectedItem().toString() : "Giá vốn");
+        currentConfig.setSuDungChucNangSanXuat(chkSuDungChucNangSanXuat.isSelected());
 
         boolean ok = configDAO.saveConfig(currentConfig);
         if (ok) {
