@@ -3,9 +3,11 @@ package kazuko.ex.ui.danhmuc;
 import kazuko.ex.dao.DonViTinhDAO;
 import kazuko.ex.dao.MatHangDAO;
 import kazuko.ex.dao.NhomMatHangDAO;
+import kazuko.ex.dao.SystemConfigDAO;
 import kazuko.ex.model.danhmuc.DonViTinh;
 import kazuko.ex.model.danhmuc.MatHang;
 import kazuko.ex.model.danhmuc.NhomMatHang;
+import kazuko.ex.model.system.SystemConfig;
 import kazuko.ex.util.IconHelper;
 
 import javax.swing.*;
@@ -28,33 +30,49 @@ public class MatHangEditDialog extends JDialog {
     private final MatHangDAO matHangDAO = new MatHangDAO();
     private final NhomMatHangDAO nhomMatHangDAO = new NhomMatHangDAO();
     private final DonViTinhDAO donViTinhDAO = new DonViTinhDAO();
+    private final SystemConfigDAO systemConfigDAO = new SystemConfigDAO();
+    private SystemConfig systemConfig;
 
     private MatHang currentItem;
     private final Runnable onSaveCallback;
 
     // Tab 1: Thông tin chính
+    private JLabel lblMaSanCo;
     private JTextField txtMaSanCo;
+    private JLabel lblMaTuSinh;
     private JTextField txtCode;
+    private JLabel lblTenHang;
     private JTextField txtName;
     private JComboBox<DonViTinh> cbDonViTinh;
     private JComboBox<DonViTinh> cbDonViTinhChan;
     private JTextField txtGiaBan;
     private JTextField txtQuyDoi;
+    private JLabel lblDonGia2;
     private JTextField txtGiaBan2;
+    private JLabel lblGiaBanChan;
     private JTextField txtGiaBanChan;
+    private JLabel lblGiaBan3;
     private JTextField txtGiaBan3;
+    private JLabel lblGiaBan4;
     private JTextField txtGiaBan4;
+    private JLabel lblGiaNhap;
     private JTextField txtGiaNhap;
+    private JLabel lblGiaUSD;
+    private JTextField txtGiaUSD;
     private JComboBox<NhomMatHang> cbNhomHang;
     private JTextField txtGiamGiaPt;
     private JTextField txtGiamGiaTien;
+    private JLabel lblKichThuoc;
+    private JTextField txtKichThuoc;
     private JTextField txtNote;
 
     // Tab 2: Thông tin khác
     private JComboBox<String> cbDoiTacKyGui;
     private JTextField txtTonToiThieu;
     private JTextField txtTonToiDa;
+    private JLabel lblHangSX;
     private JComboBox<String> cbHangSanXuat;
+    private JLabel lblBaoHanh;
     private JTextField txtBaoHanh;
     private JTextField txtHoaHong;
     private JCheckBox chkKhoiLuongTheoCan;
@@ -87,10 +105,15 @@ public class MatHangEditDialog extends JDialog {
     }
 
     private void initUI() {
+        this.systemConfig = systemConfigDAO.loadConfig();
+        if (this.systemConfig == null) {
+            this.systemConfig = new SystemConfig();
+        }
+
         setLayout(new BorderLayout());
         setResizable(true);
-        setPreferredSize(new Dimension(860, 580));
-        setMinimumSize(new Dimension(800, 520));
+        setPreferredSize(new Dimension(860, 600));
+        setMinimumSize(new Dimension(800, 540));
 
         // 1. Top Title Header
         JPanel pnlHeader = createHeaderPanel();
@@ -105,7 +128,9 @@ public class MatHangEditDialog extends JDialog {
         tabbedPane.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         tabbedPane.addTab("Thông tin chính", createTabThongTinChinh());
         tabbedPane.addTab("Thông tin khác", createTabThongTinKhac());
-        tabbedPane.addTab("Định lượng", createTabDinhLuong());
+        if (systemConfig.isMatHangCoVatTuDinhLuong()) {
+            tabbedPane.addTab("Định lượng", createTabDinhLuong());
+        }
 
         pnlCenter.add(tabbedPane, BorderLayout.CENTER);
 
@@ -216,7 +241,7 @@ public class MatHangEditDialog extends JDialog {
     }
 
     // ==================== TAB 1: THÔNG TIN CHÍNH ====================
-    private JPanel createTabThongTinChinh() {
+    private JComponent createTabThongTinChinh() {
         JPanel panel = new JPanel(null);
         panel.setBackground(Color.WHITE);
 
@@ -226,21 +251,22 @@ public class MatHangEditDialog extends JDialog {
         int startY = 12;
 
         // Row 1: Mã sẵn có
-        JLabel lblMaSanCo = new JLabel("Mã sẵn có");
+        lblMaSanCo = new JLabel("Mã sẵn có");
         lblMaSanCo.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         lblMaSanCo.setBounds(15, startY, lblW, fieldH);
         panel.add(lblMaSanCo);
 
         txtMaSanCo = new JTextField();
         txtMaSanCo.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        txtMaSanCo.setEditable(false);
-        txtMaSanCo.setBackground(new Color(245, 248, 252));
+        boolean allowEditMaSanCo = systemConfig.isSuDungMaSanCo();
+        txtMaSanCo.setEditable(allowEditMaSanCo);
+        txtMaSanCo.setBackground(allowEditMaSanCo ? Color.WHITE : new Color(245, 248, 252));
         txtMaSanCo.setBounds(120, startY, 160, fieldH);
         panel.add(txtMaSanCo);
 
-        // Row 2: Mã tự sinh
+        // Row 2: Mã tự sinh (Mã hàng)
         startY += rowGap;
-        JLabel lblMaTuSinh = new JLabel("Mã tự sinh");
+        lblMaTuSinh = new JLabel("Mã tự sinh");
         lblMaTuSinh.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         lblMaTuSinh.setBounds(15, startY, lblW, fieldH);
         panel.add(lblMaTuSinh);
@@ -250,9 +276,15 @@ public class MatHangEditDialog extends JDialog {
         txtCode.setBounds(120, startY, 160, fieldH);
         panel.add(txtCode);
 
+        if (!systemConfig.isSuDungMaHang()) {
+            lblMaTuSinh.setEnabled(false);
+            txtCode.setEditable(false);
+            txtCode.setBackground(new Color(245, 248, 252));
+        }
+
         // Row 3: Tên hàng
         startY += rowGap;
-        JLabel lblTenHang = new JLabel("Tên hàng");
+        lblTenHang = new JLabel("Tên hàng");
         lblTenHang.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         lblTenHang.setBounds(15, startY, lblW, fieldH);
         panel.add(lblTenHang);
@@ -309,7 +341,9 @@ public class MatHangEditDialog extends JDialog {
 
         // Row 6: Đơn giá 2 & Giá bán chẵn
         startY += rowGap;
-        JLabel lblDonGia2 = new JLabel("Đơn giá 2");
+        String dg2Title = (systemConfig.getDienGiaiGia2() != null && !systemConfig.getDienGiaiGia2().trim().isEmpty())
+                ? systemConfig.getDienGiaiGia2().trim() : "Đơn giá 2";
+        lblDonGia2 = new JLabel(dg2Title);
         lblDonGia2.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         lblDonGia2.setBounds(15, startY, lblW, fieldH);
         panel.add(lblDonGia2);
@@ -319,7 +353,7 @@ public class MatHangEditDialog extends JDialog {
         txtGiaBan2.setBounds(120, startY, 95, fieldH);
         panel.add(txtGiaBan2);
 
-        JLabel lblGiaBanChan = new JLabel("Giá bán chẵn");
+        lblGiaBanChan = new JLabel("Giá bán chẵn");
         lblGiaBanChan.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         lblGiaBanChan.setBounds(230, startY, 100, fieldH);
         panel.add(lblGiaBanChan);
@@ -329,41 +363,77 @@ public class MatHangEditDialog extends JDialog {
         txtGiaBanChan.setBounds(335, startY, 125, fieldH);
         panel.add(txtGiaBanChan);
 
+        if (!systemConfig.isSuDungGia2()) {
+            lblDonGia2.setVisible(false);
+            txtGiaBan2.setVisible(false);
+        }
+
         // Row 7: Giá bán 3
+        if (systemConfig.isSuDungGia3()) {
+            startY += rowGap;
+            String dg3Title = (systemConfig.getDienGiaiGia3() != null && !systemConfig.getDienGiaiGia3().trim().isEmpty())
+                    ? systemConfig.getDienGiaiGia3().trim() : "Giá bán 3";
+            lblGiaBan3 = new JLabel(dg3Title);
+            lblGiaBan3.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+            lblGiaBan3.setBounds(15, startY, lblW, fieldH);
+            panel.add(lblGiaBan3);
+
+            txtGiaBan3 = new JTextField("0");
+            txtGiaBan3.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+            txtGiaBan3.setBounds(120, startY, 95, fieldH);
+            panel.add(txtGiaBan3);
+        } else {
+            lblGiaBan3 = new JLabel("Giá bán 3");
+            txtGiaBan3 = new JTextField("0");
+        }
+
+        // Row 8: Giá bán 4
+        if (systemConfig.isSuDungGia4()) {
+            startY += rowGap;
+            String dg4Title = (systemConfig.getDienGiaiGia4() != null && !systemConfig.getDienGiaiGia4().trim().isEmpty())
+                    ? systemConfig.getDienGiaiGia4().trim() : "Giá bán 4";
+            lblGiaBan4 = new JLabel(dg4Title);
+            lblGiaBan4.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+            lblGiaBan4.setBounds(15, startY, lblW, fieldH);
+            panel.add(lblGiaBan4);
+
+            txtGiaBan4 = new JTextField("0");
+            txtGiaBan4.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+            txtGiaBan4.setBounds(120, startY, 95, fieldH);
+            panel.add(txtGiaBan4);
+        } else {
+            lblGiaBan4 = new JLabel("Giá bán 4");
+            txtGiaBan4 = new JTextField("0");
+        }
+
+        // Row: Giá nhập & Giá USD
         startY += rowGap;
-        JLabel lblGiaBan3 = new JLabel("Giá bán 3");
-        lblGiaBan3.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        lblGiaBan3.setBounds(15, startY, lblW, fieldH);
-        panel.add(lblGiaBan3);
-
-        txtGiaBan3 = new JTextField("0");
-        txtGiaBan3.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        txtGiaBan3.setBounds(120, startY, 95, fieldH);
-        panel.add(txtGiaBan3);
-
-        // Row 8: Giá bán 4 & Giá nhập
-        startY += rowGap;
-        JLabel lblGiaBan4 = new JLabel("Giá bán 4");
-        lblGiaBan4.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        lblGiaBan4.setBounds(15, startY, lblW, fieldH);
-        panel.add(lblGiaBan4);
-
-        txtGiaBan4 = new JTextField("0");
-        txtGiaBan4.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        txtGiaBan4.setBounds(120, startY, 95, fieldH);
-        panel.add(txtGiaBan4);
-
-        JLabel lblGiaNhap = new JLabel("Giá nhập");
+        lblGiaNhap = new JLabel("Giá nhập");
         lblGiaNhap.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        lblGiaNhap.setBounds(230, startY, 100, fieldH);
+        lblGiaNhap.setBounds(15, startY, lblW, fieldH);
         panel.add(lblGiaNhap);
 
         txtGiaNhap = new JTextField("0");
         txtGiaNhap.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        txtGiaNhap.setBounds(335, startY, 125, fieldH);
+        txtGiaNhap.setBounds(120, startY, 95, fieldH);
         panel.add(txtGiaNhap);
 
-        // Row 9: Nhóm mặt hàng
+        if (systemConfig.isGiaBanLeUSD()) {
+            lblGiaUSD = new JLabel("Giá bán lẻ (USD)");
+            lblGiaUSD.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+            lblGiaUSD.setBounds(230, startY, 100, fieldH);
+            panel.add(lblGiaUSD);
+
+            txtGiaUSD = new JTextField("0");
+            txtGiaUSD.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+            txtGiaUSD.setBounds(335, startY, 125, fieldH);
+            panel.add(txtGiaUSD);
+        } else {
+            lblGiaUSD = new JLabel("Giá USD");
+            txtGiaUSD = new JTextField("0");
+        }
+
+        // Row: Nhóm mặt hàng
         startY += rowGap;
         JLabel lblNhomHang = new JLabel("Nhóm mặt hàng");
         lblNhomHang.setFont(new Font("Segoe UI", Font.PLAIN, 12));
@@ -387,7 +457,7 @@ public class MatHangEditDialog extends JDialog {
         cbNhomHang.setBounds(120, startY, 340, fieldH);
         panel.add(cbNhomHang);
 
-        // Row 10: Mặc định giảm giá % & Mặc định giảm tiền
+        // Row: Mặc định giảm giá % & Mặc định giảm tiền
         startY += rowGap;
         JLabel lblGiamGiaPt = new JLabel("Mặc định giảm giá %");
         lblGiamGiaPt.setFont(new Font("Segoe UI", Font.PLAIN, 12));
@@ -409,7 +479,24 @@ public class MatHangEditDialog extends JDialog {
         txtGiamGiaTien.setBounds(345, startY, 115, fieldH);
         panel.add(txtGiamGiaTien);
 
-        // Row 11: Ghi chú (Đã bỏ field Size theo yêu cầu của người dùng)
+        // Row: Kích thước (nếu có cấu hình)
+        if (systemConfig.isMatHangCoKichThuoc()) {
+            startY += rowGap;
+            lblKichThuoc = new JLabel("Kích thước");
+            lblKichThuoc.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+            lblKichThuoc.setBounds(15, startY, lblW, fieldH);
+            panel.add(lblKichThuoc);
+
+            txtKichThuoc = new JTextField();
+            txtKichThuoc.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+            txtKichThuoc.setBounds(120, startY, 340, fieldH);
+            panel.add(txtKichThuoc);
+        } else {
+            lblKichThuoc = new JLabel("Kích thước");
+            txtKichThuoc = new JTextField();
+        }
+
+        // Row: Ghi chú
         startY += rowGap;
         JLabel lblGhiChu = new JLabel("Ghi chú");
         lblGhiChu.setFont(new Font("Segoe UI", Font.PLAIN, 12));
@@ -421,11 +508,14 @@ public class MatHangEditDialog extends JDialog {
         txtNote.setBounds(120, startY, 340, fieldH);
         panel.add(txtNote);
 
-        return panel;
+        panel.setPreferredSize(new Dimension(480, startY + 40));
+        JScrollPane scrollPane = new JScrollPane(panel);
+        scrollPane.setBorder(null);
+        return scrollPane;
     }
 
     // ==================== TAB 2: THÔNG TIN KHÁC ====================
-    private JPanel createTabThongTinKhac() {
+    private JComponent createTabThongTinKhac() {
         JPanel panel = new JPanel(null);
         panel.setBackground(Color.WHITE);
 
@@ -468,37 +558,47 @@ public class MatHangEditDialog extends JDialog {
         panel.add(txtTonToiDa);
 
         // Row 3: Hãng sản xuất
-        startY += rowGap;
-        JLabel lblHangSX = new JLabel("Hãng sản xuất");
-        lblHangSX.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        lblHangSX.setBounds(15, startY, lblW, fieldH);
-        panel.add(lblHangSX);
+        if (systemConfig.isSuDungHangSanXuat()) {
+            startY += rowGap;
+            lblHangSX = new JLabel("Hãng sản xuất");
+            lblHangSX.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+            lblHangSX.setBounds(15, startY, lblW, fieldH);
+            panel.add(lblHangSX);
 
-        cbHangSanXuat = new JComboBox<>(new String[]{"", "Việt Nhật", "Sunhouse", "Samsung", "Panasonic", "VinaKip"});
-        cbHangSanXuat.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        cbHangSanXuat.setBounds(120, startY, 335, fieldH);
-        panel.add(cbHangSanXuat);
+            cbHangSanXuat = new JComboBox<>(new String[]{"", "Việt Nhật", "Sunhouse", "Samsung", "Panasonic", "VinaKip"});
+            cbHangSanXuat.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+            cbHangSanXuat.setBounds(120, startY, 335, fieldH);
+            panel.add(cbHangSanXuat);
+        } else {
+            lblHangSX = new JLabel("Hãng sản xuất");
+            cbHangSanXuat = new JComboBox<>(new String[]{""});
+        }
 
         // Row 4: Bảo hành & Hoa hồng
         startY += rowGap;
-        JLabel lblBaoHanh = new JLabel("Bảo hành");
-        lblBaoHanh.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        lblBaoHanh.setBounds(15, startY, lblW, fieldH);
-        panel.add(lblBaoHanh);
+        if (systemConfig.isHangCoBaoHanh()) {
+            lblBaoHanh = new JLabel("Bảo hành");
+            lblBaoHanh.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+            lblBaoHanh.setBounds(15, startY, lblW, fieldH);
+            panel.add(lblBaoHanh);
 
-        txtBaoHanh = new JTextField();
-        txtBaoHanh.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        txtBaoHanh.setBounds(120, startY, 65, fieldH);
-        panel.add(txtBaoHanh);
+            txtBaoHanh = new JTextField();
+            txtBaoHanh.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+            txtBaoHanh.setBounds(120, startY, 65, fieldH);
+            panel.add(txtBaoHanh);
+        } else {
+            lblBaoHanh = new JLabel("Bảo hành");
+            txtBaoHanh = new JTextField();
+        }
 
-        JLabel lblHoaHong = new JLabel("Hoa hồng cho nhân viên kd");
+        JLabel lblHoaHong = new JLabel("Hoa hồng cho NV");
         lblHoaHong.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        lblHoaHong.setBounds(195, startY, 155, fieldH);
+        lblHoaHong.setBounds(systemConfig.isHangCoBaoHanh() ? 195 : 15, startY, systemConfig.isHangCoBaoHanh() ? 120 : lblW, fieldH);
         panel.add(lblHoaHong);
 
         txtHoaHong = new JTextField("0");
         txtHoaHong.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        txtHoaHong.setBounds(355, startY, 100, fieldH);
+        txtHoaHong.setBounds(systemConfig.isHangCoBaoHanh() ? 320 : 120, startY, systemConfig.isHangCoBaoHanh() ? 135 : 140, fieldH);
         panel.add(txtHoaHong);
 
         // Row 5: Checkboxes
@@ -509,12 +609,16 @@ public class MatHangEditDialog extends JDialog {
         chkKhoiLuongTheoCan.setBounds(120, startY, 200, 20);
         panel.add(chkKhoiLuongTheoCan);
 
-        startY += 24;
-        chkCoHanSuDung = new JCheckBox("Có hạn sử dụng");
-        chkCoHanSuDung.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        chkCoHanSuDung.setOpaque(false);
-        chkCoHanSuDung.setBounds(120, startY, 200, 20);
-        panel.add(chkCoHanSuDung);
+        if (systemConfig.isMatHangCoHanSuDung()) {
+            startY += 24;
+            chkCoHanSuDung = new JCheckBox("Có hạn sử dụng");
+            chkCoHanSuDung.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+            chkCoHanSuDung.setOpaque(false);
+            chkCoHanSuDung.setBounds(120, startY, 200, 20);
+            panel.add(chkCoHanSuDung);
+        } else {
+            chkCoHanSuDung = new JCheckBox("Có hạn sử dụng");
+        }
 
         startY += 24;
         chkKhongInCheBien = new JCheckBox("Không in chế biến");
@@ -523,7 +627,10 @@ public class MatHangEditDialog extends JDialog {
         chkKhongInCheBien.setBounds(120, startY, 200, 20);
         panel.add(chkKhongInCheBien);
 
-        return panel;
+        panel.setPreferredSize(new Dimension(480, startY + 40));
+        JScrollPane scrollPane = new JScrollPane(panel);
+        scrollPane.setBorder(null);
+        return scrollPane;
     }
 
     // ==================== TAB 3: ĐỊNH LƯỢNG ====================
@@ -820,12 +927,12 @@ public class MatHangEditDialog extends JDialog {
         if (selDvt != null) cbDonViTinh.setSelectedItem(selDvt);
 
         // 3. Tab 1 Values
-        txtMaSanCo.setText(currentItem.getId() != null ? currentItem.getId() : "1000073");
+        txtMaSanCo.setText(currentItem.getMaSanCo() != null ? currentItem.getMaSanCo() : (currentItem.getId() != null ? currentItem.getId() : "1000073"));
         if (currentItem.getCode() != null && !currentItem.getCode().isEmpty()) {
             txtCode.setText(currentItem.getCode());
         } else {
             String prefix = selNhom != null && selNhom.getCode() != null ? selNhom.getCode() : "MH";
-            txtCode.setText(matHangDAO.generateNextProductCode(prefix));
+            txtCode.setText(matHangDAO.generateProductCodeOrBarcode(systemConfig, prefix, currentItem.isKhoiLuongTheoCan()));
         }
 
         txtName.setText(currentItem.getName() != null ? currentItem.getName() : "");
@@ -840,6 +947,8 @@ public class MatHangEditDialog extends JDialog {
         txtQuyDoi.setText(df.format(currentItem.getQuyDoi()));
         txtGiamGiaPt.setText(df.format(currentItem.getGiamGiaPt()));
         txtGiamGiaTien.setText(df.format(currentItem.getGiamGiaTien()));
+        txtGiaUSD.setText(df.format(currentItem.getGiaUSD()));
+        txtKichThuoc.setText(currentItem.getKichThuoc() != null ? currentItem.getKichThuoc() : "");
         txtNote.setText(currentItem.getGhiChu() != null ? currentItem.getGhiChu() : "");
 
         // 4. Tab 2 Values
@@ -878,12 +987,29 @@ public class MatHangEditDialog extends JDialog {
             return;
         }
 
+        // Kiểm tra cấu hình cho phép / không cho phép trùng tên mặt hàng
+        if (systemConfig != null && !systemConfig.isChoPhepTrungTenMatHang()) {
+            if (matHangDAO.existsByName(name, currentItem.getId())) {
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Tên mặt hàng '" + name + "' đã tồn tại trong danh mục!\n(Hệ thống đang cấu hình Không cho phép trùng tên mặt hàng)",
+                        "Trùng tên mặt hàng",
+                        JOptionPane.WARNING_MESSAGE
+                );
+                txtName.requestFocus();
+                return;
+            }
+        }
+
         if (code.isEmpty()) {
-            code = matHangDAO.generateNextProductCode("MH");
+            NhomMatHang selNhom = (NhomMatHang) cbNhomHang.getSelectedItem();
+            String prefix = selNhom != null && selNhom.getCode() != null ? selNhom.getCode() : "MH";
+            code = matHangDAO.generateProductCodeOrBarcode(systemConfig, prefix, chkKhoiLuongTheoCan.isSelected());
         }
 
         currentItem.setCode(code);
         currentItem.setName(name);
+        currentItem.setMaSanCo(txtMaSanCo.getText().trim());
 
         currentItem.setGiaBan(parseNumber(txtGiaBan.getText()));
         currentItem.setGiaNhap(parseNumber(txtGiaNhap.getText()));
@@ -894,6 +1020,8 @@ public class MatHangEditDialog extends JDialog {
         currentItem.setQuyDoi(parseNumber(txtQuyDoi.getText()));
         currentItem.setGiamGiaPt(parseNumber(txtGiamGiaPt.getText()));
         currentItem.setGiamGiaTien(parseNumber(txtGiamGiaTien.getText()));
+        currentItem.setGiaUSD(parseNumber(txtGiaUSD.getText()));
+        currentItem.setKichThuoc(txtKichThuoc.getText().trim());
         currentItem.setGhiChu(txtNote.getText().trim());
 
         NhomMatHang selNhom = (NhomMatHang) cbNhomHang.getSelectedItem();
@@ -959,7 +1087,7 @@ public class MatHangEditDialog extends JDialog {
 
     private void onClearForNew() {
         currentItem = new MatHang();
-        String nextCode = matHangDAO.generateNextProductCode("MH");
+        String nextCode = matHangDAO.generateProductCodeOrBarcode(systemConfig, "MH", false);
         txtMaSanCo.setText("1000" + (int)(Math.random() * 900 + 100));
         txtCode.setText(nextCode);
         txtName.setText("");
@@ -972,6 +1100,8 @@ public class MatHangEditDialog extends JDialog {
         txtQuyDoi.setText("0");
         txtGiamGiaPt.setText("0");
         txtGiamGiaTien.setText("0");
+        txtGiaUSD.setText("0");
+        txtKichThuoc.setText("");
         txtNote.setText("");
         removeImage();
         txtName.requestFocus();
@@ -980,10 +1110,15 @@ public class MatHangEditDialog extends JDialog {
     private void onCloneCurrent() {
         MatHang cloned = new MatHang();
         cloned.setName(txtName.getText().trim() + " (Sao chép)");
-        String nextCode = matHangDAO.generateNextProductCode("MH");
+        String nextCode = matHangDAO.generateProductCodeOrBarcode(systemConfig, "MH", chkKhoiLuongTheoCan.isSelected());
         cloned.setCode(nextCode);
         cloned.setGiaBan(parseNumber(txtGiaBan.getText()));
         cloned.setGiaNhap(parseNumber(txtGiaNhap.getText()));
+        cloned.setGiaBan2(parseNumber(txtGiaBan2.getText()));
+        cloned.setGiaBan3(parseNumber(txtGiaBan3.getText()));
+        cloned.setGiaBan4(parseNumber(txtGiaBan4.getText()));
+        cloned.setGiaUSD(parseNumber(txtGiaUSD.getText()));
+        cloned.setKichThuoc(txtKichThuoc.getText().trim());
         this.currentItem = cloned;
         txtName.setText(cloned.getName());
         txtCode.setText(nextCode);

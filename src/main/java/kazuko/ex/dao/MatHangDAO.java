@@ -1,6 +1,7 @@
 package kazuko.ex.dao;
 
 import kazuko.ex.model.danhmuc.MatHang;
+import kazuko.ex.model.system.SystemConfig;
 import kazuko.ex.service.AuthService;
 
 import java.sql.*;
@@ -130,21 +131,75 @@ public class MatHangDAO extends BaseDAO {
     }
 
     public List<MatHang> search(String keyword, String tenNhom, String nhomId) {
+        SystemConfig config = new SystemConfigDAO().loadConfig();
+        return searchWithConfig(keyword, tenNhom, nhomId, config);
+    }
+
+    public List<MatHang> searchWithConfig(String keyword, String tenNhom, String nhomId, SystemConfig config) {
         List<MatHang> baseList = getByNhom(tenNhom, nhomId);
         if (keyword == null || keyword.trim().isEmpty()) {
             return baseList;
         }
-        String kw = keyword.trim().toLowerCase();
+        return filterListWithConfig(baseList, keyword.trim(), config);
+    }
+
+    public List<MatHang> searchWithConfigByGroupSet(String keyword, Set<String> ids, Set<String> names, SystemConfig config) {
+        List<MatHang> baseList = getByNhomIds(ids, names);
+        if (keyword == null || keyword.trim().isEmpty()) {
+            return baseList;
+        }
+        return filterListWithConfig(baseList, keyword.trim(), config);
+    }
+
+    private List<MatHang> filterListWithConfig(List<MatHang> list, String keyword, SystemConfig config) {
+        String timTheo = config != null && config.getTimTheo() != null ? config.getTimTheo() : "Cả tên hàng và mã hàng";
+        String cachTim = config != null && config.getCachTim() != null ? config.getCachTim() : "Tìm có chứa";
+
         List<MatHang> result = new ArrayList<>();
-        for (MatHang mh : baseList) {
-            boolean matchCode = mh.getCode() != null && mh.getCode().toLowerCase().contains(kw);
-            boolean matchName = mh.getName() != null && mh.getName().toLowerCase().contains(kw);
-            boolean matchGroup = mh.getTenNhom() != null && mh.getTenNhom().toLowerCase().contains(kw);
-            if (matchCode || matchName || matchGroup) {
+        for (MatHang mh : list) {
+            boolean match = false;
+            if ("Tên hàng".equalsIgnoreCase(timTheo)) {
+                match = matchText(mh.getName(), keyword, cachTim);
+            } else if ("Mã hàng".equalsIgnoreCase(timTheo)) {
+                match = matchText(mh.getCode(), keyword, cachTim);
+            } else {
+                // "Cả tên hàng và mã hàng" (kèm cả nhóm hàng)
+                match = matchText(mh.getName(), keyword, cachTim)
+                        || matchText(mh.getCode(), keyword, cachTim)
+                        || matchText(mh.getTenNhom(), keyword, cachTim);
+            }
+            if (match) {
                 result.add(mh);
             }
         }
         return result;
+    }
+
+    private boolean matchText(String source, String keyword, String cachTim) {
+        if (source == null || keyword == null) return false;
+        String s = source.trim().toLowerCase();
+        String k = keyword.trim().toLowerCase();
+
+        if ("Tìm bắt đầu".equalsIgnoreCase(cachTim)) {
+            return s.startsWith(k);
+        } else if ("Tìm chính xác".equalsIgnoreCase(cachTim)) {
+            return s.equals(k);
+        } else {
+            // "Tìm có chứa"
+            return s.contains(k);
+        }
+    }
+
+    public boolean existsByName(String name, String excludeId) {
+        if (name == null || name.trim().isEmpty()) return false;
+        String trimmed = name.trim().toLowerCase();
+        for (MatHang mh : getAll()) {
+            if (excludeId != null && excludeId.equals(mh.getId())) continue;
+            if (mh.getName() != null && mh.getName().trim().equalsIgnoreCase(trimmed)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public MatHang findById(String id) {
@@ -164,6 +219,72 @@ public class MatHangDAO extends BaseDAO {
         mh.setUserCreatedName(AuthService.getCurrentUser() != null ? AuthService.getCurrentUser().getName() : "Administrator");
         MEMORY_PRODUCTS.add(0, mh);
         return tryInsertToDb(mh);
+    }
+
+    public static char calculateChecksumChar(String numStr) {
+        if (numStr == null || numStr.isEmpty()) return '0';
+        int sum = 0;
+        for (int i = numStr.length() - 1; i >= 0; i--) {
+            char c = numStr.charAt(i);
+            if (Character.isDigit(c)) {
+                int digit = c - '0';
+                int weight = ((numStr.length() - 1 - i) % 2 == 0) ? 3 : 1;
+                sum += digit * weight;
+            }
+        }
+        int check = (10 - (sum % 10)) % 10;
+        return (char) ('0' + check);
+    }
+
+    public String generateProductCodeOrBarcode(SystemConfig config, String prefix, boolean isByWeight) {
+        if (config == null) {
+            return generateNextProductCode(prefix);
+        }
+
+        if (config.isTuDongSinhMaVach()) {
+            int len = config.getChieuDaiMaVach();
+            if (len <= 0) len = 7;
+            boolean hasCheck = config.isCoKyTuKiemTra();
+            int baseLen = hasCheck ? Math.max(1, len - 1) : len;
+
+            String codePrefix = "";
+            if (config.isSuDungTemInBangCanDienTu() && isByWeight) {
+                codePrefix = (config.getChuoiBatDauCanDienTu() != null && !config.getChuoiBatDauCanDienTu().trim().isEmpty())
+                        ? config.getChuoiBatDauCanDienTu().trim() : "29";
+            }
+
+            int numSlots = Math.max(1, baseLen - codePrefix.length());
+            long maxNum = 0;
+            for (MatHang mh : getAll()) {
+                if (mh.getCode() != null) {
+                    String c = mh.getCode().trim();
+                    if (c.startsWith(codePrefix) && c.matches("\\d+")) {
+                        try {
+                            String sub = hasCheck && c.length() > codePrefix.length() + 1
+                                    ? c.substring(codePrefix.length(), c.length() - 1)
+                                    : c.substring(codePrefix.length());
+                            long val = Long.parseLong(sub);
+                            if (val > maxNum) maxNum = val;
+                        } catch (Exception ignored) {}
+                    }
+                }
+            }
+
+            long nextNum = maxNum + 1;
+            String formatPattern = "%0" + numSlots + "d";
+            String baseCode = codePrefix + String.format(formatPattern, nextNum);
+            if (baseCode.length() > baseLen) {
+                baseCode = baseCode.substring(baseCode.length() - baseLen);
+            }
+
+            if (hasCheck) {
+                return baseCode + calculateChecksumChar(baseCode);
+            } else {
+                return baseCode;
+            }
+        } else {
+            return generateNextProductCode(prefix);
+        }
     }
 
     public String generateNextProductCode(String prefix) {
