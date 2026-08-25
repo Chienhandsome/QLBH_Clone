@@ -27,6 +27,26 @@ public class MatHangConfigIntegrationTest {
     }
 
     @Test
+    public void testSizeFieldEditableFollowsMatHangCoKichThuoc() {
+        SystemConfig config = new SystemConfig();
+        config.setMatHangCoKichThuoc(true);
+        assertTrue(config.isMatHangCoKichThuoc(), "Size should be editable when MatHangCoKichThuoc is true");
+
+        config.setMatHangCoKichThuoc(false);
+        assertFalse(config.isMatHangCoKichThuoc(), "Size should not be editable when MatHangCoKichThuoc is false");
+    }
+
+    @Test
+    public void testCoHanSuDungFollowsMatHangCoHanSuDung() {
+        SystemConfig config = new SystemConfig();
+        config.setMatHangCoHanSuDung(true);
+        assertTrue(config.isMatHangCoHanSuDung(), "CoHanSuDung should be enabled when MatHangCoHanSuDung is true");
+
+        config.setMatHangCoHanSuDung(false);
+        assertFalse(config.isMatHangCoHanSuDung(), "CoHanSuDung should be disabled when MatHangCoHanSuDung is false");
+    }
+
+    @Test
     public void testGenerateBarcodeWithChecksumAndLength() {
         SystemConfig config = new SystemConfig();
         config.setTuDongSinhMaVach(true);

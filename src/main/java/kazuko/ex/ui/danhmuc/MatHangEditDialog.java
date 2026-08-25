@@ -453,22 +453,19 @@ public class MatHangEditDialog extends JDialog {
         txtGiamGiaTien.setBounds(345, startY, 115, fieldH);
         panel.add(txtGiamGiaTien);
 
-        // Row: Kích thước (nếu có cấu hình)
-        if (systemConfig.isMatHangCoKichThuoc()) {
-            startY += rowGap;
-            lblKichThuoc = new JLabel("Kích thước");
-            lblKichThuoc.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-            lblKichThuoc.setBounds(15, startY, lblW, fieldH);
-            panel.add(lblKichThuoc);
+        // Row: Size (Ví dụ: M, L,S)
+        startY += rowGap;
+        lblKichThuoc = new JLabel("Size (Ví dụ: M, L,S)");
+        lblKichThuoc.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblKichThuoc.setBounds(15, startY, 105, fieldH);
+        panel.add(lblKichThuoc);
 
-            txtKichThuoc = new JTextField();
-            txtKichThuoc.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-            txtKichThuoc.setBounds(120, startY, 340, fieldH);
-            panel.add(txtKichThuoc);
-        } else {
-            lblKichThuoc = new JLabel("Kích thước");
-            txtKichThuoc = new JTextField();
-        }
+        txtKichThuoc = new JTextField();
+        txtKichThuoc.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        txtKichThuoc.setBounds(120, startY, 340, fieldH);
+        txtKichThuoc.setEditable(systemConfig.isMatHangCoKichThuoc());
+        txtKichThuoc.setBackground(systemConfig.isMatHangCoKichThuoc() ? Color.WHITE : new Color(240, 240, 240));
+        panel.add(txtKichThuoc);
 
         // Row: Ghi chú
         startY += rowGap;
@@ -565,14 +562,14 @@ public class MatHangEditDialog extends JDialog {
             txtBaoHanh = new JTextField();
         }
 
-        JLabel lblHoaHong = new JLabel("Hoa hồng cho NV");
+        JLabel lblHoaHong = new JLabel("Hoa hồng cho nhân viên kd");
         lblHoaHong.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        lblHoaHong.setBounds(systemConfig.isHangCoBaoHanh() ? 195 : 15, startY, systemConfig.isHangCoBaoHanh() ? 120 : lblW, fieldH);
+        lblHoaHong.setBounds(systemConfig.isHangCoBaoHanh() ? 195 : 15, startY, systemConfig.isHangCoBaoHanh() ? 150 : lblW, fieldH);
         panel.add(lblHoaHong);
 
         txtHoaHong = new JTextField("0");
         txtHoaHong.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        txtHoaHong.setBounds(systemConfig.isHangCoBaoHanh() ? 320 : 120, startY, systemConfig.isHangCoBaoHanh() ? 135 : 140, fieldH);
+        txtHoaHong.setBounds(systemConfig.isHangCoBaoHanh() ? 350 : 120, startY, systemConfig.isHangCoBaoHanh() ? 105 : 140, fieldH);
         panel.add(txtHoaHong);
 
         // Row 5: Checkboxes
@@ -583,16 +580,13 @@ public class MatHangEditDialog extends JDialog {
         chkKhoiLuongTheoCan.setBounds(120, startY, 200, 20);
         panel.add(chkKhoiLuongTheoCan);
 
-        if (systemConfig.isMatHangCoHanSuDung()) {
-            startY += 24;
-            chkCoHanSuDung = new JCheckBox("Có hạn sử dụng");
-            chkCoHanSuDung.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-            chkCoHanSuDung.setOpaque(false);
-            chkCoHanSuDung.setBounds(120, startY, 200, 20);
-            panel.add(chkCoHanSuDung);
-        } else {
-            chkCoHanSuDung = new JCheckBox("Có hạn sử dụng");
-        }
+        startY += 24;
+        chkCoHanSuDung = new JCheckBox("Có hạn sử dụng");
+        chkCoHanSuDung.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        chkCoHanSuDung.setOpaque(false);
+        chkCoHanSuDung.setBounds(120, startY, 200, 20);
+        chkCoHanSuDung.setEnabled(systemConfig.isMatHangCoHanSuDung());
+        panel.add(chkCoHanSuDung);
 
         startY += 24;
         chkKhongInCheBien = new JCheckBox("Không in chế biến");
@@ -956,6 +950,8 @@ public class MatHangEditDialog extends JDialog {
         txtQuyDoi.setText(df.format(currentItem.getQuyDoi()));
         txtGiamGiaPt.setText(df.format(currentItem.getGiamGiaPt()));
         txtGiamGiaTien.setText(df.format(currentItem.getGiamGiaTien()));
+        txtKichThuoc.setEditable(systemConfig.isMatHangCoKichThuoc());
+        txtKichThuoc.setBackground(systemConfig.isMatHangCoKichThuoc() ? Color.WHITE : new Color(240, 240, 240));
         txtKichThuoc.setText(currentItem.getKichThuoc() != null ? currentItem.getKichThuoc() : "");
         txtNote.setText(currentItem.getGhiChu() != null ? currentItem.getGhiChu() : "");
 
@@ -967,6 +963,7 @@ public class MatHangEditDialog extends JDialog {
         txtBaoHanh.setText(currentItem.getBaoHanh() != null ? currentItem.getBaoHanh() : "");
         txtHoaHong.setText(df.format(currentItem.getHoaHong()));
         chkKhoiLuongTheoCan.setSelected(currentItem.isKhoiLuongTheoCan());
+        chkCoHanSuDung.setEnabled(systemConfig.isMatHangCoHanSuDung());
         chkCoHanSuDung.setSelected(currentItem.isCoHanSuDung());
         chkKhongInCheBien.setSelected(currentItem.isKhongInCheBien());
 
