@@ -100,6 +100,32 @@ public class SystemConfigDAO {
                 config.setGiaSuDungKhiChuyenXuatKho(props.getProperty("stock.transferExportPriceType", config.getGiaSuDungKhiChuyenXuatKho()));
                 config.setSuDungChucNangSanXuat(Boolean.parseBoolean(props.getProperty("stock.useManufactureFeature", String.valueOf(config.isSuDungChucNangSanXuat()))));
 
+                // Load Mặt hàng
+                config.setSuDungMaSanCo(Boolean.parseBoolean(props.getProperty("item.useExistingCode", String.valueOf(config.isSuDungMaSanCo()))));
+                config.setSuDungMaHang(Boolean.parseBoolean(props.getProperty("item.useItemCode", String.valueOf(config.isSuDungMaHang()))));
+                config.setTuDongSinhMaVach(Boolean.parseBoolean(props.getProperty("item.autoGenerateBarcode", String.valueOf(config.isTuDongSinhMaVach()))));
+                config.setChieuDaiMaVach(Integer.parseInt(props.getProperty("item.barcodeLength", String.valueOf(config.getChieuDaiMaVach()))));
+                config.setCoKyTuKiemTra(Boolean.parseBoolean(props.getProperty("item.hasChecksumChar", String.valueOf(config.isCoKyTuKiemTra()))));
+                config.setSuDungTemInBangCanDienTu(Boolean.parseBoolean(props.getProperty("item.useScaleLabel", String.valueOf(config.isSuDungTemInBangCanDienTu()))));
+                config.setChuoiBatDauCanDienTu(props.getProperty("item.scalePrefix", config.getChuoiBatDauCanDienTu()));
+                config.setTimTheo(props.getProperty("item.searchBy", config.getTimTheo()));
+                config.setCachTim(props.getProperty("item.searchMethod", config.getCachTim()));
+                config.setChoPhepTrungTenMatHang(Boolean.parseBoolean(props.getProperty("item.allowDupItemName", String.valueOf(config.isChoPhepTrungTenMatHang()))));
+                config.setHangCoBaoHanh(Boolean.parseBoolean(props.getProperty("item.hasWarranty", String.valueOf(config.isHangCoBaoHanh()))));
+                config.setSuDungHangSanXuat(Boolean.parseBoolean(props.getProperty("item.useManufacturer", String.valueOf(config.isSuDungHangSanXuat()))));
+                config.setSuDungGia2(Boolean.parseBoolean(props.getProperty("item.usePrice2", String.valueOf(config.isSuDungGia2()))));
+                config.setDienGiaiGia2(props.getProperty("item.price2Desc", config.getDienGiaiGia2()));
+                config.setSuDungGia3(Boolean.parseBoolean(props.getProperty("item.usePrice3", String.valueOf(config.isSuDungGia3()))));
+                config.setDienGiaiGia3(props.getProperty("item.price3Desc", config.getDienGiaiGia3()));
+                config.setSuDungGia4(Boolean.parseBoolean(props.getProperty("item.usePrice4", String.valueOf(config.isSuDungGia4()))));
+                config.setDienGiaiGia4(props.getProperty("item.price4Desc", config.getDienGiaiGia4()));
+                config.setHienThiDeLuaChonNeuCoNhieuGia(Boolean.parseBoolean(props.getProperty("item.showMultiPriceChoice", String.valueOf(config.isHienThiDeLuaChonNeuCoNhieuGia()))));
+                config.setSapXepThuTuTheo(props.getProperty("item.sortBy", config.getSapXepThuTuTheo()));
+                config.setMatHangCoHanSuDung(Boolean.parseBoolean(props.getProperty("item.hasExpiryDate", String.valueOf(config.isMatHangCoHanSuDung()))));
+                config.setMatHangCoKichThuoc(Boolean.parseBoolean(props.getProperty("item.hasDimensions", String.valueOf(config.isMatHangCoKichThuoc()))));
+                config.setMatHangCoVatTuDinhLuong(Boolean.parseBoolean(props.getProperty("item.hasBOM", String.valueOf(config.isMatHangCoVatTuDinhLuong()))));
+                config.setGiaBanLeUSD(Boolean.parseBoolean(props.getProperty("item.retailPriceUSD", String.valueOf(config.isGiaBanLeUSD()))));
+
             } catch (Exception ignored) {}
         }
 
@@ -183,6 +209,32 @@ public class SystemConfigDAO {
         props.setProperty("stock.useBarcodeScanner", String.valueOf(config.isNhapKhoBangDauDocMaVach()));
         props.setProperty("stock.transferExportPriceType", config.getGiaSuDungKhiChuyenXuatKho() != null ? config.getGiaSuDungKhiChuyenXuatKho() : "Giá vốn");
         props.setProperty("stock.useManufactureFeature", String.valueOf(config.isSuDungChucNangSanXuat()));
+
+        // Save Mặt hàng
+        props.setProperty("item.useExistingCode", String.valueOf(config.isSuDungMaSanCo()));
+        props.setProperty("item.useItemCode", String.valueOf(config.isSuDungMaHang()));
+        props.setProperty("item.autoGenerateBarcode", String.valueOf(config.isTuDongSinhMaVach()));
+        props.setProperty("item.barcodeLength", String.valueOf(config.getChieuDaiMaVach()));
+        props.setProperty("item.hasChecksumChar", String.valueOf(config.isCoKyTuKiemTra()));
+        props.setProperty("item.useScaleLabel", String.valueOf(config.isSuDungTemInBangCanDienTu()));
+        props.setProperty("item.scalePrefix", config.getChuoiBatDauCanDienTu() != null ? config.getChuoiBatDauCanDienTu() : "29");
+        props.setProperty("item.searchBy", config.getTimTheo() != null ? config.getTimTheo() : "Cả tên hàng và mã hàng");
+        props.setProperty("item.searchMethod", config.getCachTim() != null ? config.getCachTim() : "Tìm có chứa");
+        props.setProperty("item.allowDupItemName", String.valueOf(config.isChoPhepTrungTenMatHang()));
+        props.setProperty("item.hasWarranty", String.valueOf(config.isHangCoBaoHanh()));
+        props.setProperty("item.useManufacturer", String.valueOf(config.isSuDungHangSanXuat()));
+        props.setProperty("item.usePrice2", String.valueOf(config.isSuDungGia2()));
+        props.setProperty("item.price2Desc", config.getDienGiaiGia2() != null ? config.getDienGiaiGia2() : "Đơn giá 2");
+        props.setProperty("item.usePrice3", String.valueOf(config.isSuDungGia3()));
+        props.setProperty("item.price3Desc", config.getDienGiaiGia3() != null ? config.getDienGiaiGia3() : "Giá bán 3");
+        props.setProperty("item.usePrice4", String.valueOf(config.isSuDungGia4()));
+        props.setProperty("item.price4Desc", config.getDienGiaiGia4() != null ? config.getDienGiaiGia4() : "Giá bán 4");
+        props.setProperty("item.showMultiPriceChoice", String.valueOf(config.isHienThiDeLuaChonNeuCoNhieuGia()));
+        props.setProperty("item.sortBy", config.getSapXepThuTuTheo() != null ? config.getSapXepThuTuTheo() : "Mã hàng");
+        props.setProperty("item.hasExpiryDate", String.valueOf(config.isMatHangCoHanSuDung()));
+        props.setProperty("item.hasDimensions", String.valueOf(config.isMatHangCoKichThuoc()));
+        props.setProperty("item.hasBOM", String.valueOf(config.isMatHangCoVatTuDinhLuong()));
+        props.setProperty("item.retailPriceUSD", String.valueOf(config.isGiaBanLeUSD()));
 
         try (OutputStreamWriter writer = new OutputStreamWriter(new FileOutputStream(CONFIG_FILE), StandardCharsets.UTF_8)) {
             props.store(writer, "Cấu hình hệ thống QLBH");

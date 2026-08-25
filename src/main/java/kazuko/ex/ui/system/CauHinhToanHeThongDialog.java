@@ -101,6 +101,32 @@ public class CauHinhToanHeThongDialog extends JDialog {
     private JComboBox<String> cbGiaSuDungKhiChuyenXuatKho;
     private JCheckBox chkSuDungChucNangSanXuat;
 
+    // Tab 8: Mặt hàng
+    private JCheckBox chkSuDungMaSanCo;
+    private JCheckBox chkSuDungMaHang;
+    private JCheckBox chkTuDongSinhMaVach;
+    private JTextField txtChieuDaiMaVach;
+    private JCheckBox chkCoKyTuKiemTra;
+    private JCheckBox chkSuDungTemInBangCanDienTu;
+    private JTextField txtChuoiBatDauCanDienTu;
+    private JComboBox<String> cbTimTheo;
+    private JComboBox<String> cbCachTim;
+    private JCheckBox chkChoPhepTrungTenMatHang;
+    private JCheckBox chkHangCoBaoHanh;
+    private JCheckBox chkSuDungHangSanXuat;
+    private JCheckBox chkSuDungGia2;
+    private JTextField txtDienGiaiGia2;
+    private JCheckBox chkSuDungGia3;
+    private JTextField txtDienGiaiGia3;
+    private JCheckBox chkSuDungGia4;
+    private JTextField txtDienGiaiGia4;
+    private JCheckBox chkHienThiDeLuaChonNeuCoNhieuGia;
+    private JComboBox<String> cbSapXepThuTuTheo;
+    private JCheckBox chkMatHangCoHanSuDung;
+    private JCheckBox chkMatHangCoKichThuoc;
+    private JCheckBox chkMatHangCoVatTuDinhLuong;
+    private JCheckBox chkGiaBanLeUSD;
+
     public CauHinhToanHeThongDialog(Frame parent) {
         super(parent, "CẤU HÌNH TOÀN HỆ THỐNG", true);
         this.currentConfig = configDAO.loadConfig();
@@ -151,12 +177,13 @@ public class CauHinhToanHeThongDialog extends JDialog {
         pnlCardContainer.add(createTabThanhToan(), "Thanh toán");
         pnlCardContainer.add(createTabTichDiem(), "Tích điểm");
         pnlCardContainer.add(createTabKhoHang(), "Kho hàng");
+        pnlCardContainer.add(createTabMatHang(), "Mặt hàng");
 
         // Placeholder cards for other categories
         for (MenuItem item : allMenuItems) {
             if (!"Thông tin chung".equals(item.name) && !"Máy in".equals(item.name) && !"Số phiếu".equals(item.name)
                     && !"Bán hàng".equals(item.name) && !"Thanh toán".equals(item.name) && !"Tích điểm".equals(item.name)
-                    && !"Kho hàng".equals(item.name)) {
+                    && !"Kho hàng".equals(item.name) && !"Mặt hàng".equals(item.name)) {
                 pnlCardContainer.add(createPlaceholderCard(item.name), item.name);
             }
         }
@@ -297,7 +324,7 @@ public class CauHinhToanHeThongDialog extends JDialog {
         }
     }
 
-    // ==================== TAB 1: THÔNG TIN CHÍNH (Ảnh 1) ====================
+    // ==================== TAB 1: THÔNG TIN CHÍNH ====================
     private JPanel createTabThongTinChinh() {
         JPanel panel = new JPanel(null);
         panel.setBackground(Color.WHITE);
@@ -452,7 +479,7 @@ public class CauHinhToanHeThongDialog extends JDialog {
         return panel;
     }
 
-    // ==================== TAB 2: MÁY IN (Ảnh 1 - Dropdown & Nhận diện máy in) ====================
+    // ==================== TAB 2: MÁY IN ====================
     private JPanel createTabMayIn() {
         JPanel panel = new JPanel(null);
         panel.setBackground(Color.WHITE);
@@ -496,7 +523,7 @@ public class CauHinhToanHeThongDialog extends JDialog {
 
     private String[] getAvailablePrinters() {
         List<String> list = new ArrayList<>();
-        list.add(""); // Lựa chọn rỗng / mặc định đầu tiên
+        list.add("");
 
         try {
             PrintService[] services = PrintServiceLookup.lookupPrintServices(null, null);
@@ -520,7 +547,7 @@ public class CauHinhToanHeThongDialog extends JDialog {
         return list.toArray(new String[0]);
     }
 
-    // ==================== TAB 3: SỐ PHIẾU (Ảnh 2 - Readonly Field + Dialog) ====================
+    // ==================== TAB 3: SỐ PHIẾU ====================
     private JPanel createTabSoPhieu() {
         JPanel panel = new JPanel(null);
         panel.setBackground(Color.WHITE);
@@ -790,7 +817,7 @@ public class CauHinhToanHeThongDialog extends JDialog {
         return container;
     }
 
-    // ==================== TAB 5: THANH TOÁN (Ảnh 1) ====================
+    // ==================== TAB 5: THANH TOÁN ====================
     private JPanel createTabThanhToan() {
         JPanel panel = new JPanel(null);
         panel.setBackground(Color.WHITE);
@@ -874,7 +901,7 @@ public class CauHinhToanHeThongDialog extends JDialog {
         return container;
     }
 
-    // ==================== TAB 6: TÍCH ĐIỂM (Ảnh 2 & 3) ====================
+    // ==================== TAB 6: TÍCH ĐIỂM ====================
     private JPanel createTabTichDiem() {
         JPanel panel = new JPanel(null);
         panel.setBackground(Color.WHITE);
@@ -894,7 +921,7 @@ public class CauHinhToanHeThongDialog extends JDialog {
         txtDoanhSoTuongUng1Diem.setBounds(225, startY, 80, fieldH);
         panel.add(txtDoanhSoTuongUng1Diem);
 
-        // 2. Cách tính điểm (Dropdown: Điểm được tính trên từng hóa đơn / tổng doanh số)
+        // 2. Cách tính điểm
         startY += rowGap;
         JLabel lblCachTinh = new JLabel("Cách tính điểm");
         lblCachTinh.setFont(new Font("Segoe UI", Font.PLAIN, 12));
@@ -941,7 +968,7 @@ public class CauHinhToanHeThongDialog extends JDialog {
         return container;
     }
 
-    // ==================== TAB 7: KHO HÀNG (Ảnh 1 & 2) ====================
+    // ==================== TAB 7: KHO HÀNG ====================
     private JPanel createTabKhoHang() {
         JPanel panel = new JPanel(null);
         panel.setBackground(Color.WHITE);
@@ -997,7 +1024,7 @@ public class CauHinhToanHeThongDialog extends JDialog {
         chkNhapKhoBangDauDocMaVach.setBounds(20, startY, 380, fieldH);
         panel.add(chkNhapKhoBangDauDocMaVach);
 
-        // 7. Giá sử dụng khi chuyển xuất kho (Dropdown: Giá bán / Giá nhập / Giá vốn - Default: Giá vốn)
+        // 7. Giá sử dụng khi chuyển xuất kho
         startY += rowGap;
         JLabel lblGiaXuat = new JLabel("Giá sử dụng khi chuyển xuất kho");
         lblGiaXuat.setFont(new Font("Segoe UI", Font.PLAIN, 12));
@@ -1021,6 +1048,248 @@ public class CauHinhToanHeThongDialog extends JDialog {
         chkSuDungChucNangSanXuat.setOpaque(false);
         chkSuDungChucNangSanXuat.setBounds(20, startY, 380, fieldH);
         panel.add(chkSuDungChucNangSanXuat);
+
+        panel.setPreferredSize(new Dimension(580, startY + 40));
+        JScrollPane scrollPane = new JScrollPane(panel);
+        scrollPane.setBorder(null);
+        JPanel container = new JPanel(new BorderLayout());
+        container.add(scrollPane, BorderLayout.CENTER);
+        return container;
+    }
+
+    // ==================== TAB 8: MẶT HÀNG (Ảnh 1 -> 5) ====================
+    private JPanel createTabMatHang() {
+        JPanel panel = new JPanel(null);
+        panel.setBackground(Color.WHITE);
+
+        int startY = 12;
+        int fieldH = 22;
+        int rowGap = 26;
+
+        // Row 1: Sử dụng mã sẵn có & Sử dụng mã hàng (Default: false / true)
+        chkSuDungMaSanCo = new JCheckBox("Sử dụng mã sẵn có", false);
+        chkSuDungMaSanCo.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        chkSuDungMaSanCo.setOpaque(false);
+        chkSuDungMaSanCo.setBounds(20, startY, 200, fieldH);
+        panel.add(chkSuDungMaSanCo);
+
+        chkSuDungMaHang = new JCheckBox("Sử dụng mã hàng", true);
+        chkSuDungMaHang.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        chkSuDungMaHang.setOpaque(false);
+        chkSuDungMaHang.setBounds(330, startY, 200, fieldH);
+        panel.add(chkSuDungMaHang);
+
+        // Row 2: Tự động sinh mã vạch (Default: true)
+        startY += rowGap;
+        chkTuDongSinhMaVach = new JCheckBox("Tự động sinh mã vạch", true);
+        chkTuDongSinhMaVach.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        chkTuDongSinhMaVach.setOpaque(false);
+        chkTuDongSinhMaVach.setBounds(20, startY, 250, fieldH);
+        panel.add(chkTuDongSinhMaVach);
+
+        // Row 3: Chiều dài mã vạch & Có ký tự kiểm tra (Default: 7 / false)
+        startY += rowGap;
+        JLabel lblChieuDai = new JLabel("Chiều dài mã vạch");
+        lblChieuDai.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblChieuDai.setBounds(45, startY, 120, fieldH);
+        panel.add(lblChieuDai);
+
+        txtChieuDaiMaVach = new JTextField("7");
+        txtChieuDaiMaVach.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        txtChieuDaiMaVach.setBounds(175, startY, 55, fieldH);
+        panel.add(txtChieuDaiMaVach);
+
+        chkCoKyTuKiemTra = new JCheckBox("Có ký tự kiểm tra", false);
+        chkCoKyTuKiemTra.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        chkCoKyTuKiemTra.setOpaque(false);
+        chkCoKyTuKiemTra.setBounds(270, startY, 200, fieldH);
+        panel.add(chkCoKyTuKiemTra);
+
+        // Row 4: Sử dụng tem in bằng cân điện tử & Chuỗi bắt đầu (Default: true / "29")
+        startY += rowGap;
+        chkSuDungTemInBangCanDienTu = new JCheckBox("Sử dụng tem in bằng cân điện tử", true);
+        chkSuDungTemInBangCanDienTu.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        chkSuDungTemInBangCanDienTu.setOpaque(false);
+        chkSuDungTemInBangCanDienTu.setBounds(20, startY, 240, fieldH);
+        panel.add(chkSuDungTemInBangCanDienTu);
+
+        JLabel lblChuoiBD = new JLabel("Chuỗi bắt đầu");
+        lblChuoiBD.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblChuoiBD.setBounds(280, startY, 90, fieldH);
+        panel.add(lblChuoiBD);
+
+        txtChuoiBatDauCanDienTu = new JTextField("29");
+        txtChuoiBatDauCanDienTu.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        txtChuoiBatDauCanDienTu.setBounds(375, startY, 155, fieldH);
+        panel.add(txtChuoiBatDauCanDienTu);
+
+        // Row 5: Tìm theo & Cách tìm
+        startY += rowGap;
+        JLabel lblTimTheo = new JLabel("Tìm theo");
+        lblTimTheo.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblTimTheo.setBounds(25, startY, 70, fieldH);
+        panel.add(lblTimTheo);
+
+        cbTimTheo = new JComboBox<>(new String[]{
+                "Cả tên hàng và mã hàng",
+                "Tên hàng",
+                "Mã hàng"
+        });
+        cbTimTheo.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        cbTimTheo.setBounds(100, startY, 160, fieldH);
+        panel.add(cbTimTheo);
+
+        JLabel lblCachTim = new JLabel("Cách tìm");
+        lblCachTim.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblCachTim.setBounds(280, startY, 70, fieldH);
+        panel.add(lblCachTim);
+
+        cbCachTim = new JComboBox<>(new String[]{
+                "Tìm có chứa",
+                "Tìm bắt đầu",
+                "Tìm chính xác"
+        });
+        cbCachTim.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        cbCachTim.setBounds(375, startY, 155, fieldH);
+        panel.add(cbCachTim);
+
+        // Row 6: Cho phép trùng tên mặt hàng & Hàng có bảo hành (Default: true / true)
+        startY += rowGap;
+        chkChoPhepTrungTenMatHang = new JCheckBox("Cho phép trùng tên mặt hàng", true);
+        chkChoPhepTrungTenMatHang.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        chkChoPhepTrungTenMatHang.setOpaque(false);
+        chkChoPhepTrungTenMatHang.setBounds(20, startY, 240, fieldH);
+        panel.add(chkChoPhepTrungTenMatHang);
+
+        chkHangCoBaoHanh = new JCheckBox("Hàng có bảo hành", true);
+        chkHangCoBaoHanh.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        chkHangCoBaoHanh.setOpaque(false);
+        chkHangCoBaoHanh.setBounds(330, startY, 200, fieldH);
+        panel.add(chkHangCoBaoHanh);
+
+        // Row 7: Sử dụng hãng sản xuất (Default: true)
+        startY += rowGap;
+        chkSuDungHangSanXuat = new JCheckBox("Sử dụng hãng sản xuất", true);
+        chkSuDungHangSanXuat.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        chkSuDungHangSanXuat.setOpaque(false);
+        chkSuDungHangSanXuat.setBounds(20, startY, 250, fieldH);
+        panel.add(chkSuDungHangSanXuat);
+
+        // Row 8: Tiêu đề Cấu hình sử dụng nhiều giá bán
+        startY += rowGap + 4;
+        JLabel lblCauHinhGia = new JLabel("Cấu hình sử dụng nhiều giá bán trên mặt hàng hay không");
+        lblCauHinhGia.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblCauHinhGia.setBounds(25, startY, 400, fieldH);
+        panel.add(lblCauHinhGia);
+
+        // Row 9: Sử dụng giá 2 & Diễn giải giá 2 (Default: false / "Đơn giá 2")
+        startY += rowGap;
+        chkSuDungGia2 = new JCheckBox("Sử dụng giá 2", false);
+        chkSuDungGia2.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        chkSuDungGia2.setOpaque(false);
+        chkSuDungGia2.setBounds(20, startY, 150, fieldH);
+        panel.add(chkSuDungGia2);
+
+        JLabel lblDienGiai2 = new JLabel("Diễn giải giá 2");
+        lblDienGiai2.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblDienGiai2.setBounds(280, startY, 90, fieldH);
+        panel.add(lblDienGiai2);
+
+        txtDienGiaiGia2 = new JTextField("Đơn giá 2");
+        txtDienGiaiGia2.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        txtDienGiaiGia2.setBounds(375, startY, 155, fieldH);
+        panel.add(txtDienGiaiGia2);
+
+        // Row 10: Sử dụng giá 3 & Diễn giải giá 3 (Default: false / "Giá bán 3")
+        startY += rowGap;
+        chkSuDungGia3 = new JCheckBox("Sử dụng giá 3", false);
+        chkSuDungGia3.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        chkSuDungGia3.setOpaque(false);
+        chkSuDungGia3.setBounds(20, startY, 150, fieldH);
+        panel.add(chkSuDungGia3);
+
+        JLabel lblDienGiai3 = new JLabel("Diễn giải giá 3");
+        lblDienGiai3.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblDienGiai3.setBounds(280, startY, 90, fieldH);
+        panel.add(lblDienGiai3);
+
+        txtDienGiaiGia3 = new JTextField("Giá bán 3");
+        txtDienGiaiGia3.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        txtDienGiaiGia3.setBounds(375, startY, 155, fieldH);
+        panel.add(txtDienGiaiGia3);
+
+        // Row 11: Sử dụng giá 4 & Diễn giải giá 4 (Default: false / "Giá bán 4")
+        startY += rowGap;
+        chkSuDungGia4 = new JCheckBox("Sử dụng giá 4", false);
+        chkSuDungGia4.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        chkSuDungGia4.setOpaque(false);
+        chkSuDungGia4.setBounds(20, startY, 150, fieldH);
+        panel.add(chkSuDungGia4);
+
+        JLabel lblDienGiai4 = new JLabel("Diễn giải giá 4");
+        lblDienGiai4.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblDienGiai4.setBounds(280, startY, 90, fieldH);
+        panel.add(lblDienGiai4);
+
+        txtDienGiaiGia4 = new JTextField("Giá bán 4");
+        txtDienGiaiGia4.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        txtDienGiaiGia4.setBounds(375, startY, 155, fieldH);
+        panel.add(txtDienGiaiGia4);
+
+        // Row 12: Hiển thị để lựa chọn nếu có nhiều giá (Default: true)
+        startY += rowGap;
+        chkHienThiDeLuaChonNeuCoNhieuGia = new JCheckBox("Hiển thị để lựa chọn nếu có nhiều giá", true);
+        chkHienThiDeLuaChonNeuCoNhieuGia.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        chkHienThiDeLuaChonNeuCoNhieuGia.setOpaque(false);
+        chkHienThiDeLuaChonNeuCoNhieuGia.setBounds(20, startY, 320, fieldH);
+        panel.add(chkHienThiDeLuaChonNeuCoNhieuGia);
+
+        // Row 13: Sắp xếp thứ tự theo (Default: "Mã hàng")
+        startY += rowGap;
+        JLabel lblSapXep = new JLabel("Sắp xếp thứ tự theo");
+        lblSapXep.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblSapXep.setBounds(25, startY, 130, fieldH);
+        panel.add(lblSapXep);
+
+        cbSapXepThuTuTheo = new JComboBox<>(new String[]{
+                "Mã hàng",
+                "Tên hàng"
+        });
+        cbSapXepThuTuTheo.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        cbSapXepThuTuTheo.setBounds(165, startY, 365, fieldH);
+        panel.add(cbSapXepThuTuTheo);
+
+        // Row 14: Mặt hàng có hạn sử dụng (Default: false)
+        startY += rowGap;
+        chkMatHangCoHanSuDung = new JCheckBox("Mặt hàng có hạn sử dụng", false);
+        chkMatHangCoHanSuDung.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        chkMatHangCoHanSuDung.setOpaque(false);
+        chkMatHangCoHanSuDung.setBounds(20, startY, 300, fieldH);
+        panel.add(chkMatHangCoHanSuDung);
+
+        // Row 15: Mặt hàng có kích thước (Default: false)
+        startY += rowGap;
+        chkMatHangCoKichThuoc = new JCheckBox("Mặt hàng có kích thước", false);
+        chkMatHangCoKichThuoc.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        chkMatHangCoKichThuoc.setOpaque(false);
+        chkMatHangCoKichThuoc.setBounds(20, startY, 300, fieldH);
+        panel.add(chkMatHangCoKichThuoc);
+
+        // Row 16: Mặt hàng có vật tư định lượng (Default: true)
+        startY += rowGap;
+        chkMatHangCoVatTuDinhLuong = new JCheckBox("Mặt hàng có vật tư định lượng", true);
+        chkMatHangCoVatTuDinhLuong.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        chkMatHangCoVatTuDinhLuong.setOpaque(false);
+        chkMatHangCoVatTuDinhLuong.setBounds(20, startY, 300, fieldH);
+        panel.add(chkMatHangCoVatTuDinhLuong);
+
+        // Row 17: Giá bán lẻ (USD) (Default: true)
+        startY += rowGap;
+        chkGiaBanLeUSD = new JCheckBox("Giá bán lẻ (USD)", true);
+        chkGiaBanLeUSD.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        chkGiaBanLeUSD.setOpaque(false);
+        chkGiaBanLeUSD.setBounds(20, startY, 300, fieldH);
+        panel.add(chkGiaBanLeUSD);
 
         panel.setPreferredSize(new Dimension(580, startY + 40));
         JScrollPane scrollPane = new JScrollPane(panel);
@@ -1141,6 +1410,32 @@ public class CauHinhToanHeThongDialog extends JDialog {
         chkNhapKhoBangDauDocMaVach.setSelected(currentConfig.isNhapKhoBangDauDocMaVach());
         cbGiaSuDungKhiChuyenXuatKho.setSelectedItem(currentConfig.getGiaSuDungKhiChuyenXuatKho());
         chkSuDungChucNangSanXuat.setSelected(currentConfig.isSuDungChucNangSanXuat());
+
+        // Tab 8: Mặt hàng
+        chkSuDungMaSanCo.setSelected(currentConfig.isSuDungMaSanCo());
+        chkSuDungMaHang.setSelected(currentConfig.isSuDungMaHang());
+        chkTuDongSinhMaVach.setSelected(currentConfig.isTuDongSinhMaVach());
+        txtChieuDaiMaVach.setText(String.valueOf(currentConfig.getChieuDaiMaVach()));
+        chkCoKyTuKiemTra.setSelected(currentConfig.isCoKyTuKiemTra());
+        chkSuDungTemInBangCanDienTu.setSelected(currentConfig.isSuDungTemInBangCanDienTu());
+        txtChuoiBatDauCanDienTu.setText(currentConfig.getChuoiBatDauCanDienTu());
+        cbTimTheo.setSelectedItem(currentConfig.getTimTheo());
+        cbCachTim.setSelectedItem(currentConfig.getCachTim());
+        chkChoPhepTrungTenMatHang.setSelected(currentConfig.isChoPhepTrungTenMatHang());
+        chkHangCoBaoHanh.setSelected(currentConfig.isHangCoBaoHanh());
+        chkSuDungHangSanXuat.setSelected(currentConfig.isSuDungHangSanXuat());
+        chkSuDungGia2.setSelected(currentConfig.isSuDungGia2());
+        txtDienGiaiGia2.setText(currentConfig.getDienGiaiGia2());
+        chkSuDungGia3.setSelected(currentConfig.isSuDungGia3());
+        txtDienGiaiGia3.setText(currentConfig.getDienGiaiGia3());
+        chkSuDungGia4.setSelected(currentConfig.isSuDungGia4());
+        txtDienGiaiGia4.setText(currentConfig.getDienGiaiGia4());
+        chkHienThiDeLuaChonNeuCoNhieuGia.setSelected(currentConfig.isHienThiDeLuaChonNeuCoNhieuGia());
+        cbSapXepThuTuTheo.setSelectedItem(currentConfig.getSapXepThuTuTheo());
+        chkMatHangCoHanSuDung.setSelected(currentConfig.isMatHangCoHanSuDung());
+        chkMatHangCoKichThuoc.setSelected(currentConfig.isMatHangCoKichThuoc());
+        chkMatHangCoVatTuDinhLuong.setSelected(currentConfig.isMatHangCoVatTuDinhLuong());
+        chkGiaBanLeUSD.setSelected(currentConfig.isGiaBanLeUSD());
     }
 
     private void onSave() {
@@ -1217,6 +1512,32 @@ public class CauHinhToanHeThongDialog extends JDialog {
         currentConfig.setNhapKhoBangDauDocMaVach(chkNhapKhoBangDauDocMaVach.isSelected());
         currentConfig.setGiaSuDungKhiChuyenXuatKho(cbGiaSuDungKhiChuyenXuatKho.getSelectedItem() != null ? cbGiaSuDungKhiChuyenXuatKho.getSelectedItem().toString() : "Giá vốn");
         currentConfig.setSuDungChucNangSanXuat(chkSuDungChucNangSanXuat.isSelected());
+
+        // Tab 8: Mặt hàng
+        currentConfig.setSuDungMaSanCo(chkSuDungMaSanCo.isSelected());
+        currentConfig.setSuDungMaHang(chkSuDungMaHang.isSelected());
+        currentConfig.setTuDongSinhMaVach(chkTuDongSinhMaVach.isSelected());
+        try { currentConfig.setChieuDaiMaVach(Integer.parseInt(txtChieuDaiMaVach.getText().trim())); } catch (Exception ignored) {}
+        currentConfig.setCoKyTuKiemTra(chkCoKyTuKiemTra.isSelected());
+        currentConfig.setSuDungTemInBangCanDienTu(chkSuDungTemInBangCanDienTu.isSelected());
+        currentConfig.setChuoiBatDauCanDienTu(txtChuoiBatDauCanDienTu.getText().trim());
+        currentConfig.setTimTheo(cbTimTheo.getSelectedItem() != null ? cbTimTheo.getSelectedItem().toString() : "Cả tên hàng và mã hàng");
+        currentConfig.setCachTim(cbCachTim.getSelectedItem() != null ? cbCachTim.getSelectedItem().toString() : "Tìm có chứa");
+        currentConfig.setChoPhepTrungTenMatHang(chkChoPhepTrungTenMatHang.isSelected());
+        currentConfig.setHangCoBaoHanh(chkHangCoBaoHanh.isSelected());
+        currentConfig.setSuDungHangSanXuat(chkSuDungHangSanXuat.isSelected());
+        currentConfig.setSuDungGia2(chkSuDungGia2.isSelected());
+        currentConfig.setDienGiaiGia2(txtDienGiaiGia2.getText().trim());
+        currentConfig.setSuDungGia3(chkSuDungGia3.isSelected());
+        currentConfig.setDienGiaiGia3(txtDienGiaiGia3.getText().trim());
+        currentConfig.setSuDungGia4(chkSuDungGia4.isSelected());
+        currentConfig.setDienGiaiGia4(txtDienGiaiGia4.getText().trim());
+        currentConfig.setHienThiDeLuaChonNeuCoNhieuGia(chkHienThiDeLuaChonNeuCoNhieuGia.isSelected());
+        currentConfig.setSapXepThuTuTheo(cbSapXepThuTuTheo.getSelectedItem() != null ? cbSapXepThuTuTheo.getSelectedItem().toString() : "Mã hàng");
+        currentConfig.setMatHangCoHanSuDung(chkMatHangCoHanSuDung.isSelected());
+        currentConfig.setMatHangCoKichThuoc(chkMatHangCoKichThuoc.isSelected());
+        currentConfig.setMatHangCoVatTuDinhLuong(chkMatHangCoVatTuDinhLuong.isSelected());
+        currentConfig.setGiaBanLeUSD(chkGiaBanLeUSD.isSelected());
 
         boolean ok = configDAO.saveConfig(currentConfig);
         if (ok) {
