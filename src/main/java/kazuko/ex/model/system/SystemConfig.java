@@ -70,6 +70,7 @@ public class SystemConfig {
     private boolean suDung2DonViTinh = false;
     private boolean tuDongTinhGiaVon = true;
     private boolean nhapKhoBangDauDocMaVach = true;
+    private String storageLocation = "Giá vốn";
     private String giaSuDungKhiChuyenXuatKho = "Giá vốn";
     private boolean suDungChucNangSanXuat = false;
 
@@ -106,6 +107,28 @@ public class SystemConfig {
     private boolean thongBaoHangHetHanDung = false;
     private boolean thongBaoHangSapHetHanDung = false;
     private int thongBaoTruocNgay = 3;
+
+    // 10. Cảm ứng
+    private boolean inPhaCheKhiInHoaDon = false;
+    private String mauInPhaChe = "Mẫu in chế biến";
+    private String mayInPhaChe = "Microsoft XPS Document Writer";
+    private boolean inPhaCheKhiLuuTam = false;
+    private String mauInPhaCheLuuTam = "";
+
+    // 11. Quản trị
+    private boolean phieuGanNhatNamPhiaDuoi = false;
+    private String phimNhapLieuTrenLuoi = "Tab để sang ngang, Enter để xuống dòng";
+    private boolean tuDongSaoLuuDuLieu = true;
+    private String duongDanSaoLuu = "";
+    private int soNgaySaoLuu = 1;
+    private String chucNangMacDinh = "Hóa đơn bán hàng";
+    private boolean locDuLieuBoKhoangTrong = false;
+    private boolean hienThiXuongDongNeuDoRongCotNho = false;
+    private String doToChuHienThi = "Nhỏ (110%)";
+    private String giaoDienChuongTrinh = "Office 2010 - Blue";
+    private boolean tuDongTaiLaiDuLieuKhiChuyenTab = true;
+    private boolean kichHoatLuuVetHoatDong = true;
+    private boolean heThongChayNhieuMayTram = true;
 
     public SystemConfig() {
         initDefaultPrinters();
@@ -399,4 +422,60 @@ public class SystemConfig {
 
     public int getThongBaoTruocNgay() { return thongBaoTruocNgay; }
     public void setThongBaoTruocNgay(int thongBaoTruocNgay) { this.thongBaoTruocNgay = thongBaoTruocNgay; }
+
+    // Getters & Setters Cảm ứng
+    public boolean isInPhaCheKhiInHoaDon() { return inPhaCheKhiInHoaDon; }
+    public void setInPhaCheKhiInHoaDon(boolean inPhaCheKhiInHoaDon) { this.inPhaCheKhiInHoaDon = inPhaCheKhiInHoaDon; }
+
+    public String getMauInPhaChe() { return mauInPhaChe; }
+    public void setMauInPhaChe(String mauInPhaChe) { this.mauInPhaChe = mauInPhaChe; }
+
+    public String getMayInPhaChe() { return mayInPhaChe; }
+    public void setMayInPhaChe(String mayInPhaChe) { this.mayInPhaChe = mayInPhaChe; }
+
+    public boolean isInPhaCheKhiLuuTam() { return inPhaCheKhiLuuTam; }
+    public void setInPhaCheKhiLuuTam(boolean inPhaCheKhiLuuTam) { this.inPhaCheKhiLuuTam = inPhaCheKhiLuuTam; }
+
+    public String getMauInPhaCheLuuTam() { return mauInPhaCheLuuTam; }
+    public void setMauInPhaCheLuuTam(String mauInPhaCheLuuTam) { this.mauInPhaCheLuuTam = mauInPhaCheLuuTam; }
+
+    // Getters & Setters Quản trị
+    public boolean isPhieuGanNhatNamPhiaDuoi() { return phieuGanNhatNamPhiaDuoi; }
+    public void setPhieuGanNhatNamPhiaDuoi(boolean phieuGanNhatNamPhiaDuoi) { this.phieuGanNhatNamPhiaDuoi = phieuGanNhatNamPhiaDuoi; }
+
+    public String getPhimNhapLieuTrenLuoi() { return phimNhapLieuTrenLuoi; }
+    public void setPhimNhapLieuTrenLuoi(String phimNhapLieuTrenLuoi) { this.phimNhapLieuTrenLuoi = phimNhapLieuTrenLuoi; }
+
+    public boolean isTuDongSaoLuuDuLieu() { return tuDongSaoLuuDuLieu; }
+    public void setTuDongSaoLuuDuLieu(boolean tuDongSaoLuuDuLieu) { this.tuDongSaoLuuDuLieu = tuDongSaoLuuDuLieu; }
+
+    public String getDuongDanSaoLuu() { return duongDanSaoLuu; }
+    public void setDuongDanSaoLuu(String duongDanSaoLuu) { this.duongDanSaoLuu = duongDanSaoLuu; }
+
+    public int getSoNgaySaoLuu() { return soNgaySaoLuu; }
+    public void setSoNgaySaoLuu(int soNgaySaoLuu) { this.soNgaySaoLuu = soNgaySaoLuu; }
+
+    public String getChucNangMacDinh() { return chucNangMacDinh; }
+    public void setChucNangMacDinh(String chucNangMacDinh) { this.chucNangMacDinh = chucNangMacDinh; }
+
+    public boolean isLocDuLieuBoKhoangTrong() { return locDuLieuBoKhoangTrong; }
+    public void setLocDuLieuBoKhoangTrong(boolean locDuLieuBoKhoangTrong) { this.locDuLieuBoKhoangTrong = locDuLieuBoKhoangTrong; }
+
+    public boolean isHienThiXuongDongNeuDoRongCotNho() { return hienThiXuongDongNeuDoRongCotNho; }
+    public void setHienThiXuongDongNeuDoRongCotNho(boolean hienThiXuongDongNeuDoRongCotNho) { this.hienThiXuongDongNeuDoRongCotNho = hienThiXuongDongNeuDoRongCotNho; }
+
+    public String getDoToChuHienThi() { return doToChuHienThi; }
+    public void setDoToChuHienThi(String doToChuHienThi) { this.doToChuHienThi = doToChuHienThi; }
+
+    public String getGiaoDienChuongTrinh() { return giaoDienChuongTrinh; }
+    public void setGiaoDienChuongTrinh(String giaoDienChuongTrinh) { this.giaoDienChuongTrinh = giaoDienChuongTrinh; }
+
+    public boolean isTuDongTaiLaiDuLieuKhiChuyenTab() { return tuDongTaiLaiDuLieuKhiChuyenTab; }
+    public void setTuDongTaiLaiDuLieuKhiChuyenTab(boolean tuDongTaiLaiDuLieuKhiChuyenTab) { this.tuDongTaiLaiDuLieuKhiChuyenTab = tuDongTaiLaiDuLieuKhiChuyenTab; }
+
+    public boolean isKichHoatLuuVetHoatDong() { return kichHoatLuuVetHoatDong; }
+    public void setKichHoatLuuVetHoatDong(boolean kichHoatLuuVetHoatDong) { this.kichHoatLuuVetHoatDong = kichHoatLuuVetHoatDong; }
+
+    public boolean isHeThongChayNhieuMayTram() { return heThongChayNhieuMayTram; }
+    public void setHeThongChayNhieuMayTram(boolean heThongChayNhieuMayTram) { this.heThongChayNhieuMayTram = heThongChayNhieuMayTram; }
 }

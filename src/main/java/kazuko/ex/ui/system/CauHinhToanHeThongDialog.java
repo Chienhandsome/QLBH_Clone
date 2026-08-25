@@ -1,6 +1,8 @@
 package kazuko.ex.ui.system;
 
+import kazuko.ex.dao.STemplateDAO;
 import kazuko.ex.dao.SystemConfigDAO;
+import kazuko.ex.model.system.STemplate;
 import kazuko.ex.model.system.SystemConfig;
 import kazuko.ex.util.IconHelper;
 
@@ -19,7 +21,15 @@ import java.util.List;
 
 public class CauHinhToanHeThongDialog extends JDialog {
     private final SystemConfigDAO configDAO = new SystemConfigDAO();
+    private final STemplateDAO templateDAO = new STemplateDAO();
     private SystemConfig currentConfig;
+
+    // State mở khóa Tab Mẫu hóa đơn (lưu trong phiên làm việc)
+    private static boolean isDevUnlocked = false;
+    private JList<STemplate> listFolderMauHD;
+    private DefaultListModel<STemplate> folderMauHDListModel;
+    private JList<STemplate> listTemplateMauHD;
+    private DefaultListModel<STemplate> templateMauHDListModel;
 
     // Sidebar
     private JList<MenuItem> listCategories;
@@ -135,6 +145,28 @@ public class CauHinhToanHeThongDialog extends JDialog {
     private JCheckBox chkThongBaoHangSapHetHanDung;
     private JTextField txtThongBaoTruocNgay;
 
+    // Tab 10: Cảm ứng
+    private JCheckBox chkInPhaCheKhiInHoaDon;
+    private JComboBox<String> cbMauInPhaChe;
+    private JComboBox<String> cbMayInPhaChe;
+    private JCheckBox chkInPhaCheKhiLuuTam;
+    private JComboBox<String> cbMauInPhaCheLuuTam;
+
+    // Tab 11: Quản trị
+    private JCheckBox chkPhieuGanNhatNamPhiaDuoi;
+    private JComboBox<String> cbPhimNhapLieuTrenLuoi;
+    private JCheckBox chkTuDongSaoLuuDuLieu;
+    private JTextField txtDuongDanSaoLuu;
+    private JTextField txtSoNgaySaoLuu;
+    private JComboBox<String> cbChucNangMacDinh;
+    private JCheckBox chkLocDuLieuBoKhoangTrong;
+    private JCheckBox chkHienThiXuongDongNeuDoRongCotNho;
+    private JComboBox<String> cbDoToChuHienThi;
+    private JComboBox<String> cbGiaoDienChuongTrinh;
+    private JCheckBox chkTuDongTaiLaiDuLieuKhiChuyenTab;
+    private JCheckBox chkKichHoatLuuVetHoatDong;
+    private JCheckBox chkHeThongChayNhieuMayTram;
+
     public CauHinhToanHeThongDialog(Frame parent) {
         super(parent, "CẤU HÌNH TOÀN HỆ THỐNG", true);
         this.currentConfig = configDAO.loadConfig();
@@ -179,6 +211,7 @@ public class CauHinhToanHeThongDialog extends JDialog {
 
         // Add Content Panels
         pnlCardContainer.add(createTabThongTinChinh(), "Thông tin chung");
+        pnlCardContainer.add(createTabMauHoaDon(), "Mẫu hóa đơn");
         pnlCardContainer.add(createTabMayIn(), "Máy in");
         pnlCardContainer.add(createTabSoPhieu(), "Số phiếu");
         pnlCardContainer.add(createTabBanHang(), "Bán hàng");
@@ -187,12 +220,15 @@ public class CauHinhToanHeThongDialog extends JDialog {
         pnlCardContainer.add(createTabKhoHang(), "Kho hàng");
         pnlCardContainer.add(createTabMatHang(), "Mặt hàng");
         pnlCardContainer.add(createTabCanhBao(), "Cảnh báo");
+        pnlCardContainer.add(createTabCamUng(), "Cảm ứng");
+        pnlCardContainer.add(createTabQuanTri(), "Quản trị");
 
         // Placeholder cards for other categories
         for (MenuItem item : allMenuItems) {
-            if (!"Thông tin chung".equals(item.name) && !"Máy in".equals(item.name) && !"Số phiếu".equals(item.name)
+            if (!"Thông tin chung".equals(item.name) && !"Mẫu hóa đơn".equals(item.name) && !"Máy in".equals(item.name) && !"Số phiếu".equals(item.name)
                     && !"Bán hàng".equals(item.name) && !"Thanh toán".equals(item.name) && !"Tích điểm".equals(item.name)
-                    && !"Kho hàng".equals(item.name) && !"Mặt hàng".equals(item.name) && !"Cảnh báo".equals(item.name)) {
+                    && !"Kho hàng".equals(item.name) && !"Mặt hàng".equals(item.name) && !"Cảnh báo".equals(item.name)
+                    && !"Cảm ứng".equals(item.name) && !"Quản trị".equals(item.name)) {
                 pnlCardContainer.add(createPlaceholderCard(item.name), item.name);
             }
         }
@@ -454,18 +490,7 @@ public class CauHinhToanHeThongDialog extends JDialog {
         lblMauHD.setBounds(20, startY, lblW, fieldH);
         panel.add(lblMauHD);
 
-        String[] templates = {
-                "Mẫu in bill 54mm",
-                "Mẫu in bill 80mm",
-                "Mẫu in bill 80 chiết khấu mặt hàng",
-                "Mẫu 54 mm x 2 dòng",
-                "Mẫu in bill A4",
-                "Mẫu in bill A5",
-                "Mẫu in A5 cho máy in kim",
-                "BIÊN BẢN GIAO NHẬN HÀNG HÓA",
-                "Mẫu in chế biến"
-        };
-        cbMauHoaDon = new JComboBox<>(templates);
+        cbMauHoaDon = new JComboBox<>();
         cbMauHoaDon.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         cbMauHoaDon.setBounds(110, startY, 340, fieldH);
         panel.add(cbMauHoaDon);
@@ -486,6 +511,213 @@ public class CauHinhToanHeThongDialog extends JDialog {
         panel.add(chkHienThiTruocKhiIn);
 
         return panel;
+    }
+
+    // ==================== TAB: MẪU HÓA ĐƠN (NHÀ PHÁT TRIỂN) ====================
+    private JPanel createTabMauHoaDon() {
+        JPanel container = new JPanel(new BorderLayout(0, 8));
+        container.setBackground(Color.WHITE);
+        container.setBorder(new EmptyBorder(12, 16, 12, 16));
+
+        // --- Top Header (Lời nhắc + Ô nhập mật khẩu + Nút mở khóa + Link Sửa mẫu) ---
+        JPanel pnlTop = new JPanel(new BorderLayout(8, 4));
+        pnlTop.setBackground(Color.WHITE);
+
+        JLabel lblPrompt = new JLabel("Phần này dành cho nhà phát triển, mời bạn nhập mật khẩu:");
+        lblPrompt.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblPrompt.setForeground(new Color(30, 30, 30));
+
+        JPanel pnlAuthBox = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
+        pnlAuthBox.setBackground(Color.WHITE);
+
+        JPasswordField txtDevPass = new JPasswordField(10);
+        txtDevPass.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        txtDevPass.setPreferredSize(new Dimension(130, 24));
+
+        JButton btnUnlock = new JButton("Mở khóa");
+        btnUnlock.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        btnUnlock.setBackground(Color.WHITE);
+        btnUnlock.setPreferredSize(new Dimension(85, 24));
+        btnUnlock.setFocusPainted(false);
+
+        pnlAuthBox.add(txtDevPass);
+        pnlAuthBox.add(btnUnlock);
+
+        JPanel pnlHeaderLeft = new JPanel(new BorderLayout(4, 6));
+        pnlHeaderLeft.setBackground(Color.WHITE);
+        pnlHeaderLeft.add(lblPrompt, BorderLayout.NORTH);
+        pnlHeaderLeft.add(pnlAuthBox, BorderLayout.SOUTH);
+        pnlTop.add(pnlHeaderLeft, BorderLayout.WEST);
+
+        JLabel lblSuaMau = new JLabel("<html><u><font color='#0066cc'>Sửa mẫu</font></u></html>");
+        lblSuaMau.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblSuaMau.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        lblSuaMau.setVisible(false);
+        lblSuaMau.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent e) {
+                STemplate selected = listTemplateMauHD != null ? listTemplateMauHD.getSelectedValue() : null;
+                if (selected != null) {
+                    JOptionPane.showMessageDialog(CauHinhToanHeThongDialog.this,
+                            "Mở trình thiết kế mẫu in FastReport cho mẫu:\n" + selected.getName() +
+                            (selected.getId() != null ? " (ID: " + selected.getId() + ")" : ""),
+                            "FastReport Designer", JOptionPane.INFORMATION_MESSAGE);
+                } else {
+                    JOptionPane.showMessageDialog(CauHinhToanHeThongDialog.this,
+                            "Vui lòng chọn một mẫu in từ danh sách bên phải để sửa!",
+                            "Thông báo", JOptionPane.WARNING_MESSAGE);
+                }
+            }
+        });
+
+        JPanel pnlHeaderRight = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 4));
+        pnlHeaderRight.setBackground(Color.WHITE);
+        pnlHeaderRight.add(lblSuaMau);
+        pnlTop.add(pnlHeaderRight, BorderLayout.EAST);
+
+        container.add(pnlTop, BorderLayout.NORTH);
+
+        // --- Center Section: 2 cột (Cây Folder bên trái + Danh sách Mẫu bên phải) ---
+        JPanel pnlCenter = new JPanel(new GridLayout(1, 2, 10, 0));
+        pnlCenter.setBackground(Color.WHITE);
+        pnlCenter.setBorder(new EmptyBorder(8, 0, 0, 0));
+
+        // 1. Cột trái: Thư mục
+        folderMauHDListModel = new DefaultListModel<>();
+        listFolderMauHD = new JList<>(folderMauHDListModel);
+        listFolderMauHD.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        listFolderMauHD.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        listFolderMauHD.setCellRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+                JLabel label = (JLabel) super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                if (value instanceof STemplate) {
+                    STemplate t = (STemplate) value;
+                    label.setText(t.getName());
+                    label.setIcon(IconHelper.getIcon("Folder2.png", 16, 16) != null ?
+                            IconHelper.getIcon("Folder2.png", 16, 16) :
+                            IconHelper.getIcon("Folder.png", 16, 16));
+                }
+                label.setBorder(new EmptyBorder(3, 6, 3, 6));
+                return label;
+            }
+        });
+
+        JScrollPane spFolders = new JScrollPane(listFolderMauHD);
+        spFolders.setBorder(new MatteBorder(1, 1, 1, 1, new Color(180, 200, 220)));
+        pnlCenter.add(spFolders);
+
+        // 2. Cột phải: Mẫu in
+        templateMauHDListModel = new DefaultListModel<>();
+        listTemplateMauHD = new JList<>(templateMauHDListModel);
+        listTemplateMauHD.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        listTemplateMauHD.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        listTemplateMauHD.setCellRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+                JLabel label = (JLabel) super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                if (value instanceof STemplate) {
+                    STemplate t = (STemplate) value;
+                    label.setText(t.getName());
+                    label.setIcon(getTemplateIcon(t.getName()));
+                }
+                label.setBorder(new EmptyBorder(3, 6, 3, 6));
+                return label;
+            }
+        });
+
+        listTemplateMauHD.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent e) {
+                if (e.getClickCount() == 2) {
+                    STemplate selected = listTemplateMauHD.getSelectedValue();
+                    if (selected != null) {
+                        JOptionPane.showMessageDialog(CauHinhToanHeThongDialog.this,
+                                "Mở trình thiết kế mẫu in FastReport cho mẫu:\n" + selected.getName(),
+                                "FastReport Designer", JOptionPane.INFORMATION_MESSAGE);
+                    }
+                }
+            }
+        });
+
+        JScrollPane spTemplates = new JScrollPane(listTemplateMauHD);
+        spTemplates.setBorder(new MatteBorder(1, 1, 1, 1, new Color(180, 200, 220)));
+        pnlCenter.add(spTemplates);
+
+        // Lắng nghe sự kiện click chọn thư mục
+        listFolderMauHD.addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting()) {
+                STemplate selectedFolder = listFolderMauHD.getSelectedValue();
+                if (selectedFolder != null) {
+                    loadTemplatesForFolder(selectedFolder);
+                }
+            }
+        });
+
+        container.add(pnlCenter, BorderLayout.CENTER);
+
+        // --- Xử lý sự kiện mở khóa bằng mật khẩu "no1admin" ---
+        Runnable doUnlock = () -> {
+            String pass = new String(txtDevPass.getPassword()).trim();
+            if ("no1admin".equals(pass)) {
+                isDevUnlocked = true;
+                pnlAuthBox.setVisible(false);
+                lblPrompt.setText("Phần này dành cho nhà phát triển:");
+                lblSuaMau.setVisible(true);
+                pnlCenter.setVisible(true);
+                loadFolderData();
+                container.revalidate();
+                container.repaint();
+            } else {
+                JOptionPane.showMessageDialog(CauHinhToanHeThongDialog.this,
+                        "Mật khẩu không chính xác!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                txtDevPass.setText("");
+                txtDevPass.requestFocus();
+            }
+        };
+
+        btnUnlock.addActionListener(e -> doUnlock.run());
+        txtDevPass.addActionListener(e -> doUnlock.run());
+
+        // Kiểm tra trạng thái mở khóa ban đầu
+        if (isDevUnlocked) {
+            pnlAuthBox.setVisible(false);
+            lblPrompt.setText("Phần này dành cho nhà phát triển:");
+            lblSuaMau.setVisible(true);
+            pnlCenter.setVisible(true);
+            loadFolderData();
+        } else {
+            pnlAuthBox.setVisible(true);
+            lblPrompt.setText("Phần này dành cho nhà phát triển, mời bạn nhập mật khẩu:");
+            lblSuaMau.setVisible(false);
+            pnlCenter.setVisible(false);
+        }
+
+        return container;
+    }
+
+    private void loadFolderData() {
+        if (folderMauHDListModel == null) return;
+        folderMauHDListModel.clear();
+        List<STemplate> folders = templateDAO.getFolderList();
+        for (STemplate f : folders) {
+            folderMauHDListModel.addElement(f);
+        }
+        if (!folderMauHDListModel.isEmpty()) {
+            listFolderMauHD.setSelectedIndex(0);
+        }
+    }
+
+    private void loadTemplatesForFolder(STemplate folder) {
+        if (templateMauHDListModel == null || folder == null) return;
+        templateMauHDListModel.clear();
+        List<STemplate> templates = templateDAO.getTemplatesByFolder(folder.getId(), folder.getName());
+        for (STemplate t : templates) {
+            templateMauHDListModel.addElement(t);
+        }
+        if (!templateMauHDListModel.isEmpty()) {
+            listTemplateMauHD.setSelectedIndex(0);
+        }
     }
 
     // ==================== TAB 2: MÁY IN ====================
@@ -549,8 +781,10 @@ public class CauHinhToanHeThongDialog extends JDialog {
         if (list.size() <= 1) {
             list.add("Microsoft Print to PDF");
             list.add("Fax");
-        } else if (!list.contains("Microsoft Print to PDF")) {
-            list.add("Microsoft Print to PDF");
+            list.add("Microsoft XPS Document Writer");
+        } else {
+            if (!list.contains("Microsoft Print to PDF")) list.add("Microsoft Print to PDF");
+            if (!list.contains("Microsoft XPS Document Writer")) list.add("Microsoft XPS Document Writer");
         }
 
         return list.toArray(new String[0]);
@@ -846,7 +1080,6 @@ public class CauHinhToanHeThongDialog extends JDialog {
         startY += rowGap;
         chkChoPhepKhachNo = new JCheckBox("Cho phép khách nợ", false);
         chkChoPhepKhachNo.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        chkChoPhepKhachNo.setOpaque(false);
         chkChoPhepKhachNo.setBounds(20, startY, 280, fieldH);
         panel.add(chkChoPhepKhachNo);
 
@@ -1308,7 +1541,7 @@ public class CauHinhToanHeThongDialog extends JDialog {
         return container;
     }
 
-    // ==================== TAB 9: CẢNH BÁO (Ảnh 1) ====================
+    // ==================== TAB 9: CẢNH BÁO ====================
     private JPanel createTabCanhBao() {
         JPanel panel = new JPanel(null);
         panel.setBackground(Color.WHITE);
@@ -1376,6 +1609,277 @@ public class CauHinhToanHeThongDialog extends JDialog {
         return container;
     }
 
+    // ==================== TAB 10: CẢM ỨNG ====================
+    private JPanel createTabCamUng() {
+        JPanel panel = new JPanel(null);
+        panel.setBackground(Color.WHITE);
+
+        int startY = 15;
+        int fieldH = 24;
+        int rowGap = 32;
+
+        String[] detectedPrinters = getAvailablePrinters();
+
+        // Row 1: In pha chế khi in hóa đơn (Default: false)
+        chkInPhaCheKhiInHoaDon = new JCheckBox("In pha chế khi in hóa đơn", false);
+        chkInPhaCheKhiInHoaDon.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        chkInPhaCheKhiInHoaDon.setOpaque(false);
+        chkInPhaCheKhiInHoaDon.setBounds(20, startY, 300, 22);
+        panel.add(chkInPhaCheKhiInHoaDon);
+
+        // Row 2: Mẫu in pha chế (Default: "Mẫu in chế biến")
+        startY += 28;
+        JLabel lblMauIn = new JLabel("Mẫu in pha chế");
+        lblMauIn.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblMauIn.setBounds(25, startY, 150, fieldH);
+        panel.add(lblMauIn);
+
+        cbMauInPhaChe = new JComboBox<>();
+        cbMauInPhaChe.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        cbMauInPhaChe.setBackground(Color.WHITE);
+        cbMauInPhaChe.setBounds(180, startY, 380, fieldH);
+        panel.add(cbMauInPhaChe);
+
+        // Row 3: Máy in pha chế (Default: "Microsoft XPS Document Writer")
+        startY += rowGap;
+        JLabel lblMayIn = new JLabel("Máy in pha chế");
+        lblMayIn.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblMayIn.setBounds(25, startY, 150, fieldH);
+        panel.add(lblMayIn);
+
+        cbMayInPhaChe = new JComboBox<>(detectedPrinters);
+        cbMayInPhaChe.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        cbMayInPhaChe.setBackground(Color.WHITE);
+        cbMayInPhaChe.setSelectedItem("Microsoft XPS Document Writer");
+        cbMayInPhaChe.setBounds(180, startY, 380, fieldH);
+        panel.add(cbMayInPhaChe);
+
+        // Row 4: In pha chế khi lưu tạm (Default: false)
+        startY += rowGap;
+        chkInPhaCheKhiLuuTam = new JCheckBox("In pha chế khi lưu tạm", false);
+        chkInPhaCheKhiLuuTam.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        chkInPhaCheKhiLuuTam.setOpaque(false);
+        chkInPhaCheKhiLuuTam.setBounds(20, startY, 300, 22);
+        panel.add(chkInPhaCheKhiLuuTam);
+
+        // Row 5: Mẫu in pha chế lưu tạm (Default: "")
+        startY += 28;
+        JLabel lblMauInTam = new JLabel("Mẫu in pha chế lưu tạm");
+        lblMauInTam.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblMauInTam.setBounds(25, startY, 150, fieldH);
+        panel.add(lblMauInTam);
+
+        cbMauInPhaCheLuuTam = new JComboBox<>();
+        cbMauInPhaCheLuuTam.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        cbMauInPhaCheLuuTam.setBackground(Color.WHITE);
+        cbMauInPhaCheLuuTam.setBounds(180, startY, 380, fieldH);
+        panel.add(cbMauInPhaCheLuuTam);
+
+        panel.setPreferredSize(new Dimension(580, startY + 40));
+        JScrollPane scrollPane = new JScrollPane(panel);
+        scrollPane.setBorder(null);
+        JPanel container = new JPanel(new BorderLayout());
+        container.add(scrollPane, BorderLayout.CENTER);
+        return container;
+    }
+
+    // ==================== TAB 11: QUẢN TRỊ (Ảnh 1 & 2) ====================
+    private JPanel createTabQuanTri() {
+        JPanel panel = new JPanel(null);
+        panel.setBackground(Color.WHITE);
+
+        int startY = 12;
+        int fieldH = 22;
+        int rowGap = 26;
+
+        // Row 1: Phiếu gần nhất nằm phía dưới (Default: false)
+        chkPhieuGanNhatNamPhiaDuoi = new JCheckBox("Phiếu gần nhất nằm phía dưới", false);
+        chkPhieuGanNhatNamPhiaDuoi.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        chkPhieuGanNhatNamPhiaDuoi.setOpaque(false);
+        chkPhieuGanNhatNamPhiaDuoi.setBounds(20, startY, 300, fieldH);
+        panel.add(chkPhieuGanNhatNamPhiaDuoi);
+
+        // Row 2: Phím nhập liệu trên lưới
+        startY += rowGap;
+        JLabel lblPhimNhap = new JLabel("Phím nhập liệu trên lưới");
+        lblPhimNhap.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblPhimNhap.setBounds(25, startY, 150, fieldH);
+        panel.add(lblPhimNhap);
+
+        cbPhimNhapLieuTrenLuoi = new JComboBox<>(new String[]{
+                "Tab để sang ngang, Enter để xuống dòng",
+                "Enter để sang ngang, Tab để xuống dòng",
+                "Enter và Tab đều sang ngang"
+        });
+        cbPhimNhapLieuTrenLuoi.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        cbPhimNhapLieuTrenLuoi.setBackground(Color.WHITE);
+        cbPhimNhapLieuTrenLuoi.setBounds(180, startY, 380, fieldH);
+        panel.add(cbPhimNhapLieuTrenLuoi);
+
+        // Row 3: Dòng mô tả Thiết lập tùy chọn tự động sao lưu dữ liệu...
+        startY += rowGap + 4;
+        JLabel lblNoteBackup = new JLabel("Thiết lập tùy chọn tự động sao lưu dữ liệu để đảm bảo an toàn trong tình huống xấu nhất");
+        lblNoteBackup.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblNoteBackup.setBounds(25, startY, 530, fieldH);
+        panel.add(lblNoteBackup);
+
+        // Row 4: Tự động sao lưu dữ liệu (Default: true)
+        startY += rowGap;
+        chkTuDongSaoLuuDuLieu = new JCheckBox("Tự động sao lưu dữ liệu", true);
+        chkTuDongSaoLuuDuLieu.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        chkTuDongSaoLuuDuLieu.setOpaque(false);
+        chkTuDongSaoLuuDuLieu.setBounds(20, startY, 300, fieldH);
+        panel.add(chkTuDongSaoLuuDuLieu);
+
+        // Row 5: Đường dẫn sao lưu & Số ngày (Default: "" / "1")
+        startY += rowGap;
+        JLabel lblDuongDan = new JLabel("Đường dẫn sao lưu:");
+        lblDuongDan.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblDuongDan.setBounds(45, startY, 125, fieldH);
+        panel.add(lblDuongDan);
+
+        txtDuongDanSaoLuu = new JTextField();
+        txtDuongDanSaoLuu.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        txtDuongDanSaoLuu.setBounds(180, startY, 140, fieldH);
+        panel.add(txtDuongDanSaoLuu);
+
+        JLabel lblSoNgay = new JLabel("Số ngày:");
+        lblSoNgay.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblSoNgay.setBounds(330, startY, 60, fieldH);
+        panel.add(lblSoNgay);
+
+        txtSoNgaySaoLuu = new JTextField("1");
+        txtSoNgaySaoLuu.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        txtSoNgaySaoLuu.setBounds(395, startY, 55, fieldH);
+        panel.add(txtSoNgaySaoLuu);
+
+        // Row 6: Chức năng mặc định
+        startY += rowGap;
+        JLabel lblChucNang = new JLabel("Chức năng mặc định");
+        lblChucNang.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblChucNang.setBounds(25, startY, 150, fieldH);
+        panel.add(lblChucNang);
+
+        cbChucNangMacDinh = new JComboBox<>(new String[]{
+                "Hóa đơn bán hàng",
+                "Báo giá",
+                "Đơn hàng",
+                "Phiếu nhập kho",
+                "Phiếu xuất kho",
+                "Danh mục mặt hàng",
+                "Khách hàng"
+        });
+        cbChucNangMacDinh.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        cbChucNangMacDinh.setBackground(Color.WHITE);
+        cbChucNangMacDinh.setBounds(180, startY, 380, fieldH);
+        panel.add(cbChucNangMacDinh);
+
+        // Row 7: Lọc dữ liệu bỏ khoảng trống (Default: false)
+        startY += rowGap;
+        chkLocDuLieuBoKhoangTrong = new JCheckBox("Lọc dữ liệu bỏ khoảng trống", false);
+        chkLocDuLieuBoKhoangTrong.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        chkLocDuLieuBoKhoangTrong.setOpaque(false);
+        chkLocDuLieuBoKhoangTrong.setBounds(20, startY, 300, fieldH);
+        panel.add(chkLocDuLieuBoKhoangTrong);
+
+        startY += 20;
+        JLabel lblNoteLoc = new JLabel("(Ví dụ bạn tìm \"cafe da\" sẽ ra cả \"cafe đá\" và \"cafeda\")");
+        lblNoteLoc.setFont(new Font("Segoe UI", Font.ITALIC, 11));
+        lblNoteLoc.setForeground(new Color(100, 100, 100));
+        lblNoteLoc.setBounds(25, startY, 450, 18);
+        panel.add(lblNoteLoc);
+
+        // Row 8: Hiển thị xuống dòng nếu độ rộng cột nhỏ (Default: false)
+        startY += 24;
+        chkHienThiXuongDongNeuDoRongCotNho = new JCheckBox("Hiển thị xuống dòng nếu độ rộng cột nhỏ", false);
+        chkHienThiXuongDongNeuDoRongCotNho.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        chkHienThiXuongDongNeuDoRongCotNho.setOpaque(false);
+        chkHienThiXuongDongNeuDoRongCotNho.setBounds(20, startY, 350, fieldH);
+        panel.add(chkHienThiXuongDongNeuDoRongCotNho);
+
+        startY += 20;
+        JLabel lblNoteXuongDong = new JLabel("(Tùy chọn này sẽ làm chương trình chạy chậm hơn một chút)");
+        lblNoteXuongDong.setFont(new Font("Segoe UI", Font.ITALIC, 11));
+        lblNoteXuongDong.setForeground(new Color(100, 100, 100));
+        lblNoteXuongDong.setBounds(25, startY, 450, 18);
+        panel.add(lblNoteXuongDong);
+
+        // Row 9: Độ to chữ hiển thị
+        startY += 24;
+        JLabel lblDoToChu = new JLabel("Độ to chữ hiển thị");
+        lblDoToChu.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblDoToChu.setBounds(25, startY, 150, fieldH);
+        panel.add(lblDoToChu);
+
+        cbDoToChuHienThi = new JComboBox<>(new String[]{
+                "Nhỏ (110%)",
+                "Mặc định (100%)",
+                "Vừa (120%)",
+                "Lớn (130%)"
+        });
+        cbDoToChuHienThi.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        cbDoToChuHienThi.setBackground(Color.WHITE);
+        cbDoToChuHienThi.setBounds(180, startY, 380, fieldH);
+        panel.add(cbDoToChuHienThi);
+
+        startY += 20;
+        JLabel lblNoteFont = new JLabel("(Bạn cần thoát chương trình ra vào lại để áp dụng)");
+        lblNoteFont.setFont(new Font("Segoe UI", Font.ITALIC, 11));
+        lblNoteFont.setForeground(new Color(100, 100, 100));
+        lblNoteFont.setBounds(180, startY, 380, 18);
+        panel.add(lblNoteFont);
+
+        // Row 10: Giao diện chương trình
+        startY += 24;
+        JLabel lblGiaoDien = new JLabel("Giao diện chương trình");
+        lblGiaoDien.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblGiaoDien.setBounds(25, startY, 150, fieldH);
+        panel.add(lblGiaoDien);
+
+        cbGiaoDienChuongTrinh = new JComboBox<>(new String[]{
+                "Office 2010 - Blue",
+                "Office 2010 - Black",
+                "Office 2010 - Silver",
+                "Windows Standard",
+                "FlatLaf Light"
+        });
+        cbGiaoDienChuongTrinh.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        cbGiaoDienChuongTrinh.setBackground(Color.WHITE);
+        cbGiaoDienChuongTrinh.setBounds(180, startY, 380, fieldH);
+        panel.add(cbGiaoDienChuongTrinh);
+
+        // Row 11: Tự động tải lại dữ liệu khi chuyển tab ở giao diện chính (Default: true)
+        startY += rowGap;
+        chkTuDongTaiLaiDuLieuKhiChuyenTab = new JCheckBox("Tự động tải lại dữ liệu khi chuyển tab ở giao diện chính", true);
+        chkTuDongTaiLaiDuLieuKhiChuyenTab.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        chkTuDongTaiLaiDuLieuKhiChuyenTab.setOpaque(false);
+        chkTuDongTaiLaiDuLieuKhiChuyenTab.setBounds(20, startY, 450, fieldH);
+        panel.add(chkTuDongTaiLaiDuLieuKhiChuyenTab);
+
+        // Row 12: Kích hoạt lưu vết hoạt động (Default: true)
+        startY += rowGap;
+        chkKichHoatLuuVetHoatDong = new JCheckBox("Kích hoạt lưu vết hoạt động", true);
+        chkKichHoatLuuVetHoatDong.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        chkKichHoatLuuVetHoatDong.setOpaque(false);
+        chkKichHoatLuuVetHoatDong.setBounds(20, startY, 350, fieldH);
+        panel.add(chkKichHoatLuuVetHoatDong);
+
+        // Row 13: Hệ thống chạy nhiều máy trạm (Default: true)
+        startY += rowGap;
+        chkHeThongChayNhieuMayTram = new JCheckBox("Hệ thống chạy nhiều máy trạm", true);
+        chkHeThongChayNhieuMayTram.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        chkHeThongChayNhieuMayTram.setOpaque(false);
+        chkHeThongChayNhieuMayTram.setBounds(20, startY, 350, fieldH);
+        panel.add(chkHeThongChayNhieuMayTram);
+
+        panel.setPreferredSize(new Dimension(580, startY + 40));
+        JScrollPane scrollPane = new JScrollPane(panel);
+        scrollPane.setBorder(null);
+        JPanel container = new JPanel(new BorderLayout());
+        container.add(scrollPane, BorderLayout.CENTER);
+        return container;
+    }
+
     private JPanel createPlaceholderCard(String title) {
         JPanel pnl = new JPanel(new GridBagLayout());
         pnl.setBackground(Color.WHITE);
@@ -1403,8 +1907,101 @@ public class CauHinhToanHeThongDialog extends JDialog {
         } catch (Exception ignored) {}
     }
 
+    private void loadTemplatesToComboBoxes() {
+        List<String> templateNames = templateDAO.getInvoiceTemplateNames();
+        if (templateNames == null || templateNames.isEmpty()) {
+            templateNames = Arrays.asList(
+                    "BIÊN BẢN GIAO NHẬN HÀNG HÓA",
+                    "Mẫu 54 mm x 2 dòng",
+                    "Mẫu in A5 cho máy in kim",
+                    "Mẫu in bill 54mm",
+                    "Mẫu in bill 80 chiết khấu mặt hàng",
+                    "Mẫu in bill 80mm",
+                    "Mẫu in bill A4",
+                    "Mẫu in bill A5",
+                    "Mẫu in chế biến",
+                    "Phiếu giao hàng"
+            );
+        }
+
+        ListCellRenderer<Object> templateRenderer = new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+                JLabel label = (JLabel) super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                if (value != null && !value.toString().trim().isEmpty()) {
+                    String valStr = value.toString();
+                    label.setText(valStr);
+                    label.setIcon(getTemplateIcon(valStr));
+                }
+                return label;
+            }
+        };
+
+        if (cbMauHoaDon != null) {
+            cbMauHoaDon.setRenderer(templateRenderer);
+            cbMauHoaDon.removeAllItems();
+            for (String t : templateNames) {
+                cbMauHoaDon.addItem(t);
+            }
+        }
+
+        if (cbMauInPhaChe != null) {
+            cbMauInPhaChe.setRenderer(templateRenderer);
+            cbMauInPhaChe.removeAllItems();
+            for (String t : templateNames) {
+                cbMauInPhaChe.addItem(t);
+            }
+        }
+
+        if (cbMauInPhaCheLuuTam != null) {
+            cbMauInPhaCheLuuTam.setRenderer(templateRenderer);
+            cbMauInPhaCheLuuTam.removeAllItems();
+            cbMauInPhaCheLuuTam.addItem("");
+            for (String t : templateNames) {
+                cbMauInPhaCheLuuTam.addItem(t);
+            }
+        }
+    }
+
+    private Icon getTemplateIcon(String name) {
+        if (name == null) return null;
+        String lower = name.toLowerCase();
+        if (lower.contains("biên bản") || lower.contains("giao nhận") || lower.contains("phiếu giao")) {
+            return IconHelper.getIcon("document_valid.png", 16, 16);
+        } else if (lower.contains("2 dòng") || lower.contains("54 mm")) {
+            return IconHelper.getIcon("Statistic16.png", 16, 16);
+        } else if (lower.contains("chế biến") || lower.contains("pha chế")) {
+            return IconHelper.getIcon("settings.png", 16, 16);
+        } else if (lower.contains("bill") || lower.contains("80") || lower.contains("54")) {
+            return IconHelper.getIcon("receipt--pencil.png", 16, 16);
+        } else {
+            return IconHelper.getIcon("Report.png", 16, 16);
+        }
+    }
+
+    private void selectOrAddItem(JComboBox<String> cbo, String value) {
+        if (cbo == null) return;
+        if (value == null || value.trim().isEmpty()) {
+            if (cbo.getItemCount() > 0) cbo.setSelectedIndex(0);
+            return;
+        }
+        String target = value.trim();
+        for (int i = 0; i < cbo.getItemCount(); i++) {
+            String item = cbo.getItemAt(i);
+            if (item != null && (item.equalsIgnoreCase(target) || item.contains(target))) {
+                cbo.setSelectedIndex(i);
+                return;
+            }
+        }
+        cbo.addItem(target);
+        cbo.setSelectedItem(target);
+    }
+
     private void loadConfigToUI() {
         if (currentConfig == null) return;
+
+        // Load dynamic templates from database
+        loadTemplatesToComboBoxes();
 
         // Tab 1
         txtTenCongTy.setText(currentConfig.getTenCongTy());
@@ -1417,7 +2014,7 @@ public class CauHinhToanHeThongDialog extends JDialog {
         txtEmail.setText(currentConfig.getEmail());
         txtLoiCamOn.setText(currentConfig.getLoiCamOn());
         txtFax.setText(currentConfig.getFax());
-        cbMauHoaDon.setSelectedItem(currentConfig.getMauHoaDon());
+        selectOrAddItem(cbMauHoaDon, currentConfig.getMauHoaDon());
         chkLuaChonMauKhiIn.setSelected(currentConfig.isLuaChonMauKhiIn());
         chkHienThiTruocKhiIn.setSelected(currentConfig.isHienThiTruocKhiIn());
 
@@ -1521,6 +2118,30 @@ public class CauHinhToanHeThongDialog extends JDialog {
         chkThongBaoHangHetHanDung.setSelected(currentConfig.isThongBaoHangHetHanDung());
         chkThongBaoHangSapHetHanDung.setSelected(currentConfig.isThongBaoHangSapHetHanDung());
         txtThongBaoTruocNgay.setText(String.valueOf(currentConfig.getThongBaoTruocNgay()));
+
+        // Tab 10: Cảm ứng
+        chkInPhaCheKhiInHoaDon.setSelected(currentConfig.isInPhaCheKhiInHoaDon());
+        selectOrAddItem(cbMauInPhaChe, currentConfig.getMauInPhaChe());
+        if (currentConfig.getMayInPhaChe() != null && !currentConfig.getMayInPhaChe().isEmpty()) {
+            cbMayInPhaChe.setSelectedItem(currentConfig.getMayInPhaChe());
+        }
+        chkInPhaCheKhiLuuTam.setSelected(currentConfig.isInPhaCheKhiLuuTam());
+        selectOrAddItem(cbMauInPhaCheLuuTam, currentConfig.getMauInPhaCheLuuTam());
+
+        // Tab 11: Quản trị
+        chkPhieuGanNhatNamPhiaDuoi.setSelected(currentConfig.isPhieuGanNhatNamPhiaDuoi());
+        cbPhimNhapLieuTrenLuoi.setSelectedItem(currentConfig.getPhimNhapLieuTrenLuoi());
+        chkTuDongSaoLuuDuLieu.setSelected(currentConfig.isTuDongSaoLuuDuLieu());
+        txtDuongDanSaoLuu.setText(currentConfig.getDuongDanSaoLuu());
+        txtSoNgaySaoLuu.setText(String.valueOf(currentConfig.getSoNgaySaoLuu()));
+        cbChucNangMacDinh.setSelectedItem(currentConfig.getChucNangMacDinh());
+        chkLocDuLieuBoKhoangTrong.setSelected(currentConfig.isLocDuLieuBoKhoangTrong());
+        chkHienThiXuongDongNeuDoRongCotNho.setSelected(currentConfig.isHienThiXuongDongNeuDoRongCotNho());
+        cbDoToChuHienThi.setSelectedItem(currentConfig.getDoToChuHienThi());
+        cbGiaoDienChuongTrinh.setSelectedItem(currentConfig.getGiaoDienChuongTrinh());
+        chkTuDongTaiLaiDuLieuKhiChuyenTab.setSelected(currentConfig.isTuDongTaiLaiDuLieuKhiChuyenTab());
+        chkKichHoatLuuVetHoatDong.setSelected(currentConfig.isKichHoatLuuVetHoatDong());
+        chkHeThongChayNhieuMayTram.setSelected(currentConfig.isHeThongChayNhieuMayTram());
     }
 
     private void onSave() {
@@ -1631,6 +2252,28 @@ public class CauHinhToanHeThongDialog extends JDialog {
         currentConfig.setThongBaoHangHetHanDung(chkThongBaoHangHetHanDung.isSelected());
         currentConfig.setThongBaoHangSapHetHanDung(chkThongBaoHangSapHetHanDung.isSelected());
         try { currentConfig.setThongBaoTruocNgay(Integer.parseInt(txtThongBaoTruocNgay.getText().trim())); } catch (Exception ignored) {}
+
+        // Tab 10: Cảm ứng
+        currentConfig.setInPhaCheKhiInHoaDon(chkInPhaCheKhiInHoaDon.isSelected());
+        currentConfig.setMauInPhaChe(cbMauInPhaChe.getSelectedItem() != null ? cbMauInPhaChe.getSelectedItem().toString() : "Mẫu in chế biến");
+        currentConfig.setMayInPhaChe(cbMayInPhaChe.getSelectedItem() != null ? cbMayInPhaChe.getSelectedItem().toString() : "Microsoft XPS Document Writer");
+        currentConfig.setInPhaCheKhiLuuTam(chkInPhaCheKhiLuuTam.isSelected());
+        currentConfig.setMauInPhaCheLuuTam(cbMauInPhaCheLuuTam.getSelectedItem() != null ? cbMauInPhaCheLuuTam.getSelectedItem().toString() : "");
+
+        // Tab 11: Quản trị
+        currentConfig.setPhieuGanNhatNamPhiaDuoi(chkPhieuGanNhatNamPhiaDuoi.isSelected());
+        currentConfig.setPhimNhapLieuTrenLuoi(cbPhimNhapLieuTrenLuoi.getSelectedItem() != null ? cbPhimNhapLieuTrenLuoi.getSelectedItem().toString() : "Tab để sang ngang, Enter để xuống dòng");
+        currentConfig.setTuDongSaoLuuDuLieu(chkTuDongSaoLuuDuLieu.isSelected());
+        currentConfig.setDuongDanSaoLuu(txtDuongDanSaoLuu.getText().trim());
+        try { currentConfig.setSoNgaySaoLuu(Integer.parseInt(txtSoNgaySaoLuu.getText().trim())); } catch (Exception ignored) {}
+        currentConfig.setChucNangMacDinh(cbChucNangMacDinh.getSelectedItem() != null ? cbChucNangMacDinh.getSelectedItem().toString() : "Hóa đơn bán hàng");
+        currentConfig.setLocDuLieuBoKhoangTrong(chkLocDuLieuBoKhoangTrong.isSelected());
+        currentConfig.setHienThiXuongDongNeuDoRongCotNho(chkHienThiXuongDongNeuDoRongCotNho.isSelected());
+        currentConfig.setDoToChuHienThi(cbDoToChuHienThi.getSelectedItem() != null ? cbDoToChuHienThi.getSelectedItem().toString() : "Nhỏ (110%)");
+        currentConfig.setGiaoDienChuongTrinh(cbGiaoDienChuongTrinh.getSelectedItem() != null ? cbGiaoDienChuongTrinh.getSelectedItem().toString() : "Office 2010 - Blue");
+        currentConfig.setTuDongTaiLaiDuLieuKhiChuyenTab(chkTuDongTaiLaiDuLieuKhiChuyenTab.isSelected());
+        currentConfig.setKichHoatLuuVetHoatDong(chkKichHoatLuuVetHoatDong.isSelected());
+        currentConfig.setHeThongChayNhieuMayTram(chkHeThongChayNhieuMayTram.isSelected());
 
         boolean ok = configDAO.saveConfig(currentConfig);
         if (ok) {

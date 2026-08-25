@@ -2,6 +2,7 @@ package kazuko.ex.ui.danhmuc;
 
 import kazuko.ex.dao.CuaHangDAO;
 import kazuko.ex.dao.KhoHangDAO;
+import kazuko.ex.dao.STemplateDAO;
 import kazuko.ex.model.danhmuc.CuaHang;
 import kazuko.ex.model.danhmuc.KhoHang;
 import kazuko.ex.util.AppColors;
@@ -21,6 +22,7 @@ import java.util.List;
 public class CuaHangEditDialog extends JDialog {
     private final CuaHangDAO cuaHangDAO = new CuaHangDAO();
     private final KhoHangDAO khoHangDAO = new KhoHangDAO();
+    private final STemplateDAO templateDAO = new STemplateDAO();
 
     private CuaHang currentCuaHang;
     private final List<CuaHang> storeList;
@@ -190,15 +192,22 @@ public class CuaHangEditDialog extends JDialog {
         gbc.gridx = 0; gbc.gridy = 5;
         formPanel.add(lblMauHD, gbc);
 
-        cbMauHoaDon = new JComboBox<>(new String[]{
-                "Mẫu 54 mm x 2 dòng",
-                "Mẫu 58 mm",
-                "Mẫu 80 mm (K80)",
-                "Mẫu A4 chuẩn",
-                "Mẫu A5 chuẩn"
-        });
+        cbMauHoaDon = new JComboBox<>();
         cbMauHoaDon.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         cbMauHoaDon.setBackground(Color.WHITE);
+        cbMauHoaDon.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+                JLabel label = (JLabel) super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                if (value != null) {
+                    String valStr = value.toString();
+                    label.setText(valStr);
+                    label.setIcon(getTemplateIcon(valStr));
+                }
+                return label;
+            }
+        });
+        loadMauHoaDonList();
         gbc.gridx = 1; gbc.gridy = 5;
         formPanel.add(cbMauHoaDon, gbc);
 
@@ -330,6 +339,35 @@ public class CuaHangEditDialog extends JDialog {
         }
     }
 
+    private void loadMauHoaDonList() {
+        try {
+            List<String> templates = templateDAO.getInvoiceTemplateNames();
+            if (templates != null && !templates.isEmpty()) {
+                for (String t : templates) {
+                    cbMauHoaDon.addItem(t);
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Lỗi loadMauHoaDonList: " + e.getMessage());
+        }
+    }
+
+    private Icon getTemplateIcon(String name) {
+        if (name == null) return null;
+        String lower = name.toLowerCase();
+        if (lower.contains("biên bản") || lower.contains("giao nhận") || lower.contains("phiếu giao")) {
+            return IconHelper.getIcon("document_valid.png", 16, 16);
+        } else if (lower.contains("2 dòng") || lower.contains("54 mm")) {
+            return IconHelper.getIcon("Statistic16.png", 16, 16);
+        } else if (lower.contains("chế biến") || lower.contains("pha chế")) {
+            return IconHelper.getIcon("settings.png", 16, 16);
+        } else if (lower.contains("bill") || lower.contains("80") || lower.contains("54")) {
+            return IconHelper.getIcon("receipt--pencil.png", 16, 16);
+        } else {
+            return IconHelper.getIcon("Report.png", 16, 16);
+        }
+    }
+
     private void loadDataToForm() {
         if (currentCuaHang != null) {
             txtCode.setText(currentCuaHang.getCode() != null ? currentCuaHang.getCode() : "");
@@ -346,12 +384,20 @@ public class CuaHangEditDialog extends JDialog {
                 cbIcon.setSelectedIndex(0);
             }
 
-            if (currentCuaHang.getMauHoaDon() != null) {
+            if (currentCuaHang.getMauHoaDon() != null && !currentCuaHang.getMauHoaDon().trim().isEmpty()) {
+                String target = currentCuaHang.getMauHoaDon().trim();
+                boolean selected = false;
                 for (int i = 0; i < cbMauHoaDon.getItemCount(); i++) {
-                    if (cbMauHoaDon.getItemAt(i).contains(currentCuaHang.getMauHoaDon())) {
+                    String item = cbMauHoaDon.getItemAt(i);
+                    if (item.equalsIgnoreCase(target) || item.contains(target)) {
                         cbMauHoaDon.setSelectedIndex(i);
+                        selected = true;
                         break;
                     }
+                }
+                if (!selected) {
+                    cbMauHoaDon.addItem(target);
+                    cbMauHoaDon.setSelectedItem(target);
                 }
             }
         }

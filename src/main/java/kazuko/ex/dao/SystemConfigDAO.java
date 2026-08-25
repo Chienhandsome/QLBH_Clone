@@ -134,6 +134,28 @@ public class SystemConfigDAO {
                 config.setThongBaoHangSapHetHanDung(Boolean.parseBoolean(props.getProperty("alert.notifyNearExpiryItem", String.valueOf(config.isThongBaoHangSapHetHanDung()))));
                 config.setThongBaoTruocNgay(Integer.parseInt(props.getProperty("alert.notifyBeforeDays", String.valueOf(config.getThongBaoTruocNgay()))));
 
+                // Load Cảm ứng
+                config.setInPhaCheKhiInHoaDon(Boolean.parseBoolean(props.getProperty("touch.printKitchenOnInvoice", String.valueOf(config.isInPhaCheKhiInHoaDon()))));
+                config.setMauInPhaChe(props.getProperty("touch.kitchenTemplate", config.getMauInPhaChe()));
+                config.setMayInPhaChe(props.getProperty("touch.kitchenPrinter", config.getMayInPhaChe()));
+                config.setInPhaCheKhiLuuTam(Boolean.parseBoolean(props.getProperty("touch.printKitchenOnDraft", String.valueOf(config.isInPhaCheKhiLuuTam()))));
+                config.setMauInPhaCheLuuTam(props.getProperty("touch.kitchenDraftTemplate", config.getMauInPhaCheLuuTam()));
+
+                // Load Quản trị
+                config.setPhieuGanNhatNamPhiaDuoi(Boolean.parseBoolean(props.getProperty("admin.recentVoucherAtBottom", String.valueOf(config.isPhieuGanNhatNamPhiaDuoi()))));
+                config.setPhimNhapLieuTrenLuoi(props.getProperty("admin.gridInputKey", config.getPhimNhapLieuTrenLuoi()));
+                config.setTuDongSaoLuuDuLieu(Boolean.parseBoolean(props.getProperty("admin.autoBackupData", String.valueOf(config.isTuDongSaoLuuDuLieu()))));
+                config.setDuongDanSaoLuu(props.getProperty("admin.backupPath", config.getDuongDanSaoLuu()));
+                config.setSoNgaySaoLuu(Integer.parseInt(props.getProperty("admin.backupDays", String.valueOf(config.getSoNgaySaoLuu()))));
+                config.setChucNangMacDinh(props.getProperty("admin.defaultFeature", config.getChucNangMacDinh()));
+                config.setLocDuLieuBoKhoangTrong(Boolean.parseBoolean(props.getProperty("admin.filterIgnoreWhitespace", String.valueOf(config.isLocDuLieuBoKhoangTrong()))));
+                config.setHienThiXuongDongNeuDoRongCotNho(Boolean.parseBoolean(props.getProperty("admin.wrapTextIfColSmall", String.valueOf(config.isHienThiXuongDongNeuDoRongCotNho()))));
+                config.setDoToChuHienThi(props.getProperty("admin.fontSizeScale", config.getDoToChuHienThi()));
+                config.setGiaoDienChuongTrinh(props.getProperty("admin.uiTheme", config.getGiaoDienChuongTrinh()));
+                config.setTuDongTaiLaiDuLieuKhiChuyenTab(Boolean.parseBoolean(props.getProperty("admin.autoReloadOnTabChange", String.valueOf(config.isTuDongTaiLaiDuLieuKhiChuyenTab()))));
+                config.setKichHoatLuuVetHoatDong(Boolean.parseBoolean(props.getProperty("admin.enableAuditTrail", String.valueOf(config.isKichHoatLuuVetHoatDong()))));
+                config.setHeThongChayNhieuMayTram(Boolean.parseBoolean(props.getProperty("admin.multiWorkstations", String.valueOf(config.isHeThongChayNhieuMayTram()))));
+
             } catch (Exception ignored) {}
         }
 
@@ -251,6 +273,28 @@ public class SystemConfigDAO {
         props.setProperty("alert.notifyExpiredItem", String.valueOf(config.isThongBaoHangHetHanDung()));
         props.setProperty("alert.notifyNearExpiryItem", String.valueOf(config.isThongBaoHangSapHetHanDung()));
         props.setProperty("alert.notifyBeforeDays", String.valueOf(config.getThongBaoTruocNgay()));
+
+        // Save Cảm ứng
+        props.setProperty("touch.printKitchenOnInvoice", String.valueOf(config.isInPhaCheKhiInHoaDon()));
+        props.setProperty("touch.kitchenTemplate", config.getMauInPhaChe() != null ? config.getMauInPhaChe() : "Mẫu in chế biến");
+        props.setProperty("touch.kitchenPrinter", config.getMayInPhaChe() != null ? config.getMayInPhaChe() : "Microsoft XPS Document Writer");
+        props.setProperty("touch.printKitchenOnDraft", String.valueOf(config.isInPhaCheKhiLuuTam()));
+        props.setProperty("touch.kitchenDraftTemplate", config.getMauInPhaCheLuuTam() != null ? config.getMauInPhaCheLuuTam() : "");
+
+        // Save Quản trị
+        props.setProperty("admin.recentVoucherAtBottom", String.valueOf(config.isPhieuGanNhatNamPhiaDuoi()));
+        props.setProperty("admin.gridInputKey", config.getPhimNhapLieuTrenLuoi() != null ? config.getPhimNhapLieuTrenLuoi() : "Tab để sang ngang, Enter để xuống dòng");
+        props.setProperty("admin.autoBackupData", String.valueOf(config.isTuDongSaoLuuDuLieu()));
+        props.setProperty("admin.backupPath", config.getDuongDanSaoLuu() != null ? config.getDuongDanSaoLuu() : "");
+        props.setProperty("admin.backupDays", String.valueOf(config.getSoNgaySaoLuu()));
+        props.setProperty("admin.defaultFeature", config.getChucNangMacDinh() != null ? config.getChucNangMacDinh() : "Hóa đơn bán hàng");
+        props.setProperty("admin.filterIgnoreWhitespace", String.valueOf(config.isLocDuLieuBoKhoangTrong()));
+        props.setProperty("admin.wrapTextIfColSmall", String.valueOf(config.isHienThiXuongDongNeuDoRongCotNho()));
+        props.setProperty("admin.fontSizeScale", config.getDoToChuHienThi() != null ? config.getDoToChuHienThi() : "Nhỏ (110%)");
+        props.setProperty("admin.uiTheme", config.getGiaoDienChuongTrinh() != null ? config.getGiaoDienChuongTrinh() : "Office 2010 - Blue");
+        props.setProperty("admin.autoReloadOnTabChange", String.valueOf(config.isTuDongTaiLaiDuLieuKhiChuyenTab()));
+        props.setProperty("admin.enableAuditTrail", String.valueOf(config.isKichHoatLuuVetHoatDong()));
+        props.setProperty("admin.multiWorkstations", String.valueOf(config.isHeThongChayNhieuMayTram()));
 
         try (OutputStreamWriter writer = new OutputStreamWriter(new FileOutputStream(CONFIG_FILE), StandardCharsets.UTF_8)) {
             props.store(writer, "Cấu hình hệ thống QLBH");
