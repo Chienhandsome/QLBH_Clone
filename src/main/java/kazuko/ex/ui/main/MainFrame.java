@@ -7,6 +7,7 @@ import kazuko.ex.ui.auth.DoiMatKhauDialog;
 import kazuko.ex.ui.auth.LoginForm;
 import kazuko.ex.ui.common.StatusPanel;
 import kazuko.ex.ui.danhmuc.CuaHangDialog;
+import kazuko.ex.ui.danhmuc.DanhMucMatHangPanel;
 import kazuko.ex.ui.danhmuc.NhanVienDialog;
 import kazuko.ex.ui.khohang.QuanLyXuatKhoPanel;
 import kazuko.ex.util.AppColors;
@@ -62,7 +63,8 @@ public class MainFrame extends JFrame {
         mainTabbedPane = new JTabbedPane(JTabbedPane.TOP, JTabbedPane.SCROLL_TAB_LAYOUT);
         mainTabbedPane.setFont(new Font("Segoe UI", Font.BOLD, 12));
 
-//        mainTabbedPane.setSelectedIndex(1);
+        // Mở sẵn tab Danh mục mặt hàng
+        openTab("Danh mục mặt hàng", new DanhMucMatHangPanel());
 
         add(mainTabbedPane, BorderLayout.CENTER);
 
@@ -107,8 +109,11 @@ public class MainFrame extends JFrame {
         JMenuItem miCuaHang = new JMenuItem("Danh mục cửa hàng");
         miCuaHang.addActionListener(e -> new CuaHangDialog(this).setVisible(true));
 
+        JMenuItem miMatHang = new JMenuItem("Danh mục mặt hàng");
+        miMatHang.addActionListener(e -> openTab("Danh mục mặt hàng", new DanhMucMatHangPanel()));
+
         mHoatDong.add(miCuaHang);
-        mHoatDong.add(new JMenuItem("Danh mục mặt hàng"));
+        mHoatDong.add(miMatHang);
         mHoatDong.add(new JMenuItem("Danh mục khách hàng"));
         mHoatDong.add(new JMenuItem("Gửi tin nhắn khách hàng"));
         mHoatDong.add(new JMenuItem("Danh mục đợt khuyến mãi"));
@@ -216,16 +221,35 @@ public class MainFrame extends JFrame {
         leftPanel.setOpaque(false);
 
         JButton btnHoaDon = createToolButton("Hóa đơn");
-        JButton btnQLBanHang = createToolButton("Quản lý bán hàng");
-        JButton btnTKDoanhThu = createToolButton("Thống kê doanh thu");
-        JButton btnTKMatHang = createToolButton("Thống kê mặt hàng bán");
-        JButton btnChiTietHD = createToolButton("Chi tiết hoạt động");
-        JButton btnTongHopKQKD = createToolButton("Tổng hợp KQKD");
-        JButton btnTonKho = createToolButton("Tồn kho");
-        JButton btnGhiChu = createToolButton("Ghi chú");
-        JButton btnBaoCao = createToolButton("Báo cáo");
-        JButton btnThoat = createToolButton("Thoát");
+        btnHoaDon.setIcon(IconHelper.getIcon("btnNew.Image.png", 16, 16));
 
+        JButton btnQLBanHang = createToolButton("Quản lý bán hàng");
+        btnQLBanHang.setIcon(IconHelper.getIcon("btnOpen.Image.png", 16, 16));
+
+        JButton btnTKDoanhThu = createToolButton("Thống kê doanh thu");
+        btnTKDoanhThu.setIcon(IconHelper.getIcon("Statistic16.png", 16, 16));
+
+        JButton btnTKMatHang = createToolButton("Thống kê mặt hàng bán");
+        btnTKMatHang.setIcon(IconHelper.getIcon("1282529873_objects.png", 16, 16));
+        btnTKMatHang.addActionListener(e -> openTab("Danh mục mặt hàng", new DanhMucMatHangPanel()));
+
+        JButton btnChiTietHD = createToolButton("Chi tiết hoạt động");
+        btnChiTietHD.setIcon(IconHelper.getIcon("Report.png", 16, 16));
+
+        JButton btnTongHopKQKD = createToolButton("Tổng hợp KQKD");
+        btnTongHopKQKD.setIcon(IconHelper.getIcon("Tree.png", 16, 16));
+
+        JButton btnTonKho = createToolButton("Tồn kho");
+        btnTonKho.setIcon(IconHelper.getIcon("Folder2.png", 16, 16));
+
+        JButton btnGhiChu = createToolButton("Ghi chú");
+        btnGhiChu.setIcon(IconHelper.getIcon("FilterEdit.png", 16, 16));
+
+        JButton btnBaoCao = createToolButton("Báo cáo");
+        btnBaoCao.setIcon(IconHelper.getIcon("Preview.png", 16, 16));
+
+        JButton btnThoat = createToolButton("Thoát");
+        btnThoat.setIcon(IconHelper.getIcon("Cancelled.png", 16, 16));
         btnThoat.addActionListener(e -> onExit());
 
         leftPanel.add(btnHoaDon);
