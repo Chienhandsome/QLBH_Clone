@@ -450,15 +450,39 @@ public class DanhMucMatHangPanel extends JPanel {
     private void setupTableRenderers() {
         DecimalFormat dfMoney = new DecimalFormat("#,##0.##");
 
-        // 1. Column 0: Pointer ▶
+        // 1. Column 0: Pointer Vector Icon
+        final Icon pointerIcon = new Icon() {
+            @Override
+            public void paintIcon(Component c, Graphics g, int x, int y) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(new Color(25, 65, 135));
+                int cx = x + 2;
+                int cy = y + 1;
+                int[] xPoints = {cx, cx + 7, cx};
+                int[] yPoints = {cy, cy + 5, cy + 10};
+                g2.fillPolygon(xPoints, yPoints, 3);
+                g2.dispose();
+            }
+
+            @Override
+            public int getIconWidth() {
+                return 10;
+            }
+
+            @Override
+            public int getIconHeight() {
+                return 12;
+            }
+        };
+
         tableMatHang.getColumnModel().getColumn(0).setCellRenderer(new DefaultTableCellRenderer() {
             @Override
             public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int col) {
                 JLabel lbl = (JLabel) super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, col);
                 lbl.setHorizontalAlignment(SwingConstants.CENTER);
-                lbl.setFont(new Font("Segoe UI", Font.BOLD, 10));
-                lbl.setText(isSelected ? "▶" : "");
-                lbl.setForeground(new Color(40, 80, 160));
+                lbl.setText("");
+                lbl.setIcon(isSelected ? pointerIcon : null);
                 lbl.setBackground(isSelected ? new Color(210, 230, 250) : (row % 2 == 0 ? Color.WHITE : new Color(248, 251, 255)));
                 return lbl;
             }
