@@ -68,7 +68,7 @@ public class CauHinhToanHeThongDialog extends JDialog {
     private JTextField txtSoNgayChoPhepDoiTra;
     private JCheckBox chkHienThiAnhSanPham;
     private JCheckBox chkKichHoatKhuyenMaiTuDong;
-    private JCheckBox chkHienThiMatHangKhuyenMai;
+    private JCheckBox chkHienThiMatHangKhuyenMaiKhiThanhToan;
     private JCheckBox chkCoGiaoHang;
     private JCheckBox chkSuDungGiaTheoKhach;
     private JCheckBox chkSuDungGiamGiaMacDinh;
@@ -127,6 +127,14 @@ public class CauHinhToanHeThongDialog extends JDialog {
     private JCheckBox chkMatHangCoVatTuDinhLuong;
     private JCheckBox chkGiaBanLeUSD;
 
+    // Tab 9: Cảnh báo
+    private JCheckBox chkHienThiCanhBao;
+    private JCheckBox chkThongBaoHangDuoiMucAnToan;
+    private JCheckBox chkThongBaoKhachDenNgaySinhNhat;
+    private JCheckBox chkThongBaoHangHetHanDung;
+    private JCheckBox chkThongBaoHangSapHetHanDung;
+    private JTextField txtThongBaoTruocNgay;
+
     public CauHinhToanHeThongDialog(Frame parent) {
         super(parent, "CẤU HÌNH TOÀN HỆ THỐNG", true);
         this.currentConfig = configDAO.loadConfig();
@@ -178,12 +186,13 @@ public class CauHinhToanHeThongDialog extends JDialog {
         pnlCardContainer.add(createTabTichDiem(), "Tích điểm");
         pnlCardContainer.add(createTabKhoHang(), "Kho hàng");
         pnlCardContainer.add(createTabMatHang(), "Mặt hàng");
+        pnlCardContainer.add(createTabCanhBao(), "Cảnh báo");
 
         // Placeholder cards for other categories
         for (MenuItem item : allMenuItems) {
             if (!"Thông tin chung".equals(item.name) && !"Máy in".equals(item.name) && !"Số phiếu".equals(item.name)
                     && !"Bán hàng".equals(item.name) && !"Thanh toán".equals(item.name) && !"Tích điểm".equals(item.name)
-                    && !"Kho hàng".equals(item.name) && !"Mặt hàng".equals(item.name)) {
+                    && !"Kho hàng".equals(item.name) && !"Mặt hàng".equals(item.name) && !"Cảnh báo".equals(item.name)) {
                 pnlCardContainer.add(createPlaceholderCard(item.name), item.name);
             }
         }
@@ -760,11 +769,11 @@ public class CauHinhToanHeThongDialog extends JDialog {
 
         // 15. Hiển thị mặt hàng khuyến mại khi thanh toán (Default: true)
         startY += rowGap;
-        chkHienThiMatHangKhuyenMai = new JCheckBox("Hiển thị mặt hàng khuyến mại khi thanh toán", true);
-        chkHienThiMatHangKhuyenMai.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        chkHienThiMatHangKhuyenMai.setOpaque(false);
-        chkHienThiMatHangKhuyenMai.setBounds(20, startY, 350, fieldH);
-        panel.add(chkHienThiMatHangKhuyenMai);
+        chkHienThiMatHangKhuyenMaiKhiThanhToan = new JCheckBox("Hiển thị mặt hàng khuyến mại khi thanh toán", true);
+        chkHienThiMatHangKhuyenMaiKhiThanhToan.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        chkHienThiMatHangKhuyenMaiKhiThanhToan.setOpaque(false);
+        chkHienThiMatHangKhuyenMaiKhiThanhToan.setBounds(20, startY, 350, fieldH);
+        panel.add(chkHienThiMatHangKhuyenMaiKhiThanhToan);
 
         // 16. Có giao hàng (Default: false)
         startY += rowGap;
@@ -1057,7 +1066,7 @@ public class CauHinhToanHeThongDialog extends JDialog {
         return container;
     }
 
-    // ==================== TAB 8: MẶT HÀNG (Ảnh 1 -> 5) ====================
+    // ==================== TAB 8: MẶT HÀNG ====================
     private JPanel createTabMatHang() {
         JPanel panel = new JPanel(null);
         panel.setBackground(Color.WHITE);
@@ -1299,6 +1308,74 @@ public class CauHinhToanHeThongDialog extends JDialog {
         return container;
     }
 
+    // ==================== TAB 9: CẢNH BÁO (Ảnh 1) ====================
+    private JPanel createTabCanhBao() {
+        JPanel panel = new JPanel(null);
+        panel.setBackground(Color.WHITE);
+
+        int startY = 15;
+        int fieldH = 22;
+        int rowGap = 28;
+
+        // 1. Hiển thị cảnh báo (Default: true)
+        chkHienThiCanhBao = new JCheckBox("Hiển thị cảnh báo", true);
+        chkHienThiCanhBao.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        chkHienThiCanhBao.setOpaque(false);
+        chkHienThiCanhBao.setBounds(20, startY, 300, fieldH);
+        panel.add(chkHienThiCanhBao);
+
+        // 2. Thông báo hàng dưới mức an toàn (Default: false)
+        startY += rowGap;
+        chkThongBaoHangDuoiMucAnToan = new JCheckBox("Thông báo hàng dưới mức an toàn", false);
+        chkThongBaoHangDuoiMucAnToan.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        chkThongBaoHangDuoiMucAnToan.setOpaque(false);
+        chkThongBaoHangDuoiMucAnToan.setBounds(20, startY, 350, fieldH);
+        panel.add(chkThongBaoHangDuoiMucAnToan);
+
+        // 3. Thông báo khách đến ngày sinh nhật (Default: false)
+        startY += rowGap;
+        chkThongBaoKhachDenNgaySinhNhat = new JCheckBox("Thông báo khách đến ngày sinh nhật", false);
+        chkThongBaoKhachDenNgaySinhNhat.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        chkThongBaoKhachDenNgaySinhNhat.setOpaque(false);
+        chkThongBaoKhachDenNgaySinhNhat.setBounds(20, startY, 350, fieldH);
+        panel.add(chkThongBaoKhachDenNgaySinhNhat);
+
+        // 4. Thông báo hàng hết hạn dùng (Default: false)
+        startY += rowGap;
+        chkThongBaoHangHetHanDung = new JCheckBox("Thông báo hàng hết hạn dùng", false);
+        chkThongBaoHangHetHanDung.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        chkThongBaoHangHetHanDung.setOpaque(false);
+        chkThongBaoHangHetHanDung.setBounds(20, startY, 350, fieldH);
+        panel.add(chkThongBaoHangHetHanDung);
+
+        // 5. Thông báo hàng sắp hết hạn dùng (Default: false)
+        startY += rowGap;
+        chkThongBaoHangSapHetHanDung = new JCheckBox("Thông báo hàng sắp hết hạn dùng", false);
+        chkThongBaoHangSapHetHanDung.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        chkThongBaoHangSapHetHanDung.setOpaque(false);
+        chkThongBaoHangSapHetHanDung.setBounds(20, startY, 350, fieldH);
+        panel.add(chkThongBaoHangSapHetHanDung);
+
+        // 6. Thông báo trước (ngày) (Default: 3)
+        startY += rowGap;
+        JLabel lblThongBaoTruoc = new JLabel("Thông báo trước (ngày)");
+        lblThongBaoTruoc.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblThongBaoTruoc.setBounds(25, startY, 150, fieldH);
+        panel.add(lblThongBaoTruoc);
+
+        txtThongBaoTruocNgay = new JTextField("3");
+        txtThongBaoTruocNgay.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        txtThongBaoTruocNgay.setBounds(180, startY, 75, fieldH);
+        panel.add(txtThongBaoTruocNgay);
+
+        panel.setPreferredSize(new Dimension(580, startY + 40));
+        JScrollPane scrollPane = new JScrollPane(panel);
+        scrollPane.setBorder(null);
+        JPanel container = new JPanel(new BorderLayout());
+        container.add(scrollPane, BorderLayout.CENTER);
+        return container;
+    }
+
     private JPanel createPlaceholderCard(String title) {
         JPanel pnl = new JPanel(new GridBagLayout());
         pnl.setBackground(Color.WHITE);
@@ -1378,7 +1455,7 @@ public class CauHinhToanHeThongDialog extends JDialog {
         txtSoNgayChoPhepDoiTra.setText(String.valueOf(currentConfig.getSoNgayChoPhepDoiTra()));
         chkHienThiAnhSanPham.setSelected(currentConfig.isHienThiAnhSanPhamTrongGiaoDien());
         chkKichHoatKhuyenMaiTuDong.setSelected(currentConfig.isKichHoatKhuyenMaiTuDong());
-        chkHienThiMatHangKhuyenMai.setSelected(currentConfig.isHienThiMatHangKhuyenMaiKhiThanhToan());
+        chkHienThiMatHangKhuyenMaiKhiThanhToan.setSelected(currentConfig.isHienThiMatHangKhuyenMaiKhiThanhToan());
         chkCoGiaoHang.setSelected(currentConfig.isCoGiaoHang());
         chkSuDungGiaTheoKhach.setSelected(currentConfig.isSuDungGiaTheoKhach());
         chkSuDungGiamGiaMacDinh.setSelected(currentConfig.isSuDungGiamGiaMacDinhTheoMatHang());
@@ -1436,6 +1513,14 @@ public class CauHinhToanHeThongDialog extends JDialog {
         chkMatHangCoKichThuoc.setSelected(currentConfig.isMatHangCoKichThuoc());
         chkMatHangCoVatTuDinhLuong.setSelected(currentConfig.isMatHangCoVatTuDinhLuong());
         chkGiaBanLeUSD.setSelected(currentConfig.isGiaBanLeUSD());
+
+        // Tab 9: Cảnh báo
+        chkHienThiCanhBao.setSelected(currentConfig.isHienThiCanhBao());
+        chkThongBaoHangDuoiMucAnToan.setSelected(currentConfig.isThongBaoHangDuoiMucAnToan());
+        chkThongBaoKhachDenNgaySinhNhat.setSelected(currentConfig.isThongBaoKhachDenNgaySinhNhat());
+        chkThongBaoHangHetHanDung.setSelected(currentConfig.isThongBaoHangHetHanDung());
+        chkThongBaoHangSapHetHanDung.setSelected(currentConfig.isThongBaoHangSapHetHanDung());
+        txtThongBaoTruocNgay.setText(String.valueOf(currentConfig.getThongBaoTruocNgay()));
     }
 
     private void onSave() {
@@ -1480,7 +1565,7 @@ public class CauHinhToanHeThongDialog extends JDialog {
         try { currentConfig.setSoNgayChoPhepDoiTra(Integer.parseInt(txtSoNgayChoPhepDoiTra.getText().trim())); } catch (Exception ignored) {}
         currentConfig.setHienThiAnhSanPhamTrongGiaoDien(chkHienThiAnhSanPham.isSelected());
         currentConfig.setKichHoatKhuyenMaiTuDong(chkKichHoatKhuyenMaiTuDong.isSelected());
-        currentConfig.setHienThiMatHangKhuyenMaiKhiThanhToan(chkHienThiMatHangKhuyenMai.isSelected());
+        currentConfig.setHienThiMatHangKhuyenMaiKhiThanhToan(chkHienThiMatHangKhuyenMaiKhiThanhToan.isSelected());
         currentConfig.setCoGiaoHang(chkCoGiaoHang.isSelected());
         currentConfig.setSuDungGiaTheoKhach(chkSuDungGiaTheoKhach.isSelected());
         currentConfig.setSuDungGiamGiaMacDinhTheoMatHang(chkSuDungGiamGiaMacDinh.isSelected());
@@ -1538,6 +1623,14 @@ public class CauHinhToanHeThongDialog extends JDialog {
         currentConfig.setMatHangCoKichThuoc(chkMatHangCoKichThuoc.isSelected());
         currentConfig.setMatHangCoVatTuDinhLuong(chkMatHangCoVatTuDinhLuong.isSelected());
         currentConfig.setGiaBanLeUSD(chkGiaBanLeUSD.isSelected());
+
+        // Tab 9: Cảnh báo
+        currentConfig.setHienThiCanhBao(chkHienThiCanhBao.isSelected());
+        currentConfig.setThongBaoHangDuoiMucAnToan(chkThongBaoHangDuoiMucAnToan.isSelected());
+        currentConfig.setThongBaoKhachDenNgaySinhNhat(chkThongBaoKhachDenNgaySinhNhat.isSelected());
+        currentConfig.setThongBaoHangHetHanDung(chkThongBaoHangHetHanDung.isSelected());
+        currentConfig.setThongBaoHangSapHetHanDung(chkThongBaoHangSapHetHanDung.isSelected());
+        try { currentConfig.setThongBaoTruocNgay(Integer.parseInt(txtThongBaoTruocNgay.getText().trim())); } catch (Exception ignored) {}
 
         boolean ok = configDAO.saveConfig(currentConfig);
         if (ok) {

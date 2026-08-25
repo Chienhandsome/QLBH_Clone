@@ -126,6 +126,14 @@ public class SystemConfigDAO {
                 config.setMatHangCoVatTuDinhLuong(Boolean.parseBoolean(props.getProperty("item.hasBOM", String.valueOf(config.isMatHangCoVatTuDinhLuong()))));
                 config.setGiaBanLeUSD(Boolean.parseBoolean(props.getProperty("item.retailPriceUSD", String.valueOf(config.isGiaBanLeUSD()))));
 
+                // Load Cảnh báo
+                config.setHienThiCanhBao(Boolean.parseBoolean(props.getProperty("alert.showAlert", String.valueOf(config.isHienThiCanhBao()))));
+                config.setThongBaoHangDuoiMucAnToan(Boolean.parseBoolean(props.getProperty("alert.notifyBelowSafeStock", String.valueOf(config.isThongBaoHangDuoiMucAnToan()))));
+                config.setThongBaoKhachDenNgaySinhNhat(Boolean.parseBoolean(props.getProperty("alert.notifyCustomerBirthday", String.valueOf(config.isThongBaoKhachDenNgaySinhNhat()))));
+                config.setThongBaoHangHetHanDung(Boolean.parseBoolean(props.getProperty("alert.notifyExpiredItem", String.valueOf(config.isThongBaoHangHetHanDung()))));
+                config.setThongBaoHangSapHetHanDung(Boolean.parseBoolean(props.getProperty("alert.notifyNearExpiryItem", String.valueOf(config.isThongBaoHangSapHetHanDung()))));
+                config.setThongBaoTruocNgay(Integer.parseInt(props.getProperty("alert.notifyBeforeDays", String.valueOf(config.getThongBaoTruocNgay()))));
+
             } catch (Exception ignored) {}
         }
 
@@ -235,6 +243,14 @@ public class SystemConfigDAO {
         props.setProperty("item.hasDimensions", String.valueOf(config.isMatHangCoKichThuoc()));
         props.setProperty("item.hasBOM", String.valueOf(config.isMatHangCoVatTuDinhLuong()));
         props.setProperty("item.retailPriceUSD", String.valueOf(config.isGiaBanLeUSD()));
+
+        // Save Cảnh báo
+        props.setProperty("alert.showAlert", String.valueOf(config.isHienThiCanhBao()));
+        props.setProperty("alert.notifyBelowSafeStock", String.valueOf(config.isThongBaoHangDuoiMucAnToan()));
+        props.setProperty("alert.notifyCustomerBirthday", String.valueOf(config.isThongBaoKhachDenNgaySinhNhat()));
+        props.setProperty("alert.notifyExpiredItem", String.valueOf(config.isThongBaoHangHetHanDung()));
+        props.setProperty("alert.notifyNearExpiryItem", String.valueOf(config.isThongBaoHangSapHetHanDung()));
+        props.setProperty("alert.notifyBeforeDays", String.valueOf(config.getThongBaoTruocNgay()));
 
         try (OutputStreamWriter writer = new OutputStreamWriter(new FileOutputStream(CONFIG_FILE), StandardCharsets.UTF_8)) {
             props.store(writer, "Cấu hình hệ thống QLBH");

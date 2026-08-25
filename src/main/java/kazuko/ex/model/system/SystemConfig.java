@@ -99,6 +99,14 @@ public class SystemConfig {
     private boolean matHangCoVatTuDinhLuong = true;
     private boolean giaBanLeUSD = true;
 
+    // 9. Cảnh báo
+    private boolean hienThiCanhBao = true;
+    private boolean thongBaoHangDuoiMucAnToan = false;
+    private boolean thongBaoKhachDenNgaySinhNhat = false;
+    private boolean thongBaoHangHetHanDung = false;
+    private boolean thongBaoHangSapHetHanDung = false;
+    private int thongBaoTruocNgay = 3;
+
     public SystemConfig() {
         initDefaultPrinters();
         initDefaultVoucherRules();
@@ -372,4 +380,23 @@ public class SystemConfig {
 
     public boolean isGiaBanLeUSD() { return giaBanLeUSD; }
     public void setGiaBanLeUSD(boolean giaBanLeUSD) { this.giaBanLeUSD = giaBanLeUSD; }
+
+    // Getters & Setters Cảnh báo
+    public boolean isHienThiCanhBao() { return hienThiCanhBao; }
+    public void setHienThiCanhBao(boolean hienThiCanhBao) { this.hienThiCanhBao = hienThiCanhBao; }
+
+    public boolean isThongBaoHangDuoiMucAnToan() { return thongBaoHangDuoiMucAnToan; }
+    public void setThongBaoHangDuoiMucAnToan(boolean thongBaoHangDuoiMucAnToan) { this.thongBaoHangDuoiMucAnToan = thongBaoHangDuoiMucAnToan; }
+
+    public boolean isThongBaoKhachDenNgaySinhNhat() { return thongBaoKhachDenNgaySinhNhat; }
+    public void setThongBaoKhachDenNgaySinhNhat(boolean thongBaoKhachDenNgaySinhNhat) { this.thongBaoKhachDenNgaySinhNhat = thongBaoKhachDenNgaySinhNhat; }
+
+    public boolean isThongBaoHangHetHanDung() { return thongBaoHangHetHanDung; }
+    public void setThongBaoHangHetHanDung(boolean thongBaoHangHetHanDung) { this.thongBaoHangHetHanDung = thongBaoHangHetHanDung; }
+
+    public boolean isThongBaoHangSapHetHanDung() { return thongBaoHangSapHetHanDung; }
+    public void setThongBaoHangSapHetHanDung(boolean thongBaoHangSapHetHanDung) { this.thongBaoHangSapHetHanDung = thongBaoHangSapHetHanDung; }
+
+    public int getThongBaoTruocNgay() { return thongBaoTruocNgay; }
+    public void setThongBaoTruocNgay(int thongBaoTruocNgay) { this.thongBaoTruocNgay = thongBaoTruocNgay; }
 }
