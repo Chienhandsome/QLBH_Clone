@@ -124,7 +124,6 @@ public class SystemConfigDAO {
                 config.setMatHangCoHanSuDung(Boolean.parseBoolean(props.getProperty("item.hasExpiryDate", String.valueOf(config.isMatHangCoHanSuDung()))));
                 config.setMatHangCoKichThuoc(Boolean.parseBoolean(props.getProperty("item.hasDimensions", String.valueOf(config.isMatHangCoKichThuoc()))));
                 config.setMatHangCoVatTuDinhLuong(Boolean.parseBoolean(props.getProperty("item.hasBOM", String.valueOf(config.isMatHangCoVatTuDinhLuong()))));
-                config.setGiaBanLeUSD(Boolean.parseBoolean(props.getProperty("item.retailPriceUSD", String.valueOf(config.isGiaBanLeUSD()))));
 
                 // Load Cảnh báo
                 config.setHienThiCanhBao(Boolean.parseBoolean(props.getProperty("alert.showAlert", String.valueOf(config.isHienThiCanhBao()))));
@@ -264,7 +263,6 @@ public class SystemConfigDAO {
         props.setProperty("item.hasExpiryDate", String.valueOf(config.isMatHangCoHanSuDung()));
         props.setProperty("item.hasDimensions", String.valueOf(config.isMatHangCoKichThuoc()));
         props.setProperty("item.hasBOM", String.valueOf(config.isMatHangCoVatTuDinhLuong()));
-        props.setProperty("item.retailPriceUSD", String.valueOf(config.isGiaBanLeUSD()));
 
         // Save Cảnh báo
         props.setProperty("alert.showAlert", String.valueOf(config.isHienThiCanhBao()));

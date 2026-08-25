@@ -135,7 +135,6 @@ public class CauHinhToanHeThongDialog extends JDialog {
     private JCheckBox chkMatHangCoHanSuDung;
     private JCheckBox chkMatHangCoKichThuoc;
     private JCheckBox chkMatHangCoVatTuDinhLuong;
-    private JCheckBox chkGiaBanLeUSD;
 
     // Tab 9: Cảnh báo
     private JCheckBox chkHienThiCanhBao;
@@ -1525,14 +1524,6 @@ public class CauHinhToanHeThongDialog extends JDialog {
         chkMatHangCoVatTuDinhLuong.setBounds(20, startY, 300, fieldH);
         panel.add(chkMatHangCoVatTuDinhLuong);
 
-        // Row 17: Giá bán lẻ (USD) (Default: true)
-        startY += rowGap;
-        chkGiaBanLeUSD = new JCheckBox("Giá bán lẻ (USD)", true);
-        chkGiaBanLeUSD.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        chkGiaBanLeUSD.setOpaque(false);
-        chkGiaBanLeUSD.setBounds(20, startY, 300, fieldH);
-        panel.add(chkGiaBanLeUSD);
-
         panel.setPreferredSize(new Dimension(580, startY + 40));
         JScrollPane scrollPane = new JScrollPane(panel);
         scrollPane.setBorder(null);
@@ -2109,7 +2100,6 @@ public class CauHinhToanHeThongDialog extends JDialog {
         chkMatHangCoHanSuDung.setSelected(currentConfig.isMatHangCoHanSuDung());
         chkMatHangCoKichThuoc.setSelected(currentConfig.isMatHangCoKichThuoc());
         chkMatHangCoVatTuDinhLuong.setSelected(currentConfig.isMatHangCoVatTuDinhLuong());
-        chkGiaBanLeUSD.setSelected(currentConfig.isGiaBanLeUSD());
 
         // Tab 9: Cảnh báo
         chkHienThiCanhBao.setSelected(currentConfig.isHienThiCanhBao());
@@ -2243,7 +2233,6 @@ public class CauHinhToanHeThongDialog extends JDialog {
         currentConfig.setMatHangCoHanSuDung(chkMatHangCoHanSuDung.isSelected());
         currentConfig.setMatHangCoKichThuoc(chkMatHangCoKichThuoc.isSelected());
         currentConfig.setMatHangCoVatTuDinhLuong(chkMatHangCoVatTuDinhLuong.isSelected());
-        currentConfig.setGiaBanLeUSD(chkGiaBanLeUSD.isSelected());
 
         // Tab 9: Cảnh báo
         currentConfig.setHienThiCanhBao(chkHienThiCanhBao.isSelected());

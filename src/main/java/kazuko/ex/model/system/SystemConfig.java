@@ -98,7 +98,6 @@ public class SystemConfig {
     private boolean matHangCoHanSuDung = false;
     private boolean matHangCoKichThuoc = false;
     private boolean matHangCoVatTuDinhLuong = true;
-    private boolean giaBanLeUSD = true;
 
     // 9. Cảnh báo
     private boolean hienThiCanhBao = true;
@@ -400,9 +399,6 @@ public class SystemConfig {
 
     public boolean isMatHangCoVatTuDinhLuong() { return matHangCoVatTuDinhLuong; }
     public void setMatHangCoVatTuDinhLuong(boolean matHangCoVatTuDinhLuong) { this.matHangCoVatTuDinhLuong = matHangCoVatTuDinhLuong; }
-
-    public boolean isGiaBanLeUSD() { return giaBanLeUSD; }
-    public void setGiaBanLeUSD(boolean giaBanLeUSD) { this.giaBanLeUSD = giaBanLeUSD; }
 
     // Getters & Setters Cảnh báo
     public boolean isHienThiCanhBao() { return hienThiCanhBao; }

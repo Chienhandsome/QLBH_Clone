@@ -24,7 +24,9 @@ import java.awt.datatransfer.Transferable;
 import java.awt.event.*;
 import java.io.File;
 import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.util.List;
+import java.util.Locale;
 
 public class MatHangEditDialog extends JDialog {
     private final MatHangDAO matHangDAO = new MatHangDAO();
@@ -57,8 +59,6 @@ public class MatHangEditDialog extends JDialog {
     private JTextField txtGiaBan4;
     private JLabel lblGiaNhap;
     private JTextField txtGiaNhap;
-    private JLabel lblGiaUSD;
-    private JTextField txtGiaUSD;
     private JComboBox<NhomMatHang> cbNhomHang;
     private JTextField txtGiamGiaPt;
     private JTextField txtGiamGiaTien;
@@ -339,7 +339,7 @@ public class MatHangEditDialog extends JDialog {
         txtQuyDoi.setBounds(335, startY, 40, fieldH);
         panel.add(txtQuyDoi);
 
-        // Row 6: Đơn giá 2 & Giá bán chẵn
+        // Row 6: Đơn giá 2 (Diễn giải giá 2) & Giá bán chẵn
         startY += rowGap;
         String dg2Title = (systemConfig.getDienGiaiGia2() != null && !systemConfig.getDienGiaiGia2().trim().isEmpty())
                 ? systemConfig.getDienGiaiGia2().trim() : "Đơn giá 2";
@@ -351,6 +351,8 @@ public class MatHangEditDialog extends JDialog {
         txtGiaBan2 = new JTextField("0");
         txtGiaBan2.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         txtGiaBan2.setBounds(120, startY, 95, fieldH);
+        txtGiaBan2.setEditable(systemConfig.isSuDungGia2());
+        txtGiaBan2.setBackground(systemConfig.isSuDungGia2() ? Color.WHITE : new Color(240, 240, 240));
         panel.add(txtGiaBan2);
 
         lblGiaBanChan = new JLabel("Giá bán chẵn");
@@ -363,75 +365,47 @@ public class MatHangEditDialog extends JDialog {
         txtGiaBanChan.setBounds(335, startY, 125, fieldH);
         panel.add(txtGiaBanChan);
 
-        if (!systemConfig.isSuDungGia2()) {
-            lblDonGia2.setVisible(false);
-            txtGiaBan2.setVisible(false);
-        }
-
-        // Row 7: Giá bán 3
-        if (systemConfig.isSuDungGia3()) {
-            startY += rowGap;
-            String dg3Title = (systemConfig.getDienGiaiGia3() != null && !systemConfig.getDienGiaiGia3().trim().isEmpty())
-                    ? systemConfig.getDienGiaiGia3().trim() : "Giá bán 3";
-            lblGiaBan3 = new JLabel(dg3Title);
-            lblGiaBan3.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-            lblGiaBan3.setBounds(15, startY, lblW, fieldH);
-            panel.add(lblGiaBan3);
-
-            txtGiaBan3 = new JTextField("0");
-            txtGiaBan3.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-            txtGiaBan3.setBounds(120, startY, 95, fieldH);
-            panel.add(txtGiaBan3);
-        } else {
-            lblGiaBan3 = new JLabel("Giá bán 3");
-            txtGiaBan3 = new JTextField("0");
-        }
-
-        // Row 8: Giá bán 4
-        if (systemConfig.isSuDungGia4()) {
-            startY += rowGap;
-            String dg4Title = (systemConfig.getDienGiaiGia4() != null && !systemConfig.getDienGiaiGia4().trim().isEmpty())
-                    ? systemConfig.getDienGiaiGia4().trim() : "Giá bán 4";
-            lblGiaBan4 = new JLabel(dg4Title);
-            lblGiaBan4.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-            lblGiaBan4.setBounds(15, startY, lblW, fieldH);
-            panel.add(lblGiaBan4);
-
-            txtGiaBan4 = new JTextField("0");
-            txtGiaBan4.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-            txtGiaBan4.setBounds(120, startY, 95, fieldH);
-            panel.add(txtGiaBan4);
-        } else {
-            lblGiaBan4 = new JLabel("Giá bán 4");
-            txtGiaBan4 = new JTextField("0");
-        }
-
-        // Row: Giá nhập & Giá USD
+        // Row 7: Giá bán 3 (Diễn giải giá 3)
         startY += rowGap;
+        String dg3Title = (systemConfig.getDienGiaiGia3() != null && !systemConfig.getDienGiaiGia3().trim().isEmpty())
+                ? systemConfig.getDienGiaiGia3().trim() : "Giá bán 3";
+        lblGiaBan3 = new JLabel(dg3Title);
+        lblGiaBan3.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblGiaBan3.setBounds(15, startY, lblW, fieldH);
+        panel.add(lblGiaBan3);
+
+        txtGiaBan3 = new JTextField("0");
+        txtGiaBan3.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        txtGiaBan3.setBounds(120, startY, 95, fieldH);
+        txtGiaBan3.setEditable(systemConfig.isSuDungGia3());
+        txtGiaBan3.setBackground(systemConfig.isSuDungGia3() ? Color.WHITE : new Color(240, 240, 240));
+        panel.add(txtGiaBan3);
+
+        // Row 8: Giá bán 4 (Diễn giải giá 4) & Giá nhập
+        startY += rowGap;
+        String dg4Title = (systemConfig.getDienGiaiGia4() != null && !systemConfig.getDienGiaiGia4().trim().isEmpty())
+                ? systemConfig.getDienGiaiGia4().trim() : "Giá bán 4";
+        lblGiaBan4 = new JLabel(dg4Title);
+        lblGiaBan4.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblGiaBan4.setBounds(15, startY, lblW, fieldH);
+        panel.add(lblGiaBan4);
+
+        txtGiaBan4 = new JTextField("0");
+        txtGiaBan4.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        txtGiaBan4.setBounds(120, startY, 95, fieldH);
+        txtGiaBan4.setEditable(systemConfig.isSuDungGia4());
+        txtGiaBan4.setBackground(systemConfig.isSuDungGia4() ? Color.WHITE : new Color(240, 240, 240));
+        panel.add(txtGiaBan4);
+
         lblGiaNhap = new JLabel("Giá nhập");
         lblGiaNhap.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        lblGiaNhap.setBounds(15, startY, lblW, fieldH);
+        lblGiaNhap.setBounds(230, startY, 100, fieldH);
         panel.add(lblGiaNhap);
 
         txtGiaNhap = new JTextField("0");
         txtGiaNhap.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        txtGiaNhap.setBounds(120, startY, 95, fieldH);
+        txtGiaNhap.setBounds(335, startY, 125, fieldH);
         panel.add(txtGiaNhap);
-
-        if (systemConfig.isGiaBanLeUSD()) {
-            lblGiaUSD = new JLabel("Giá bán lẻ (USD)");
-            lblGiaUSD.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-            lblGiaUSD.setBounds(230, startY, 100, fieldH);
-            panel.add(lblGiaUSD);
-
-            txtGiaUSD = new JTextField("0");
-            txtGiaUSD.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-            txtGiaUSD.setBounds(335, startY, 125, fieldH);
-            panel.add(txtGiaUSD);
-        } else {
-            lblGiaUSD = new JLabel("Giá USD");
-            txtGiaUSD = new JTextField("0");
-        }
 
         // Row: Nhóm mặt hàng
         startY += rowGap;
@@ -913,8 +887,10 @@ public class MatHangEditDialog extends JDialog {
         // 2. Đơn vị tính
         cbDonViTinh.removeAllItems();
         cbDonViTinhChan.removeAllItems();
+        cbDonViTinhChan.addItem(new DonViTinh("", "", "")); // Blank option
         List<DonViTinh> dvtList = donViTinhDAO.getAll();
         DonViTinh selDvt = null;
+        DonViTinh selDvtChan = null;
         for (DonViTinh dvt : dvtList) {
             cbDonViTinh.addItem(dvt);
             cbDonViTinhChan.addItem(dvt);
@@ -923,10 +899,43 @@ public class MatHangEditDialog extends JDialog {
             } else if (currentItem.getTenDonViTinh() != null && currentItem.getTenDonViTinh().equalsIgnoreCase(dvt.getName())) {
                 selDvt = dvt;
             }
+            if (currentItem.getDonViTinhChanId() != null && currentItem.getDonViTinhChanId().equals(dvt.getId())) {
+                selDvtChan = dvt;
+            } else if (currentItem.getTenDonViTinhChan() != null && currentItem.getTenDonViTinhChan().equalsIgnoreCase(dvt.getName())) {
+                selDvtChan = dvt;
+            }
         }
         if (selDvt != null) cbDonViTinh.setSelectedItem(selDvt);
+        if (selDvtChan != null) {
+            cbDonViTinhChan.setSelectedItem(selDvtChan);
+        } else {
+            cbDonViTinhChan.setSelectedIndex(0);
+        }
 
         // 3. Tab 1 Values
+        this.systemConfig = systemConfigDAO.loadConfig();
+        if (this.systemConfig == null) {
+            this.systemConfig = new SystemConfig();
+        }
+
+        String dg2Title = (systemConfig.getDienGiaiGia2() != null && !systemConfig.getDienGiaiGia2().trim().isEmpty())
+                ? systemConfig.getDienGiaiGia2().trim() : "Đơn giá 2";
+        lblDonGia2.setText(dg2Title);
+        txtGiaBan2.setEditable(systemConfig.isSuDungGia2());
+        txtGiaBan2.setBackground(systemConfig.isSuDungGia2() ? Color.WHITE : new Color(240, 240, 240));
+
+        String dg3Title = (systemConfig.getDienGiaiGia3() != null && !systemConfig.getDienGiaiGia3().trim().isEmpty())
+                ? systemConfig.getDienGiaiGia3().trim() : "Giá bán 3";
+        lblGiaBan3.setText(dg3Title);
+        txtGiaBan3.setEditable(systemConfig.isSuDungGia3());
+        txtGiaBan3.setBackground(systemConfig.isSuDungGia3() ? Color.WHITE : new Color(240, 240, 240));
+
+        String dg4Title = (systemConfig.getDienGiaiGia4() != null && !systemConfig.getDienGiaiGia4().trim().isEmpty())
+                ? systemConfig.getDienGiaiGia4().trim() : "Giá bán 4";
+        lblGiaBan4.setText(dg4Title);
+        txtGiaBan4.setEditable(systemConfig.isSuDungGia4());
+        txtGiaBan4.setBackground(systemConfig.isSuDungGia4() ? Color.WHITE : new Color(240, 240, 240));
+
         txtMaSanCo.setText(currentItem.getMaSanCo() != null ? currentItem.getMaSanCo() : (currentItem.getId() != null ? currentItem.getId() : "1000073"));
         if (currentItem.getCode() != null && !currentItem.getCode().isEmpty()) {
             txtCode.setText(currentItem.getCode());
@@ -937,7 +946,7 @@ public class MatHangEditDialog extends JDialog {
 
         txtName.setText(currentItem.getName() != null ? currentItem.getName() : "");
 
-        DecimalFormat df = new DecimalFormat("#,##0.##");
+        DecimalFormat df = new DecimalFormat("#,##0.##", DecimalFormatSymbols.getInstance(Locale.US));
         txtGiaBan.setText(df.format(currentItem.getGiaBan()));
         txtGiaNhap.setText(df.format(currentItem.getGiaNhap()));
         txtGiaBan2.setText(df.format(currentItem.getGiaBan2()));
@@ -947,7 +956,6 @@ public class MatHangEditDialog extends JDialog {
         txtQuyDoi.setText(df.format(currentItem.getQuyDoi()));
         txtGiamGiaPt.setText(df.format(currentItem.getGiamGiaPt()));
         txtGiamGiaTien.setText(df.format(currentItem.getGiamGiaTien()));
-        txtGiaUSD.setText(df.format(currentItem.getGiaUSD()));
         txtKichThuoc.setText(currentItem.getKichThuoc() != null ? currentItem.getKichThuoc() : "");
         txtNote.setText(currentItem.getGhiChu() != null ? currentItem.getGhiChu() : "");
 
@@ -1020,7 +1028,6 @@ public class MatHangEditDialog extends JDialog {
         currentItem.setQuyDoi(parseNumber(txtQuyDoi.getText()));
         currentItem.setGiamGiaPt(parseNumber(txtGiamGiaPt.getText()));
         currentItem.setGiamGiaTien(parseNumber(txtGiamGiaTien.getText()));
-        currentItem.setGiaUSD(parseNumber(txtGiaUSD.getText()));
         currentItem.setKichThuoc(txtKichThuoc.getText().trim());
         currentItem.setGhiChu(txtNote.getText().trim());
 
@@ -1031,15 +1038,21 @@ public class MatHangEditDialog extends JDialog {
         }
 
         DonViTinh selDvt = (DonViTinh) cbDonViTinh.getSelectedItem();
-        if (selDvt != null) {
+        if (selDvt != null && selDvt.getId() != null && !selDvt.getId().trim().isEmpty()) {
             currentItem.setDonViTinhId(selDvt.getId());
             currentItem.setTenDonViTinh(selDvt.getName());
+        } else {
+            currentItem.setDonViTinhId(null);
+            currentItem.setTenDonViTinh(null);
         }
 
         DonViTinh selDvtChan = (DonViTinh) cbDonViTinhChan.getSelectedItem();
-        if (selDvtChan != null) {
+        if (selDvtChan != null && selDvtChan.getId() != null && !selDvtChan.getId().trim().isEmpty()) {
             currentItem.setDonViTinhChanId(selDvtChan.getId());
             currentItem.setTenDonViTinhChan(selDvtChan.getName());
+        } else {
+            currentItem.setDonViTinhChanId(null);
+            currentItem.setTenDonViTinhChan(null);
         }
 
         // Tab 2
@@ -1100,9 +1113,9 @@ public class MatHangEditDialog extends JDialog {
         txtQuyDoi.setText("0");
         txtGiamGiaPt.setText("0");
         txtGiamGiaTien.setText("0");
-        txtGiaUSD.setText("0");
         txtKichThuoc.setText("");
         txtNote.setText("");
+        if (cbDonViTinhChan.getItemCount() > 0) cbDonViTinhChan.setSelectedIndex(0);
         removeImage();
         txtName.requestFocus();
     }
@@ -1117,8 +1130,21 @@ public class MatHangEditDialog extends JDialog {
         cloned.setGiaBan2(parseNumber(txtGiaBan2.getText()));
         cloned.setGiaBan3(parseNumber(txtGiaBan3.getText()));
         cloned.setGiaBan4(parseNumber(txtGiaBan4.getText()));
-        cloned.setGiaUSD(parseNumber(txtGiaUSD.getText()));
+        cloned.setGiaBanChan(parseNumber(txtGiaBanChan.getText()));
+        cloned.setQuyDoi(parseNumber(txtQuyDoi.getText()));
+        cloned.setGiamGiaPt(parseNumber(txtGiamGiaPt.getText()));
+        cloned.setGiamGiaTien(parseNumber(txtGiamGiaTien.getText()));
         cloned.setKichThuoc(txtKichThuoc.getText().trim());
+        DonViTinh selDvt = (DonViTinh) cbDonViTinh.getSelectedItem();
+        if (selDvt != null && selDvt.getId() != null && !selDvt.getId().trim().isEmpty()) {
+            cloned.setDonViTinhId(selDvt.getId());
+            cloned.setTenDonViTinh(selDvt.getName());
+        }
+        DonViTinh selDvtChan = (DonViTinh) cbDonViTinhChan.getSelectedItem();
+        if (selDvtChan != null && selDvtChan.getId() != null && !selDvtChan.getId().trim().isEmpty()) {
+            cloned.setDonViTinhChanId(selDvtChan.getId());
+            cloned.setTenDonViTinhChan(selDvtChan.getName());
+        }
         this.currentItem = cloned;
         txtName.setText(cloned.getName());
         txtCode.setText(nextCode);
@@ -1179,9 +1205,34 @@ public class MatHangEditDialog extends JDialog {
 
     private double parseNumber(String val) {
         if (val == null) return 0.0;
+        String s = val.trim();
+        if (s.isEmpty()) return 0.0;
         try {
-            String cleaned = val.replace(",", "").trim();
-            return Double.parseDouble(cleaned);
+            s = s.replaceAll("\\s+", "");
+            if (s.contains(".") && s.contains(",")) {
+                if (s.lastIndexOf('.') > s.lastIndexOf(',')) {
+                    s = s.replace(",", "");
+                } else {
+                    s = s.replace(".", "").replace(",", ".");
+                }
+            } else if (s.contains(",")) {
+                int commaIndex = s.lastIndexOf(',');
+                int decimals = s.length() - commaIndex - 1;
+                if (s.indexOf(',') != commaIndex || decimals == 3) {
+                    s = s.replace(",", "");
+                } else {
+                    s = s.replace(",", ".");
+                }
+            } else if (s.contains(".")) {
+                int dotIndex = s.lastIndexOf('.');
+                int decimals = s.length() - dotIndex - 1;
+                if (s.indexOf('.') != dotIndex) {
+                    s = s.replace(".", "");
+                } else if (decimals == 3 && s.length() > 4) {
+                    s = s.replace(".", "");
+                }
+            }
+            return Double.parseDouble(s);
         } catch (Exception e) {
             return 0.0;
         }

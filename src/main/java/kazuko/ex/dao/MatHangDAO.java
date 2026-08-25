@@ -450,14 +450,68 @@ public class MatHangDAO extends BaseDAO {
         return true;
     }
 
+    static {
+        ensureDatabaseColumns();
+    }
+
+    private static void ensureDatabaseColumns() {
+    }
+
+    private MatHang mapResultSetToMatHang(ResultSet rs) throws SQLException {
+        MatHang mh = new MatHang();
+        mh.setId(rs.getString("ID"));
+        mh.setCode(rs.getString("CODE"));
+        mh.setName(rs.getString("NAME"));
+        mh.setMaSanCo(rs.getString("MASANCO"));
+        mh.setGiaNhap(rs.getDouble("GIANHAP"));
+        mh.setGiaBan(rs.getDouble("GIABAN"));
+        mh.setGiaVon(rs.getDouble("GIAVON"));
+        mh.setGiaBan2(rs.getDouble("GIABAN2"));
+        mh.setGiaBan3(rs.getDouble("GIABAN3"));
+        mh.setGiaBan4(rs.getDouble("GIABAN4"));
+        mh.setGiaBanChan(rs.getDouble("GIABANCHAN"));
+        mh.setQuyDoi(rs.getDouble("QUYDOI"));
+        mh.setGiamGiaPt(rs.getDouble("MACDINHGIAMGIA"));
+        mh.setGiamGiaTien(rs.getDouble("MACDINHGIAMTIEN"));
+        mh.setNhomMatHangId(rs.getString("DNHOMMATHANGID"));
+        mh.setDonViTinhId(rs.getString("DDONVITINHID"));
+        mh.setDonViTinhChanId(rs.getString("DDONVITINHCHANID"));
+        mh.setTenNhom(rs.getString("TENNHOM"));
+        mh.setTenDonViTinh(rs.getString("TENDONVITINH"));
+        mh.setTenDonViTinhChan(rs.getString("TENDONVITINHCHAN"));
+        mh.setGhiChu(rs.getString("NOTE"));
+        mh.setStatus(rs.getInt("STATUS"));
+        mh.setTimeCreated(rs.getTimestamp("TIMECREATED"));
+        mh.setUserCreatedId(rs.getString("USERCREATEDID"));
+        mh.setTimeModified(rs.getTimestamp("TIMEMODIFIED"));
+        mh.setUserModifiedId(rs.getString("USERMODIFIEDID"));
+        mh.setTonToiThieu(rs.getDouble("TONTOITHIEU"));
+        mh.setTonToiDa(rs.getDouble("TONTOIDA"));
+        mh.setBaoHanh(rs.getString("BAOHANH"));
+        mh.setHoaHong(rs.getDouble("HOAHONG"));
+        mh.setKhoiLuongTheoCan(rs.getInt("THEOCAN") == 1);
+        mh.setCoHanSuDung(rs.getInt("COHANSUDUNG") == 1);
+        mh.setPhuongThucTruKho(rs.getInt("LOAIDINHLUONG"));
+        mh.setKichThuoc(rs.getString("SIZE"));
+        mh.setKhongInCheBien(rs.getInt("KHONGINCHEBIEN") == 1);
+        mh.setHangSanXuat(rs.getString("DHANGSANXUATID"));
+        mh.setDoiTacKyGui(rs.getString("DDOITACKYGUIID"));
+        return mh;
+    }
+
     private List<MatHang> tryLoadTrashFromDb() {
         List<MatHang> list = new ArrayList<>();
-        String sql = "SELECT m.ID, m.CODE, m.NAME, m.GIANHAP, m.GIABAN, m.GIAVON, m.DNHOMMATHANGID, m.DDONVITINHID, " +
-                     "m.NOTE, m.STATUS, m.TIMECREATED, m.TIMEMODIFIED, " +
-                     "n.NAME as TENNHOM, d.NAME as TENDONVITINH " +
+        String sql = "SELECT m.ID, m.CODE, m.NAME, m.MASANCO, m.GIANHAP, m.GIABAN, m.GIAVON, " +
+                     "m.GIABAN2, m.GIABAN3, m.GIABAN4, m.GIABANCHAN, m.QUYDOI, " +
+                     "m.MACDINHGIAMGIA, m.MACDINHGIAMTIEN, m.DNHOMMATHANGID, m.DDONVITINHID, m.DDONVITINHCHANID, " +
+                     "m.NOTE, m.STATUS, m.USERCREATEDID, m.TIMECREATED, m.USERMODIFIEDID, m.TIMEMODIFIED, " +
+                     "m.TONTOITHIEU, m.TONTOIDA, m.BAOHANH, m.DHANGSANXUATID, m.DDOITACKYGUIID, m.HOAHONG, " +
+                     "m.THEOCAN, m.COHANSUDUNG, m.LOAIDINHLUONG, m.SIZE, m.KHONGINCHEBIEN, " +
+                     "n.NAME as TENNHOM, d.NAME as TENDONVITINH, dc.NAME as TENDONVITINHCHAN " +
                      "FROM DMATHANG m " +
                      "LEFT JOIN DNHOMMATHANG n ON m.DNHOMMATHANGID = n.ID " +
                      "LEFT JOIN DDONVITINH d ON m.DDONVITINHID = d.ID " +
+                     "LEFT JOIN DDONVITINH dc ON m.DDONVITINHCHANID = dc.ID " +
                      "WHERE m.STATUS < 0 " +
                      "ORDER BY m.CODE, m.NAME";
 
@@ -465,22 +519,7 @@ public class MatHangDAO extends BaseDAO {
              PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
-                MatHang mh = new MatHang();
-                mh.setId(rs.getString("ID"));
-                mh.setCode(rs.getString("CODE"));
-                mh.setName(rs.getString("NAME"));
-                mh.setGiaNhap(rs.getDouble("GIANHAP"));
-                mh.setGiaBan(rs.getDouble("GIABAN"));
-                mh.setGiaVon(rs.getDouble("GIAVON"));
-                mh.setNhomMatHangId(rs.getString("DNHOMMATHANGID"));
-                mh.setDonViTinhId(rs.getString("DDONVITINHID"));
-                mh.setTenNhom(rs.getString("TENNHOM"));
-                mh.setTenDonViTinh(rs.getString("TENDONVITINH"));
-                mh.setGhiChu(rs.getString("NOTE"));
-                mh.setStatus(-1);
-                mh.setTimeCreated(rs.getTimestamp("TIMECREATED"));
-                mh.setTimeModified(rs.getTimestamp("TIMEMODIFIED"));
-                list.add(mh);
+                list.add(mapResultSetToMatHang(rs));
             }
             return list;
         } catch (Exception e) {
@@ -491,12 +530,17 @@ public class MatHangDAO extends BaseDAO {
     private List<MatHang> tryLoadFromDb(String tenNhomFilter, String nhomIdFilter) {
         List<MatHang> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
-                "SELECT m.ID, m.CODE, m.NAME, m.GIANHAP, m.GIABAN, m.GIAVON, m.DNHOMMATHANGID, m.DDONVITINHID, " +
-                "m.NOTE, m.STATUS, m.TIMECREATED, m.TIMEMODIFIED, " +
-                "n.NAME as TENNHOM, d.NAME as TENDONVITINH " +
+                "SELECT m.ID, m.CODE, m.NAME, m.MASANCO, m.GIANHAP, m.GIABAN, m.GIAVON, " +
+                "m.GIABAN2, m.GIABAN3, m.GIABAN4, m.GIABANCHAN, m.QUYDOI, " +
+                "m.MACDINHGIAMGIA, m.MACDINHGIAMTIEN, m.DNHOMMATHANGID, m.DDONVITINHID, m.DDONVITINHCHANID, " +
+                "m.NOTE, m.STATUS, m.USERCREATEDID, m.TIMECREATED, m.USERMODIFIEDID, m.TIMEMODIFIED, " +
+                "m.TONTOITHIEU, m.TONTOIDA, m.BAOHANH, m.DHANGSANXUATID, m.DDOITACKYGUIID, m.HOAHONG, " +
+                "m.THEOCAN, m.COHANSUDUNG, m.LOAIDINHLUONG, m.SIZE, m.KHONGINCHEBIEN, " +
+                "n.NAME as TENNHOM, d.NAME as TENDONVITINH, dc.NAME as TENDONVITINHCHAN " +
                 "FROM DMATHANG m " +
                 "LEFT JOIN DNHOMMATHANG n ON m.DNHOMMATHANGID = n.ID " +
                 "LEFT JOIN DDONVITINH d ON m.DDONVITINHID = d.ID " +
+                "LEFT JOIN DDONVITINH dc ON m.DDONVITINHCHANID = dc.ID " +
                 "WHERE (m.STATUS IS NULL OR m.STATUS >= 0) "
         );
 
@@ -523,21 +567,7 @@ public class MatHangDAO extends BaseDAO {
 
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
-                    MatHang mh = new MatHang();
-                    mh.setId(rs.getString("ID"));
-                    mh.setCode(rs.getString("CODE"));
-                    mh.setName(rs.getString("NAME"));
-                    mh.setGiaNhap(rs.getDouble("GIANHAP"));
-                    mh.setGiaBan(rs.getDouble("GIABAN"));
-                    mh.setGiaVon(rs.getDouble("GIAVON"));
-                    mh.setNhomMatHangId(rs.getString("DNHOMMATHANGID"));
-                    mh.setDonViTinhId(rs.getString("DDONVITINHID"));
-                    mh.setTenNhom(rs.getString("TENNHOM"));
-                    mh.setTenDonViTinh(rs.getString("TENDONVITINH"));
-                    mh.setGhiChu(rs.getString("NOTE"));
-                    mh.setTimeCreated(rs.getTimestamp("TIMECREATED"));
-                    mh.setTimeModified(rs.getTimestamp("TIMEMODIFIED"));
-                    list.add(mh);
+                    list.add(mapResultSetToMatHang(rs));
                 }
             }
             return list;
@@ -547,42 +577,122 @@ public class MatHangDAO extends BaseDAO {
     }
 
     private boolean tryInsertToDb(MatHang mh) {
-        String sql = "INSERT INTO DMATHANG (ID, CODE, NAME, GIANHAP, GIABAN, GIAVON, DNHOMMATHANGID, DDONVITINHID, NOTE, STATUS, TIMECREATED) " +
-                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 30, ?)";
+        String sql = "INSERT INTO DMATHANG (" +
+                "ID, CODE, NAME, MASANCO, GIANHAP, GIABAN, GIAVON, " +
+                "GIABAN2, GIABAN3, GIABAN4, GIABANCHAN, QUYDOI, " +
+                "MACDINHGIAMGIA, MACDINHGIAMTIEN, DNHOMMATHANGID, DDONVITINHID, DDONVITINHCHANID, " +
+                "NOTE, STATUS, TIMECREATED, USERCREATEDID, TONTOITHIEU, TONTOIDA, " +
+                "BAOHANH, DHANGSANXUATID, DDOITACKYGUIID, HOAHONG, THEOCAN, " +
+                "COHANSUDUNG, LOAIDINHLUONG, SIZE, KHONGINCHEBIEN" +
+                ") VALUES (" +
+                "?, ?, ?, ?, ?, ?, ?, " +
+                "?, ?, ?, ?, ?, " +
+                "?, ?, ?, ?, ?, " +
+                "?, 30, ?, ?, ?, ?, " +
+                "?, ?, ?, ?, ?, " +
+                "?, ?, ?, ?" +
+                ")";
         try (Connection conn = getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, mh.getId());
-            ps.setString(2, mh.getCode());
-            ps.setString(3, mh.getName());
-            ps.setDouble(4, mh.getGiaNhap());
-            ps.setDouble(5, mh.getGiaBan());
-            ps.setDouble(6, mh.getGiaVon());
-            ps.setString(7, mh.getNhomMatHangId());
-            ps.setString(8, mh.getDonViTinhId());
-            ps.setString(9, mh.getGhiChu() != null ? mh.getGhiChu() : "");
-            ps.setTimestamp(10, mh.getTimeCreated() != null ? mh.getTimeCreated() : new Timestamp(System.currentTimeMillis()));
-            return ps.executeUpdate() > 0;
+            int i = 1;
+            ps.setString(i++, mh.getId());
+            ps.setString(i++, mh.getCode());
+            ps.setString(i++, mh.getName());
+            ps.setString(i++, mh.getMaSanCo() != null ? mh.getMaSanCo() : "");
+            ps.setDouble(i++, mh.getGiaNhap());
+            ps.setDouble(i++, mh.getGiaBan());
+            ps.setDouble(i++, mh.getGiaVon());
+            ps.setDouble(i++, mh.getGiaBan2());
+            ps.setDouble(i++, mh.getGiaBan3());
+            ps.setDouble(i++, mh.getGiaBan4());
+            ps.setDouble(i++, mh.getGiaBanChan());
+            ps.setDouble(i++, mh.getQuyDoi());
+            ps.setDouble(i++, mh.getGiamGiaPt());
+            ps.setDouble(i++, mh.getGiamGiaTien());
+            ps.setString(i++, mh.getNhomMatHangId());
+            ps.setString(i++, mh.getDonViTinhId());
+            ps.setString(i++, mh.getDonViTinhChanId());
+            ps.setString(i++, mh.getGhiChu() != null ? mh.getGhiChu() : "");
+            ps.setTimestamp(i++, mh.getTimeCreated() != null ? mh.getTimeCreated() : new Timestamp(System.currentTimeMillis()));
+            String userCreated = mh.getUserCreatedId();
+            if (userCreated == null || userCreated.trim().isEmpty()) {
+                userCreated = (AuthService.getCurrentUser() != null && AuthService.getCurrentUser().getId() != null)
+                        ? AuthService.getCurrentUser().getId() : "1000001";
+            }
+            ps.setString(i++, userCreated);
+            ps.setDouble(i++, mh.getTonToiThieu());
+            ps.setDouble(i++, mh.getTonToiDa());
+            ps.setString(i++, mh.getBaoHanh() != null ? mh.getBaoHanh() : "");
+            ps.setString(i++, mh.getHangSanXuat() != null ? mh.getHangSanXuat() : "");
+            ps.setString(i++, mh.getDoiTacKyGui() != null ? mh.getDoiTacKyGui() : "");
+            ps.setDouble(i++, mh.getHoaHong());
+            ps.setInt(i++, mh.isKhoiLuongTheoCan() ? 1 : 0);
+            ps.setInt(i++, mh.isCoHanSuDung() ? 1 : 0);
+            ps.setInt(i++, mh.getPhuongThucTruKho());
+            ps.setString(i++, mh.getKichThuoc() != null ? mh.getKichThuoc() : "");
+            ps.setInt(i++, mh.isKhongInCheBien() ? 1 : 0);
+            int rows = ps.executeUpdate();
+            if (!conn.getAutoCommit()) conn.commit();
+            return rows > 0;
         } catch (Exception e) {
+            e.printStackTrace();
             return false;
         }
     }
 
     private boolean tryUpdateToDb(MatHang mh) {
-        String sql = "UPDATE DMATHANG SET CODE=?, NAME=?, GIANHAP=?, GIABAN=?, GIAVON=?, DNHOMMATHANGID=?, DDONVITINHID=?, NOTE=?, TIMEMODIFIED=? WHERE ID=?";
+        String sql = "UPDATE DMATHANG SET " +
+                "CODE=?, NAME=?, MASANCO=?, GIANHAP=?, GIABAN=?, GIAVON=?, " +
+                "GIABAN2=?, GIABAN3=?, GIABAN4=?, GIABANCHAN=?, QUYDOI=?, " +
+                "MACDINHGIAMGIA=?, MACDINHGIAMTIEN=?, DNHOMMATHANGID=?, DDONVITINHID=?, DDONVITINHCHANID=?, " +
+                "NOTE=?, TIMEMODIFIED=?, USERMODIFIEDID=?, TONTOITHIEU=?, TONTOIDA=?, " +
+                "BAOHANH=?, DHANGSANXUATID=?, DDOITACKYGUIID=?, HOAHONG=?, THEOCAN=?, " +
+                "COHANSUDUNG=?, LOAIDINHLUONG=?, SIZE=?, KHONGINCHEBIEN=? " +
+                "WHERE ID=?";
         try (Connection conn = getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, mh.getCode());
-            ps.setString(2, mh.getName());
-            ps.setDouble(3, mh.getGiaNhap());
-            ps.setDouble(4, mh.getGiaBan());
-            ps.setDouble(5, mh.getGiaVon());
-            ps.setString(6, mh.getNhomMatHangId());
-            ps.setString(7, mh.getDonViTinhId());
-            ps.setString(8, mh.getGhiChu());
-            ps.setTimestamp(9, mh.getTimeModified() != null ? mh.getTimeModified() : new Timestamp(System.currentTimeMillis()));
-            ps.setString(10, mh.getId());
-            return ps.executeUpdate() > 0;
+            int i = 1;
+            ps.setString(i++, mh.getCode());
+            ps.setString(i++, mh.getName());
+            ps.setString(i++, mh.getMaSanCo() != null ? mh.getMaSanCo() : "");
+            ps.setDouble(i++, mh.getGiaNhap());
+            ps.setDouble(i++, mh.getGiaBan());
+            ps.setDouble(i++, mh.getGiaVon());
+            ps.setDouble(i++, mh.getGiaBan2());
+            ps.setDouble(i++, mh.getGiaBan3());
+            ps.setDouble(i++, mh.getGiaBan4());
+            ps.setDouble(i++, mh.getGiaBanChan());
+            ps.setDouble(i++, mh.getQuyDoi());
+            ps.setDouble(i++, mh.getGiamGiaPt());
+            ps.setDouble(i++, mh.getGiamGiaTien());
+            ps.setString(i++, mh.getNhomMatHangId());
+            ps.setString(i++, mh.getDonViTinhId());
+            ps.setString(i++, mh.getDonViTinhChanId());
+            ps.setString(i++, mh.getGhiChu() != null ? mh.getGhiChu() : "");
+            ps.setTimestamp(i++, mh.getTimeModified() != null ? mh.getTimeModified() : new Timestamp(System.currentTimeMillis()));
+            String userModified = mh.getUserModifiedId();
+            if (userModified == null || userModified.trim().isEmpty()) {
+                userModified = (AuthService.getCurrentUser() != null && AuthService.getCurrentUser().getId() != null)
+                        ? AuthService.getCurrentUser().getId() : "1000001";
+            }
+            ps.setString(i++, userModified);
+            ps.setDouble(i++, mh.getTonToiThieu());
+            ps.setDouble(i++, mh.getTonToiDa());
+            ps.setString(i++, mh.getBaoHanh() != null ? mh.getBaoHanh() : "");
+            ps.setString(i++, mh.getHangSanXuat() != null ? mh.getHangSanXuat() : "");
+            ps.setString(i++, mh.getDoiTacKyGui() != null ? mh.getDoiTacKyGui() : "");
+            ps.setDouble(i++, mh.getHoaHong());
+            ps.setInt(i++, mh.isKhoiLuongTheoCan() ? 1 : 0);
+            ps.setInt(i++, mh.isCoHanSuDung() ? 1 : 0);
+            ps.setInt(i++, mh.getPhuongThucTruKho());
+            ps.setString(i++, mh.getKichThuoc() != null ? mh.getKichThuoc() : "");
+            ps.setInt(i++, mh.isKhongInCheBien() ? 1 : 0);
+            ps.setString(i++, mh.getId());
+            int rows = ps.executeUpdate();
+            if (!conn.getAutoCommit()) conn.commit();
+            return rows > 0;
         } catch (Exception e) {
+            e.printStackTrace();
             return false;
         }
     }

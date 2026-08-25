@@ -32,7 +32,6 @@ public class MatHang {
     private String hangSanXuat;
     private String baoHanh;
     private String kichThuoc;
-    private double giaUSD = 0.0;
     private double hoaHong = 0.0;
     private double tonToiThieu = 0.0;
     private double tonToiDa = 0.0;
@@ -142,9 +141,6 @@ public class MatHang {
 
     public String getKichThuoc() { return kichThuoc; }
     public void setKichThuoc(String kichThuoc) { this.kichThuoc = kichThuoc; }
-
-    public double getGiaUSD() { return giaUSD; }
-    public void setGiaUSD(double giaUSD) { this.giaUSD = giaUSD; }
 
     public double getHoaHong() { return hoaHong; }
     public void setHoaHong(double hoaHong) { this.hoaHong = hoaHong; }

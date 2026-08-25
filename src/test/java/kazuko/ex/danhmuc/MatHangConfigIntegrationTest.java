@@ -22,10 +22,8 @@ public class MatHangConfigIntegrationTest {
     public void testMatHangNewFields() {
         MatHang mh = new MatHang();
         mh.setKichThuoc("XL - 120x80cm");
-        mh.setGiaUSD(15.5);
 
         assertEquals("XL - 120x80cm", mh.getKichThuoc());
-        assertEquals(15.5, mh.getGiaUSD(), 0.001);
     }
 
     @Test
@@ -116,5 +114,103 @@ public class MatHangConfigIntegrationTest {
         config.setCachTim("Tìm chính xác...");
         List<MatHang> results5 = matHangDAO.searchWithConfig("CODE_THAT_DOES_NOT_EXIST_AS_NAME_12345", null, null, config);
         assertTrue(results5.isEmpty());
+    }
+
+    @Test
+    public void testMultiplePriceConfigAndLabels() {
+        SystemConfig config = new SystemConfig();
+        config.setSuDungGia2(true);
+        config.setDienGiaiGia2("Giá bán đại lý");
+        config.setSuDungGia3(false);
+        config.setDienGiaiGia3("Giá bán VIP");
+        config.setSuDungGia4(true);
+        config.setDienGiaiGia4("Giá bán sỉ");
+
+        assertTrue(config.isSuDungGia2());
+        assertEquals("Giá bán đại lý", config.getDienGiaiGia2());
+        assertFalse(config.isSuDungGia3());
+        assertEquals("Giá bán VIP", config.getDienGiaiGia3());
+        assertTrue(config.isSuDungGia4());
+        assertEquals("Giá bán sỉ", config.getDienGiaiGia4());
+    }
+
+    @Test
+    public void testInsertAndUpdateMatHangAllFields() {
+        kazuko.ex.dao.DonViTinhDAO dvtDAO = new kazuko.ex.dao.DonViTinhDAO();
+        List<kazuko.ex.model.danhmuc.DonViTinh> dvts = dvtDAO.getAll();
+        assertFalse(dvts.isEmpty(), "Need at least 1 unit to test");
+        String dvtId = dvts.get(0).getId();
+        String dvtChanId = dvts.size() > 1 ? dvts.get(1).getId() : dvts.get(0).getId();
+
+        MatHang mh = new MatHang();
+        String code = "TEST_" + System.currentTimeMillis();
+        String name = "Mặt hàng kiểm thử " + System.currentTimeMillis();
+        mh.setCode(code);
+        mh.setName(name);
+        mh.setDonViTinhId(dvtId);
+        mh.setDonViTinhChanId(dvtChanId);
+        mh.setQuyDoi(12.0);
+        mh.setGiaBan(50000.0);
+        mh.setGiaBanChan(550000.0);
+        mh.setGiaBan2(48000.0);
+        mh.setGiaBan3(47000.0);
+        mh.setGiaBan4(46000.0);
+        mh.setGiamGiaPt(5.5);
+        mh.setGiamGiaTien(2000.0);
+        mh.setGiaNhap(40000.0);
+        mh.setKichThuoc("M");
+        mh.setBaoHanh("12 tháng");
+        mh.setHoaHong(1.5);
+        mh.setPhuongThucTruKho(1);
+
+        boolean insertOk = matHangDAO.insert(mh);
+        assertTrue(insertOk, "Insert MatHang should succeed");
+
+        List<MatHang> all = matHangDAO.getAll();
+        MatHang saved = all.stream().filter(m -> code.equals(m.getCode())).findFirst().orElse(null);
+        assertNotNull(saved, "Saved product should be found in DB");
+        assertNotNull(saved.getId(), "Saved product should have an ID");
+        assertEquals(name, saved.getName());
+        assertEquals(dvtChanId, saved.getDonViTinhChanId());
+        assertEquals(12.0, saved.getQuyDoi(), 0.001);
+        assertEquals(50000.0, saved.getGiaBan(), 0.001);
+        assertEquals(550000.0, saved.getGiaBanChan(), 0.001);
+        assertEquals(48000.0, saved.getGiaBan2(), 0.001);
+        assertEquals(47000.0, saved.getGiaBan3(), 0.001);
+        assertEquals(46000.0, saved.getGiaBan4(), 0.001);
+        assertEquals(5.5, saved.getGiamGiaPt(), 0.001);
+        assertEquals(2000.0, saved.getGiamGiaTien(), 0.001);
+
+        // Update fields
+        saved.setName(name + " (Updated)");
+        saved.setGiaBan(60000.0);
+        saved.setGiaBanChan(650000.0);
+        saved.setQuyDoi(24.0);
+        saved.setGiaBan2(58000.0);
+        saved.setGiaBan3(57000.0);
+        saved.setGiaBan4(56000.0);
+        saved.setGiamGiaPt(10.0);
+        saved.setGiamGiaTien(5000.0);
+        saved.setDonViTinhChanId(null); // Clear bulk unit
+
+        boolean updateOk = matHangDAO.update(saved);
+        assertTrue(updateOk, "Update MatHang should succeed");
+
+        List<MatHang> allAfterUpdate = matHangDAO.getAll();
+        MatHang updated = allAfterUpdate.stream().filter(m -> code.equals(m.getCode())).findFirst().orElse(null);
+        assertNotNull(updated, "Updated product should be found");
+        assertEquals(name + " (Updated)", updated.getName());
+        assertNull(updated.getDonViTinhChanId(), "Bulk unit should be cleared/null");
+        assertEquals(24.0, updated.getQuyDoi(), 0.001);
+        assertEquals(60000.0, updated.getGiaBan(), 0.001);
+        assertEquals(650000.0, updated.getGiaBanChan(), 0.001);
+        assertEquals(58000.0, updated.getGiaBan2(), 0.001);
+        assertEquals(57000.0, updated.getGiaBan3(), 0.001);
+        assertEquals(56000.0, updated.getGiaBan4(), 0.001);
+        assertEquals(10.0, updated.getGiamGiaPt(), 0.001);
+        assertEquals(5000.0, updated.getGiamGiaTien(), 0.001);
+
+        // Clean up
+        matHangDAO.deletePermanently(updated.getId());
     }
 }

@@ -360,6 +360,11 @@ public class DanhMucMatHangPanel extends JPanel {
         colList.add("Tên mặt hàng");
         colList.add("Nhóm mặt hàng");
         colList.add("Đơn vị tính");
+        if (systemConfig != null && systemConfig.isSuDung2DonViTinh()) {
+            colList.add("ĐVT chẵn");
+            colList.add("Quy đổi");
+            colList.add("Giá bán chẵn");
+        }
         colList.add("Giá bán");
         if (systemConfig != null && systemConfig.isSuDungGia2()) {
             colList.add(systemConfig.getDienGiaiGia2() != null && !systemConfig.getDienGiaiGia2().isEmpty() ? systemConfig.getDienGiaiGia2() : "Đơn giá 2");
@@ -369,9 +374,6 @@ public class DanhMucMatHangPanel extends JPanel {
         }
         if (systemConfig != null && systemConfig.isSuDungGia4()) {
             colList.add(systemConfig.getDienGiaiGia4() != null && !systemConfig.getDienGiaiGia4().isEmpty() ? systemConfig.getDienGiaiGia4() : "Giá bán 4");
-        }
-        if (systemConfig != null && systemConfig.isGiaBanLeUSD()) {
-            colList.add("Giá bán lẻ (USD)");
         }
         colList.add("Giá nhập");
         colList.add("Mặc định giảm giá");
@@ -616,10 +618,10 @@ public class DanhMucMatHangPanel extends JPanel {
             } else if ("Nhóm mặt hàng".equals(col)) {
                 tableMatHang.getColumnModel().getColumn(i).setCellRenderer(nhomRenderer);
                 tableMatHang.getColumnModel().getColumn(i).setPreferredWidth(120);
-            } else if ("Đơn vị tính".equals(col)) {
+            } else if ("Đơn vị tính".equals(col) || "ĐVT chẵn".equals(col)) {
                 tableMatHang.getColumnModel().getColumn(i).setCellRenderer(dvtRenderer);
                 tableMatHang.getColumnModel().getColumn(i).setPreferredWidth(70);
-            } else if (col.contains("Giá") || col.contains("giảm") || col.contains("USD")
+            } else if (col.contains("Giá") || col.contains("giảm") || col.contains("USD") || "Quy đổi".equals(col)
                     || (systemConfig != null && systemConfig.isSuDungGia2() && col.equals(systemConfig.getDienGiaiGia2()))
                     || (systemConfig != null && systemConfig.isSuDungGia3() && col.equals(systemConfig.getDienGiaiGia3()))
                     || (systemConfig != null && systemConfig.isSuDungGia4() && col.equals(systemConfig.getDienGiaiGia4()))) {
@@ -793,6 +795,15 @@ public class DanhMucMatHangPanel extends JPanel {
             case "Đơn vị tính":
                 comparator = Comparator.comparing(m -> m.getTenDonViTinh() != null ? m.getTenDonViTinh() : "", String.CASE_INSENSITIVE_ORDER);
                 break;
+            case "ĐVT chẵn":
+                comparator = Comparator.comparing(m -> m.getTenDonViTinhChan() != null ? m.getTenDonViTinhChan() : "", String.CASE_INSENSITIVE_ORDER);
+                break;
+            case "Quy đổi":
+                comparator = Comparator.comparingDouble(MatHang::getQuyDoi);
+                break;
+            case "Giá bán chẵn":
+                comparator = Comparator.comparingDouble(MatHang::getGiaBanChan);
+                break;
             case "Giá bán":
                 comparator = Comparator.comparingDouble(MatHang::getGiaBan);
                 break;
@@ -807,9 +818,6 @@ public class DanhMucMatHangPanel extends JPanel {
                 break;
             case "Giá bán 4":
                 comparator = Comparator.comparingDouble(MatHang::getGiaBan4);
-                break;
-            case "Giá bán lẻ (USD)":
-                comparator = Comparator.comparingDouble(MatHang::getGiaUSD);
                 break;
             case "Mặc định giảm giá":
                 comparator = Comparator.comparingDouble(MatHang::getGiamGiaPt);
@@ -858,11 +866,13 @@ public class DanhMucMatHangPanel extends JPanel {
                 else if ("Tên mặt hàng".equals(col)) row.add(mh.getName() != null ? mh.getName() : "");
                 else if ("Nhóm mặt hàng".equals(col)) row.add(mh.getTenNhom() != null ? mh.getTenNhom() : "");
                 else if ("Đơn vị tính".equals(col)) row.add(mh.getTenDonViTinh() != null ? mh.getTenDonViTinh() : "");
+                else if ("ĐVT chẵn".equals(col)) row.add(mh.getTenDonViTinhChan() != null ? mh.getTenDonViTinhChan() : "");
+                else if ("Quy đổi".equals(col)) row.add(mh.getQuyDoi());
+                else if ("Giá bán chẵn".equals(col)) row.add(mh.getGiaBanChan());
                 else if ("Giá bán".equals(col)) row.add(mh.getGiaBan());
                 else if (systemConfig != null && systemConfig.isSuDungGia2() && col.equals(systemConfig.getDienGiaiGia2())) row.add(mh.getGiaBan2());
                 else if (systemConfig != null && systemConfig.isSuDungGia3() && col.equals(systemConfig.getDienGiaiGia3())) row.add(mh.getGiaBan3());
                 else if (systemConfig != null && systemConfig.isSuDungGia4() && col.equals(systemConfig.getDienGiaiGia4())) row.add(mh.getGiaBan4());
-                else if ("Giá bán lẻ (USD)".equals(col)) row.add(mh.getGiaUSD());
                 else if ("Giá nhập".equals(col)) row.add(mh.getGiaNhap());
                 else if ("Mặc định giảm giá".equals(col)) row.add(mh.getGiamGiaPt());
                 else if ("Mặc định giảm tiền".equals(col)) row.add(mh.getGiamGiaTien());
