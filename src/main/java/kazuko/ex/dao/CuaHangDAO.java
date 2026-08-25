@@ -4,9 +4,7 @@ import kazuko.ex.model.danhmuc.CuaHang;
 import kazuko.ex.service.AuthService;
 
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public class CuaHangDAO extends BaseDAO {
@@ -139,14 +137,85 @@ public class CuaHangDAO extends BaseDAO {
         return dbSuccess || memFound;
     }
 
+    public Set<String> getAllDescendantIds(String rootId) {
+        Set<String> allIds = new HashSet<>();
+        if (rootId == null || rootId.trim().isEmpty()) return allIds;
+        allIds.add(rootId.trim());
+
+        List<CuaHang> allItems = new ArrayList<>();
+        List<CuaHang> dbItems = tryLoadAllFromDb();
+        if (dbItems != null && !dbItems.isEmpty()) {
+            allItems.addAll(dbItems);
+        } else {
+            allItems.addAll(MEMORY_STORES);
+        }
+
+        boolean added;
+        do {
+            added = false;
+            for (CuaHang ch : allItems) {
+                if (ch.getParentId() != null && !ch.getParentId().trim().isEmpty() && ch.getId() != null) {
+                    if (allIds.contains(ch.getParentId().trim())) {
+                        if (allIds.add(ch.getId().trim())) {
+                            added = true;
+                        }
+                    }
+                }
+            }
+        } while (added);
+
+        return allIds;
+    }
+
+    public Set<String> getAllAncestorIds(String childId) {
+        Set<String> ancestors = new HashSet<>();
+        if (childId == null || childId.trim().isEmpty()) return ancestors;
+
+        List<CuaHang> allItems = new ArrayList<>();
+        List<CuaHang> dbItems = tryLoadAllFromDb();
+        if (dbItems != null && !dbItems.isEmpty()) {
+            allItems.addAll(dbItems);
+        } else {
+            allItems.addAll(MEMORY_STORES);
+        }
+
+        Map<String, CuaHang> itemMap = new HashMap<>();
+        for (CuaHang ch : allItems) {
+            if (ch.getId() != null) {
+                itemMap.put(ch.getId().trim(), ch);
+            }
+        }
+
+        String currParent = null;
+        CuaHang current = itemMap.get(childId.trim());
+        if (current != null) {
+            currParent = current.getParentId();
+        }
+
+        while (currParent != null && !currParent.trim().isEmpty() && !ancestors.contains(currParent.trim())) {
+            String pId = currParent.trim();
+            ancestors.add(pId);
+            CuaHang parentObj = itemMap.get(pId);
+            if (parentObj != null) {
+                currParent = parentObj.getParentId();
+            } else {
+                break;
+            }
+        }
+
+        return ancestors;
+    }
+
     public boolean moveToTrash(String id) {
         if (id == null) return false;
-        // Cập nhật CSDL Firebird: chuyển STATUS = -1
-        tryUpdateStatusInDb(id, -1);
+        Set<String> idsToTrash = getAllDescendantIds(id);
+
+        // Cập nhật CSDL Firebird: chuyển STATUS = -1 cho toàn bộ cây con
+        tryUpdateStatusInDb(idsToTrash, -1);
 
         // Cập nhật bộ nhớ cache
         for (CuaHang ch : MEMORY_STORES) {
-            if (id.equals(ch.getId()) || id.equals(ch.getParentId())) {
+            if (idsToTrash.contains(ch.getId())) {
                 ch.setStatus(-1);
             }
         }
@@ -155,20 +224,19 @@ public class CuaHangDAO extends BaseDAO {
 
     public boolean restoreFromTrash(String id) {
         if (id == null) return false;
+        Set<String> idsToRestore = getAllDescendantIds(id);
+
+        // Khi khôi phục một mục, khôi phục cả các mục cha/tổ tiên nếu chúng đang trong thùng rác
+        Set<String> ancestorIds = getAllAncestorIds(id);
+        idsToRestore.addAll(ancestorIds);
+
         // Cập nhật CSDL Firebird: khôi phục STATUS = 30
-        tryUpdateStatusInDb(id, 30);
+        tryUpdateStatusInDb(idsToRestore, 30);
 
         // Cập nhật bộ nhớ cache
         for (CuaHang ch : MEMORY_STORES) {
-            if (id.equals(ch.getId())) {
+            if (idsToRestore.contains(ch.getId())) {
                 ch.setStatus(1);
-                if (ch.getParentId() != null) {
-                    CuaHang parent = findById(ch.getParentId());
-                    if (parent != null && parent.getStatus() < 0) {
-                        parent.setStatus(1);
-                        tryUpdateStatusInDb(parent.getId(), 30);
-                    }
-                }
             }
         }
         return true;
@@ -176,11 +244,13 @@ public class CuaHangDAO extends BaseDAO {
 
     public boolean deletePermanently(String id) throws SQLException {
         if (id == null) return false;
-        // Xóa khỏi CSDL Firebird (ném ngoại lệ nếu vi phạm ràng buộc khóa ngoại)
-        tryDeleteFromDb(id);
+        Set<String> idsToDelete = getAllDescendantIds(id);
+
+        // Xóa khỏi CSDL Firebird
+        tryDeleteFromDb(idsToDelete);
 
         // Xóa khỏi bộ nhớ cache
-        MEMORY_STORES.removeIf(ch -> id.equals(ch.getId()) || id.equals(ch.getParentId()));
+        MEMORY_STORES.removeIf(ch -> idsToDelete.contains(ch.getId()));
         return true;
     }
 
@@ -293,18 +363,61 @@ public class CuaHangDAO extends BaseDAO {
         }
     }
 
-    private boolean tryUpdateStatusInDb(String id, int status) {
-        String sql = "UPDATE DCUAHANG SET STATUS = ?, USERMODIFIEDID = ?, TIMEMODIFIED = ? WHERE ID = ? OR PARENTID = ?";
+    private List<CuaHang> tryLoadAllFromDb() {
+        List<CuaHang> list = new ArrayList<>();
+        String sql = "SELECT ID, CODE, NAME, DIACHI, DIENTHOAI, DKHOHANGID, NOTE, STATUS, PARENTID, ITEMTYPE FROM DCUAHANG";
         try (Connection conn = getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+                CuaHang ch = new CuaHang();
+                ch.setId(rs.getString("ID"));
+                ch.setCode(rs.getString("CODE"));
+                ch.setName(rs.getString("NAME"));
+                ch.setDiaChi(rs.getString("DIACHI"));
+                ch.setDienThoai(rs.getString("DIENTHOAI"));
+                ch.setKhoHangId(rs.getString("DKHOHANGID"));
+                ch.setGhiChu(rs.getString("NOTE"));
+                int statusVal = rs.getObject("STATUS") != null ? rs.getInt("STATUS") : 30;
+                ch.setStatus(statusVal >= 0 ? 1 : -1);
+                ch.setParentId(rs.getString("PARENTID"));
+                Integer itemType = rs.getObject("ITEMTYPE") != null ? rs.getInt("ITEMTYPE") : null;
+                if (itemType != null && itemType == 1) {
+                    ch.setFolder(true);
+                    ch.setIconName("folder");
+                } else if (itemType != null && itemType == 2) {
+                    ch.setSeparator(true);
+                }
+                list.add(ch);
+            }
+            return list;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private boolean tryUpdateStatusInDb(Set<String> ids, int status) {
+        if (ids == null || ids.isEmpty()) return false;
+        StringBuilder sql = new StringBuilder("UPDATE DCUAHANG SET STATUS = ?, USERMODIFIEDID = ?, TIMEMODIFIED = ? WHERE ID IN (");
+        for (int i = 0; i < ids.size(); i++) {
+            if (i > 0) sql.append(",");
+            sql.append("?");
+        }
+        sql.append(")");
+
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
             String userId = getEffectiveUserId();
             Timestamp now = new Timestamp(System.currentTimeMillis());
 
             ps.setInt(1, status >= 0 ? 30 : -1);
             ps.setString(2, userId);
             ps.setTimestamp(3, now);
-            ps.setString(4, id);
-            ps.setString(5, id);
+            int idx = 4;
+            for (String itemId : ids) {
+                ps.setString(idx++, itemId);
+            }
             return ps.executeUpdate() > 0;
         } catch (Exception e) {
             System.err.println("Lỗi cập nhật STATUS DCUAHANG: " + e.getMessage());
@@ -344,11 +457,21 @@ public class CuaHangDAO extends BaseDAO {
         }
     }
 
-    private void tryDeleteFromDb(String id) throws SQLException {
-        String sql = "DELETE FROM DCUAHANG WHERE ID = ?";
+    private void tryDeleteFromDb(Set<String> ids) throws SQLException {
+        if (ids == null || ids.isEmpty()) return;
+        StringBuilder sql = new StringBuilder("DELETE FROM DCUAHANG WHERE ID IN (");
+        for (int i = 0; i < ids.size(); i++) {
+            if (i > 0) sql.append(",");
+            sql.append("?");
+        }
+        sql.append(")");
+
         try (Connection conn = getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, id);
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            int idx = 1;
+            for (String itemId : ids) {
+                ps.setString(idx++, itemId);
+            }
             ps.executeUpdate();
         }
     }
