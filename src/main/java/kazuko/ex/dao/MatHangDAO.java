@@ -210,38 +210,161 @@ public class MatHangDAO extends BaseDAO {
         return dbOk || memFound;
     }
 
-    public boolean delete(String id) {
+    private static final java.util.Map<String, MatHang> TRASH_PRODUCTS = new java.util.concurrent.ConcurrentHashMap<>();
+
+    public boolean moveToTrash(String id) {
         if (id == null) return false;
+        MatHang found = findById(id);
+        if (found != null) {
+            found.setStatus(-1);
+            TRASH_PRODUCTS.put(id, found);
+        }
         MEMORY_PRODUCTS.removeIf(m -> id.equals(m.getId()));
-        return tryDeleteFromDb(id);
+
+        String sql = "UPDATE DMATHANG SET STATUS = -1 WHERE ID = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, id);
+            ps.executeUpdate();
+            if (!conn.getAutoCommit()) conn.commit();
+        } catch (Exception ignored) {}
+        return true;
+    }
+
+    public boolean restoreFromTrash(String id) {
+        if (id == null) return false;
+        MatHang restored = TRASH_PRODUCTS.remove(id);
+        if (restored == null) {
+            restored = findByIdInTrash(id);
+        }
+        if (restored != null) {
+            restored.setStatus(1);
+            MEMORY_PRODUCTS.add(0, restored);
+        }
+
+        String sql = "UPDATE DMATHANG SET STATUS = 30 WHERE ID = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, id);
+            ps.executeUpdate();
+            if (!conn.getAutoCommit()) conn.commit();
+        } catch (Exception ignored) {}
+        return true;
+    }
+
+    public boolean deletePermanently(String id) {
+        if (id == null) return false;
+        TRASH_PRODUCTS.remove(id);
+        MEMORY_PRODUCTS.removeIf(m -> id.equals(m.getId()));
+
+        String sql = "DELETE FROM DMATHANG WHERE ID = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, id);
+            int rows = ps.executeUpdate();
+            if (!conn.getAutoCommit()) conn.commit();
+            return rows > 0;
+        } catch (Exception ignored) {
+            return false;
+        }
+    }
+
+    public List<MatHang> getTrashProducts() {
+        List<MatHang> dbList = tryLoadTrashFromDb();
+        java.util.Map<String, MatHang> map = new java.util.LinkedHashMap<>();
+        if (dbList != null) {
+            for (MatHang mh : dbList) {
+                if (mh.getId() != null) {
+                    map.put(mh.getId(), mh);
+                }
+            }
+        }
+        for (java.util.Map.Entry<String, MatHang> entry : TRASH_PRODUCTS.entrySet()) {
+            if (!map.containsKey(entry.getKey())) {
+                map.put(entry.getKey(), entry.getValue());
+            }
+        }
+        return new ArrayList<>(map.values());
+    }
+
+    public MatHang findByIdInTrash(String id) {
+        if (id == null) return null;
+        if (TRASH_PRODUCTS.containsKey(id)) return TRASH_PRODUCTS.get(id);
+        for (MatHang mh : getTrashProducts()) {
+            if (id.equals(mh.getId())) return mh;
+        }
+        return null;
+    }
+
+    public boolean delete(String id) {
+        return moveToTrash(id);
     }
 
     public boolean deleteByNhom(String tenNhom, String nhomId) {
         if (tenNhom == null || tenNhom.trim().isEmpty()) return false;
+        for (MatHang m : MEMORY_PRODUCTS) {
+            boolean matchId = nhomId != null && nhomId.equals(m.getNhomMatHangId());
+            boolean matchName = tenNhom.equalsIgnoreCase(m.getTenNhom());
+            if (matchId || matchName) {
+                m.setStatus(-1);
+                if (m.getId() != null) {
+                    TRASH_PRODUCTS.put(m.getId(), m);
+                }
+            }
+        }
         MEMORY_PRODUCTS.removeIf(m -> {
             boolean matchId = nhomId != null && nhomId.equals(m.getNhomMatHangId());
             boolean matchName = tenNhom.equalsIgnoreCase(m.getTenNhom());
             return matchId || matchName;
         });
 
-        // Thử Hard Delete trong CSDL
-        String sqlHard = "DELETE FROM DMATHANG WHERE DNHOMMATHANGID = ? OR DNHOMMATHANGID IN (SELECT ID FROM DNHOMMATHANG WHERE NAME = ?)";
+        String sqlSoft = "UPDATE DMATHANG SET STATUS = -1 WHERE DNHOMMATHANGID = ? OR DNHOMMATHANGID IN (SELECT ID FROM DNHOMMATHANG WHERE NAME = ?)";
         try (Connection conn = getConnection();
-             PreparedStatement ps = conn.prepareStatement(sqlHard)) {
+             PreparedStatement ps = conn.prepareStatement(sqlSoft)) {
             ps.setString(1, nhomId != null ? nhomId : "");
             ps.setString(2, tenNhom);
             ps.executeUpdate();
-        } catch (Exception e) {
-            // Nếu có ràng buộc khóa ngoại, Soft Delete (STATUS = -1)
-            String sqlSoft = "UPDATE DMATHANG SET STATUS = -1 WHERE DNHOMMATHANGID = ? OR DNHOMMATHANGID IN (SELECT ID FROM DNHOMMATHANG WHERE NAME = ?)";
-            try (Connection conn = getConnection();
-                 PreparedStatement ps = conn.prepareStatement(sqlSoft)) {
-                ps.setString(1, nhomId != null ? nhomId : "");
-                ps.setString(2, tenNhom);
-                ps.executeUpdate();
-            } catch (Exception ignored) {}
-        }
+            if (!conn.getAutoCommit()) conn.commit();
+        } catch (Exception ignored) {}
         return true;
+    }
+
+    private List<MatHang> tryLoadTrashFromDb() {
+        List<MatHang> list = new ArrayList<>();
+        String sql = "SELECT m.ID, m.CODE, m.NAME, m.GIANHAP, m.GIABAN, m.GIAVON, m.DNHOMMATHANGID, m.DDONVITINHID, " +
+                     "m.NOTE, m.STATUS, m.TIMECREATED, m.TIMEMODIFIED, " +
+                     "n.NAME as TENNHOM, d.NAME as TENDONVITINH " +
+                     "FROM DMATHANG m " +
+                     "LEFT JOIN DNHOMMATHANG n ON m.DNHOMMATHANGID = n.ID " +
+                     "LEFT JOIN DDONVITINH d ON m.DDONVITINHID = d.ID " +
+                     "WHERE m.STATUS < 0 " +
+                     "ORDER BY m.CODE, m.NAME";
+
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                MatHang mh = new MatHang();
+                mh.setId(rs.getString("ID"));
+                mh.setCode(rs.getString("CODE"));
+                mh.setName(rs.getString("NAME"));
+                mh.setGiaNhap(rs.getDouble("GIANHAP"));
+                mh.setGiaBan(rs.getDouble("GIABAN"));
+                mh.setGiaVon(rs.getDouble("GIAVON"));
+                mh.setNhomMatHangId(rs.getString("DNHOMMATHANGID"));
+                mh.setDonViTinhId(rs.getString("DDONVITINHID"));
+                mh.setTenNhom(rs.getString("TENNHOM"));
+                mh.setTenDonViTinh(rs.getString("TENDONVITINH"));
+                mh.setGhiChu(rs.getString("NOTE"));
+                mh.setStatus(-1);
+                mh.setTimeCreated(rs.getTimestamp("TIMECREATED"));
+                mh.setTimeModified(rs.getTimestamp("TIMEMODIFIED"));
+                list.add(mh);
+            }
+            return list;
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     private List<MatHang> tryLoadFromDb(String tenNhomFilter, String nhomIdFilter) {

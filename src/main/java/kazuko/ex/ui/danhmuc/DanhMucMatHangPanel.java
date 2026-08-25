@@ -32,6 +32,7 @@ import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class DanhMucMatHangPanel extends JPanel {
     private final MatHangDAO matHangDAO = new MatHangDAO();
@@ -50,9 +51,12 @@ public class DanhMucMatHangPanel extends JPanel {
     private JLabel lblModifiedTime;
     private JLabel lblModifiedUser;
 
+    private JButton btnAddMatHang;
     private List<MatHang> currentList = new ArrayList<>();
     private String currentSelectedNhom = "Tất cả";
     private String currentSelectedNhomId = null;
+    private String currentSortField = "Mã hàng";
+    private boolean currentSortAsc = true;
 
     public DanhMucMatHangPanel() {
         initUI();
@@ -156,6 +160,11 @@ public class DanhMucMatHangPanel extends JPanel {
                         label.setIcon(IconHelper.getIcon("Folder.png", 16, 16));
                         label.setFont(new Font("Segoe UI", Font.PLAIN, 12));
                         label.setForeground(Color.DARK_GRAY);
+                    } else if ("Thùng rác".equals(userObj)) {
+                        label.setText("Thùng rác");
+                        label.setIcon(IconHelper.getIcon("RecycleBin.png", 16, 16));
+                        label.setFont(new Font("Segoe UI", Font.BOLD, 12));
+                        label.setForeground(new Color(30, 60, 110));
                     } else if (userObj instanceof NhomMatHang) {
                         NhomMatHang nh = (NhomMatHang) userObj;
                         if (nh.isSeparator()) {
@@ -186,16 +195,24 @@ public class DanhMucMatHangPanel extends JPanel {
                 if ("Tất cả".equals(userObj)) {
                     currentSelectedNhom = "Tất cả";
                     currentSelectedNhomId = null;
+                    if (btnAddMatHang != null) btnAddMatHang.setEnabled(true);
                     loadTableData(currentSelectedNhom, currentSelectedNhomId, txtSearch.getText().trim());
                 } else if ("Chưa thiết lập".equals(userObj)) {
                     currentSelectedNhom = "Chưa thiết lập";
                     currentSelectedNhomId = null;
+                    if (btnAddMatHang != null) btnAddMatHang.setEnabled(true);
                     loadTableData(currentSelectedNhom, currentSelectedNhomId, txtSearch.getText().trim());
+                } else if ("Thùng rác".equals(userObj)) {
+                    currentSelectedNhom = "Thùng rác";
+                    currentSelectedNhomId = null;
+                    if (btnAddMatHang != null) btnAddMatHang.setEnabled(false);
+                    loadTrashTableData(txtSearch.getText().trim());
                 } else if (userObj instanceof NhomMatHang) {
                     NhomMatHang nh = (NhomMatHang) userObj;
                     if (nh.isSeparator()) return;
                     currentSelectedNhom = nh.getName();
                     currentSelectedNhomId = nh.getId();
+                    if (btnAddMatHang != null) btnAddMatHang.setEnabled(true);
 
                     if (nh.isFolder()) {
                         // Thư mục cha: Lấy tất cả ID của cây con để lọc
@@ -298,7 +315,7 @@ public class DanhMucMatHangPanel extends JPanel {
         });
         topBar.add(txtSearch);
 
-        JButton btnAdd = createToolButton("Thêm mới (Insert)", "plus.png", new Color(0, 120, 50), true);
+        btnAddMatHang = createToolButton("Thêm mới (Insert)", "plus.png", new Color(0, 120, 50), true);
         JButton btnEdit = createToolButton("Chỉnh sửa (F4)", "pencil.png", Color.BLACK, false);
         JButton btnDelete = createToolButton("Xóa (Del)", "cross.png", new Color(180, 20, 20), false);
         JButton btnImportExcel = createToolButton("Thêm excel", "Bookmark.png", Color.BLACK, false);
@@ -307,7 +324,7 @@ public class DanhMucMatHangPanel extends JPanel {
         JButton btnSummary = createToolButton("∑ Tổng", null, Color.BLACK, false);
         JButton btnBarcode = createToolButton("In mã vạch", "Barcode.png", Color.BLACK, false);
 
-        btnAdd.addActionListener(e -> onAddNewProduct());
+        btnAddMatHang.addActionListener(e -> onAddNewProduct());
         btnEdit.addActionListener(e -> onEditSelectedProduct());
         btnDelete.addActionListener(e -> onDeleteSelectedProduct());
         btnImportExcel.addActionListener(e -> JOptionPane.showMessageDialog(this, "Chức năng Thêm từ Excel đang phát triển!", "Thông báo", JOptionPane.INFORMATION_MESSAGE));
@@ -316,7 +333,7 @@ public class DanhMucMatHangPanel extends JPanel {
         btnSummary.addActionListener(e -> showSummaryDialog());
         btnBarcode.addActionListener(e -> JOptionPane.showMessageDialog(this, "Chức năng In mã vạch đang phát triển!", "Thông báo", JOptionPane.INFORMATION_MESSAGE));
 
-        topBar.add(btnAdd);
+        topBar.add(btnAddMatHang);
         topBar.add(btnEdit);
         topBar.add(btnDelete);
         topBar.add(btnImportExcel);
@@ -384,12 +401,26 @@ public class DanhMucMatHangPanel extends JPanel {
             }
         });
 
-        // Double Click -> Edit
+        // Double Click -> Edit, Right Click -> Quick Menu
         tableMatHang.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                if (e.getClickCount() == 2) {
+                if (e.getClickCount() == 2 && SwingUtilities.isLeftMouseButton(e)) {
                     onEditSelectedProduct();
+                }
+            }
+
+            @Override
+            public void mousePressed(MouseEvent e) {
+                if (e.isPopupTrigger()) {
+                    showTablePopup(e);
+                }
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                if (e.isPopupTrigger()) {
+                    showTablePopup(e);
                 }
             }
         });
@@ -596,6 +627,13 @@ public class DanhMucMatHangPanel extends JPanel {
             }
         }
 
+        // Pass 3: Thùng rác ở dưới cùng của cây
+        DefaultMutableTreeNode nodeTrash = new DefaultMutableTreeNode("Thùng rác");
+        rootTreeNode.add(nodeTrash);
+        if ("Thùng rác".equalsIgnoreCase(selectCategoryName)) {
+            targetNode = nodeTrash;
+        }
+
         treeModel.reload();
         for (int i = 0; i < treeNhomHang.getRowCount(); i++) {
             treeNhomHang.expandRow(i);
@@ -605,10 +643,17 @@ public class DanhMucMatHangPanel extends JPanel {
         treeNhomHang.setSelectionPath(path);
         treeNhomHang.scrollPathToVisible(path);
 
-        if (targetNode.getUserObject() instanceof NhomMatHang) {
+        if ("Thùng rác".equals(targetNode.getUserObject())) {
+            currentSelectedNhom = "Thùng rác";
+            currentSelectedNhomId = null;
+            if (btnAddMatHang != null) btnAddMatHang.setEnabled(false);
+            loadTrashTableData(txtSearch.getText().trim());
+        } else if (targetNode.getUserObject() instanceof NhomMatHang) {
             NhomMatHang selNh = (NhomMatHang) targetNode.getUserObject();
             currentSelectedNhom = selNh.getName();
             currentSelectedNhomId = selNh.getId();
+            if (btnAddMatHang != null) btnAddMatHang.setEnabled(true);
+
             if (selNh.isFolder()) {
                 Set<String> descIds = nhomMatHangDAO.getAllDescendantIds(selNh.getId());
                 Set<String> descNames = new HashSet<>();
@@ -624,12 +669,30 @@ public class DanhMucMatHangPanel extends JPanel {
         } else if ("Chưa thiết lập".equals(targetNode.getUserObject())) {
             currentSelectedNhom = "Chưa thiết lập";
             currentSelectedNhomId = null;
+            if (btnAddMatHang != null) btnAddMatHang.setEnabled(true);
             loadTableData(currentSelectedNhom, currentSelectedNhomId, txtSearch.getText().trim());
         } else {
             currentSelectedNhom = "Tất cả";
             currentSelectedNhomId = null;
+            if (btnAddMatHang != null) btnAddMatHang.setEnabled(true);
             loadTableData(currentSelectedNhom, currentSelectedNhomId, txtSearch.getText().trim());
         }
+    }
+
+    public void loadTrashTableData(String keyword) {
+        List<MatHang> trash = matHangDAO.getTrashProducts();
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            String kw = keyword.trim().toLowerCase();
+            currentList = trash.stream().filter(m ->
+                    (m.getCode() != null && m.getCode().toLowerCase().contains(kw)) ||
+                    (m.getName() != null && m.getName().toLowerCase().contains(kw)) ||
+                    (m.getTenNhom() != null && m.getTenNhom().toLowerCase().contains(kw))
+            ).collect(Collectors.toList());
+        } else {
+            currentList = new ArrayList<>(trash);
+        }
+        applyCurrentSort();
+        renderTableData();
     }
 
     public void loadTableData(String tenNhom, String keyword) {
@@ -637,12 +700,16 @@ public class DanhMucMatHangPanel extends JPanel {
     }
 
     public void loadTableData(String tenNhom, String nhomId, String keyword) {
+        if ("Thùng rác".equals(tenNhom)) {
+            loadTrashTableData(keyword);
+            return;
+        }
         if (keyword != null && !keyword.trim().isEmpty()) {
             currentList = matHangDAO.search(keyword, tenNhom, nhomId);
         } else {
             currentList = matHangDAO.getByNhom(tenNhom, nhomId);
         }
-
+        applyCurrentSort();
         renderTableData();
     }
 
@@ -652,8 +719,54 @@ public class DanhMucMatHangPanel extends JPanel {
         } else {
             currentList = matHangDAO.getByNhomIds(ids, names);
         }
-
+        applyCurrentSort();
         renderTableData();
+    }
+
+    private void applyCurrentSort() {
+        if (currentList == null || currentList.isEmpty()) return;
+
+        Comparator<MatHang> comparator;
+        switch (currentSortField) {
+            case "Tên mặt hàng":
+                comparator = Comparator.comparing(m -> m.getName() != null ? m.getName() : "", String.CASE_INSENSITIVE_ORDER);
+                break;
+            case "Nhóm mặt hàng":
+                comparator = Comparator.comparing(m -> m.getTenNhom() != null ? m.getTenNhom() : "", String.CASE_INSENSITIVE_ORDER);
+                break;
+            case "Đơn vị tính":
+                comparator = Comparator.comparing(m -> m.getTenDonViTinh() != null ? m.getTenDonViTinh() : "", String.CASE_INSENSITIVE_ORDER);
+                break;
+            case "Giá bán":
+                comparator = Comparator.comparingDouble(MatHang::getGiaBan);
+                break;
+            case "Giá nhập":
+                comparator = Comparator.comparingDouble(MatHang::getGiaNhap);
+                break;
+            case "Mặc định giảm giá":
+                comparator = Comparator.comparingDouble(MatHang::getGiamGiaPt);
+                break;
+            case "Mặc định giảm tiền":
+                comparator = Comparator.comparingDouble(MatHang::getGiamGiaTien);
+                break;
+            case "Ghi chú":
+                comparator = Comparator.comparing(m -> m.getGhiChu() != null ? m.getGhiChu() : "", String.CASE_INSENSITIVE_ORDER);
+                break;
+            case "Không in chế biến":
+                comparator = Comparator.comparing(MatHang::isKhongInCheBien);
+                break;
+            case "Bảo hành":
+            case "Hãng sản xuất":
+            case "Mã hàng":
+            default:
+                comparator = Comparator.comparing(m -> m.getCode() != null ? m.getCode() : "", String.CASE_INSENSITIVE_ORDER);
+                break;
+        }
+
+        if (!currentSortAsc) {
+            comparator = comparator.reversed();
+        }
+        currentList.sort(comparator);
     }
 
     private void renderTableData() {
@@ -707,7 +820,11 @@ public class DanhMucMatHangPanel extends JPanel {
     }
 
     private void onSearch() {
-        loadTableData(currentSelectedNhom, txtSearch.getText().trim());
+        if ("Thùng rác".equals(currentSelectedNhom)) {
+            loadTrashTableData(txtSearch.getText().trim());
+        } else {
+            loadTableData(currentSelectedNhom, txtSearch.getText().trim());
+        }
     }
 
     private MatHang getSelectedMatHang() {
@@ -720,7 +837,7 @@ public class DanhMucMatHangPanel extends JPanel {
 
     private void onAddNewProduct() {
         MatHang newMH = new MatHang();
-        if (currentSelectedNhom != null && !"Tất cả".equals(currentSelectedNhom) && !"Chưa thiết lập".equals(currentSelectedNhom)) {
+        if (currentSelectedNhom != null && !"Tất cả".equals(currentSelectedNhom) && !"Chưa thiết lập".equals(currentSelectedNhom) && !"Thùng rác".equals(currentSelectedNhom)) {
             newMH.setTenNhom(currentSelectedNhom);
             newMH.setNhomMatHangId(currentSelectedNhomId);
         }
@@ -737,7 +854,11 @@ public class DanhMucMatHangPanel extends JPanel {
             return;
         }
         MatHangEditDialog dialog = new MatHangEditDialog(this, sel, () -> {
-            loadTableData(currentSelectedNhom, txtSearch.getText().trim());
+            if ("Thùng rác".equals(currentSelectedNhom)) {
+                loadTrashTableData(txtSearch.getText().trim());
+            } else {
+                loadTableData(currentSelectedNhom, txtSearch.getText().trim());
+            }
         });
         dialog.setVisible(true);
     }
@@ -749,21 +870,187 @@ public class DanhMucMatHangPanel extends JPanel {
             return;
         }
 
+        if ("Thùng rác".equals(currentSelectedNhom)) {
+            onDeletePermanently();
+            return;
+        }
+
         int confirm = JOptionPane.showConfirmDialog(
                 this,
-                "Bạn có chắc chắn muốn xóa mặt hàng '" + sel.getName() + "' (" + sel.getCode() + ")?",
-                "Xác nhận xóa",
+                "Bạn có chắc chắn muốn chuyển mặt hàng '" + sel.getName() + "' (" + sel.getCode() + ") vào Thùng rác không?",
+                "Xác nhận chuyển thùng rác",
                 JOptionPane.YES_NO_OPTION,
                 JOptionPane.QUESTION_MESSAGE
         );
 
         if (confirm == JOptionPane.YES_OPTION) {
-            boolean ok = matHangDAO.delete(sel.getId());
+            boolean ok = matHangDAO.moveToTrash(sel.getId());
             if (ok) {
-                JOptionPane.showMessageDialog(this, "Đã xóa mặt hàng thành công!", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Đã chuyển mặt hàng vào Thùng rác!", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
                 loadTableData(currentSelectedNhom, txtSearch.getText().trim());
             }
         }
+    }
+
+    private void onRestoreSelectedProduct() {
+        MatHang sel = getSelectedMatHang();
+        if (sel == null) return;
+        int confirm = JOptionPane.showConfirmDialog(
+                this,
+                "Bạn có chắc chắn muốn khôi phục mặt hàng '" + sel.getName() + "' không?",
+                "Xác nhận khôi phục",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.QUESTION_MESSAGE
+        );
+        if (confirm == JOptionPane.YES_OPTION) {
+            matHangDAO.restoreFromTrash(sel.getId());
+            JOptionPane.showMessageDialog(this, "Đã khôi phục mặt hàng thành công!", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+            loadTrashTableData(txtSearch.getText().trim());
+        }
+    }
+
+    private void onDeletePermanently() {
+        MatHang sel = getSelectedMatHang();
+        if (sel == null) return;
+        int confirm = JOptionPane.showConfirmDialog(
+                this,
+                "Bạn có chắc chắn muốn XÓA VĨNH VIỄN mặt hàng '" + sel.getName() + "' (" + sel.getCode() + ")?\nThao tác này KHÔNG thể hoàn tác!",
+                "Xác nhận xóa vĩnh viễn",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.ERROR_MESSAGE
+        );
+        if (confirm == JOptionPane.YES_OPTION) {
+            matHangDAO.deletePermanently(sel.getId());
+            JOptionPane.showMessageDialog(this, "Đã xóa vĩnh viễn mặt hàng khỏi hệ thống!", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+            loadTrashTableData(txtSearch.getText().trim());
+        }
+    }
+
+    private void onCopySelectedProduct() {
+        MatHang sel = getSelectedMatHang();
+        if (sel == null) return;
+        String text = sel.getCode() + "\t" + sel.getName() + "\t" + (sel.getTenNhom() != null ? sel.getTenNhom() : "") + "\t" + sel.getGiaBan();
+        StringSelection stringSelection = new StringSelection(text);
+        Toolkit.getDefaultToolkit().getSystemClipboard().setContents(stringSelection, null);
+    }
+
+    private void onRegenerateCode() {
+        MatHang sel = getSelectedMatHang();
+        if (sel == null) return;
+        String prefix = sel.getCode() != null && sel.getCode().length() >= 2 ? sel.getCode().replaceAll("\\d", "") : "MH";
+        String newCode = matHangDAO.generateNextProductCode(prefix);
+        sel.setCode(newCode);
+        matHangDAO.update(sel);
+        renderTableData();
+        JOptionPane.showMessageDialog(this, "Đã cập nhật mã mới cho mặt hàng: " + newCode, "Đánh lại mã hàng", JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    private void showTablePopup(MouseEvent e) {
+        int row = tableMatHang.rowAtPoint(e.getPoint());
+        if (row >= 0) {
+            tableMatHang.setRowSelectionInterval(row, row);
+        }
+        MatHang sel = getSelectedMatHang();
+        if (sel == null) return;
+
+        JPopupMenu popup = new JPopupMenu();
+
+        if ("Thùng rác".equals(currentSelectedNhom)) {
+            // Context menu Thùng rác (Ảnh 3 & 4)
+            JMenuItem miRestore = new JMenuItem("Khôi phục", IconHelper.getIcon("Refresh.png", 16, 16));
+            JMenu mSort = createSortSubMenu();
+            JMenuItem miRefresh = new JMenuItem("Refresh", IconHelper.getIcon("Refresh.png", 16, 16));
+            JMenuItem miCopy = new JMenuItem("Sao chép", IconHelper.getIcon("Report.png", 16, 16));
+            JMenuItem miRegenCode = new JMenuItem("Đánh lại mã hàng");
+            JMenuItem miDeletePerm = new JMenuItem("Xóa vĩnh viễn", IconHelper.getIcon("cross.png", 16, 16));
+            JMenuItem miProps = new JMenuItem("Thuộc tính");
+
+            miRestore.addActionListener(ev -> onRestoreSelectedProduct());
+            miRefresh.addActionListener(ev -> loadTrashTableData(txtSearch.getText().trim()));
+            miCopy.addActionListener(ev -> onCopySelectedProduct());
+            miRegenCode.addActionListener(ev -> onRegenerateCode());
+            miDeletePerm.addActionListener(ev -> onDeletePermanently());
+            miProps.addActionListener(ev -> onEditSelectedProduct());
+
+            popup.add(miRestore);
+            popup.add(mSort);
+            popup.add(miRefresh);
+            popup.add(miCopy);
+            popup.add(miRegenCode);
+            popup.addSeparator();
+            popup.add(miDeletePerm);
+            popup.add(miProps);
+        } else {
+            // Context menu Danh mục thường
+            JMenuItem miEdit = new JMenuItem("Chỉnh sửa (F4)", IconHelper.getIcon("pencil.png", 16, 16));
+            JMenuItem miDelete = new JMenuItem("Xóa (Chuyển vào thùng rác)", IconHelper.getIcon("cross.png", 16, 16));
+            JMenu mSort = createSortSubMenu();
+            JMenuItem miRefresh = new JMenuItem("Refresh", IconHelper.getIcon("Refresh.png", 16, 16));
+            JMenuItem miCopy = new JMenuItem("Sao chép", IconHelper.getIcon("Report.png", 16, 16));
+            JMenuItem miRegenCode = new JMenuItem("Đánh lại mã hàng");
+            JMenuItem miProps = new JMenuItem("Thuộc tính");
+
+            miEdit.addActionListener(ev -> onEditSelectedProduct());
+            miDelete.addActionListener(ev -> onDeleteSelectedProduct());
+            miRefresh.addActionListener(ev -> loadTableData(currentSelectedNhom, txtSearch.getText().trim()));
+            miCopy.addActionListener(ev -> onCopySelectedProduct());
+            miRegenCode.addActionListener(ev -> onRegenerateCode());
+            miProps.addActionListener(ev -> onEditSelectedProduct());
+
+            popup.add(miEdit);
+            popup.add(miDelete);
+            popup.add(mSort);
+            popup.add(miRefresh);
+            popup.add(miCopy);
+            popup.add(miRegenCode);
+            popup.addSeparator();
+            popup.add(miProps);
+        }
+
+        popup.show(tableMatHang, e.getX(), e.getY());
+    }
+
+    private JMenu createSortSubMenu() {
+        JMenu mSort = new JMenu("Sắp xếp");
+
+        JMenuItem miAsc = new JMenuItem("Sắp xếp tăng dần");
+        miAsc.setIcon(currentSortAsc ? CHECKED_ORANGE_BOX : UNCHECKED_ORANGE_BOX);
+        miAsc.addActionListener(e -> {
+            currentSortAsc = true;
+            applyCurrentSort();
+            renderTableData();
+        });
+
+        JMenuItem miDesc = new JMenuItem("Sắp xếp giảm dần");
+        miDesc.setIcon(!currentSortAsc ? CHECKED_ORANGE_BOX : UNCHECKED_ORANGE_BOX);
+        miDesc.addActionListener(e -> {
+            currentSortAsc = false;
+            applyCurrentSort();
+            renderTableData();
+        });
+
+        mSort.add(miAsc);
+        mSort.add(miDesc);
+        mSort.addSeparator();
+
+        String[] sortFields = {
+                "Mã hàng", "Tên mặt hàng", "Nhóm mặt hàng", "Đơn vị tính",
+                "Giá bán", "Giá nhập", "Mặc định giảm giá", "Mặc định giảm tiền",
+                "Ghi chú", "Không in chế biến", "Bảo hành", "Hãng sản xuất"
+        };
+
+        for (String field : sortFields) {
+            JMenuItem miField = new JMenuItem(field);
+            miField.setIcon(field.equalsIgnoreCase(currentSortField) ? CHECKED_ORANGE_BOX : UNCHECKED_ORANGE_BOX);
+            miField.addActionListener(e -> {
+                currentSortField = field;
+                applyCurrentSort();
+                renderTableData();
+            });
+            mSort.add(miField);
+        }
+
+        return mSort;
     }
 
     private void onAddNhom() {
@@ -1111,4 +1398,35 @@ public class DanhMucMatHangPanel extends JPanel {
             return false;
         }
     }
+
+    private static final Icon CHECKED_ORANGE_BOX = new Icon() {
+        @Override
+        public void paintIcon(Component c, Graphics g, int x, int y) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2.setColor(new Color(245, 145, 20)); // Viền cam
+            g2.drawRect(x + 1, y + 1, 14, 14);
+            g2.setColor(new Color(255, 248, 235));
+            g2.fillRect(x + 2, y + 2, 13, 13);
+            g2.setColor(new Color(30, 30, 30));
+            g2.setStroke(new BasicStroke(2.0f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+            g2.drawLine(x + 4, y + 8, x + 7, y + 12);
+            g2.drawLine(x + 7, y + 12, x + 13, y + 5);
+            g2.dispose();
+        }
+
+        @Override
+        public int getIconWidth() { return 18; }
+        @Override
+        public int getIconHeight() { return 18; }
+    };
+
+    private static final Icon UNCHECKED_ORANGE_BOX = new Icon() {
+        @Override
+        public void paintIcon(Component c, Graphics g, int x, int y) {}
+        @Override
+        public int getIconWidth() { return 18; }
+        @Override
+        public int getIconHeight() { return 18; }
+    };
 }
