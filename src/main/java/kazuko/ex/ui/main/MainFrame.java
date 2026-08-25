@@ -10,6 +10,7 @@ import kazuko.ex.ui.danhmuc.CuaHangDialog;
 import kazuko.ex.ui.danhmuc.DanhMucMatHangPanel;
 import kazuko.ex.ui.danhmuc.NhanVienDialog;
 import kazuko.ex.ui.khohang.QuanLyXuatKhoPanel;
+import kazuko.ex.ui.system.CauHinhToanHeThongDialog;
 import kazuko.ex.util.AppColors;
 import kazuko.ex.util.IconHelper;
 
@@ -293,7 +294,9 @@ public class MainFrame extends JFrame {
         mQuanTri.add(new JMenuItem("Xóa dữ liệu"));
         mQuanTri.add(new JMenuItem("Công cụ nhà phát triển"));
         mQuanTri.add(new JMenuItem("Người dùng và phân quyền"));
-        mQuanTri.add(new JMenuItem("Cấu hình toàn hệ thống"));
+        JMenuItem miCauHinh = new JMenuItem("Cấu hình toàn hệ thống");
+        miCauHinh.addActionListener(e -> new CauHinhToanHeThongDialog(this).setVisible(true));
+        mQuanTri.add(miCauHinh);
 
         // 8. BÁO CÁO
         JMenu mBaoCao = new JMenu("BÁO CÁO");
@@ -440,6 +443,10 @@ public class MainFrame extends JFrame {
                 break;
             case "GỬI TIN NHẮN KHÁCH HÀNG":
                 openTab("Gửi tin nhắn tới khách hàng", createPlaceholderPanel("Gửi tin nhắn tới khách hàng"));
+                break;
+            case "CẤU HÌNH TOÀN HỆ THỐNG":
+            case "CẤU HÌNH HỆ THỐNG":
+                new CauHinhToanHeThongDialog(this).setVisible(true);
                 break;
             case "ĐỔI MẬT KHẨU":
                 new DoiMatKhauDialog(this, currentUser).setVisible(true);
