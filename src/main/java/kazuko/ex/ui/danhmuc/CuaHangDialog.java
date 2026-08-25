@@ -13,6 +13,10 @@ import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreePath;
 import java.awt.*;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.Transferable;
+import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
@@ -175,6 +179,14 @@ public class CuaHangDialog extends JDialog {
                 }
             }
         });
+
+        // Bật tính năng Kéo & Thả (Drag & Drop)
+        treeCuaHang.setDragEnabled(true);
+        treeCuaHang.setDropMode(DropMode.ON);
+        treeCuaHang.setTransferHandler(new TreeTransferHandler(cuaHangDAO, () -> {
+            loadTreeData();
+            loadDefaultStoreComboBox();
+        }));
 
         JScrollPane scrollPane = new JScrollPane(treeCuaHang);
         scrollPane.setBorder(new MatteBorder(1, 1, 1, 1, new Color(180, 200, 225)));
@@ -398,5 +410,123 @@ public class CuaHangDialog extends JDialog {
             loadDefaultStoreComboBox();
         });
         trashDialog.setVisible(true);
+    }
+
+    private static class TreeTransferHandler extends TransferHandler {
+        private final CuaHangDAO cuaHangDAO;
+        private final Runnable onDataChanged;
+        private DefaultMutableTreeNode draggedNode;
+
+        public TreeTransferHandler(CuaHangDAO cuaHangDAO, Runnable onDataChanged) {
+            this.cuaHangDAO = cuaHangDAO;
+            this.onDataChanged = onDataChanged;
+        }
+
+        @Override
+        public int getSourceActions(JComponent c) {
+            return TransferHandler.MOVE;
+        }
+
+        @Override
+        protected Transferable createTransferable(JComponent c) {
+            JTree tree = (JTree) c;
+            TreePath path = tree.getSelectionPath();
+            if (path == null) {
+                return null;
+            }
+            DefaultMutableTreeNode node = (DefaultMutableTreeNode) path.getLastPathComponent();
+            if (node == null || !(node.getUserObject() instanceof CuaHang)) {
+                return null;
+            }
+            draggedNode = node;
+            CuaHang ch = (CuaHang) node.getUserObject();
+            return new StringSelection(ch.getId());
+        }
+
+        @Override
+        public boolean canImport(TransferSupport support) {
+            if (!support.isDrop() || !support.isDataFlavorSupported(DataFlavor.stringFlavor)) {
+                return false;
+            }
+
+            support.setShowDropLocation(true);
+            JTree.DropLocation dl = (JTree.DropLocation) support.getDropLocation();
+            TreePath dropPath = dl.getPath();
+
+            if (dropPath == null) {
+                // Drop vào vùng trống -> Chuyển về Root
+                return true;
+            }
+
+            DefaultMutableTreeNode targetNode = (DefaultMutableTreeNode) dropPath.getLastPathComponent();
+            if (draggedNode == null || draggedNode == targetNode) {
+                return false;
+            }
+
+            // Chặn kéo node cha thả vào bất kỳ node con nào của nó
+            if (draggedNode.isNodeDescendant(targetNode)) {
+                return false;
+            }
+
+            return true;
+        }
+
+        @Override
+        public boolean importData(TransferSupport support) {
+            if (!canImport(support)) {
+                return false;
+            }
+
+            try {
+                String draggedId = (String) support.getTransferable().getTransferData(DataFlavor.stringFlavor);
+                if (draggedId == null || draggedId.trim().isEmpty()) {
+                    return false;
+                }
+
+                JTree.DropLocation dl = (JTree.DropLocation) support.getDropLocation();
+                TreePath dropPath = dl.getPath();
+
+                String newParentId = "";
+                if (dropPath != null) {
+                    DefaultMutableTreeNode targetNode = (DefaultMutableTreeNode) dropPath.getLastPathComponent();
+                    Object targetUserObj = targetNode.getUserObject();
+                    if (targetUserObj instanceof CuaHang) {
+                        CuaHang targetItem = (CuaHang) targetUserObj;
+                        if (targetItem.isFolder()) {
+                            newParentId = targetItem.getId();
+                        } else {
+                            newParentId = targetItem.getParentId() != null ? targetItem.getParentId() : "";
+                        }
+                    }
+                }
+
+                // Cập nhật CSDL & Memory
+                boolean ok = cuaHangDAO.updateParentId(draggedId, newParentId);
+                if (ok) {
+                    if (onDataChanged != null) {
+                        onDataChanged.run();
+                    }
+                    JTree tree = (JTree) support.getComponent();
+                    SwingUtilities.invokeLater(() -> {
+                        for (int i = 0; i < tree.getRowCount(); i++) {
+                            TreePath p = tree.getPathForRow(i);
+                            DefaultMutableTreeNode n = (DefaultMutableTreeNode) p.getLastPathComponent();
+                            if (n.getUserObject() instanceof CuaHang) {
+                                CuaHang ch = (CuaHang) n.getUserObject();
+                                if (draggedId.equals(ch.getId())) {
+                                    tree.setSelectionPath(p);
+                                    tree.scrollPathToVisible(p);
+                                    break;
+                                }
+                            }
+                        }
+                    });
+                    return true;
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+            return false;
+        }
     }
 }

@@ -312,6 +312,38 @@ public class CuaHangDAO extends BaseDAO {
         }
     }
 
+    public boolean updateParentId(String id, String newParentId) {
+        if (id == null) return false;
+        String parentIdVal = (newParentId != null && !newParentId.trim().isEmpty()) ? newParentId.trim() : "";
+
+        // Cập nhật bộ nhớ cache
+        boolean foundInMem = false;
+        for (CuaHang ch : MEMORY_STORES) {
+            if (id.equals(ch.getId())) {
+                ch.setParentId(parentIdVal);
+                foundInMem = true;
+                break;
+            }
+        }
+
+        // Cập nhật CSDL Firebird
+        String sql = "UPDATE DCUAHANG SET PARENTID = ?, USERMODIFIEDID = ?, TIMEMODIFIED = ? WHERE ID = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            String userId = getEffectiveUserId();
+            Timestamp now = new Timestamp(System.currentTimeMillis());
+            ps.setString(1, parentIdVal);
+            ps.setString(2, userId);
+            ps.setTimestamp(3, now);
+            ps.setString(4, id);
+            boolean ok = ps.executeUpdate() > 0;
+            return ok || foundInMem;
+        } catch (Exception e) {
+            System.err.println("Lỗi cập nhật PARENTID DCUAHANG: " + e.getMessage());
+            return foundInMem;
+        }
+    }
+
     private void tryDeleteFromDb(String id) throws SQLException {
         String sql = "DELETE FROM DCUAHANG WHERE ID = ?";
         try (Connection conn = getConnection();
