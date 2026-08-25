@@ -6,6 +6,7 @@ import kazuko.ex.service.AuthService;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -62,7 +63,7 @@ public class MatHangDAO extends BaseDAO {
 
     public List<MatHang> getAll() {
         List<MatHang> dbList = tryLoadFromDb(null, null);
-        if (dbList != null && !dbList.isEmpty()) {
+        if (dbList != null) {
             return dbList;
         }
         return new ArrayList<>(MEMORY_PRODUCTS);
@@ -73,24 +74,63 @@ public class MatHangDAO extends BaseDAO {
             return getAll();
         }
         List<MatHang> dbList = tryLoadFromDb(tenNhom, nhomId);
-        if (dbList != null && !dbList.isEmpty()) {
+        if (dbList != null) {
             return dbList;
         }
         List<MatHang> filtered = new ArrayList<>();
         for (MatHang mh : MEMORY_PRODUCTS) {
             if ("Chưa thiết lập".equalsIgnoreCase(tenNhom)) {
-                if (mh.getTenNhom() == null || mh.getTenNhom().trim().isEmpty()) {
+                if ((mh.getTenNhom() == null || mh.getTenNhom().trim().isEmpty()) &&
+                    (mh.getNhomMatHangId() == null || mh.getNhomMatHangId().trim().isEmpty())) {
                     filtered.add(mh);
                 }
-            } else if (tenNhom.equalsIgnoreCase(mh.getTenNhom())) {
+            } else {
+                boolean matchId = nhomId != null && nhomId.equals(mh.getNhomMatHangId());
+                boolean matchName = tenNhom.equalsIgnoreCase(mh.getTenNhom());
+                if (matchId || matchName) {
+                    filtered.add(mh);
+                }
+            }
+        }
+        return filtered;
+    }
+
+    public List<MatHang> getByNhomIds(Set<String> nhomIds, Set<String> nhomNames) {
+        if (nhomIds == null || nhomIds.isEmpty()) {
+            return getAll();
+        }
+        List<MatHang> all = getAll();
+        List<MatHang> filtered = new ArrayList<>();
+        for (MatHang mh : all) {
+            boolean matchId = mh.getNhomMatHangId() != null && nhomIds.contains(mh.getNhomMatHangId());
+            boolean matchName = mh.getTenNhom() != null && nhomNames != null && nhomNames.contains(mh.getTenNhom());
+            if (matchId || matchName) {
                 filtered.add(mh);
             }
         }
         return filtered;
     }
 
+    public void updateNhomName(String nhomId, String oldName, String newName) {
+        if (newName == null || newName.trim().isEmpty()) return;
+        for (MatHang mh : MEMORY_PRODUCTS) {
+            boolean matchId = nhomId != null && nhomId.equals(mh.getNhomMatHangId());
+            boolean matchOldName = oldName != null && oldName.equalsIgnoreCase(mh.getTenNhom());
+            if (matchId || matchOldName) {
+                mh.setTenNhom(newName);
+                if (nhomId != null) {
+                    mh.setNhomMatHangId(nhomId);
+                }
+            }
+        }
+    }
+
     public List<MatHang> search(String keyword, String tenNhom) {
-        List<MatHang> baseList = getByNhom(tenNhom, null);
+        return search(keyword, tenNhom, null);
+    }
+
+    public List<MatHang> search(String keyword, String tenNhom, String nhomId) {
+        List<MatHang> baseList = getByNhom(tenNhom, nhomId);
         if (keyword == null || keyword.trim().isEmpty()) {
             return baseList;
         }
@@ -174,6 +214,34 @@ public class MatHangDAO extends BaseDAO {
         if (id == null) return false;
         MEMORY_PRODUCTS.removeIf(m -> id.equals(m.getId()));
         return tryDeleteFromDb(id);
+    }
+
+    public boolean deleteByNhom(String tenNhom, String nhomId) {
+        if (tenNhom == null || tenNhom.trim().isEmpty()) return false;
+        MEMORY_PRODUCTS.removeIf(m -> {
+            boolean matchId = nhomId != null && nhomId.equals(m.getNhomMatHangId());
+            boolean matchName = tenNhom.equalsIgnoreCase(m.getTenNhom());
+            return matchId || matchName;
+        });
+
+        // Thử Hard Delete trong CSDL
+        String sqlHard = "DELETE FROM DMATHANG WHERE DNHOMMATHANGID = ? OR DNHOMMATHANGID IN (SELECT ID FROM DNHOMMATHANG WHERE NAME = ?)";
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sqlHard)) {
+            ps.setString(1, nhomId != null ? nhomId : "");
+            ps.setString(2, tenNhom);
+            ps.executeUpdate();
+        } catch (Exception e) {
+            // Nếu có ràng buộc khóa ngoại, Soft Delete (STATUS = -1)
+            String sqlSoft = "UPDATE DMATHANG SET STATUS = -1 WHERE DNHOMMATHANGID = ? OR DNHOMMATHANGID IN (SELECT ID FROM DNHOMMATHANG WHERE NAME = ?)";
+            try (Connection conn = getConnection();
+                 PreparedStatement ps = conn.prepareStatement(sqlSoft)) {
+                ps.setString(1, nhomId != null ? nhomId : "");
+                ps.setString(2, tenNhom);
+                ps.executeUpdate();
+            } catch (Exception ignored) {}
+        }
+        return true;
     }
 
     private List<MatHang> tryLoadFromDb(String tenNhomFilter, String nhomIdFilter) {
@@ -279,6 +347,15 @@ public class MatHangDAO extends BaseDAO {
         String sql = "DELETE FROM DMATHANG WHERE ID = ?";
         try (Connection conn = getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, id);
+            int rows = ps.executeUpdate();
+            if (rows > 0) return true;
+        } catch (Exception ignored) {}
+
+        // Fallback to soft delete
+        String sqlSoft = "UPDATE DMATHANG SET STATUS = -1 WHERE ID = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sqlSoft)) {
             ps.setString(1, id);
             return ps.executeUpdate() > 0;
         } catch (Exception e) {

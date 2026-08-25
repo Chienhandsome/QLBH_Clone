@@ -237,9 +237,12 @@ public class NhomMatHangDialog extends JDialog {
         menu.show(invoker, 0, invoker.getHeight());
     }
 
+    private String originalName;
+
     private void loadData() {
         boolean isEdit = currentNhom != null && currentNhom.getId() != null;
         setTitle(isEdit ? "NHÓM MẶT HÀNG - SỬA" : "NHÓM MẶT HÀNG - THÊM");
+        originalName = isEdit ? currentNhom.getName() : null;
 
         if (isEdit) {
             txtName.setText(currentNhom.getName() != null ? currentNhom.getName() : "");
@@ -297,6 +300,7 @@ public class NhomMatHangDialog extends JDialog {
             return false;
         }
 
+        String oldName = originalName;
         currentNhom.setName(name);
         currentNhom.setCode(code.isEmpty() ? name.substring(0, Math.min(name.length(), 3)).toUpperCase() : code);
         currentNhom.setIconName((String) cbIcon.getSelectedItem());
@@ -307,9 +311,13 @@ public class NhomMatHangDialog extends JDialog {
             ok = nhomMatHangDAO.insert(currentNhom);
         } else {
             ok = nhomMatHangDAO.update(currentNhom);
+            if (oldName != null && !oldName.equalsIgnoreCase(name)) {
+                new kazuko.ex.dao.MatHangDAO().updateNhomName(currentNhom.getId(), oldName, name);
+            }
         }
 
         if (ok) {
+            originalName = name;
             allCategories = nhomMatHangDAO.getAll();
             findCurrentIndex();
             if (onSaveCallback != null) {

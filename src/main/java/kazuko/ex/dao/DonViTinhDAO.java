@@ -25,7 +25,7 @@ public class DonViTinhDAO extends BaseDAO {
 
     public List<DonViTinh> getAll() {
         List<DonViTinh> dbList = tryLoadFromDb();
-        if (dbList != null && !dbList.isEmpty()) {
+        if (dbList != null) {
             return dbList;
         }
         return new ArrayList<>(MEMORY_UNITS);
