@@ -210,26 +210,28 @@ public class CuaHangDialog extends JDialog {
 
         Map<String, DefaultMutableTreeNode> nodeMap = new HashMap<>();
 
-        // Add root / folder nodes
+        // Pass 1: Tạo TreeNode cho tất cả các phần tử
         for (CuaHang ch : stores) {
-            if (ch.getParentId() == null || ch.getParentId().isEmpty()) {
-                DefaultMutableTreeNode node = new DefaultMutableTreeNode(ch);
-                nodeMap.put(ch.getId(), node);
-                rootNode.add(node);
+            if (ch.getId() != null) {
+                nodeMap.put(ch.getId(), new DefaultMutableTreeNode(ch));
             }
         }
 
-        // Add child nodes
+        // Pass 2: Gắn vào cây phân cấp theo parentId
         for (CuaHang ch : stores) {
-            if (ch.getParentId() != null && !ch.getParentId().isEmpty()) {
-                DefaultMutableTreeNode parentNode = nodeMap.get(ch.getParentId());
-                DefaultMutableTreeNode childNode = new DefaultMutableTreeNode(ch);
-                nodeMap.put(ch.getId(), childNode);
-                if (parentNode != null) {
-                    parentNode.add(childNode);
-                } else {
-                    rootNode.add(childNode);
-                }
+            DefaultMutableTreeNode currentNode = nodeMap.get(ch.getId());
+            if (currentNode == null) continue;
+
+            String parentId = ch.getParentId();
+            DefaultMutableTreeNode parentNode = null;
+            if (parentId != null && !parentId.trim().isEmpty()) {
+                parentNode = nodeMap.get(parentId.trim());
+            }
+
+            if (parentNode != null && parentNode != currentNode) {
+                parentNode.add(currentNode);
+            } else {
+                rootNode.add(currentNode);
             }
         }
 
@@ -302,6 +304,7 @@ public class CuaHangDialog extends JDialog {
         if (folderName != null && !folderName.trim().isEmpty()) {
             CuaHang folder = new CuaHang();
             folder.setName(folderName.trim());
+            folder.setCode("TM" + (System.currentTimeMillis() % 10000));
             folder.setFolder(true);
             folder.setIconName("folder");
 
@@ -317,6 +320,8 @@ public class CuaHangDialog extends JDialog {
 
     private void onAddSeparator() {
         CuaHang sep = new CuaHang();
+        sep.setName("----------------------------------------");
+        sep.setCode("SEP" + (System.currentTimeMillis() % 10000));
         sep.setSeparator(true);
         cuaHangDAO.insert(sep);
         loadTreeData();

@@ -225,6 +225,8 @@ public class CuaHangDAO extends BaseDAO {
                 if (itemType != null && itemType == 1) {
                     ch.setFolder(true);
                     ch.setIconName("folder");
+                } else if (itemType != null && itemType == 2) {
+                    ch.setSeparator(true);
                 }
 
                 if ((statusFilter >= 0 && ch.getStatus() >= 0) || (statusFilter < 0 && ch.getStatus() < 0)) {
@@ -247,8 +249,8 @@ public class CuaHangDAO extends BaseDAO {
             Timestamp now = new Timestamp(System.currentTimeMillis());
 
             ps.setString(1, ch.getId());
-            ps.setString(2, ch.getCode());
-            ps.setString(3, ch.getName());
+            ps.setString(2, ch.getCode() != null && !ch.getCode().trim().isEmpty() ? ch.getCode().trim() : (ch.isSeparator() ? "SEP" : (ch.isFolder() ? "TM" : "")));
+            ps.setString(3, ch.getName() != null && !ch.getName().trim().isEmpty() ? ch.getName().trim() : (ch.isSeparator() ? "--------------------" : "Thư mục"));
             ps.setString(4, ch.getDiaChi());
             ps.setString(5, ch.getDienThoai());
             ps.setString(6, ch.getKhoHangId());
@@ -257,7 +259,7 @@ public class CuaHangDAO extends BaseDAO {
             ps.setString(9, userId);
             ps.setTimestamp(10, now);
             ps.setString(11, ch.getParentId() != null ? ch.getParentId() : "");
-            ps.setObject(12, ch.isFolder() ? 1 : 0);
+            ps.setObject(12, ch.isFolder() ? 1 : (ch.isSeparator() ? 2 : 0));
             return ps.executeUpdate() > 0;
         } catch (Exception e) {
             System.err.println("Lỗi insert DCUAHANG: " + e.getMessage());
@@ -272,15 +274,15 @@ public class CuaHangDAO extends BaseDAO {
             String userId = getEffectiveUserId();
             Timestamp now = new Timestamp(System.currentTimeMillis());
 
-            ps.setString(1, ch.getCode());
-            ps.setString(2, ch.getName());
+            ps.setString(1, ch.getCode() != null && !ch.getCode().trim().isEmpty() ? ch.getCode().trim() : "");
+            ps.setString(2, ch.getName() != null && !ch.getName().trim().isEmpty() ? ch.getName().trim() : (ch.isSeparator() ? "--------------------" : "Thư mục"));
             ps.setString(3, ch.getDiaChi());
             ps.setString(4, ch.getDienThoai());
             ps.setString(5, ch.getKhoHangId());
             ps.setString(6, ch.getGhiChu());
             ps.setInt(7, ch.getStatus() >= 0 ? 30 : -1);
             ps.setString(8, ch.getParentId() != null ? ch.getParentId() : "");
-            ps.setObject(9, ch.isFolder() ? 1 : 0);
+            ps.setObject(9, ch.isFolder() ? 1 : (ch.isSeparator() ? 2 : 0));
             ps.setString(10, userId);
             ps.setTimestamp(11, now);
             ps.setString(12, ch.getId());

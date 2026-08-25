@@ -103,9 +103,16 @@ public class CuaHangTrashDialog extends JDialog {
                     Object userObj = ((DefaultMutableTreeNode) value).getUserObject();
                     if (userObj instanceof CuaHang) {
                         CuaHang ch = (CuaHang) userObj;
-                        if (ch.isFolder()) {
+                        if (ch.isSeparator()) {
+                            label.setText("----------------------------------------------");
+                            label.setForeground(Color.LIGHT_GRAY);
+                            label.setIcon(null);
+                        } else if (ch.isFolder()) {
                             label.setText(ch.getName());
                             label.setIcon(IconHelper.getIcon("Folder.png", 16, 16));
+                        } else if ("headquarter".equalsIgnoreCase(ch.getIconName())) {
+                            label.setText(ch.getName());
+                            label.setIcon(IconHelper.getIcon("globe-network.png", 16, 16));
                         } else {
                             label.setText(ch.getName());
                             label.setIcon(IconHelper.getIcon("1282529873_objects.png", 16, 16));
@@ -150,26 +157,28 @@ public class CuaHangTrashDialog extends JDialog {
 
         Map<String, DefaultMutableTreeNode> nodeMap = new HashMap<>();
 
-        // Add folder nodes first
+        // Pass 1: Tạo TreeNode cho tất cả các phần tử
         for (CuaHang ch : trashList) {
-            if (ch.isFolder() || ch.getParentId() == null) {
-                DefaultMutableTreeNode node = new DefaultMutableTreeNode(ch);
-                nodeMap.put(ch.getId(), node);
-                rootNode.add(node);
+            if (ch.getId() != null) {
+                nodeMap.put(ch.getId(), new DefaultMutableTreeNode(ch));
             }
         }
 
-        // Add child items
+        // Pass 2: Gắn vào cây phân cấp theo parentId
         for (CuaHang ch : trashList) {
-            if (ch.getParentId() != null) {
-                DefaultMutableTreeNode parentNode = nodeMap.get(ch.getParentId());
-                DefaultMutableTreeNode childNode = new DefaultMutableTreeNode(ch);
-                nodeMap.put(ch.getId(), childNode);
-                if (parentNode != null) {
-                    parentNode.add(childNode);
-                } else {
-                    rootNode.add(childNode);
-                }
+            DefaultMutableTreeNode currentNode = nodeMap.get(ch.getId());
+            if (currentNode == null) continue;
+
+            String parentId = ch.getParentId();
+            DefaultMutableTreeNode parentNode = null;
+            if (parentId != null && !parentId.trim().isEmpty()) {
+                parentNode = nodeMap.get(parentId.trim());
+            }
+
+            if (parentNode != null && parentNode != currentNode) {
+                parentNode.add(currentNode);
+            } else {
+                rootNode.add(currentNode);
             }
         }
 
