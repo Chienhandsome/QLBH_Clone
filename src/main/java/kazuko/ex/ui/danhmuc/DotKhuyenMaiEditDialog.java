@@ -564,7 +564,7 @@ public class DotKhuyenMaiEditDialog extends JDialog {
     }
 
     private void loadFormData() {
-        allStores = cuaHangDAO.getAll();
+        allStores = cuaHangDAO.getRealStores();
         List<String> selectedStoreIds = currentDotKM.getId() != null ? dotKhuyenMaiDAO.getStoresForPromotion(currentDotKM.getId()) : new ArrayList<>();
 
         modelCuaHang.setRowCount(0);

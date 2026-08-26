@@ -730,7 +730,7 @@ public class DanhMucDotKhuyenMaiPanel extends JPanel {
             // Load applied stores
             List<String> storeIds = dotKhuyenMaiDAO.getStoresForPromotion(km.getId());
             modelCuaHangApDung.setRowCount(0);
-            List<CuaHang> allStores = cuaHangDAO.getAll();
+            List<CuaHang> allStores = cuaHangDAO.getRealStores();
             for (CuaHang ch : allStores) {
                 if (storeIds.contains(ch.getId())) {
                     modelCuaHangApDung.addRow(new Object[]{ch.getId(), ch.getName(), ch.getDiaChi() != null ? ch.getDiaChi() : ""});

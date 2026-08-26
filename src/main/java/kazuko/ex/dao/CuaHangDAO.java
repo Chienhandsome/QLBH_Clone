@@ -66,6 +66,17 @@ public class CuaHangDAO extends BaseDAO {
         return getAllActive();
     }
 
+    public List<CuaHang> getRealStores() {
+        List<CuaHang> all = getAllActive();
+        List<CuaHang> result = new ArrayList<>();
+        for (CuaHang ch : all) {
+            if (!ch.isFolder() && !ch.isSeparator()) {
+                result.add(ch);
+            }
+        }
+        return result;
+    }
+
     public List<CuaHang> getAllActive() {
         List<CuaHang> dbList = tryLoadFromDb(1);
         if (dbList != null) {
