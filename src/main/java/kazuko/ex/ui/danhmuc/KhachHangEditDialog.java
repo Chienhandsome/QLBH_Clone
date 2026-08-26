@@ -6,6 +6,7 @@ import kazuko.ex.dao.UserDAO;
 import kazuko.ex.model.danhmuc.KhachHang;
 import kazuko.ex.model.danhmuc.NhomKhachHang;
 import kazuko.ex.model.system.SUser;
+import kazuko.ex.ui.common.DatePickerField;
 import kazuko.ex.util.IconHelper;
 
 import javax.swing.*;
@@ -38,7 +39,7 @@ public class KhachHangEditDialog extends JDialog {
     private JTextField txtDiaChi;
     private JTextField txtDienThoai;
     private JTextField txtEmail;
-    private JTextField txtNgaySinhNhat;
+    private DatePickerField txtNgaySinhNhat;
     private JTextField txtDiemBanDau;
     private JComboBox<String> cbGiaBan;
     private JTextField txtMaSoThue;
@@ -221,9 +222,8 @@ public class KhachHangEditDialog extends JDialog {
         lblNgaySinh.setBounds(15, y, labelWidth, rowHeight);
         formPanel.add(lblNgaySinh);
 
-        txtNgaySinhNhat = new JTextField();
-        txtNgaySinhNhat.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        txtNgaySinhNhat.setBounds(fieldX, y, 100, rowHeight);
+        txtNgaySinhNhat = new DatePickerField();
+        txtNgaySinhNhat.setBounds(fieldX, y, 105, rowHeight);
         formPanel.add(txtNgaySinhNhat);
 
         JLabel lblDiemBanDau = new JLabel("Điểm tích lũy ban đầu");
@@ -555,11 +555,12 @@ public class KhachHangEditDialog extends JDialog {
 
         String dobStr = txtNgaySinhNhat.getText().trim();
         if (!dobStr.isEmpty()) {
-            try {
-                currentKhachHang.setNgaySinhNhat(new Timestamp(sdf.parse(dobStr).getTime()));
-            } catch (ParseException e) {
+            Date d = txtNgaySinhNhat.getDate();
+            if (d != null) {
+                currentKhachHang.setNgaySinhNhat(new Timestamp(d.getTime()));
+            } else {
                 JOptionPane.showMessageDialog(this, "Định dạng ngày sinh không hợp lệ (đúng chuẩn dd/MM/yyyy)!", "Cảnh báo", JOptionPane.WARNING_MESSAGE);
-                txtNgaySinhNhat.requestFocus();
+                txtNgaySinhNhat.getTextField().requestFocus();
                 return;
             }
         } else {

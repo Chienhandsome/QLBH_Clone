@@ -307,7 +307,6 @@ public class DanhMucKhachHangPanel extends JPanel {
         JButton btnImportExcel = createToolButton("Thêm excel", "page_white_excel.png", Color.BLACK, false);
         JButton btnExportExcel = createToolButton("Xuất excel", "export_excel.png", Color.BLACK, false);
         JButton btnPrint = createToolButton("In", "Preview.png", Color.BLACK, false);
-        JButton btnSummary = createToolButton("∑ Tổng", null, Color.BLACK, false);
 
         btnAddKhachHang.addActionListener(e -> onAddNewCustomer());
         btnEdit.addActionListener(e -> onEditSelectedCustomer());
@@ -315,7 +314,6 @@ public class DanhMucKhachHangPanel extends JPanel {
         btnImportExcel.addActionListener(e -> JOptionPane.showMessageDialog(this, "Chức năng Nhập Excel đang hoàn thiện!", "Thông báo", JOptionPane.INFORMATION_MESSAGE));
         btnExportExcel.addActionListener(e -> onExportExcel());
         btnPrint.addActionListener(e -> JOptionPane.showMessageDialog(this, "Đã gửi dữ liệu sang máy in!", "In ấn", JOptionPane.INFORMATION_MESSAGE));
-        btnSummary.addActionListener(e -> showSummaryDialog());
 
         topBar.add(btnAddKhachHang);
         topBar.add(btnEdit);
@@ -323,7 +321,6 @@ public class DanhMucKhachHangPanel extends JPanel {
         topBar.add(btnImportExcel);
         topBar.add(btnExportExcel);
         topBar.add(btnPrint);
-        topBar.add(btnSummary);
         rightPanel.add(topBar, BorderLayout.NORTH);
 
         // 2. Table Khách hàng
@@ -976,18 +973,6 @@ public class DanhMucKhachHangPanel extends JPanel {
             loadNhomTree();
         });
         dialog.setVisible(true);
-    }
-
-    private void showSummaryDialog() {
-        int total = currentList.size();
-        double totalPoints = 0;
-        for (KhachHang kh : currentList) {
-            totalPoints += kh.getDiemTichLuy();
-        }
-        JOptionPane.showMessageDialog(this,
-                "Tổng số khách hàng hiển thị: " + total + " khách hàng\n" +
-                "Tổng điểm tích lũy: " + String.format("%,.0f", totalPoints) + " điểm",
-                "∑ Tổng hợp danh mục khách hàng", JOptionPane.INFORMATION_MESSAGE);
     }
 
     private void onExportExcel() {
