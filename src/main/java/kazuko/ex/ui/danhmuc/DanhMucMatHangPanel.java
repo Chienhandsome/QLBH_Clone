@@ -63,6 +63,9 @@ public class DanhMucMatHangPanel extends JPanel {
     private JLabel lblModifiedUser;
 
     private JButton btnAddMatHang;
+    private JButton btnEdit;
+    private JButton btnDelete;
+    private JButton btnRestore;
     private JButton btnSummary;
     private JPanel summaryPanel;
     private JPanel tableContainer;
@@ -217,24 +220,24 @@ public class DanhMucMatHangPanel extends JPanel {
                 if ("Tất cả".equals(userObj)) {
                     currentSelectedNhom = "Tất cả";
                     currentSelectedNhomId = null;
-                    if (btnAddMatHang != null) btnAddMatHang.setEnabled(true);
+                    updateToolbarState();
                     loadTableData(currentSelectedNhom, currentSelectedNhomId, txtSearch.getText().trim());
                 } else if ("Chưa thiết lập".equals(userObj)) {
                     currentSelectedNhom = "Chưa thiết lập";
                     currentSelectedNhomId = null;
-                    if (btnAddMatHang != null) btnAddMatHang.setEnabled(true);
+                    updateToolbarState();
                     loadTableData(currentSelectedNhom, currentSelectedNhomId, txtSearch.getText().trim());
                 } else if ("Thùng rác".equals(userObj)) {
                     currentSelectedNhom = "Thùng rác";
                     currentSelectedNhomId = null;
-                    if (btnAddMatHang != null) btnAddMatHang.setEnabled(false);
+                    updateToolbarState();
                     loadTrashTableData(txtSearch.getText().trim());
                 } else if (userObj instanceof NhomMatHang) {
                     NhomMatHang nh = (NhomMatHang) userObj;
                     if (nh.isSeparator()) return;
                     currentSelectedNhom = nh.getName();
                     currentSelectedNhomId = nh.getId();
-                    if (btnAddMatHang != null) btnAddMatHang.setEnabled(true);
+                    updateToolbarState();
 
                     if (nh.isFolder()) {
                         // Thư mục cha: Lấy tất cả ID của cây con để lọc
@@ -261,7 +264,9 @@ public class DanhMucMatHangPanel extends JPanel {
                     TreePath path = treeNhomHang.getPathForLocation(e.getX(), e.getY());
                     if (path != null) {
                         DefaultMutableTreeNode node = (DefaultMutableTreeNode) path.getLastPathComponent();
-                        if (node.getUserObject() instanceof NhomMatHang) {
+                        if ("Thùng rác".equals(node.getUserObject())) {
+                            onOpenTrash();
+                        } else if (node.getUserObject() instanceof NhomMatHang) {
                             NhomMatHang nh = (NhomMatHang) node.getUserObject();
                             if (!nh.isSeparator()) {
                                 NhomMatHangDialog dialog = new NhomMatHangDialog(DanhMucMatHangPanel.this, nh, () -> {
@@ -339,8 +344,10 @@ public class DanhMucMatHangPanel extends JPanel {
         });
         topBar.add(txtSearch);
         btnAddMatHang = createToolButton("Thêm mới (Insert)", "plus.png", new Color(0, 120, 50), true);
-        JButton btnEdit = createToolButton("Chỉnh sửa (F4)", "pencil.png", Color.BLACK, false);
-        JButton btnDelete = createToolButton("Xóa (Del)", "cross.png", new Color(180, 20, 20), false);
+        btnEdit = createToolButton("Chỉnh sửa (F4)", "pencil.png", Color.BLACK, false);
+        btnDelete = createToolButton("Xóa (Del)", "cross.png", new Color(180, 20, 20), false);
+        btnRestore = createToolButton("Khôi phục", "Undo.png", new Color(0, 100, 180), false);
+        btnRestore.setVisible(false);
         JButton btnImportExcel = createToolButton("Thêm excel", "page_white_excel.png", Color.BLACK, false);
         JButton btnExportExcel = createToolButton("Xuất excel", "export_excel.png", Color.BLACK, false);
         JButton btnPrint = createToolButton("In", "Preview.png", Color.BLACK, false);
@@ -350,6 +357,7 @@ public class DanhMucMatHangPanel extends JPanel {
         btnAddMatHang.addActionListener(e -> onAddNewProduct());
         btnEdit.addActionListener(e -> onEditSelectedProduct());
         btnDelete.addActionListener(e -> onDeleteSelectedProduct());
+        btnRestore.addActionListener(e -> onRestoreSelectedProduct());
         btnImportExcel.addActionListener(e -> onOpenThemNhanhExcel());
         btnExportExcel.addActionListener(e -> onExportExcel());
         btnPrint.addActionListener(e -> JOptionPane.showMessageDialog(this, "Đã gửi dữ liệu sang máy in!", "In ấn", JOptionPane.INFORMATION_MESSAGE));
@@ -359,6 +367,7 @@ public class DanhMucMatHangPanel extends JPanel {
         topBar.add(btnAddMatHang);
         topBar.add(btnEdit);
         topBar.add(btnDelete);
+        topBar.add(btnRestore);
         topBar.add(btnImportExcel);
         topBar.add(btnExportExcel);
         topBar.add(btnPrint);
@@ -1182,6 +1191,34 @@ public class DanhMucMatHangPanel extends JPanel {
             }
         });
         dialog.setVisible(true);
+    }
+
+    private void updateToolbarState() {
+        boolean isTrash = "Thùng rác".equals(currentSelectedNhom);
+        if (isTrash) {
+            if (btnAddMatHang != null) btnAddMatHang.setEnabled(false);
+            if (btnEdit != null) btnEdit.setEnabled(false);
+            if (btnDelete != null) {
+                btnDelete.setText("Xóa vĩnh viễn");
+                btnDelete.setIcon(IconHelper.getIcon("cross.png", 16, 16));
+                btnDelete.setEnabled(true);
+            }
+            if (btnRestore != null) {
+                btnRestore.setVisible(true);
+                btnRestore.setEnabled(true);
+            }
+        } else {
+            if (btnAddMatHang != null) btnAddMatHang.setEnabled(true);
+            if (btnEdit != null) btnEdit.setEnabled(true);
+            if (btnDelete != null) {
+                btnDelete.setText("Xóa (Del)");
+                btnDelete.setIcon(IconHelper.getIcon("cross.png", 16, 16));
+                btnDelete.setEnabled(true);
+            }
+            if (btnRestore != null) {
+                btnRestore.setVisible(false);
+            }
+        }
     }
 
     private void onDeleteSelectedProduct() {
