@@ -264,6 +264,13 @@ public class DbInspectionTest {
                     System.out.println("DotKM: ID=" + rs.getString("ID") + ", NAME=" + rs.getString("NAME") + ", LoaiKM=" + rs.getString("TENLOAIKM") + ", TuNgay=" + rs.getTimestamp("TUNGAY") + ", DenNgay=" + rs.getTimestamp("DENNGAY") + ", Ngung=" + rs.getInt("NGUNGAPDUNG") + ", TiLe=" + rs.getDouble("TILEGIAMGIA") + ", TuGio=" + rs.getTimestamp("TUGIO") + ", DenGio=" + rs.getTimestamp("DENGIO"));
                 }
             }
+            System.out.println("\n--- Data in DDOTKHUYENMAICHITIET ---");
+            try (PreparedStatement ps = conn.prepareStatement("SELECT c.*, n.NAME as TENNHOM FROM DDOTKHUYENMAICHITIET c LEFT JOIN DNHOMMATHANG n ON c.DNHOMMATHANGID = n.ID WHERE (c.STATUS IS NULL OR c.STATUS >= 0)");
+                 ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    System.out.println("ChiTiet: ID=" + rs.getString("ID") + ", DotKMID=" + rs.getString("DDOTKHUYENMAIID") + ", NhomID=" + rs.getString("DNHOMMATHANGID") + ", TenNhom=" + rs.getString("TENNHOM") + ", TiLe=" + rs.getDouble("TILEGIAMGIA"));
+                }
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }

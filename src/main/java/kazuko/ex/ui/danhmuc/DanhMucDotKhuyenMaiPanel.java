@@ -162,7 +162,7 @@ public class DanhMucDotKhuyenMaiPanel extends JPanel {
                 if ("Tất cả".equals(userObj)) {
                     currentSelectedLoai = "Tất cả";
                     currentSelectedLoaiId = null;
-                    if (btnAddDotKM != null) btnAddDotKM.setEnabled(true);
+                    if (btnAddDotKM != null) btnAddDotKM.setEnabled(false);
                     loadTableData(currentSelectedLoai, currentSelectedLoaiId, txtSearch.getText().trim());
                 } else if ("Thùng rác".equals(userObj)) {
                     currentSelectedLoai = "Thùng rác";
@@ -246,6 +246,7 @@ public class DanhMucDotKhuyenMaiPanel extends JPanel {
         topBar.add(txtSearch);
 
         btnAddDotKM = createToolButton("Thêm mới (Insert)", "plus.png", new Color(0, 120, 50), true);
+        btnAddDotKM.setEnabled(false);
         JButton btnEdit = createToolButton("Chỉnh sửa (F4)", "pencil.png", Color.BLACK, false);
         JButton btnDelete = createToolButton("Xóa (Del)", "cross.png", new Color(180, 20, 20), false);
         JButton btnImportExcel = createToolButton("Thêm excel", "page_white_excel.png", Color.BLACK, false);
@@ -743,11 +744,13 @@ public class DanhMucDotKhuyenMaiPanel extends JPanel {
     }
 
     private void onAddNewPromotion() {
-        DotKhuyenMai newKm = new DotKhuyenMai();
-        if (currentSelectedLoaiId != null) {
-            newKm.setdLoaiHinhKhuyenMaiId(currentSelectedLoaiId);
-            newKm.setTenLoaiHinhKhuyenMai(currentSelectedLoai);
+        if (currentSelectedLoaiId == null || "Tất cả".equals(currentSelectedLoai) || "Thùng rác".equals(currentSelectedLoai)) {
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn một loại hình khuyến mại cụ thể trên cây bên trái trước khi thêm mới!", "Thông báo", JOptionPane.WARNING_MESSAGE);
+            return;
         }
+        DotKhuyenMai newKm = new DotKhuyenMai();
+        newKm.setdLoaiHinhKhuyenMaiId(currentSelectedLoaiId);
+        newKm.setTenLoaiHinhKhuyenMai(currentSelectedLoai);
         DotKhuyenMaiEditDialog dialog = new DotKhuyenMaiEditDialog(this, newKm, () -> {
             loadTableData(currentSelectedLoai, currentSelectedLoaiId, txtSearch.getText().trim());
         });
