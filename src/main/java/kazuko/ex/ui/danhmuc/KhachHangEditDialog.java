@@ -349,48 +349,22 @@ public class KhachHangEditDialog extends JDialog {
         add(footerPanel, BorderLayout.SOUTH);
     }
 
-    private static ImageIcon loadIcon(String resourceName, int width, int height) {
-        if (resourceName == null || resourceName.trim().isEmpty()) return null;
-        try {
-            return IconHelper.getIcon(resourceName, width, height);
-        } catch (Throwable t) {
-            try {
-                String path = resourceName.startsWith("/") ? resourceName : "/" + resourceName;
-                URL url = KhachHangEditDialog.class.getResource(path);
-                if (url == null) return null;
-                ImageIcon icon = new ImageIcon(url);
-                if (width > 0 && height > 0 && (icon.getIconWidth() != width || icon.getIconHeight() != height)) {
-                    Image img = icon.getImage().getScaledInstance(width, height, Image.SCALE_SMOOTH);
-                    icon = new ImageIcon(img);
-                }
-                return icon;
-            } catch (Exception ex) {
-                return null;
-            }
-        }
-    }
-
-    private static ImageIcon loadIcon(String resourceName) {
-        return loadIcon(resourceName, -1, -1);
-    }
-
     private JButton createRibbonButton(String text, String iconName) {
         JButton btn = new JButton(text);
-        if (iconName != null) {
-            btn.setIcon(loadIcon(iconName, 16, 16));
+        if (iconName != null && !iconName.isEmpty()) {
+            btn.setIcon(IconHelper.getIcon(iconName, 16, 16));
         }
         btn.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         btn.setFocusPainted(false);
         btn.setBackground(Color.WHITE);
-        btn.setBorder(new LineBorder(new Color(180, 200, 225), 1));
         btn.setMargin(new Insets(2, 6, 2, 6));
         return btn;
     }
 
     private JButton createActionButton(String text, String iconName) {
         JButton btn = new JButton(text);
-        if (iconName != null) {
-            btn.setIcon(loadIcon(iconName, 16, 16));
+        if (iconName != null && !iconName.isEmpty()) {
+            btn.setIcon(IconHelper.getIcon(iconName, 16, 16));
         }
         btn.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         btn.setPreferredSize(new Dimension(text.length() > 6 ? 100 : 75, 26));
@@ -428,7 +402,7 @@ public class KhachHangEditDialog extends JDialog {
                     SUser u = (SUser) value;
                     lbl.setText(u.getName() != null ? u.getName() : "");
                     if (u.getId() != null && !u.getId().isEmpty()) {
-                        lbl.setIcon(loadIcon("users.png", 14, 14));
+                        lbl.setIcon(IconHelper.getIcon("users.png", 14, 14));
                     } else {
                         lbl.setIcon(null);
                     }
@@ -447,7 +421,7 @@ public class KhachHangEditDialog extends JDialog {
                 cbTinhThanh.addItem(ttName);
             }
         } else {
-            String[] defaultList = {"DONG NAI", "TP. HỒ CHÍ MINH", "HÀ NỘI", "LÂM ĐỒNG", "BÌNH DƯƠNG", "BÀ RỊA - VŨNG TÀU", "ĐÀ NẴNG", "HẢI PHÒNG", "CẦN THƠ", "KHÁNH HÒA", "ĐẮK LẮK"};
+            String[] defaultList = {"DONG NAI", "TP. HÒ CHÍ MINH", "HÀ NỘI", "LÂM ĐỒNG", "BÌNH DƯƠNG", "BÀ RỊA - VŨNG TÀU", "ĐÀ NẴNG", "HẢI PHÒNG", "CẦN THƠ", "KHÁNH HÒA", "ĐẮK LẮK"};
             for (String tt : defaultList) {
                 cbTinhThanh.addItem(tt);
             }
@@ -473,7 +447,7 @@ public class KhachHangEditDialog extends JDialog {
                 if (value instanceof NhomKhachHang) {
                     NhomKhachHang n = (NhomKhachHang) value;
                     lbl.setText(n.getName());
-                    lbl.setIcon(loadIcon(n.getIconName() != null ? n.getIconName() : "Folder.png", 14, 14));
+                    lbl.setIcon(IconHelper.getIcon(n.getIconName() != null ? n.getIconName() : "Folder.png", 14, 14));
                 }
                 return lbl;
             }

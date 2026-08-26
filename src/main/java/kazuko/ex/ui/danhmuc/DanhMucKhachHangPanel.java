@@ -129,17 +129,17 @@ public class DanhMucKhachHangPanel extends JPanel {
                     Object userObj = ((DefaultMutableTreeNode) value).getUserObject();
                     if ("Tất cả".equals(userObj)) {
                         label.setText("Tất cả");
-                        label.setIcon(loadIcon("Folder.png", 16, 16));
+                        label.setIcon(IconHelper.getIcon("Folder.png", 16, 16));
                         label.setFont(new Font("Segoe UI", Font.BOLD, 12));
                         label.setForeground(new Color(25, 55, 105));
                     } else if ("Chưa thiết lập".equals(userObj)) {
                         label.setText("Chưa thiết lập");
-                        label.setIcon(loadIcon("Folder.png", 16, 16));
+                        label.setIcon(IconHelper.getIcon("Folder.png", 16, 16));
                         label.setFont(new Font("Segoe UI", Font.PLAIN, 12));
                         label.setForeground(Color.DARK_GRAY);
                     } else if ("Thùng rác".equals(userObj)) {
                         label.setText("Thùng rác");
-                        label.setIcon(loadIcon("RecycleBin.png", 16, 16));
+                        label.setIcon(IconHelper.getIcon("RecycleBin.png", 16, 16));
                         label.setFont(new Font("Segoe UI", Font.BOLD, 12));
                         label.setForeground(new Color(30, 60, 110));
                     } else if (userObj instanceof NhomKhachHang) {
@@ -151,7 +151,7 @@ public class DanhMucKhachHangPanel extends JPanel {
                         } else {
                             label.setText(nh.getName());
                             String iconName = nh.getIconName() != null ? nh.getIconName() : "Folder.png";
-                            label.setIcon(loadIcon(iconName, 16, 16));
+                            label.setIcon(IconHelper.getIcon(iconName, 16, 16));
                             label.setFont(new Font("Segoe UI", Font.PLAIN, 12));
                         }
                     }
@@ -263,7 +263,7 @@ public class DanhMucKhachHangPanel extends JPanel {
         });
         topBar.add(txtSearch);
 
-        btnAddKhachHang = createToolButton("+ Thêm mới (Insert)", "plus.png", new Color(0, 120, 50), true);
+        btnAddKhachHang = createToolButton("Thêm mới (Insert)", "plus.png", new Color(0, 120, 50), true);
         JButton btnEdit = createToolButton("Chỉnh sửa (F4)", "pencil.png", Color.BLACK, false);
         JButton btnDelete = createToolButton("Xóa (Del)", "cross.png", new Color(180, 20, 20), false);
         JButton btnImportExcel = createToolButton("Thêm excel", "Bookmark.png", Color.BLACK, false);
@@ -457,7 +457,7 @@ public class DanhMucKhachHangPanel extends JPanel {
             @Override
             public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int col) {
                 JLabel lbl = (JLabel) super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, col);
-                lbl.setIcon(loadIcon("Folder.png", 14, 14));
+                lbl.setIcon(IconHelper.getIcon("Folder.png", 14, 14));
                 if (!isSelected) {
                     lbl.setBackground(row % 2 == 0 ? Color.WHITE : new Color(248, 251, 255));
                 }
@@ -470,7 +470,7 @@ public class DanhMucKhachHangPanel extends JPanel {
             public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int col) {
                 JLabel lbl = (JLabel) super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, col);
                 if (value != null && !value.toString().trim().isEmpty()) {
-                    lbl.setIcon(loadIcon("users.png", 14, 14));
+                    lbl.setIcon(IconHelper.getIcon("users.png", 14, 14));
                 } else {
                     lbl.setIcon(null);
                 }
@@ -541,54 +541,27 @@ public class DanhMucKhachHangPanel extends JPanel {
         });
     }
 
-    private static ImageIcon loadIcon(String resourceName, int width, int height) {
-        if (resourceName == null || resourceName.trim().isEmpty()) return null;
-        try {
-            return IconHelper.getIcon(resourceName, width, height);
-        } catch (Throwable t) {
-            try {
-                String path = resourceName.startsWith("/") ? resourceName : "/" + resourceName;
-                URL url = DanhMucKhachHangPanel.class.getResource(path);
-                if (url == null) return null;
-                ImageIcon icon = new ImageIcon(url);
-                if (width > 0 && height > 0 && (icon.getIconWidth() != width || icon.getIconHeight() != height)) {
-                    Image img = icon.getImage().getScaledInstance(width, height, Image.SCALE_SMOOTH);
-                    icon = new ImageIcon(img);
-                }
-                return icon;
-            } catch (Exception ex) {
-                return null;
-            }
-        }
-    }
-
-    private static ImageIcon loadIcon(String resourceName) {
-        return loadIcon(resourceName, -1, -1);
-    }
-
     private JButton createToolButton(String text, String iconName, Color textColor, boolean isBold) {
         JButton btn = new JButton(text);
-        if (iconName != null) {
-            btn.setIcon(loadIcon(iconName, 16, 16));
+        if (iconName != null && !iconName.isEmpty()) {
+            btn.setIcon(IconHelper.getIcon(iconName, 16, 16));
         }
         btn.setFont(new Font("Segoe UI", isBold ? Font.BOLD : Font.PLAIN, 12));
         btn.setForeground(textColor);
         btn.setFocusPainted(false);
         btn.setBackground(Color.WHITE);
-        btn.setBorder(new LineBorder(new Color(185, 205, 230), 1));
         btn.setMargin(new Insets(2, 6, 2, 6));
         return btn;
     }
 
     private JButton createMiniToolButton(String iconName, String tooltip) {
         JButton btn = new JButton();
-        btn.setIcon(loadIcon(iconName, 16, 16));
+        btn.setIcon(IconHelper.getIcon(iconName, 14, 14));
         btn.setToolTipText(tooltip);
         btn.setPreferredSize(new Dimension(22, 22));
-        btn.setMargin(new Insets(0, 0, 0, 0));
         btn.setFocusPainted(false);
-        btn.setBackground(new Color(235, 242, 252));
-        btn.setBorder(new LineBorder(new Color(185, 205, 230), 1));
+        btn.setBackground(Color.WHITE);
+        btn.setMargin(new Insets(1, 1, 1, 1));
         return btn;
     }
 
