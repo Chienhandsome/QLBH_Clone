@@ -388,7 +388,7 @@ public class DatabaseConfigDialog extends JDialog {
             boolean ok = DatabaseConnection.testConnection(ip, port, dbPath, user, pass);
             if (ok) {
                 statusPanel.setBackground(new Color(235, 250, 240));
-                lblStatusText.setText("✓ Kết nối tới Cơ sở dữ liệu Firebird THÀNH CÔNG!");
+                lblStatusText.setText("Kết nối tới Cơ sở dữ liệu Firebird THÀNH CÔNG!");
                 lblStatusText.setForeground(new Color(20, 130, 60));
                 JOptionPane.showMessageDialog(this,
                         "Kết nối tới Cơ sở dữ liệu Firebird thành công!\n" +
@@ -397,7 +397,7 @@ public class DatabaseConfigDialog extends JDialog {
                         "Kiểm tra kết nối", JOptionPane.INFORMATION_MESSAGE);
             } else {
                 statusPanel.setBackground(new Color(254, 237, 237));
-                lblStatusText.setText("✗ Không thể kết nối! Vui lòng kiểm tra lại IP/Port/File CSDL.");
+                lblStatusText.setText("Không thể kết nối! Vui lòng kiểm tra lại IP/Port/File CSDL.");
                 lblStatusText.setForeground(new Color(190, 20, 20));
                 JOptionPane.showMessageDialog(this,
                         "Không thể kết nối tới Cơ sở dữ liệu Firebird!\n\n" +
