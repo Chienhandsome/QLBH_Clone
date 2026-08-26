@@ -15,6 +15,8 @@ import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 import javax.swing.border.MatteBorder;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
@@ -47,8 +49,10 @@ public class MatHangEditDialog extends JDialog {
     private JTextField txtName;
     private JComboBox<DonViTinh> cbDonViTinh;
     private JComboBox<DonViTinh> cbDonViTinhChan;
+    private JLabel lblGiaBan;
     private JTextField txtGiaBan;
     private JTextField txtQuyDoi;
+    private JLabel lblQuyDoiGiaiThich;
     private JLabel lblDonGia2;
     private JTextField txtGiaBan2;
     private JLabel lblGiaBanChan;
@@ -307,6 +311,7 @@ public class MatHangEditDialog extends JDialog {
         cbDonViTinh = new JComboBox<>();
         cbDonViTinh.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         cbDonViTinh.setBounds(120, startY, 95, fieldH);
+        cbDonViTinh.addActionListener(e -> updateUnitLabelsAndExplanation());
         panel.add(cbDonViTinh);
 
         JLabel lblDVTChan = new JLabel("Đơn vị tính chẵn");
@@ -317,11 +322,13 @@ public class MatHangEditDialog extends JDialog {
         cbDonViTinhChan = new JComboBox<>();
         cbDonViTinhChan.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         cbDonViTinhChan.setBounds(335, startY, 125, fieldH);
+        cbDonViTinhChan.setEnabled(systemConfig.isSuDung2DonViTinh());
+        cbDonViTinhChan.addActionListener(e -> updateUnitLabelsAndExplanation());
         panel.add(cbDonViTinhChan);
 
         // Row 5: Giá bán & Quy đổi
         startY += rowGap;
-        JLabel lblGiaBan = new JLabel("Giá bán");
+        lblGiaBan = new JLabel("Giá bán");
         lblGiaBan.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         lblGiaBan.setBounds(15, startY, lblW, fieldH);
         panel.add(lblGiaBan);
@@ -339,7 +346,23 @@ public class MatHangEditDialog extends JDialog {
         txtQuyDoi = new JTextField("0");
         txtQuyDoi.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         txtQuyDoi.setBounds(335, startY, 40, fieldH);
+        txtQuyDoi.setEditable(systemConfig.isSuDung2DonViTinh());
+        txtQuyDoi.setBackground(systemConfig.isSuDung2DonViTinh() ? Color.WHITE : new Color(240, 240, 240));
+        txtQuyDoi.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent e) { updateUnitLabelsAndExplanation(); }
+            @Override
+            public void removeUpdate(DocumentEvent e) { updateUnitLabelsAndExplanation(); }
+            @Override
+            public void changedUpdate(DocumentEvent e) { updateUnitLabelsAndExplanation(); }
+        });
         panel.add(txtQuyDoi);
+
+        lblQuyDoiGiaiThich = new JLabel("");
+        lblQuyDoiGiaiThich.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        lblQuyDoiGiaiThich.setForeground(new Color(60, 60, 60));
+        lblQuyDoiGiaiThich.setBounds(380, startY, 140, fieldH);
+        panel.add(lblQuyDoiGiaiThich);
 
         // Row 6: Đơn giá 2 (Diễn giải giá 2) & Giá bán chẵn
         startY += rowGap;
@@ -365,6 +388,8 @@ public class MatHangEditDialog extends JDialog {
         txtGiaBanChan = new JTextField("0");
         txtGiaBanChan.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         txtGiaBanChan.setBounds(335, startY, 125, fieldH);
+        txtGiaBanChan.setEditable(systemConfig.isSuDung2DonViTinh());
+        txtGiaBanChan.setBackground(systemConfig.isSuDung2DonViTinh() ? Color.WHITE : new Color(240, 240, 240));
         panel.add(txtGiaBanChan);
 
         // Row 7: Giá bán 3 (Diễn giải giá 3)
@@ -926,6 +951,13 @@ public class MatHangEditDialog extends JDialog {
             this.systemConfig = new SystemConfig();
         }
 
+        boolean allow2Units = systemConfig.isSuDung2DonViTinh();
+        cbDonViTinhChan.setEnabled(allow2Units);
+        txtQuyDoi.setEditable(allow2Units);
+        txtQuyDoi.setBackground(allow2Units ? Color.WHITE : new Color(240, 240, 240));
+        txtGiaBanChan.setEditable(allow2Units);
+        txtGiaBanChan.setBackground(allow2Units ? Color.WHITE : new Color(240, 240, 240));
+
         String dg2Title = (systemConfig.getDienGiaiGia2() != null && !systemConfig.getDienGiaiGia2().trim().isEmpty())
                 ? systemConfig.getDienGiaiGia2().trim() : "Đơn giá 2";
         lblDonGia2.setText(dg2Title);
@@ -968,6 +1000,8 @@ public class MatHangEditDialog extends JDialog {
         txtKichThuoc.setBackground(systemConfig.isMatHangCoKichThuoc() ? Color.WHITE : new Color(240, 240, 240));
         txtKichThuoc.setText(currentItem.getKichThuoc() != null ? currentItem.getKichThuoc() : "");
         txtNote.setText(currentItem.getGhiChu() != null ? currentItem.getGhiChu() : "");
+
+        updateUnitLabelsAndExplanation();
 
         // 4. Tab 2 Values
         if (currentItem.getDoiTacKyGui() != null) cbDoiTacKyGui.setSelectedItem(currentItem.getDoiTacKyGui());
@@ -1114,6 +1148,48 @@ public class MatHangEditDialog extends JDialog {
         }
     }
 
+    private void updateUnitLabelsAndExplanation() {
+        if (lblGiaBan == null || lblGiaBanChan == null || cbDonViTinh == null || cbDonViTinhChan == null) {
+            return;
+        }
+
+        DonViTinh selDvt = (DonViTinh) cbDonViTinh.getSelectedItem();
+        String tenDvt = (selDvt != null && selDvt.getName() != null && !selDvt.getName().trim().isEmpty())
+                ? selDvt.getName().trim() : "";
+
+        DonViTinh selDvtChan = (DonViTinh) cbDonViTinhChan.getSelectedItem();
+        String tenDvtChan = (selDvtChan != null && selDvtChan.getName() != null && !selDvtChan.getName().trim().isEmpty())
+                ? selDvtChan.getName().trim() : "";
+
+        // 1. Cập nhật nhãn Giá bán
+        if (!tenDvt.isEmpty()) {
+            lblGiaBan.setText("Giá bán " + tenDvt);
+        } else {
+            lblGiaBan.setText("Giá bán");
+        }
+
+        // 2. Cập nhật nhãn Giá bán chẵn
+        if (!tenDvtChan.isEmpty()) {
+            lblGiaBanChan.setText("Giá bán " + tenDvtChan);
+        } else {
+            lblGiaBanChan.setText("Giá bán chẵn");
+        }
+
+        // 3. Cập nhật diễn giải quy đổi: (1 bao = 10 Cây)
+        if (lblQuyDoiGiaiThich != null) {
+            String qdStr = txtQuyDoi != null ? txtQuyDoi.getText().trim() : "0";
+            if (qdStr.isEmpty()) qdStr = "0";
+
+            if (!tenDvtChan.isEmpty() && !tenDvt.isEmpty()) {
+                lblQuyDoiGiaiThich.setText("(1 " + tenDvtChan + " = " + qdStr + " " + tenDvt + ")");
+                lblQuyDoiGiaiThich.setVisible(true);
+            } else {
+                lblQuyDoiGiaiThich.setText("");
+                lblQuyDoiGiaiThich.setVisible(false);
+            }
+        }
+    }
+
     private void onClearForNew() {
         currentItem = new MatHang();
         String nextCode = matHangDAO.generateProductCodeOrBarcode(systemConfig, "MH", false);
@@ -1134,6 +1210,7 @@ public class MatHangEditDialog extends JDialog {
         if (cbDonViTinhChan.getItemCount() > 0) cbDonViTinhChan.setSelectedIndex(0);
         if (rbKiemVatTu != null) rbKiemVatTu.setSelected(true);
         if (modelDinhLuong != null) modelDinhLuong.setRowCount(0);
+        updateUnitLabelsAndExplanation();
         removeImage();
         txtName.requestFocus();
     }
