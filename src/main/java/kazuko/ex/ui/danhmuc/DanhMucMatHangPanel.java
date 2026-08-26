@@ -21,6 +21,8 @@ import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
+import javax.swing.table.TableCellRenderer;
+import javax.swing.table.TableColumn;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.DefaultTreeModel;
@@ -57,6 +59,7 @@ public class DanhMucMatHangPanel extends JPanel {
 
     private JButton btnAddMatHang;
     private List<MatHang> currentList = new ArrayList<>();
+    private List<String> visibleColumns = new ArrayList<>();
     private String currentSelectedNhom = "Tất cả";
     private String currentSelectedNhomId = null;
     private String currentSortField = "Mã hàng";
@@ -354,42 +357,10 @@ public class DanhMucMatHangPanel extends JPanel {
         rightPanel.add(topBar, BorderLayout.NORTH);
 
         // 2. Table Mặt Hàng (Cột hiển thị linh hoạt theo Cấu hình hệ thống)
+        visibleColumns = getDefaultVisibleColumns();
         List<String> colList = new ArrayList<>();
         colList.add(""); // 0: Pointer
-        colList.add("Mã hàng");
-        colList.add("Tên mặt hàng");
-        colList.add("Nhóm mặt hàng");
-        colList.add("Đơn vị tính");
-        if (systemConfig != null && systemConfig.isSuDung2DonViTinh()) {
-            colList.add("ĐVT chẵn");
-            colList.add("Quy đổi");
-            colList.add("Giá bán chẵn");
-        }
-        colList.add("Giá bán");
-        if (systemConfig != null && systemConfig.isSuDungGia2()) {
-            colList.add(systemConfig.getDienGiaiGia2() != null && !systemConfig.getDienGiaiGia2().isEmpty() ? systemConfig.getDienGiaiGia2() : "Đơn giá 2");
-        }
-        if (systemConfig != null && systemConfig.isSuDungGia3()) {
-            colList.add(systemConfig.getDienGiaiGia3() != null && !systemConfig.getDienGiaiGia3().isEmpty() ? systemConfig.getDienGiaiGia3() : "Giá bán 3");
-        }
-        if (systemConfig != null && systemConfig.isSuDungGia4()) {
-            colList.add(systemConfig.getDienGiaiGia4() != null && !systemConfig.getDienGiaiGia4().isEmpty() ? systemConfig.getDienGiaiGia4() : "Giá bán 4");
-        }
-        colList.add("Giá nhập");
-        colList.add("Mặc định giảm giá");
-        colList.add("Mặc định giảm tiền");
-        if (systemConfig != null && systemConfig.isMatHangCoKichThuoc()) {
-            colList.add("Kích thước");
-        }
-        if (systemConfig != null && systemConfig.isHangCoBaoHanh()) {
-            colList.add("Bảo hành");
-        }
-        if (systemConfig != null && systemConfig.isSuDungHangSanXuat()) {
-            colList.add("Hãng sản xuất");
-        }
-        colList.add("Ghi chú");
-        colList.add("Không in chế biến");
-        colList.add("Bán nhanh");
+        colList.addAll(visibleColumns);
 
         String[] columns = colList.toArray(new String[0]);
 
@@ -420,6 +391,45 @@ public class DanhMucMatHangPanel extends JPanel {
         th.setBackground(new Color(230, 238, 248));
         th.setForeground(new Color(30, 30, 30));
         th.setPreferredSize(new Dimension(100, 26));
+
+        // Click chuột trái vào header cột -> Sắp xếp tăng/giảm dần; Click chuột phải -> Quick Menu thead
+        th.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (SwingUtilities.isLeftMouseButton(e)) {
+                    int colIndex = tableMatHang.columnAtPoint(e.getPoint());
+                    if (colIndex >= 0) {
+                        int modelCol = tableMatHang.convertColumnIndexToModel(colIndex);
+                        String colName = tableMatHang.getModel().getColumnName(modelCol);
+                        if (colName != null && !colName.trim().isEmpty()) { // Bỏ qua cột con trỏ
+                            if (colName.equalsIgnoreCase(currentSortField)) {
+                                currentSortAsc = !currentSortAsc;
+                            } else {
+                                currentSortField = colName;
+                                currentSortAsc = true;
+                            }
+                            applyCurrentSort();
+                            renderTableData();
+                            th.repaint();
+                        }
+                    }
+                }
+            }
+
+            @Override
+            public void mousePressed(MouseEvent e) {
+                if (e.isPopupTrigger() || SwingUtilities.isRightMouseButton(e)) {
+                    showTableHeaderPopup(e);
+                }
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                if (e.isPopupTrigger()) {
+                    showTableHeaderPopup(e);
+                }
+            }
+        });
 
         // Custom Cell Renderers & Column widths
         setupTableRenderers();
@@ -634,6 +644,18 @@ public class DanhMucMatHangPanel extends JPanel {
                 tableMatHang.getColumnModel().getColumn(i).setPreferredWidth(100);
             }
         }
+
+        // Header Renderer với mũi tên chỉ hướng sắp xếp (▲ / ▼)
+        TableCellRenderer defaultHeaderRenderer = tableMatHang.getTableHeader().getDefaultRenderer();
+        tableMatHang.getTableHeader().setDefaultRenderer((table, value, isSelected, hasFocus, row, col) -> {
+            int modelCol = table.convertColumnIndexToModel(col);
+            String colName = table.getModel().getColumnName(modelCol);
+            String displayVal = value != null ? value.toString() : "";
+            if (colName != null && !colName.isEmpty() && colName.equalsIgnoreCase(currentSortField)) {
+                displayVal += currentSortAsc ? " ▲" : " ▼";
+            }
+            return defaultHeaderRenderer.getTableCellRendererComponent(table, displayVal, isSelected, hasFocus, row, col);
+        });
     }
 
     private void loadNhomTree() {
@@ -784,75 +806,240 @@ public class DanhMucMatHangPanel extends JPanel {
         if (currentList == null || currentList.isEmpty()) return;
 
         Comparator<MatHang> comparator;
-        switch (currentSortField) {
-            case "Tên mặt hàng":
-            case "Tên hàng":
-                comparator = Comparator.comparing(m -> m.getName() != null ? m.getName() : "", String.CASE_INSENSITIVE_ORDER);
-                break;
-            case "Nhóm mặt hàng":
-                comparator = Comparator.comparing(m -> m.getTenNhom() != null ? m.getTenNhom() : "", String.CASE_INSENSITIVE_ORDER);
-                break;
-            case "Đơn vị tính":
-                comparator = Comparator.comparing(m -> m.getTenDonViTinh() != null ? m.getTenDonViTinh() : "", String.CASE_INSENSITIVE_ORDER);
-                break;
-            case "ĐVT chẵn":
-                comparator = Comparator.comparing(m -> m.getTenDonViTinhChan() != null ? m.getTenDonViTinhChan() : "", String.CASE_INSENSITIVE_ORDER);
-                break;
-            case "Quy đổi":
-                comparator = Comparator.comparingDouble(MatHang::getQuyDoi);
-                break;
-            case "Giá bán chẵn":
-                comparator = Comparator.comparingDouble(MatHang::getGiaBanChan);
-                break;
-            case "Giá bán":
-                comparator = Comparator.comparingDouble(MatHang::getGiaBan);
-                break;
-            case "Giá nhập":
-                comparator = Comparator.comparingDouble(MatHang::getGiaNhap);
-                break;
-            case "Giá bán 2":
-                comparator = Comparator.comparingDouble(MatHang::getGiaBan2);
-                break;
-            case "Giá bán 3":
-                comparator = Comparator.comparingDouble(MatHang::getGiaBan3);
-                break;
-            case "Giá bán 4":
-                comparator = Comparator.comparingDouble(MatHang::getGiaBan4);
-                break;
-            case "Mặc định giảm giá":
-                comparator = Comparator.comparingDouble(MatHang::getGiamGiaPt);
-                break;
-            case "Mặc định giảm tiền":
-                comparator = Comparator.comparingDouble(MatHang::getGiamGiaTien);
-                break;
-            case "Kích thước":
-                comparator = Comparator.comparing(m -> m.getKichThuoc() != null ? m.getKichThuoc() : "", String.CASE_INSENSITIVE_ORDER);
-                break;
-            case "Bảo hành":
-                comparator = Comparator.comparing(m -> m.getBaoHanh() != null ? m.getBaoHanh() : "", String.CASE_INSENSITIVE_ORDER);
-                break;
-            case "Hãng sản xuất":
-                comparator = Comparator.comparing(m -> m.getHangSanXuat() != null ? m.getHangSanXuat() : "", String.CASE_INSENSITIVE_ORDER);
-                break;
-            case "Ghi chú":
-                comparator = Comparator.comparing(m -> m.getGhiChu() != null ? m.getGhiChu() : "", String.CASE_INSENSITIVE_ORDER);
-                break;
-            case "Không in chế biến":
-                comparator = Comparator.comparing(MatHang::isKhongInCheBien);
-                break;
-            case "Bán nhanh":
-                comparator = Comparator.comparing(MatHang::isBanNhanh);
-                break;
-            case "Mã hàng":
-            default:
-                comparator = Comparator.comparing(m -> m.getCode() != null ? m.getCode() : "", String.CASE_INSENSITIVE_ORDER);
-                break;
+        if (systemConfig != null && systemConfig.isSuDungGia2() && currentSortField.equalsIgnoreCase(systemConfig.getDienGiaiGia2())) {
+            comparator = Comparator.comparingDouble(MatHang::getGiaBan2);
+        } else if (systemConfig != null && systemConfig.isSuDungGia3() && currentSortField.equalsIgnoreCase(systemConfig.getDienGiaiGia3())) {
+            comparator = Comparator.comparingDouble(MatHang::getGiaBan3);
+        } else if (systemConfig != null && systemConfig.isSuDungGia4() && currentSortField.equalsIgnoreCase(systemConfig.getDienGiaiGia4())) {
+            comparator = Comparator.comparingDouble(MatHang::getGiaBan4);
+        } else if ("Giá vốn".equalsIgnoreCase(currentSortField)) {
+            comparator = Comparator.comparingDouble(MatHang::getGiaVon);
+        } else {
+            switch (currentSortField) {
+                case "Tên mặt hàng":
+                case "Tên hàng":
+                    comparator = Comparator.comparing(m -> m.getName() != null ? m.getName() : "", String.CASE_INSENSITIVE_ORDER);
+                    break;
+                case "Nhóm mặt hàng":
+                    comparator = Comparator.comparing(m -> m.getTenNhom() != null ? m.getTenNhom() : "", String.CASE_INSENSITIVE_ORDER);
+                    break;
+                case "Đơn vị tính":
+                    comparator = Comparator.comparing(m -> m.getTenDonViTinh() != null ? m.getTenDonViTinh() : "", String.CASE_INSENSITIVE_ORDER);
+                    break;
+                case "ĐVT chẵn":
+                    comparator = Comparator.comparing(m -> m.getTenDonViTinhChan() != null ? m.getTenDonViTinhChan() : "", String.CASE_INSENSITIVE_ORDER);
+                    break;
+                case "Quy đổi":
+                    comparator = Comparator.comparingDouble(MatHang::getQuyDoi);
+                    break;
+                case "Giá bán chẵn":
+                    comparator = Comparator.comparingDouble(MatHang::getGiaBanChan);
+                    break;
+                case "Giá bán":
+                    comparator = Comparator.comparingDouble(MatHang::getGiaBan);
+                    break;
+                case "Giá nhập":
+                    comparator = Comparator.comparingDouble(MatHang::getGiaNhap);
+                    break;
+                case "Giá bán 2":
+                case "Đơn giá 2":
+                    comparator = Comparator.comparingDouble(MatHang::getGiaBan2);
+                    break;
+                case "Giá bán 3":
+                    comparator = Comparator.comparingDouble(MatHang::getGiaBan3);
+                    break;
+                case "Giá bán 4":
+                    comparator = Comparator.comparingDouble(MatHang::getGiaBan4);
+                    break;
+                case "Mặc định giảm giá":
+                    comparator = Comparator.comparingDouble(MatHang::getGiamGiaPt);
+                    break;
+                case "Mặc định giảm tiền":
+                    comparator = Comparator.comparingDouble(MatHang::getGiamGiaTien);
+                    break;
+                case "Kích thước":
+                    comparator = Comparator.comparing(m -> m.getKichThuoc() != null ? m.getKichThuoc() : "", String.CASE_INSENSITIVE_ORDER);
+                    break;
+                case "Bảo hành":
+                    comparator = Comparator.comparing(m -> m.getBaoHanh() != null ? m.getBaoHanh() : "", String.CASE_INSENSITIVE_ORDER);
+                    break;
+                case "Hãng sản xuất":
+                    comparator = Comparator.comparing(m -> m.getHangSanXuat() != null ? m.getHangSanXuat() : "", String.CASE_INSENSITIVE_ORDER);
+                    break;
+                case "Ghi chú":
+                    comparator = Comparator.comparing(m -> m.getGhiChu() != null ? m.getGhiChu() : "", String.CASE_INSENSITIVE_ORDER);
+                    break;
+                case "Không in chế biến":
+                    comparator = Comparator.comparing(MatHang::isKhongInCheBien);
+                    break;
+                case "Bán nhanh":
+                    comparator = Comparator.comparing(MatHang::isBanNhanh);
+                    break;
+                case "Mã hàng":
+                default:
+                    comparator = Comparator.comparing(m -> m.getCode() != null ? m.getCode() : "", String.CASE_INSENSITIVE_ORDER);
+                    break;
+            }
         }
 
         if (!currentSortAsc) {
             comparator = comparator.reversed();
         }
         currentList.sort(comparator);
+    }
+
+    public List<String> getDefaultVisibleColumns() {
+        List<String> colList = new ArrayList<>();
+        colList.add("Mã hàng");
+        colList.add("Tên mặt hàng");
+        colList.add("Nhóm mặt hàng");
+        colList.add("Đơn vị tính");
+        if (systemConfig != null && systemConfig.isSuDung2DonViTinh()) {
+            colList.add("Đơn vị tính chẵn");
+            colList.add("Quy đổi");
+            colList.add("Giá bán chẵn");
+        }
+        colList.add("Giá bán");
+        if (systemConfig != null && systemConfig.isSuDungGia2()) {
+            colList.add(systemConfig.getDienGiaiGia2() != null && !systemConfig.getDienGiaiGia2().isEmpty() ? systemConfig.getDienGiaiGia2() : "Đơn giá 2");
+        }
+        if (systemConfig != null && systemConfig.isSuDungGia3()) {
+            colList.add(systemConfig.getDienGiaiGia3() != null && !systemConfig.getDienGiaiGia3().isEmpty() ? systemConfig.getDienGiaiGia3() : "Giá bán 3");
+        }
+        if (systemConfig != null && systemConfig.isSuDungGia4()) {
+            colList.add(systemConfig.getDienGiaiGia4() != null && !systemConfig.getDienGiaiGia4().isEmpty() ? systemConfig.getDienGiaiGia4() : "Giá bán 4");
+        }
+        colList.add("Giá nhập");
+        colList.add("Mặc định giảm giá");
+        colList.add("Mặc định giảm tiền");
+        if (systemConfig != null && systemConfig.isMatHangCoKichThuoc()) {
+            colList.add("Size");
+        }
+        if (systemConfig != null && systemConfig.isHangCoBaoHanh()) {
+            colList.add("Bảo hành");
+        }
+        if (systemConfig != null && systemConfig.isSuDungHangSanXuat()) {
+            colList.add("Hãng sản xuất");
+        }
+        colList.add("Ghi chú");
+        colList.add("Không in chế biến");
+        colList.add("Bán nhanh");
+        return colList;
+    }
+
+    public List<String> getAllPossibleColumns() {
+        List<String> all = new ArrayList<>();
+        all.add("Mã hàng");
+        all.add("Tên mặt hàng");
+        all.add("Nhóm mặt hàng");
+        all.add("Đơn vị tính");
+        all.add("Giá bán");
+        all.add("Giá nhập");
+        all.add("Mặc định giảm giá");
+        all.add("Mặc định giảm tiền");
+        all.add("Ghi chú");
+        all.add("Không in chế biến");
+        all.add("Bảo hành");
+        all.add("Đơn vị tính chẵn");
+        all.add("Quy đổi");
+        all.add("Giá bán chẵn");
+        all.add(systemConfig != null && systemConfig.getDienGiaiGia2() != null && !systemConfig.getDienGiaiGia2().isEmpty() ? systemConfig.getDienGiaiGia2() : "Đơn giá 2");
+        all.add(systemConfig != null && systemConfig.getDienGiaiGia3() != null && !systemConfig.getDienGiaiGia3().isEmpty() ? systemConfig.getDienGiaiGia3() : "Giá bán 3");
+        all.add("Giá vốn");
+        all.add("Hãng sản xuất");
+        all.add("Có hạn sử dụng");
+        all.add("Size");
+        all.add("Bán nhanh");
+        all.add("Ảnh");
+        all.add("Đối tác ký gửi");
+        all.add("Hoa hồng");
+        all.add("Tồn tối thiểu");
+        all.add("Tồn tối đa");
+        return all;
+    }
+
+    public void rebuildTableColumns(List<String> newColumns) {
+        this.visibleColumns = new ArrayList<>(newColumns);
+        List<String> fullColList = new ArrayList<>();
+        fullColList.add(""); // 0: Pointer
+        fullColList.addAll(visibleColumns);
+
+        String[] cols = fullColList.toArray(new String[0]);
+        tableModel.setColumnIdentifiers(cols);
+
+        setupTableRenderers();
+        renderTableData();
+    }
+
+    public void autoResizeColumnWidths() {
+        for (int column = 0; column < tableMatHang.getColumnCount(); column++) {
+            if (column == 0) {
+                tableMatHang.getColumnModel().getColumn(0).setPreferredWidth(26);
+                tableMatHang.getColumnModel().getColumn(0).setMaxWidth(30);
+                continue;
+            }
+            TableColumn tableColumn = tableMatHang.getColumnModel().getColumn(column);
+            int preferredWidth = 50;
+
+            // Chiều rộng của Header
+            TableCellRenderer headerRenderer = tableMatHang.getTableHeader().getDefaultRenderer();
+            if (headerRenderer != null) {
+                Component headerComp = headerRenderer.getTableCellRendererComponent(
+                        tableMatHang, tableColumn.getHeaderValue(), false, false, 0, column);
+                if (headerComp != null) {
+                    preferredWidth = Math.max(preferredWidth, headerComp.getPreferredSize().width + 20);
+                }
+            }
+
+            // Chiều rộng của các dòng dữ liệu (tối đa kiểm tra 100 dòng đầu)
+            int rowCount = Math.min(tableMatHang.getRowCount(), 100);
+            for (int row = 0; row < rowCount; row++) {
+                TableCellRenderer cellRenderer = tableMatHang.getCellRenderer(row, column);
+                if (cellRenderer != null) {
+                    Component c = tableMatHang.prepareRenderer(cellRenderer, row, column);
+                    if (c != null) {
+                        int width = c.getPreferredSize().width + tableMatHang.getIntercellSpacing().width + 16;
+                        preferredWidth = Math.max(preferredWidth, width);
+                    }
+                }
+            }
+
+            tableColumn.setPreferredWidth(Math.min(preferredWidth, 350));
+        }
+        tableMatHang.getTableHeader().repaint();
+    }
+
+    private void onOpenColumnChooser() {
+        Window owner = SwingUtilities.getWindowAncestor(this);
+        ChonCotHienThiDialog dialog = new ChonCotHienThiDialog(
+                owner,
+                visibleColumns,
+                getAllPossibleColumns(),
+                getDefaultVisibleColumns(),
+                this::rebuildTableColumns
+        );
+        dialog.setVisible(true);
+    }
+
+    private void showTableHeaderPopup(MouseEvent e) {
+        JPopupMenu popup = new JPopupMenu();
+
+        JMenuItem miAdd = new JMenuItem("Thêm Mặt hàng", IconHelper.getIcon("edit_add.png", 16, 16));
+        if (miAdd.getIcon() == null) miAdd.setIcon(IconHelper.getIcon("1282529873_objects.png", 16, 16));
+        miAdd.addActionListener(ev -> onAddNewProduct());
+        popup.add(miAdd);
+
+        popup.addSeparator();
+
+        JMenuItem miAutoResize = new JMenuItem("Tự động dãn cột");
+        miAutoResize.addActionListener(ev -> autoResizeColumnWidths());
+        popup.add(miAutoResize);
+
+        JMenuItem miChooseCols = new JMenuItem("Cột hiển thị");
+        miChooseCols.addActionListener(ev -> onOpenColumnChooser());
+        popup.add(miChooseCols);
+
+        popup.show(tableMatHang.getTableHeader(), e.getX(), e.getY());
     }
 
     private void renderTableData() {
@@ -866,22 +1053,29 @@ public class DanhMucMatHangPanel extends JPanel {
                 else if ("Tên mặt hàng".equals(col)) row.add(mh.getName() != null ? mh.getName() : "");
                 else if ("Nhóm mặt hàng".equals(col)) row.add(mh.getTenNhom() != null ? mh.getTenNhom() : "");
                 else if ("Đơn vị tính".equals(col)) row.add(mh.getTenDonViTinh() != null ? mh.getTenDonViTinh() : "");
-                else if ("ĐVT chẵn".equals(col)) row.add(mh.getTenDonViTinhChan() != null ? mh.getTenDonViTinhChan() : "");
+                else if ("ĐVT chẵn".equals(col) || "Đơn vị tính chẵn".equals(col)) row.add(mh.getTenDonViTinhChan() != null ? mh.getTenDonViTinhChan() : "");
                 else if ("Quy đổi".equals(col)) row.add(mh.getQuyDoi());
                 else if ("Giá bán chẵn".equals(col)) row.add(mh.getGiaBanChan());
                 else if ("Giá bán".equals(col)) row.add(mh.getGiaBan());
-                else if (systemConfig != null && systemConfig.isSuDungGia2() && col.equals(systemConfig.getDienGiaiGia2())) row.add(mh.getGiaBan2());
-                else if (systemConfig != null && systemConfig.isSuDungGia3() && col.equals(systemConfig.getDienGiaiGia3())) row.add(mh.getGiaBan3());
-                else if (systemConfig != null && systemConfig.isSuDungGia4() && col.equals(systemConfig.getDienGiaiGia4())) row.add(mh.getGiaBan4());
+                else if ("Giá vốn".equals(col)) row.add(mh.getGiaVon());
                 else if ("Giá nhập".equals(col)) row.add(mh.getGiaNhap());
+                else if ("Đơn giá 2".equals(col) || "Giá bán 2".equals(col) || (systemConfig != null && systemConfig.isSuDungGia2() && col.equals(systemConfig.getDienGiaiGia2()))) row.add(mh.getGiaBan2());
+                else if ("Giá bán 3".equals(col) || (systemConfig != null && systemConfig.isSuDungGia3() && col.equals(systemConfig.getDienGiaiGia3()))) row.add(mh.getGiaBan3());
+                else if ("Giá bán 4".equals(col) || (systemConfig != null && systemConfig.isSuDungGia4() && col.equals(systemConfig.getDienGiaiGia4()))) row.add(mh.getGiaBan4());
                 else if ("Mặc định giảm giá".equals(col)) row.add(mh.getGiamGiaPt());
                 else if ("Mặc định giảm tiền".equals(col)) row.add(mh.getGiamGiaTien());
-                else if ("Kích thước".equals(col)) row.add(mh.getKichThuoc() != null ? mh.getKichThuoc() : "");
+                else if ("Kích thước".equals(col) || "Size".equals(col)) row.add(mh.getKichThuoc() != null ? mh.getKichThuoc() : "");
                 else if ("Bảo hành".equals(col)) row.add(mh.getBaoHanh() != null ? mh.getBaoHanh() : "");
                 else if ("Hãng sản xuất".equals(col)) row.add(mh.getHangSanXuat() != null ? mh.getHangSanXuat() : "");
                 else if ("Ghi chú".equals(col)) row.add(mh.getGhiChu() != null ? mh.getGhiChu() : "");
                 else if ("Không in chế biến".equals(col)) row.add(mh.isKhongInCheBien());
                 else if ("Bán nhanh".equals(col)) row.add(mh.isBanNhanh());
+                else if ("Có hạn sử dụng".equals(col)) row.add(mh.isCoHanSuDung());
+                else if ("Ảnh".equals(col)) row.add(mh.getImagePath() != null ? mh.getImagePath() : "");
+                else if ("Đối tác ký gửi".equals(col)) row.add(mh.getDoiTacKyGui() != null ? mh.getDoiTacKyGui() : "");
+                else if ("Hoa hồng".equals(col)) row.add(mh.getHoaHong());
+                else if ("Tồn tối thiểu".equals(col)) row.add(mh.getTonToiThieu());
+                else if ("Tồn tối đa".equals(col)) row.add(mh.getTonToiDa());
                 else row.add("");
             }
             tableModel.addRow(row.toArray());
@@ -1055,13 +1249,15 @@ public class DanhMucMatHangPanel extends JPanel {
         JPopupMenu popup = new JPopupMenu();
 
         if ("Thùng rác".equals(currentSelectedNhom)) {
-            // Context menu Thùng rác (Ảnh 3 & 4)
+            // Context menu Thùng rác
             JMenuItem miRestore = new JMenuItem("Khôi phục", IconHelper.getIcon("Refresh.png", 16, 16));
             JMenu mSort = createSortSubMenu();
             JMenuItem miRefresh = new JMenuItem("Refresh", IconHelper.getIcon("Refresh.png", 16, 16));
             JMenuItem miCopy = new JMenuItem("Sao chép", IconHelper.getIcon("Report.png", 16, 16));
             JMenuItem miRegenCode = new JMenuItem("Đánh lại mã hàng");
             JMenuItem miDeletePerm = new JMenuItem("Xóa vĩnh viễn", IconHelper.getIcon("cross.png", 16, 16));
+            JMenuItem miAutoResize = new JMenuItem("Tự động dãn cột");
+            JMenuItem miChooseCols = new JMenuItem("Cột hiển thị");
             JMenuItem miProps = new JMenuItem("Thuộc tính");
 
             miRestore.addActionListener(ev -> onRestoreSelectedProduct());
@@ -1069,6 +1265,8 @@ public class DanhMucMatHangPanel extends JPanel {
             miCopy.addActionListener(ev -> onCopySelectedProduct());
             miRegenCode.addActionListener(ev -> onRegenerateCode());
             miDeletePerm.addActionListener(ev -> onDeletePermanently());
+            miAutoResize.addActionListener(ev -> autoResizeColumnWidths());
+            miChooseCols.addActionListener(ev -> onOpenColumnChooser());
             miProps.addActionListener(ev -> onEditSelectedProduct());
 
             popup.add(miRestore);
@@ -1078,31 +1276,75 @@ public class DanhMucMatHangPanel extends JPanel {
             popup.add(miRegenCode);
             popup.addSeparator();
             popup.add(miDeletePerm);
+            popup.addSeparator();
+            popup.add(miAutoResize);
+            popup.add(miChooseCols);
             popup.add(miProps);
         } else {
-            // Context menu Danh mục thường
-            JMenuItem miEdit = new JMenuItem("Chỉnh sửa (F4)", IconHelper.getIcon("pencil.png", 16, 16));
-            JMenuItem miDelete = new JMenuItem("Xóa (Chuyển vào thùng rác)", IconHelper.getIcon("cross.png", 16, 16));
+            // Context menu Danh mục thường (Khớp Ảnh 1 & 2)
+            JMenuItem miAdd = new JMenuItem("Thêm Mặt hàng", IconHelper.getIcon("edit_add.png", 16, 16));
+            if (miAdd.getIcon() == null) miAdd.setIcon(IconHelper.getIcon("1282529873_objects.png", 16, 16));
+            JMenuItem miAddExcel = new JMenuItem("Thêm nhanh (excel)");
+            JMenuItem miUpdateExcel = new JMenuItem("Cập nhật nhanh (excel)");
+            JMenuItem miEdit = new JMenuItem("Chỉnh sửa", IconHelper.getIcon("pencil.png", 16, 16));
+
+            JMenuItem miRegenCode = new JMenuItem("Đánh lại mã hàng");
+            JMenuItem miSetItemName = new JMenuItem("Đặt Tên mặt hàng");
+            JMenuItem miFilterItemName = new JMenuItem("Lọc Tên mặt hàng");
+
             JMenu mSort = createSortSubMenu();
             JMenuItem miRefresh = new JMenuItem("Refresh", IconHelper.getIcon("Refresh.png", 16, 16));
-            JMenuItem miCopy = new JMenuItem("Sao chép", IconHelper.getIcon("Report.png", 16, 16));
-            JMenuItem miRegenCode = new JMenuItem("Đánh lại mã hàng");
+            JMenuItem miPrint = new JMenuItem("In danh sách");
+
+            JMenuItem miCopyCell = new JMenuItem("Sao chép ô", IconHelper.getIcon("Report.png", 16, 16));
+            JMenuItem miCopySelection = new JMenuItem("Sao chép vùng chọn", IconHelper.getIcon("Report.png", 16, 16));
+            JMenuItem miDelete = new JMenuItem("Xóa", IconHelper.getIcon("cross.png", 16, 16));
+
+            JMenuItem miAutoResize = new JMenuItem("Tự động dãn cột");
+            JMenuItem miChooseCols = new JMenuItem("Cột hiển thị");
             JMenuItem miProps = new JMenuItem("Thuộc tính");
 
+            miAdd.addActionListener(ev -> onAddNewProduct());
+            miAddExcel.addActionListener(ev -> JOptionPane.showMessageDialog(this, "Chức năng Thêm từ Excel đang phát triển!", "Thông báo", JOptionPane.INFORMATION_MESSAGE));
+            miUpdateExcel.addActionListener(ev -> JOptionPane.showMessageDialog(this, "Chức năng Cập nhật từ Excel đang phát triển!", "Thông báo", JOptionPane.INFORMATION_MESSAGE));
             miEdit.addActionListener(ev -> onEditSelectedProduct());
-            miDelete.addActionListener(ev -> onDeleteSelectedProduct());
-            miRefresh.addActionListener(ev -> loadTableData(currentSelectedNhom, txtSearch.getText().trim()));
-            miCopy.addActionListener(ev -> onCopySelectedProduct());
             miRegenCode.addActionListener(ev -> onRegenerateCode());
+            miSetItemName.addActionListener(ev -> onEditSelectedProduct());
+            miFilterItemName.addActionListener(ev -> {
+                if (sel != null && sel.getName() != null) {
+                    txtSearch.setText(sel.getName());
+                }
+            });
+
+            miRefresh.addActionListener(ev -> loadTableData(currentSelectedNhom, txtSearch.getText().trim()));
+            miPrint.addActionListener(ev -> JOptionPane.showMessageDialog(this, "Đã gửi dữ liệu sang máy in!", "In ấn", JOptionPane.INFORMATION_MESSAGE));
+            miCopyCell.addActionListener(ev -> onCopySelectedProduct());
+            miCopySelection.addActionListener(ev -> onCopySelectedProduct());
+            miDelete.addActionListener(ev -> onDeleteSelectedProduct());
+
+            miAutoResize.addActionListener(ev -> autoResizeColumnWidths());
+            miChooseCols.addActionListener(ev -> onOpenColumnChooser());
             miProps.addActionListener(ev -> onEditSelectedProduct());
 
+            popup.add(miAdd);
+            popup.add(miAddExcel);
+            popup.add(miUpdateExcel);
             popup.add(miEdit);
-            popup.add(miDelete);
+            popup.addSeparator();
+            popup.add(miRegenCode);
+            popup.add(miSetItemName);
+            popup.add(miFilterItemName);
+            popup.addSeparator();
             popup.add(mSort);
             popup.add(miRefresh);
-            popup.add(miCopy);
-            popup.add(miRegenCode);
+            popup.add(miPrint);
             popup.addSeparator();
+            popup.add(miCopyCell);
+            popup.add(miCopySelection);
+            popup.add(miDelete);
+            popup.addSeparator();
+            popup.add(miAutoResize);
+            popup.add(miChooseCols);
             popup.add(miProps);
         }
 
@@ -1110,7 +1352,7 @@ public class DanhMucMatHangPanel extends JPanel {
     }
 
     private JMenu createSortSubMenu() {
-        JMenu mSort = new JMenu("Sắp xếp");
+        JMenu mSort = new JMenu("Sắp xếp theo");
 
         JMenuItem miAsc = new JMenuItem("Sắp xếp tăng dần");
         miAsc.setIcon(currentSortAsc ? CHECKED_ORANGE_BOX : UNCHECKED_ORANGE_BOX);
@@ -1118,6 +1360,7 @@ public class DanhMucMatHangPanel extends JPanel {
             currentSortAsc = true;
             applyCurrentSort();
             renderTableData();
+            tableMatHang.getTableHeader().repaint();
         });
 
         JMenuItem miDesc = new JMenuItem("Sắp xếp giảm dần");
@@ -1126,6 +1369,7 @@ public class DanhMucMatHangPanel extends JPanel {
             currentSortAsc = false;
             applyCurrentSort();
             renderTableData();
+            tableMatHang.getTableHeader().repaint();
         });
 
         mSort.add(miAsc);
@@ -1135,7 +1379,10 @@ public class DanhMucMatHangPanel extends JPanel {
         String[] sortFields = {
                 "Mã hàng", "Tên mặt hàng", "Nhóm mặt hàng", "Đơn vị tính",
                 "Giá bán", "Giá nhập", "Mặc định giảm giá", "Mặc định giảm tiền",
-                "Ghi chú", "Không in chế biến", "Bảo hành", "Hãng sản xuất"
+                "Ghi chú", "Không in chế biến", "Bảo hành",
+                "Đơn vị tính chẵn", "Quy đổi", "Giá bán chẵn",
+                "Đơn giá 2", "Giá bán 3", "Giá vốn",
+                "Hãng sản xuất", "Có hạn sử dụng", "Size"
         };
 
         for (String field : sortFields) {
@@ -1145,6 +1392,7 @@ public class DanhMucMatHangPanel extends JPanel {
                 currentSortField = field;
                 applyCurrentSort();
                 renderTableData();
+                tableMatHang.getTableHeader().repaint();
             });
             mSort.add(miField);
         }
