@@ -62,6 +62,10 @@ public class CuaHangDAO extends BaseDAO {
         MEMORY_STORES.add(childTrash);
     }
 
+    public List<CuaHang> getAll() {
+        return getAllActive();
+    }
+
     public List<CuaHang> getAllActive() {
         List<CuaHang> dbList = tryLoadFromDb(1);
         if (dbList != null) {

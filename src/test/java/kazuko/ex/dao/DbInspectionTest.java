@@ -229,4 +229,43 @@ public class DbInspectionTest {
         nkhDAO.deletePermanently(testNhom.getId());
         System.out.println("End-to-end DAO DB Persistence Test Passed Successfully!");
     }
+
+    @Test
+    public void testKhuyenMaiTables() {
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            DatabaseMetaData meta = conn.getMetaData();
+            System.out.println("\n--- Tables matching *KHUYENMAI* or *KM* ---");
+            try (ResultSet rs = meta.getTables(null, null, "%", new String[]{"TABLE"})) {
+                while (rs.next()) {
+                    String tableName = rs.getString("TABLE_NAME");
+                    if (tableName.toUpperCase().contains("KHUYENMAI") || tableName.toUpperCase().contains("KM") || tableName.toUpperCase().contains("DOT")) {
+                        System.out.println("Found Table: " + tableName);
+                        // Print columns
+                        try (ResultSet cols = meta.getColumns(null, null, tableName, "%")) {
+                            while (cols.next()) {
+                                System.out.println("   - " + cols.getString("COLUMN_NAME") + " (" + cols.getString("TYPE_NAME") + ")");
+                            }
+                        }
+                    }
+                }
+            }
+            System.out.println("\n--- Data in DLOAIHINHKHUYENMAI ---");
+            try (PreparedStatement ps = conn.prepareStatement("SELECT * FROM DLOAIHINHKHUYENMAI WHERE (STATUS IS NULL OR STATUS >= 0) ORDER BY SORTORDER, NAME");
+                 ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    System.out.println("LoaiKM: ID=" + rs.getString("ID") + ", NAME=" + rs.getString("NAME") + ", NOTE=" + rs.getString("NOTE") + ", SIMAGEID=" + rs.getString("SIMAGEID"));
+                }
+            }
+
+            System.out.println("\n--- Data in DDOTKHUYENMAI ---");
+            try (PreparedStatement ps = conn.prepareStatement("SELECT k.*, l.NAME as TENLOAIKM FROM DDOTKHUYENMAI k LEFT JOIN DLOAIHINHKHUYENMAI l ON k.DLOAIHINHKHUYENMAIID = l.ID WHERE (k.STATUS IS NULL OR k.STATUS >= 0) ORDER BY k.NAME");
+                 ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    System.out.println("DotKM: ID=" + rs.getString("ID") + ", NAME=" + rs.getString("NAME") + ", LoaiKM=" + rs.getString("TENLOAIKM") + ", TuNgay=" + rs.getTimestamp("TUNGAY") + ", DenNgay=" + rs.getTimestamp("DENNGAY") + ", Ngung=" + rs.getInt("NGUNGAPDUNG") + ", TiLe=" + rs.getDouble("TILEGIAMGIA") + ", TuGio=" + rs.getTimestamp("TUGIO") + ", DenGio=" + rs.getTimestamp("DENGIO"));
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 }

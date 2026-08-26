@@ -1,0 +1,579 @@
+package kazuko.ex.ui.danhmuc;
+
+import kazuko.ex.dao.CuaHangDAO;
+import kazuko.ex.dao.DotKhuyenMaiDAO;
+import kazuko.ex.dao.LoaiHinhKhuyenMaiDAO;
+import kazuko.ex.model.danhmuc.CuaHang;
+import kazuko.ex.model.danhmuc.DotKhuyenMai;
+import kazuko.ex.model.danhmuc.LoaiHinhKhuyenMai;
+import kazuko.ex.ui.common.DatePickerField;
+import kazuko.ex.util.IconHelper;
+
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import javax.swing.border.LineBorder;
+import javax.swing.border.MatteBorder;
+import javax.swing.table.DefaultTableModel;
+import java.awt.*;
+import java.awt.event.KeyEvent;
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.util.List;
+
+public class DotKhuyenMaiEditDialog extends JDialog {
+    private final DotKhuyenMaiDAO dotKhuyenMaiDAO = new DotKhuyenMaiDAO();
+    private final LoaiHinhKhuyenMaiDAO loaiHinhKhuyenMaiDAO = new LoaiHinhKhuyenMaiDAO();
+    private final CuaHangDAO cuaHangDAO = new CuaHangDAO();
+
+    private DotKhuyenMai currentDotKM;
+    private final Runnable onSaveCallback;
+    private List<DotKhuyenMai> allPromotions;
+    private int currentIndex = -1;
+
+    private JTextField txtName;
+    private JComboBox<LoaiHinhKhuyenMai> cbLoaiHinhKM;
+    private DatePickerField dpTuNgay;
+    private DatePickerField dpDenNgay;
+    private JSpinner spTuGio;
+    private JSpinner spDenGio;
+    private JTextField txtTiLeGiamGia;
+    private JCheckBox chkNgungApDung;
+    private JTextField txtNote;
+
+    private JTable tableCuaHang;
+    private DefaultTableModel modelCuaHang;
+    private List<CuaHang> allStores = new ArrayList<>();
+
+    private final SimpleDateFormat sdfTime = new SimpleDateFormat("HH:mm");
+
+    private static final Color COLOR_HEADER_BG = new Color(255, 254, 230);
+    private static final Color COLOR_HEADER_BORDER = new Color(225, 220, 185);
+    private static final Color COLOR_TOOLBAR_BG = new Color(210, 225, 244);
+    private static final Color COLOR_TOOLBAR_BORDER = new Color(175, 198, 226);
+    private static final Color COLOR_FORM_BG = new Color(190, 211, 236);
+    private static final Color COLOR_TEXT_DARK = new Color(20, 45, 85);
+    private static final Color COLOR_REQUIRED_FIELD = new Color(255, 255, 204);
+
+    public DotKhuyenMaiEditDialog(Component parent, DotKhuyenMai dotKM, Runnable onSaveCallback) {
+        super(SwingUtilities.getWindowAncestor(parent), "", ModalityType.APPLICATION_MODAL);
+        this.currentDotKM = dotKM != null ? dotKM : new DotKhuyenMai();
+        this.onSaveCallback = onSaveCallback;
+
+        this.allPromotions = dotKhuyenMaiDAO.getAll();
+        findCurrentIndex();
+
+        initUI();
+        loadFormData();
+        setupShortcuts();
+        pack();
+        setLocationRelativeTo(parent);
+    }
+
+    private void findCurrentIndex() {
+        if (currentDotKM != null && currentDotKM.getId() != null) {
+            for (int i = 0; i < allPromotions.size(); i++) {
+                if (currentDotKM.getId().equals(allPromotions.get(i).getId())) {
+                    currentIndex = i;
+                    break;
+                }
+            }
+        }
+    }
+
+    private void initUI() {
+        setLayout(new BorderLayout());
+        setResizable(false);
+        setPreferredSize(new Dimension(540, 570));
+
+        // 1. Top Header Banner
+        JPanel headerPanel = new JPanel(new BorderLayout());
+        headerPanel.setBackground(COLOR_HEADER_BG);
+        headerPanel.setBorder(new MatteBorder(0, 0, 1, 0, COLOR_HEADER_BORDER));
+        headerPanel.setPreferredSize(new Dimension(540, 52));
+
+        JPanel leftHeader = new JPanel(new FlowLayout(FlowLayout.LEFT, 12, 8));
+        leftHeader.setOpaque(false);
+
+        JLabel lblIcon = new JLabel(IconHelper.getIcon("1282529873_objects.png", 34, 34));
+        JLabel lblHeaderTitle = new JLabel("Đợt khuyến mại");
+        lblHeaderTitle.setFont(new Font("Segoe UI", Font.BOLD, 15));
+        lblHeaderTitle.setForeground(COLOR_TEXT_DARK);
+
+        leftHeader.add(lblIcon);
+        leftHeader.add(lblHeaderTitle);
+        headerPanel.add(leftHeader, BorderLayout.WEST);
+        add(headerPanel, BorderLayout.NORTH);
+
+        // 2. Middle Container: Ribbon Toolbar + Form Body
+        JPanel centerContainer = new JPanel(new BorderLayout());
+
+        // 2.1 Sub Toolbar
+        JPanel ribbonBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 3));
+        ribbonBar.setBackground(COLOR_TOOLBAR_BG);
+        ribbonBar.setBorder(new MatteBorder(0, 0, 1, 0, COLOR_TOOLBAR_BORDER));
+
+        JButton btnPrev = createRibbonButton("Trước (F10)", "arrow-180-medium.png");
+        JButton btnNext = createRibbonButton("Sau (F11)", "arrow-000-medium.png");
+        JButton btnCreateNew = createRibbonButton("Tạo mới", "btnNew.Image.png");
+        JButton btnCopy = createRibbonButton("Sao chép", "Copy.png");
+        JButton btnDelete = createRibbonButton("Xóa", "cross.png");
+
+        btnPrev.addActionListener(e -> navigatePrevious());
+        btnNext.addActionListener(e -> navigateNext());
+        btnCreateNew.addActionListener(e -> onNewPromotion());
+        btnCopy.addActionListener(e -> onCopyPromotion());
+        btnDelete.addActionListener(e -> onDeletePromotion());
+
+        ribbonBar.add(btnPrev);
+        ribbonBar.add(btnNext);
+        ribbonBar.add(btnCreateNew);
+        ribbonBar.add(btnCopy);
+        ribbonBar.add(btnDelete);
+        centerContainer.add(ribbonBar, BorderLayout.NORTH);
+
+        // 2.2 Main Form Fields
+        JPanel formPanel = new JPanel(null);
+        formPanel.setBackground(COLOR_FORM_BG);
+        formPanel.setBorder(new EmptyBorder(10, 14, 10, 14));
+
+        int y = 10;
+        int labelWidth = 140;
+        int fieldX = 155;
+        int fieldWidth = 345;
+        int rowHeight = 24;
+        int gap = 6;
+
+        // Row 1: Tên đợt khuyến mại (Bắt buộc - màu nền vàng)
+        JLabel lblName = new JLabel("Tên đợt khuyến mại");
+        lblName.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblName.setBounds(15, y, labelWidth, rowHeight);
+        formPanel.add(lblName);
+
+        txtName = new JTextField();
+        txtName.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        txtName.setBackground(COLOR_REQUIRED_FIELD);
+        txtName.setBounds(fieldX, y, fieldWidth, rowHeight);
+        formPanel.add(txtName);
+
+        // Row 2: Loại hình khuyến mại
+        y += rowHeight + gap;
+        JLabel lblLoaiHinh = new JLabel("Loại hình khuyến mại");
+        lblLoaiHinh.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblLoaiHinh.setBounds(15, y, labelWidth, rowHeight);
+        formPanel.add(lblLoaiHinh);
+
+        cbLoaiHinhKM = new JComboBox<>();
+        cbLoaiHinhKM.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        cbLoaiHinhKM.setBounds(fieldX, y, fieldWidth, rowHeight);
+        populateLoaiHinhKMComboBox();
+        formPanel.add(cbLoaiHinhKM);
+
+        // Row 3: Từ ngày - Đến ngày
+        y += rowHeight + gap;
+        JLabel lblTuNgay = new JLabel("Từ ngày");
+        lblTuNgay.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblTuNgay.setBounds(15, y, labelWidth, rowHeight);
+        formPanel.add(lblTuNgay);
+
+        dpTuNgay = new DatePickerField();
+        dpTuNgay.setBounds(fieldX, y, 105, rowHeight);
+        formPanel.add(dpTuNgay);
+
+        JLabel lblDenNgay = new JLabel("Đến ngày");
+        lblDenNgay.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblDenNgay.setBounds(275, y, 60, rowHeight);
+        formPanel.add(lblDenNgay);
+
+        dpDenNgay = new DatePickerField();
+        dpDenNgay.setBounds(345, y, 105, rowHeight);
+        formPanel.add(dpDenNgay);
+
+        // Row 4: Từ giờ - Đến giờ
+        y += rowHeight + gap;
+        JLabel lblTuGio = new JLabel("Từ giờ");
+        lblTuGio.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblTuGio.setBounds(15, y, labelWidth, rowHeight);
+        formPanel.add(lblTuGio);
+
+        SpinnerDateModel modelTuGio = new SpinnerDateModel();
+        spTuGio = new JSpinner(modelTuGio);
+        JSpinner.DateEditor deTuGio = new JSpinner.DateEditor(spTuGio, "HH:mm");
+        spTuGio.setEditor(deTuGio);
+        spTuGio.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        spTuGio.setBounds(fieldX, y, 75, rowHeight);
+        formPanel.add(spTuGio);
+
+        JLabel lblDenGio = new JLabel("Đến giờ");
+        lblDenGio.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblDenGio.setBounds(275, y, 60, rowHeight);
+        formPanel.add(lblDenGio);
+
+        SpinnerDateModel modelDenGio = new SpinnerDateModel();
+        spDenGio = new JSpinner(modelDenGio);
+        JSpinner.DateEditor deDenGio = new JSpinner.DateEditor(spDenGio, "HH:mm");
+        spDenGio.setEditor(deDenGio);
+        spDenGio.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        spDenGio.setBounds(345, y, 75, rowHeight);
+        formPanel.add(spDenGio);
+
+        // Row 5: Tỉ lệ giảm giá % | Ngừng áp dụng
+        y += rowHeight + gap;
+        JLabel lblTiLe = new JLabel("Tỉ lệ giảm giá");
+        lblTiLe.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblTiLe.setBounds(15, y, labelWidth, rowHeight);
+        formPanel.add(lblTiLe);
+
+        txtTiLeGiamGia = new JTextField("0");
+        txtTiLeGiamGia.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        txtTiLeGiamGia.setBounds(fieldX, y, 75, rowHeight);
+        formPanel.add(txtTiLeGiamGia);
+
+        JLabel lblPercent = new JLabel("%");
+        lblPercent.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        lblPercent.setBounds(fieldX + 80, y, 20, rowHeight);
+        formPanel.add(lblPercent);
+
+        chkNgungApDung = new JCheckBox("Ngừng áp dụng");
+        chkNgungApDung.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        chkNgungApDung.setOpaque(false);
+        chkNgungApDung.setBounds(275, y, 160, rowHeight);
+        formPanel.add(chkNgungApDung);
+
+        // Row 6: Ghi chú
+        y += rowHeight + gap;
+        JLabel lblGhiChu = new JLabel("Ghi chú");
+        lblGhiChu.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblGhiChu.setBounds(15, y, labelWidth, rowHeight);
+        formPanel.add(lblGhiChu);
+
+        txtNote = new JTextField();
+        txtNote.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        txtNote.setBounds(fieldX, y, fieldWidth, rowHeight);
+        formPanel.add(txtNote);
+
+        // Row 7: Cửa hàng áp dụng (Table)
+        y += rowHeight + gap + 4;
+        JLabel lblStores = new JLabel("Cửa hàng áp dụng:");
+        lblStores.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        lblStores.setForeground(new Color(25, 55, 105));
+        lblStores.setBounds(15, y, 200, 20);
+        formPanel.add(lblStores);
+
+        y += 24;
+        String[] storeCols = {"Chọn", "Tên cửa hàng", "Địa chỉ"};
+        modelCuaHang = new DefaultTableModel(storeCols, 0) {
+            @Override
+            public Class<?> getColumnClass(int columnIndex) {
+                return columnIndex == 0 ? Boolean.class : String.class;
+            }
+
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return column == 0;
+            }
+        };
+
+        tableCuaHang = new JTable(modelCuaHang);
+        tableCuaHang.setRowHeight(22);
+        tableCuaHang.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        tableCuaHang.getColumnModel().getColumn(0).setPreferredWidth(45);
+        tableCuaHang.getColumnModel().getColumn(0).setMaxWidth(50);
+        tableCuaHang.getColumnModel().getColumn(1).setPreferredWidth(160);
+        tableCuaHang.getColumnModel().getColumn(2).setPreferredWidth(230);
+
+        JScrollPane scrollStores = new JScrollPane(tableCuaHang);
+        scrollStores.setBounds(15, y, fieldWidth + fieldX - 15, 130);
+        scrollStores.setBorder(new LineBorder(new Color(175, 195, 220), 1));
+        formPanel.add(scrollStores);
+
+        centerContainer.add(formPanel, BorderLayout.CENTER);
+        add(centerContainer, BorderLayout.CENTER);
+
+        // 3. Bottom Action Buttons
+        JPanel footerPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 8));
+        footerPanel.setBackground(new Color(235, 242, 252));
+        footerPanel.setBorder(new MatteBorder(1, 0, 0, 0, new Color(185, 205, 230)));
+
+        JButton btnSave = createActionButton("Lưu", "Save1.png");
+        JButton btnSaveNew = createActionButton("Lưu & Mới", null);
+        JButton btnSaveExit = createActionButton("Lưu & thoát", null);
+        JButton btnExit = createActionButton("Thoát", null);
+
+        btnSave.addActionListener(e -> onSave(false, false));
+        btnSaveNew.addActionListener(e -> onSave(true, false));
+        btnSaveExit.addActionListener(e -> onSave(false, true));
+        btnExit.addActionListener(e -> dispose());
+
+        footerPanel.add(btnSave);
+        footerPanel.add(btnSaveNew);
+        footerPanel.add(btnSaveExit);
+        footerPanel.add(btnExit);
+        add(footerPanel, BorderLayout.SOUTH);
+    }
+
+    private void populateLoaiHinhKMComboBox() {
+        cbLoaiHinhKM.removeAllItems();
+        List<LoaiHinhKhuyenMai> list = loaiHinhKhuyenMaiDAO.getAll();
+        for (LoaiHinhKhuyenMai l : list) {
+            cbLoaiHinhKM.addItem(l);
+        }
+        cbLoaiHinhKM.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+                JLabel lbl = (JLabel) super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                if (value instanceof LoaiHinhKhuyenMai) {
+                    LoaiHinhKhuyenMai l = (LoaiHinhKhuyenMai) value;
+                    lbl.setText(l.getName());
+                    lbl.setIcon(IconHelper.getIcon(l.getIconName() != null ? l.getIconName() : "asterisk-yellow.png", 14, 14));
+                }
+                return lbl;
+            }
+        });
+    }
+
+    private void loadFormData() {
+        allStores = cuaHangDAO.getAll();
+        List<String> selectedStoreIds = currentDotKM.getId() != null ? dotKhuyenMaiDAO.getStoresForPromotion(currentDotKM.getId()) : new ArrayList<>();
+
+        modelCuaHang.setRowCount(0);
+        for (CuaHang ch : allStores) {
+            boolean checked = selectedStoreIds.contains(ch.getId()) || (currentDotKM.getId() == null);
+            modelCuaHang.addRow(new Object[]{checked, ch.getName(), ch.getDiaChi() != null ? ch.getDiaChi() : ""});
+        }
+
+        if (currentDotKM.getId() != null) {
+            setTitle("ĐỢT KHUYẾN MẠI - SỬA");
+            txtName.setText(currentDotKM.getName() != null ? currentDotKM.getName() : "");
+            txtNote.setText(currentDotKM.getNote() != null ? currentDotKM.getNote() : "");
+            txtTiLeGiamGia.setText(String.valueOf(currentDotKM.getTiLeGiamGia()));
+            chkNgungApDung.setSelected(currentDotKM.isNgungApDung());
+
+            if (currentDotKM.getTuNgay() != null) {
+                dpTuNgay.setDate(currentDotKM.getTuNgay());
+            } else {
+                dpTuNgay.setText("");
+            }
+
+            if (currentDotKM.getDenNgay() != null) {
+                dpDenNgay.setDate(currentDotKM.getDenNgay());
+            } else {
+                dpDenNgay.setText("");
+            }
+
+            if (currentDotKM.getTuGio() != null) {
+                spTuGio.setValue(new Date(currentDotKM.getTuGio().getTime()));
+            } else {
+                setSpinnerTime(spTuGio, 0, 0);
+            }
+
+            if (currentDotKM.getDenGio() != null) {
+                spDenGio.setValue(new Date(currentDotKM.getDenGio().getTime()));
+            } else {
+                setSpinnerTime(spDenGio, 23, 59);
+            }
+
+            // Chọn Loại hình khuyến mãi
+            if (currentDotKM.getdLoaiHinhKhuyenMaiId() != null) {
+                for (int i = 0; i < cbLoaiHinhKM.getItemCount(); i++) {
+                    LoaiHinhKhuyenMai l = cbLoaiHinhKM.getItemAt(i);
+                    if (currentDotKM.getdLoaiHinhKhuyenMaiId().equals(l.getId())) {
+                        cbLoaiHinhKM.setSelectedIndex(i);
+                        break;
+                    }
+                }
+            }
+        } else {
+            setTitle("ĐỢT KHUYẾN MẠI - THÊM MỚI");
+            txtName.setText("");
+            txtNote.setText("");
+            txtTiLeGiamGia.setText("0");
+            chkNgungApDung.setSelected(false);
+            dpTuNgay.setDate(new Date());
+            dpDenNgay.setDate(new Date());
+            setSpinnerTime(spTuGio, 0, 0);
+            setSpinnerTime(spDenGio, 23, 59);
+            if (cbLoaiHinhKM.getItemCount() > 0) {
+                cbLoaiHinhKM.setSelectedIndex(0);
+            }
+        }
+    }
+
+    private void setSpinnerTime(JSpinner spinner, int hour, int minute) {
+        Calendar c = Calendar.getInstance();
+        c.set(Calendar.HOUR_OF_DAY, hour);
+        c.set(Calendar.MINUTE, minute);
+        c.set(Calendar.SECOND, 0);
+        spinner.setValue(c.getTime());
+    }
+
+    private void onSave(boolean isSaveAndNew, boolean isSaveAndExit) {
+        String name = txtName.getText().trim();
+        if (name.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Tên đợt khuyến mại không được để trống!", "Cảnh báo", JOptionPane.WARNING_MESSAGE);
+            txtName.requestFocus();
+            return;
+        }
+
+        LoaiHinhKhuyenMai selectedLoai = (LoaiHinhKhuyenMai) cbLoaiHinhKM.getSelectedItem();
+        if (selectedLoai == null) {
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn loại hình khuyến mại!", "Cảnh báo", JOptionPane.WARNING_MESSAGE);
+            cbLoaiHinhKM.requestFocus();
+            return;
+        }
+
+        currentDotKM.setName(name);
+        currentDotKM.setdLoaiHinhKhuyenMaiId(selectedLoai.getId());
+        currentDotKM.setTenLoaiHinhKhuyenMai(selectedLoai.getName());
+        currentDotKM.setNote(txtNote.getText().trim());
+        currentDotKM.setNgungApDung(chkNgungApDung.isSelected());
+
+        Date tuNgay = dpTuNgay.getDate();
+        currentDotKM.setTuNgay(tuNgay != null ? new Timestamp(tuNgay.getTime()) : null);
+
+        Date denNgay = dpDenNgay.getDate();
+        currentDotKM.setDenNgay(denNgay != null ? new Timestamp(denNgay.getTime()) : null);
+
+        try {
+            double tiLe = Double.parseDouble(txtTiLeGiamGia.getText().trim().replace(",", "."));
+            currentDotKM.setTiLeGiamGia(tiLe);
+        } catch (Exception e) {
+            currentDotKM.setTiLeGiamGia(0);
+        }
+
+        Date tuGio = (Date) spTuGio.getValue();
+        currentDotKM.setTuGio(tuGio != null ? new Timestamp(tuGio.getTime()) : null);
+
+        Date denGio = (Date) spDenGio.getValue();
+        currentDotKM.setDenGio(denGio != null ? new Timestamp(denGio.getTime()) : null);
+
+        // Selected stores
+        List<String> chosenStoreIds = new ArrayList<>();
+        for (int r = 0; r < modelCuaHang.getRowCount(); r++) {
+            Boolean checked = (Boolean) modelCuaHang.getValueAt(r, 0);
+            if (Boolean.TRUE.equals(checked) && r < allStores.size()) {
+                chosenStoreIds.add(allStores.get(r).getId());
+            }
+        }
+        currentDotKM.setListCuaHangApDungIds(chosenStoreIds);
+
+        boolean success;
+        if (currentDotKM.getId() != null) {
+            success = dotKhuyenMaiDAO.update(currentDotKM);
+        } else {
+            success = dotKhuyenMaiDAO.insert(currentDotKM);
+        }
+
+        if (success) {
+            if (onSaveCallback != null) onSaveCallback.run();
+            if (isSaveAndExit) {
+                dispose();
+            } else if (isSaveAndNew) {
+                onNewPromotion();
+            } else {
+                JOptionPane.showMessageDialog(this, "Lưu thông tin đợt khuyến mại thành công!", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+            }
+        } else {
+            JOptionPane.showMessageDialog(this, "Không thể lưu đợt khuyến mại!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void onNewPromotion() {
+        this.currentDotKM = new DotKhuyenMai();
+        this.currentIndex = -1;
+        loadFormData();
+        txtName.requestFocus();
+    }
+
+    private void onCopyPromotion() {
+        DotKhuyenMai copy = new DotKhuyenMai();
+        copy.setName(txtName.getText().trim() + " (Bản sao)");
+        copy.setNote(txtNote.getText().trim());
+        LoaiHinhKhuyenMai selectedLoai = (LoaiHinhKhuyenMai) cbLoaiHinhKM.getSelectedItem();
+        if (selectedLoai != null) {
+            copy.setdLoaiHinhKhuyenMaiId(selectedLoai.getId());
+            copy.setTenLoaiHinhKhuyenMai(selectedLoai.getName());
+        }
+        Date tuNgay = dpTuNgay.getDate();
+        copy.setTuNgay(tuNgay != null ? new Timestamp(tuNgay.getTime()) : null);
+        Date denNgay = dpDenNgay.getDate();
+        copy.setDenNgay(denNgay != null ? new Timestamp(denNgay.getTime()) : null);
+        copy.setTuGio(new Timestamp(((Date) spTuGio.getValue()).getTime()));
+        copy.setDenGio(new Timestamp(((Date) spDenGio.getValue()).getTime()));
+        try {
+            copy.setTiLeGiamGia(Double.parseDouble(txtTiLeGiamGia.getText().trim().replace(",", ".")));
+        } catch (Exception e) {
+            copy.setTiLeGiamGia(0);
+        }
+        copy.setNgungApDung(chkNgungApDung.isSelected());
+
+        this.currentDotKM = copy;
+        this.currentIndex = -1;
+        loadFormData();
+    }
+
+    private void onDeletePromotion() {
+        if (currentDotKM.getId() == null) return;
+        int confirm = JOptionPane.showConfirmDialog(this,
+                "Bạn có chắc muốn chuyển đợt khuyến mại '" + currentDotKM.getName() + "' vào thùng rác?",
+                "Xác nhận xóa", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+        if (confirm == JOptionPane.YES_OPTION) {
+            dotKhuyenMaiDAO.moveToTrash(currentDotKM.getId());
+            if (onSaveCallback != null) onSaveCallback.run();
+            dispose();
+        }
+    }
+
+    private void navigatePrevious() {
+        if (allPromotions.isEmpty()) return;
+        if (currentIndex > 0) {
+            currentIndex--;
+        } else {
+            currentIndex = allPromotions.size() - 1;
+        }
+        this.currentDotKM = allPromotions.get(currentIndex);
+        loadFormData();
+    }
+
+    private void navigateNext() {
+        if (allPromotions.isEmpty()) return;
+        if (currentIndex < allPromotions.size() - 1) {
+            currentIndex++;
+        } else {
+            currentIndex = 0;
+        }
+        this.currentDotKM = allPromotions.get(currentIndex);
+        loadFormData();
+    }
+
+    private JButton createRibbonButton(String text, String iconName) {
+        JButton btn = new JButton(text);
+        if (iconName != null && !iconName.isEmpty()) {
+            btn.setIcon(IconHelper.getIcon(iconName, 16, 16));
+        }
+        btn.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        btn.setFocusPainted(false);
+        btn.setBackground(Color.WHITE);
+        btn.setMargin(new Insets(2, 6, 2, 6));
+        return btn;
+    }
+
+    private JButton createActionButton(String text, String iconName) {
+        JButton btn = new JButton(text);
+        if (iconName != null && !iconName.isEmpty()) {
+            btn.setIcon(IconHelper.getIcon(iconName, 16, 16));
+        }
+        btn.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        btn.setPreferredSize(new Dimension(text.length() > 6 ? 100 : 75, 26));
+        btn.setBackground(Color.WHITE);
+        return btn;
+    }
+
+    private void setupShortcuts() {
+        getRootPane().registerKeyboardAction(e -> onSave(false, true), KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, KeyEvent.CTRL_DOWN_MASK), JComponent.WHEN_IN_FOCUSED_WINDOW);
+        getRootPane().registerKeyboardAction(e -> onNewPromotion(), KeyStroke.getKeyStroke(KeyEvent.VK_INSERT, 0), JComponent.WHEN_IN_FOCUSED_WINDOW);
+        getRootPane().registerKeyboardAction(e -> navigatePrevious(), KeyStroke.getKeyStroke(KeyEvent.VK_F10, 0), JComponent.WHEN_IN_FOCUSED_WINDOW);
+        getRootPane().registerKeyboardAction(e -> navigateNext(), KeyStroke.getKeyStroke(KeyEvent.VK_F11, 0), JComponent.WHEN_IN_FOCUSED_WINDOW);
+        getRootPane().registerKeyboardAction(e -> dispose(), KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), JComponent.WHEN_IN_FOCUSED_WINDOW);
+    }
+}
