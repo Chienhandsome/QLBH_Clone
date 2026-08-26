@@ -17,8 +17,12 @@ import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 import javax.swing.border.MatteBorder;
+import javax.swing.event.ChangeEvent;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.TableColumnModelEvent;
+import javax.swing.event.TableColumnModelListener;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
@@ -59,6 +63,10 @@ public class DanhMucMatHangPanel extends JPanel {
     private JLabel lblModifiedUser;
 
     private JButton btnAddMatHang;
+    private JButton btnSummary;
+    private JPanel summaryPanel;
+    private JPanel tableContainer;
+    private boolean isSummaryVisible = false;
     private List<MatHang> currentList = new ArrayList<>();
     private List<String> visibleColumns = new ArrayList<>();
     private String currentSelectedNhom = "Tất cả";
@@ -328,14 +336,13 @@ public class DanhMucMatHangPanel extends JPanel {
             public void changedUpdate(DocumentEvent e) { onSearch(); }
         });
         topBar.add(txtSearch);
-
         btnAddMatHang = createToolButton("Thêm mới (Insert)", "plus.png", new Color(0, 120, 50), true);
         JButton btnEdit = createToolButton("Chỉnh sửa (F4)", "pencil.png", Color.BLACK, false);
         JButton btnDelete = createToolButton("Xóa (Del)", "cross.png", new Color(180, 20, 20), false);
         JButton btnImportExcel = createToolButton("Thêm excel", "page_white_excel.png", Color.BLACK, false);
         JButton btnExportExcel = createToolButton("Xuất excel", "export_excel.png", Color.BLACK, false);
         JButton btnPrint = createToolButton("In", "Preview.png", Color.BLACK, false);
-        JButton btnSummary = createToolButton("∑ Tổng", null, Color.BLACK, false);
+        btnSummary = createToolButton("∑ Tổng", null, Color.BLACK, false);
         JButton btnBarcode = createToolButton("In mã vạch", "Barcode.png", Color.BLACK, false);
 
         btnAddMatHang.addActionListener(e -> onAddNewProduct());
@@ -344,7 +351,7 @@ public class DanhMucMatHangPanel extends JPanel {
         btnImportExcel.addActionListener(e -> onOpenThemNhanhExcel());
         btnExportExcel.addActionListener(e -> onExportExcel());
         btnPrint.addActionListener(e -> JOptionPane.showMessageDialog(this, "Đã gửi dữ liệu sang máy in!", "In ấn", JOptionPane.INFORMATION_MESSAGE));
-        btnSummary.addActionListener(e -> showSummaryDialog());
+        btnSummary.addActionListener(e -> toggleTableSummary());
         btnBarcode.addActionListener(e -> JOptionPane.showMessageDialog(this, "Chức năng In mã vạch đang phát triển!", "Thông báo", JOptionPane.INFORMATION_MESSAGE));
 
         topBar.add(btnAddMatHang);
@@ -381,6 +388,7 @@ public class DanhMucMatHangPanel extends JPanel {
         };
 
         tableMatHang = new JTable(tableModel);
+        tableMatHang.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
         tableMatHang.setRowHeight(22);
         tableMatHang.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         tableMatHang.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -402,7 +410,7 @@ public class DanhMucMatHangPanel extends JPanel {
                     if (colIndex >= 0) {
                         int modelCol = tableMatHang.convertColumnIndexToModel(colIndex);
                         String colName = tableMatHang.getModel().getColumnName(modelCol);
-                        if (colName != null && !colName.trim().isEmpty()) { // Bỏ qua cột con trỏ
+                        if (colName != null && !colName.trim().isEmpty()) {
                             if (colName.equalsIgnoreCase(currentSortField)) {
                                 currentSortAsc = !currentSortAsc;
                             } else {
@@ -435,14 +443,12 @@ public class DanhMucMatHangPanel extends JPanel {
         // Custom Cell Renderers & Column widths
         setupTableRenderers();
 
-        // Row Selection Listener -> Update Bottom Info Panel
         tableMatHang.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {
                 updateBottomInfo();
             }
         });
 
-        // Double Click -> Edit, Right Click -> Quick Menu
         tableMatHang.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
@@ -469,10 +475,17 @@ public class DanhMucMatHangPanel extends JPanel {
         JScrollPane tableScroll = new JScrollPane(tableMatHang);
         tableScroll.setBorder(null);
 
+        tableContainer = new JPanel(new BorderLayout());
+        tableContainer.add(tableScroll, BorderLayout.CENTER);
+
+        summaryPanel = createTableSummaryPanel(tableScroll);
+        summaryPanel.setVisible(false);
+        tableContainer.add(summaryPanel, BorderLayout.SOUTH);
+
         // 3. Khung Dưới: TabbedPane Thông tin chi tiết
         JPanel bottomInfoPanel = createBottomTabbedPanel();
 
-        JSplitPane rightSplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT, tableScroll, bottomInfoPanel);
+        JSplitPane rightSplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT, tableContainer, bottomInfoPanel);
         rightSplit.setResizeWeight(0.85);
         rightSplit.setDividerSize(4);
         rightPanel.add(rightSplit, BorderLayout.CENTER);
@@ -1096,6 +1109,10 @@ public class DanhMucMatHangPanel extends JPanel {
         } else {
             clearBottomInfo();
         }
+
+        if (summaryPanel != null && summaryPanel.isVisible()) {
+            summaryPanel.repaint();
+        }
     }
 
     private void updateBottomInfo() {
@@ -1558,21 +1575,171 @@ public class DanhMucMatHangPanel extends JPanel {
         popup.show(treeNhomHang, x, y);
     }
 
-    private void showSummaryDialog() {
-        int totalItems = currentList.size();
-        double totalGiaBan = 0;
-        double totalGiaNhap = 0;
-        for (MatHang mh : currentList) {
-            totalGiaBan += mh.getGiaBan();
-            totalGiaNhap += mh.getGiaNhap();
+    private void toggleTableSummary() {
+        isSummaryVisible = !isSummaryVisible;
+        summaryPanel.setVisible(isSummaryVisible);
+        if (isSummaryVisible) {
+            btnSummary.setBackground(new Color(255, 235, 140));
+            summaryPanel.repaint();
+        } else {
+            btnSummary.setBackground(Color.WHITE);
         }
-        DecimalFormat df = new DecimalFormat("#,##0.## VNĐ");
-        JOptionPane.showMessageDialog(this,
-                "<html><b>TỔNG HỢP DANH MỤC MẶT HÀNG</b><br><br>" +
-                "• Tổng số lượng mặt hàng: <b>" + totalItems + "</b> mặt hàng<br>" +
-                "• Tổng giá trị bán niêm yết: <b>" + df.format(totalGiaBan) + "</b><br>" +
-                "• Tổng giá trị nhập niêm yết: <b>" + df.format(totalGiaNhap) + "</b></html>",
-                "∑ Tổng mặt hàng", JOptionPane.INFORMATION_MESSAGE);
+        if (tableContainer != null) {
+            tableContainer.revalidate();
+            tableContainer.repaint();
+        }
+    }
+
+    private JPanel createTableSummaryPanel(JScrollPane tableScroll) {
+        JPanel panel = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+
+                int panelW = getWidth();
+                int panelH = getHeight();
+
+                // Background matching UI
+                g2.setColor(new Color(240, 243, 248));
+                g2.fillRect(0, 0, panelW, panelH);
+
+                // Top border line
+                g2.setColor(new Color(185, 205, 230));
+                g2.drawLine(0, 0, panelW, 0);
+
+                if (tableMatHang == null || tableModel == null) {
+                    g2.dispose();
+                    return;
+                }
+
+                int scrollX = 0;
+                if (tableScroll != null && tableScroll.getViewport() != null) {
+                    scrollX = tableScroll.getViewport().getViewPosition().x;
+                }
+
+                DecimalFormat df = new DecimalFormat("#,##0.##");
+
+                // Draw "TỔNG" label on the left
+                g2.setFont(new Font("Segoe UI", Font.BOLD, 12));
+                g2.setColor(new Color(20, 20, 20));
+                FontMetrics fmBold = g2.getFontMetrics();
+                int textY = (panelH - fmBold.getHeight()) / 2 + fmBold.getAscent();
+                g2.drawString("TỔNG", 10, textY);
+
+                // Clip to the viewport width so summary stays aligned with table area
+                int viewportW = panelW;
+                if (tableScroll != null && tableScroll.getViewport() != null) {
+                    viewportW = tableScroll.getViewport().getWidth();
+                }
+                Shape origClip = g2.getClip();
+                g2.clipRect(0, 0, viewportW, panelH);
+
+                // Iterate over all columns currently displayed in tableMatHang
+                int colCount = tableMatHang.getColumnCount();
+                for (int c = 0; c < colCount; c++) {
+                    TableColumn tableCol = tableMatHang.getColumnModel().getColumn(c);
+                    int modelCol = tableCol.getModelIndex();
+                    if (modelCol < 0 || modelCol >= tableModel.getColumnCount()) continue;
+
+                    String colName = tableModel.getColumnName(modelCol);
+                    if (colName == null || colName.trim().isEmpty() || !isNumericSummaryColumn(colName)) {
+                        continue;
+                    }
+
+                    // Calculate column sum across currently displayed rows
+                    double sum = 0;
+                    int rowCount = tableModel.getRowCount();
+                    for (int r = 0; r < rowCount; r++) {
+                        Object val = tableModel.getValueAt(r, modelCol);
+                        if (val instanceof Number) {
+                            sum += ((Number) val).doubleValue();
+                        } else if (val != null) {
+                            try {
+                                String clean = val.toString().replace(",", "").replace(" ", "").trim();
+                                if (!clean.isEmpty()) {
+                                    sum += Double.parseDouble(clean);
+                                }
+                            } catch (Exception ignored) {}
+                        }
+                    }
+
+                    String sumText;
+                    if (sum == 0) {
+                        sumText = "0";
+                    } else if (sum == (long) sum) {
+                        sumText = String.format("%,d", (long) sum);
+                    } else {
+                        sumText = df.format(sum);
+                    }
+
+                    // Position of column in viewport
+                    Rectangle headerRect = tableMatHang.getTableHeader() != null ? tableMatHang.getTableHeader().getHeaderRect(c) : new Rectangle(0, 0, tableCol.getWidth(), 26);
+                    int colX = headerRect.x - scrollX;
+                    int colW = headerRect.width;
+
+                    int boxX = colX + 2;
+                    int boxY = 3;
+                    int boxW = Math.max(10, colW - 4);
+                    int boxH = panelH - 6;
+
+                    // Draw white box
+                    g2.setColor(Color.WHITE);
+                    g2.fillRect(boxX, boxY, boxW, boxH);
+
+                    // Draw box border
+                    g2.setColor(new Color(185, 205, 230));
+                    g2.drawRect(boxX, boxY, boxW, boxH);
+
+                    // Draw number text aligned right
+                    g2.setColor(new Color(20, 20, 20));
+                    g2.setFont(new Font("Segoe UI", Font.BOLD, 12));
+                    FontMetrics fm = g2.getFontMetrics();
+                    int numW = fm.stringWidth(sumText);
+                    int numX = boxX + boxW - numW - 4;
+                    int numY = boxY + (boxH - fm.getHeight()) / 2 + fm.getAscent();
+
+                    Shape boxClip = g2.getClip();
+                    g2.clipRect(boxX + 1, boxY + 1, boxW - 2, boxH - 2);
+                    g2.drawString(sumText, numX, numY);
+                    g2.setClip(boxClip);
+                }
+
+                g2.setClip(origClip);
+                g2.dispose();
+            }
+        };
+
+        panel.setPreferredSize(new Dimension(100, 26));
+        panel.setBackground(new Color(240, 243, 248));
+
+        // Listen to column resize, reorder, margin changes
+        tableMatHang.getColumnModel().addColumnModelListener(new TableColumnModelListener() {
+            @Override public void columnAdded(TableColumnModelEvent e) { panel.repaint(); }
+            @Override public void columnRemoved(TableColumnModelEvent e) { panel.repaint(); }
+            @Override public void columnMoved(TableColumnModelEvent e) { panel.repaint(); }
+            @Override public void columnMarginChanged(ChangeEvent e) { panel.repaint(); }
+            @Override public void columnSelectionChanged(ListSelectionEvent e) {}
+        });
+
+        // Listen to horizontal scrolling in viewport
+        if (tableScroll != null && tableScroll.getViewport() != null) {
+            tableScroll.getViewport().addChangeListener(e -> panel.repaint());
+        }
+
+        return panel;
+    }
+
+    private boolean isNumericSummaryColumn(String colName) {
+        if (colName == null) return false;
+        String lower = colName.toLowerCase().trim();
+        return lower.contains("giá") || lower.contains("tiền") || lower.contains("quy đổi")
+                || lower.contains("hoa hồng") || lower.contains("tồn")
+                || (systemConfig != null && systemConfig.isSuDungGia2() && colName.equalsIgnoreCase(systemConfig.getDienGiaiGia2()))
+                || (systemConfig != null && systemConfig.isSuDungGia3() && colName.equalsIgnoreCase(systemConfig.getDienGiaiGia3()))
+                || (systemConfig != null && systemConfig.isSuDungGia4() && colName.equalsIgnoreCase(systemConfig.getDienGiaiGia4()));
     }
 
     private void setupShortcuts() {
