@@ -122,6 +122,11 @@ public class DanhMucKhachHangPanel extends JPanel {
         treeNhomKhachHang.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         treeNhomKhachHang.setRowHeight(22);
 
+        // Drag and drop sắp xếp / phân cấp
+        treeNhomKhachHang.setDragEnabled(true);
+        treeNhomKhachHang.setDropMode(DropMode.ON_OR_INSERT);
+        treeNhomKhachHang.setTransferHandler(new TreeTransferHandler(nhomKhachHangDAO, () -> loadNhomTree(currentSelectedNhom)));
+
         treeNhomKhachHang.setCellRenderer(new DefaultTreeCellRenderer() {
             @Override
             public Component getTreeCellRendererComponent(JTree tree, Object value, boolean sel, boolean expanded, boolean leaf, int row, boolean hasFocus) {
@@ -149,6 +154,10 @@ public class DanhMucKhachHangPanel extends JPanel {
                             label.setText("----------------------------------------------");
                             label.setForeground(Color.LIGHT_GRAY);
                             label.setIcon(null);
+                        } else if (nh.isFolder()) {
+                            label.setText(nh.getName());
+                            label.setIcon(IconHelper.getIcon("Folder.png", 16, 16));
+                            label.setFont(new Font("Segoe UI", Font.BOLD, 12));
                         } else {
                             label.setText(nh.getName());
                             String iconName = nh.getIconName() != null ? nh.getIconName() : "Folder.png";
@@ -1019,5 +1028,118 @@ public class DanhMucKhachHangPanel extends JPanel {
         registerKeyboardAction(e -> onEditSelectedCustomer(), KeyStroke.getKeyStroke(KeyEvent.VK_F4, 0), JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
         registerKeyboardAction(e -> onDeleteSelectedCustomer(), KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0), JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
         registerKeyboardAction(e -> txtSearch.requestFocus(), KeyStroke.getKeyStroke(KeyEvent.VK_F3, 0), JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
+    }
+
+    private static class TreeTransferHandler extends TransferHandler {
+        private final NhomKhachHangDAO nhomKhachHangDAO;
+        private final Runnable onDataChanged;
+        private DefaultMutableTreeNode draggedNode;
+
+        public TreeTransferHandler(NhomKhachHangDAO nhomKhachHangDAO, Runnable onDataChanged) {
+            this.nhomKhachHangDAO = nhomKhachHangDAO;
+            this.onDataChanged = onDataChanged;
+        }
+
+        @Override
+        public int getSourceActions(JComponent c) {
+            return TransferHandler.MOVE;
+        }
+
+        @Override
+        protected Transferable createTransferable(JComponent c) {
+            JTree tree = (JTree) c;
+            TreePath path = tree.getSelectionPath();
+            if (path == null) {
+                return null;
+            }
+            DefaultMutableTreeNode node = (DefaultMutableTreeNode) path.getLastPathComponent();
+            if (node == null || !(node.getUserObject() instanceof NhomKhachHang)) {
+                return null;
+            }
+            draggedNode = node;
+            NhomKhachHang nh = (NhomKhachHang) node.getUserObject();
+            return new StringSelection(nh.getId());
+        }
+
+        @Override
+        public boolean canImport(TransferSupport support) {
+            if (!support.isDrop() || !support.isDataFlavorSupported(DataFlavor.stringFlavor)) {
+                return false;
+            }
+
+            support.setShowDropLocation(true);
+            JTree.DropLocation dl = (JTree.DropLocation) support.getDropLocation();
+            TreePath dropPath = dl.getPath();
+
+            if (dropPath == null) {
+                return true;
+            }
+
+            DefaultMutableTreeNode targetNode = (DefaultMutableTreeNode) dropPath.getLastPathComponent();
+            if (draggedNode == null || draggedNode == targetNode) {
+                return false;
+            }
+
+            if (draggedNode.isNodeDescendant(targetNode)) {
+                return false;
+            }
+
+            return true;
+        }
+
+        @Override
+        public boolean importData(TransferSupport support) {
+            if (!canImport(support)) {
+                return false;
+            }
+
+            try {
+                String draggedId = (String) support.getTransferable().getTransferData(DataFlavor.stringFlavor);
+                if (draggedId == null || draggedId.trim().isEmpty()) {
+                    return false;
+                }
+
+                JTree.DropLocation dl = (JTree.DropLocation) support.getDropLocation();
+                TreePath dropPath = dl.getPath();
+
+                String newParentId = "";
+                if (dropPath != null) {
+                    DefaultMutableTreeNode targetNode = (DefaultMutableTreeNode) dropPath.getLastPathComponent();
+                    Object targetUserObj = targetNode.getUserObject();
+                    if (targetUserObj instanceof NhomKhachHang) {
+                        NhomKhachHang targetItem = (NhomKhachHang) targetUserObj;
+                        if (targetItem.isFolder()) {
+                            newParentId = targetItem.getId();
+                        } else {
+                            newParentId = targetItem.getParentId() != null ? targetItem.getParentId() : "";
+                        }
+                    }
+                }
+
+                boolean ok = nhomKhachHangDAO.updateParentAndOrder(draggedId, newParentId, 0);
+                if (ok) {
+                    if (onDataChanged != null) {
+                        onDataChanged.run();
+                    }
+                    JTree tree = (JTree) support.getComponent();
+                    SwingUtilities.invokeLater(() -> {
+                        for (int i = 0; i < tree.getRowCount(); i++) {
+                            TreePath p = tree.getPathForRow(i);
+                            DefaultMutableTreeNode n = (DefaultMutableTreeNode) p.getLastPathComponent();
+                            if (n.getUserObject() instanceof NhomKhachHang) {
+                                NhomKhachHang nh = (NhomKhachHang) n.getUserObject();
+                                if (draggedId.equals(nh.getId())) {
+                                    tree.setSelectionPath(p);
+                                    tree.scrollPathToVisible(p);
+                                    break;
+                                }
+                            }
+                        }
+                    });
+                    return true;
+                }
+            } catch (Exception ignored) {}
+            return false;
+        }
     }
 }

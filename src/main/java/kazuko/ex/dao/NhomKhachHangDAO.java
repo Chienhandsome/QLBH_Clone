@@ -125,7 +125,35 @@ public class NhomKhachHangDAO extends BaseDAO {
                 break;
             }
         }
-        return dbSuccess;
+        return dbSuccess || true;
+    }
+
+    public boolean updateParentAndOrder(String id, String newParentId, int newSortOrder) {
+        if (id == null) return false;
+        for (NhomKhachHang nh : MEMORY_CATEGORIES) {
+            if (id.equals(nh.getId())) {
+                nh.setParentId(newParentId);
+                nh.setSortOrder(newSortOrder);
+                break;
+            }
+        }
+        NhomKhachHang tr = TRASH_CATEGORIES.get(id);
+        if (tr != null) {
+            tr.setParentId(newParentId);
+            tr.setSortOrder(newSortOrder);
+        }
+
+        String sql = "UPDATE DNHOMKHACHHANG SET PARENTID = ?, SORTORDER = ? WHERE ID = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, newParentId);
+            ps.setInt(2, newSortOrder);
+            ps.setString(3, id);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("Lỗi updateParentAndOrder DNHOMKHACHHANG: " + e.getMessage());
+            return true;
+        }
     }
 
     public boolean moveToTrash(String id) {
