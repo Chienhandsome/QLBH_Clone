@@ -49,6 +49,9 @@ public class DanhMucKhachHangPanel extends JPanel {
     private JLabel lblModifiedUser;
 
     private JButton btnAddKhachHang;
+    private JButton btnEdit;
+    private JButton btnDelete;
+    private JButton btnRestore;
     private List<KhachHang> currentList = new ArrayList<>();
     private String currentSelectedNhom = "Tất cả";
     private String currentSelectedNhomId = null;
@@ -181,24 +184,24 @@ public class DanhMucKhachHangPanel extends JPanel {
                 if ("Tất cả".equals(userObj)) {
                     currentSelectedNhom = "Tất cả";
                     currentSelectedNhomId = null;
-                    if (btnAddKhachHang != null) btnAddKhachHang.setEnabled(true);
+                    updateToolbarState();
                     loadTableData(currentSelectedNhom, currentSelectedNhomId, txtSearch.getText().trim());
                 } else if ("Chưa thiết lập".equals(userObj)) {
                     currentSelectedNhom = "Chưa thiết lập";
                     currentSelectedNhomId = null;
-                    if (btnAddKhachHang != null) btnAddKhachHang.setEnabled(true);
+                    updateToolbarState();
                     loadTableData(currentSelectedNhom, currentSelectedNhomId, txtSearch.getText().trim());
                 } else if ("Thùng rác".equals(userObj)) {
                     currentSelectedNhom = "Thùng rác";
                     currentSelectedNhomId = null;
-                    if (btnAddKhachHang != null) btnAddKhachHang.setEnabled(false);
+                    updateToolbarState();
                     loadTrashTableData(txtSearch.getText().trim());
                 } else if (userObj instanceof NhomKhachHang) {
                     NhomKhachHang nh = (NhomKhachHang) userObj;
                     if (nh.isSeparator()) return;
                     currentSelectedNhom = nh.getName();
                     currentSelectedNhomId = nh.getId();
-                    if (btnAddKhachHang != null) btnAddKhachHang.setEnabled(true);
+                    updateToolbarState();
 
                     if (nh.isFolder()) {
                         Set<String> descIds = nhomKhachHangDAO.getAllDescendantIds(nh.getId());
@@ -224,7 +227,9 @@ public class DanhMucKhachHangPanel extends JPanel {
                     TreePath path = treeNhomKhachHang.getPathForLocation(e.getX(), e.getY());
                     if (path != null) {
                         DefaultMutableTreeNode node = (DefaultMutableTreeNode) path.getLastPathComponent();
-                        if (node.getUserObject() instanceof NhomKhachHang) {
+                        if ("Thùng rác".equals(node.getUserObject())) {
+                            onOpenTrash();
+                        } else if (node.getUserObject() instanceof NhomKhachHang) {
                             NhomKhachHang nh = (NhomKhachHang) node.getUserObject();
                             if (!nh.isSeparator()) {
                                 NhomKhachHangDialog dialog = new NhomKhachHangDialog(DanhMucKhachHangPanel.this, nh, () -> {
@@ -302,8 +307,10 @@ public class DanhMucKhachHangPanel extends JPanel {
         topBar.add(txtSearch);
 
         btnAddKhachHang = createToolButton("Thêm mới (Insert)", "plus.png", new Color(0, 120, 50), true);
-        JButton btnEdit = createToolButton("Chỉnh sửa (F4)", "pencil.png", Color.BLACK, false);
-        JButton btnDelete = createToolButton("Xóa (Del)", "cross.png", new Color(180, 20, 20), false);
+        btnEdit = createToolButton("Chỉnh sửa (F4)", "pencil.png", Color.BLACK, false);
+        btnDelete = createToolButton("Xóa (Del)", "cross.png", new Color(180, 20, 20), false);
+        btnRestore = createToolButton("Khôi phục", "Undo.png", new Color(0, 100, 180), false);
+        btnRestore.setVisible(false);
         JButton btnImportExcel = createToolButton("Thêm excel", "page_white_excel.png", Color.BLACK, false);
         JButton btnExportExcel = createToolButton("Xuất excel", "export_excel.png", Color.BLACK, false);
         JButton btnPrint = createToolButton("In", "Preview.png", Color.BLACK, false);
@@ -311,6 +318,7 @@ public class DanhMucKhachHangPanel extends JPanel {
         btnAddKhachHang.addActionListener(e -> onAddNewCustomer());
         btnEdit.addActionListener(e -> onEditSelectedCustomer());
         btnDelete.addActionListener(e -> onDeleteSelectedCustomer());
+        btnRestore.addActionListener(e -> onRestoreSelectedCustomer());
         btnImportExcel.addActionListener(e -> JOptionPane.showMessageDialog(this, "Chức năng Nhập Excel đang hoàn thiện!", "Thông báo", JOptionPane.INFORMATION_MESSAGE));
         btnExportExcel.addActionListener(e -> onExportExcel());
         btnPrint.addActionListener(e -> JOptionPane.showMessageDialog(this, "Đã gửi dữ liệu sang máy in!", "In ấn", JOptionPane.INFORMATION_MESSAGE));
@@ -318,6 +326,7 @@ public class DanhMucKhachHangPanel extends JPanel {
         topBar.add(btnAddKhachHang);
         topBar.add(btnEdit);
         topBar.add(btnDelete);
+        topBar.add(btnRestore);
         topBar.add(btnImportExcel);
         topBar.add(btnExportExcel);
         topBar.add(btnPrint);
@@ -802,6 +811,34 @@ public class DanhMucKhachHangPanel extends JPanel {
         dialog.setVisible(true);
     }
 
+    private void updateToolbarState() {
+        boolean isTrash = "Thùng rác".equals(currentSelectedNhom);
+        if (isTrash) {
+            if (btnAddKhachHang != null) btnAddKhachHang.setEnabled(false);
+            if (btnEdit != null) btnEdit.setEnabled(false);
+            if (btnDelete != null) {
+                btnDelete.setText("Xóa vĩnh viễn");
+                btnDelete.setIcon(IconHelper.getIcon("cross.png", 16, 16));
+                btnDelete.setEnabled(true);
+            }
+            if (btnRestore != null) {
+                btnRestore.setVisible(true);
+                btnRestore.setEnabled(true);
+            }
+        } else {
+            if (btnAddKhachHang != null) btnAddKhachHang.setEnabled(true);
+            if (btnEdit != null) btnEdit.setEnabled(true);
+            if (btnDelete != null) {
+                btnDelete.setText("Xóa (Del)");
+                btnDelete.setIcon(IconHelper.getIcon("cross.png", 16, 16));
+                btnDelete.setEnabled(true);
+            }
+            if (btnRestore != null) {
+                btnRestore.setVisible(false);
+            }
+        }
+    }
+
     private void onDeleteSelectedCustomer() {
         int selected = tableKhachHang.getSelectedRow();
         if (selected < 0 || selected >= currentList.size()) {
@@ -809,12 +846,44 @@ public class DanhMucKhachHangPanel extends JPanel {
             return;
         }
         KhachHang kh = currentList.get(selected);
+        if ("Thùng rác".equals(currentSelectedNhom)) {
+            onDeletePermanentlySelectedCustomer();
+        } else {
+            int confirm = JOptionPane.showConfirmDialog(this,
+                    "Bạn có chắc muốn chuyển khách hàng '" + kh.getName() + "' vào thùng rác?",
+                    "Xác nhận xóa", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+            if (confirm == JOptionPane.YES_OPTION) {
+                khachHangDAO.moveToTrash(kh.getId());
+                loadTableData(currentSelectedNhom, currentSelectedNhomId, txtSearch.getText().trim());
+            }
+        }
+    }
+
+    private void onRestoreSelectedCustomer() {
+        int selected = tableKhachHang.getSelectedRow();
+        if (selected < 0 || selected >= currentList.size()) {
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn khách hàng cần khôi phục!", "Thông báo", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        KhachHang kh = currentList.get(selected);
+        khachHangDAO.restoreFromTrash(kh.getId());
+        loadTrashTableData(txtSearch.getText().trim());
+        JOptionPane.showMessageDialog(this, "Đã khôi phục khách hàng '" + kh.getName() + "'!", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    private void onDeletePermanentlySelectedCustomer() {
+        int selected = tableKhachHang.getSelectedRow();
+        if (selected < 0 || selected >= currentList.size()) {
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn khách hàng cần xóa vĩnh viễn!", "Thông báo", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        KhachHang kh = currentList.get(selected);
         int confirm = JOptionPane.showConfirmDialog(this,
-                "Bạn có chắc muốn chuyển khách hàng '" + kh.getName() + "' vào thùng rác?",
-                "Xác nhận xóa", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+                "Bạn có chắc muốn xóa VĨNH VIỄN khách hàng '" + kh.getName() + "'?\nHành động này không thể hoàn tác!",
+                "Xác nhận xóa vĩnh viễn", JOptionPane.YES_NO_OPTION, JOptionPane.ERROR_MESSAGE);
         if (confirm == JOptionPane.YES_OPTION) {
-            khachHangDAO.moveToTrash(kh.getId());
-            loadTableData(currentSelectedNhom, currentSelectedNhomId, txtSearch.getText().trim());
+            khachHangDAO.deletePermanently(kh.getId());
+            loadTrashTableData(txtSearch.getText().trim());
         }
     }
 
@@ -969,8 +1038,12 @@ public class DanhMucKhachHangPanel extends JPanel {
     }
 
     private void onOpenTrash() {
-        NhomKhachHangTrashDialog dialog = new NhomKhachHangTrashDialog((Frame) SwingUtilities.getWindowAncestor(this), () -> {
-            loadNhomTree();
+        KhachHangTrashDialog dialog = new KhachHangTrashDialog(this, () -> {
+            if ("Thùng rác".equals(currentSelectedNhom)) {
+                loadTrashTableData(txtSearch.getText().trim());
+            } else {
+                loadTableData(currentSelectedNhom, currentSelectedNhomId, txtSearch.getText().trim());
+            }
         });
         dialog.setVisible(true);
     }
@@ -986,27 +1059,45 @@ public class DanhMucKhachHangPanel extends JPanel {
         }
 
         JPopupMenu popup = new JPopupMenu();
-        JMenuItem miAdd = new JMenuItem("Thêm khách hàng", IconHelper.getIcon("plus.png", 16, 16));
-        JMenuItem miEdit = new JMenuItem("Chỉnh sửa", IconHelper.getIcon("pencil.png", 16, 16));
-        JMenuItem miDelete = new JMenuItem("Xóa", IconHelper.getIcon("cross.png", 16, 16));
-        JMenuItem miExport = new JMenuItem("Xuất Excel", IconHelper.getIcon("export_excel.png", 16, 16));
-        JMenuItem miPrint = new JMenuItem("In danh sách", IconHelper.getIcon("Preview.png", 16, 16));
-        JMenuItem miRefresh = new JMenuItem("Làm mới", IconHelper.getIcon("Refresh.png", 16, 16));
+        if ("Thùng rác".equals(currentSelectedNhom)) {
+            JMenuItem miRestore = new JMenuItem("Khôi phục", IconHelper.getIcon("Undo.png", 16, 16));
+            JMenuItem miDeletePermanent = new JMenuItem("Xóa vĩnh viễn", IconHelper.getIcon("cross.png", 16, 16));
+            JMenuItem miExport = new JMenuItem("Xuất Excel", IconHelper.getIcon("export_excel.png", 16, 16));
+            JMenuItem miRefresh = new JMenuItem("Làm mới", IconHelper.getIcon("Refresh.png", 16, 16));
 
-        miAdd.addActionListener(ev -> onAddNewCustomer());
-        miEdit.addActionListener(ev -> onEditSelectedCustomer());
-        miDelete.addActionListener(ev -> onDeleteSelectedCustomer());
-        miExport.addActionListener(ev -> onExportExcel());
-        miPrint.addActionListener(ev -> JOptionPane.showMessageDialog(this, "Đã gửi dữ liệu sang máy in!", "In ấn", JOptionPane.INFORMATION_MESSAGE));
-        miRefresh.addActionListener(ev -> loadTableData(currentSelectedNhom, currentSelectedNhomId, txtSearch.getText().trim()));
+            miRestore.addActionListener(ev -> onRestoreSelectedCustomer());
+            miDeletePermanent.addActionListener(ev -> onDeletePermanentlySelectedCustomer());
+            miExport.addActionListener(ev -> onExportExcel());
+            miRefresh.addActionListener(ev -> loadTrashTableData(txtSearch.getText().trim()));
 
-        popup.add(miAdd);
-        popup.add(miEdit);
-        popup.add(miDelete);
-        popup.addSeparator();
-        popup.add(miExport);
-        popup.add(miPrint);
-        popup.add(miRefresh);
+            popup.add(miRestore);
+            popup.add(miDeletePermanent);
+            popup.addSeparator();
+            popup.add(miExport);
+            popup.add(miRefresh);
+        } else {
+            JMenuItem miAdd = new JMenuItem("Thêm khách hàng", IconHelper.getIcon("plus.png", 16, 16));
+            JMenuItem miEdit = new JMenuItem("Chỉnh sửa", IconHelper.getIcon("pencil.png", 16, 16));
+            JMenuItem miDelete = new JMenuItem("Xóa", IconHelper.getIcon("cross.png", 16, 16));
+            JMenuItem miExport = new JMenuItem("Xuất Excel", IconHelper.getIcon("export_excel.png", 16, 16));
+            JMenuItem miPrint = new JMenuItem("In danh sách", IconHelper.getIcon("Preview.png", 16, 16));
+            JMenuItem miRefresh = new JMenuItem("Làm mới", IconHelper.getIcon("Refresh.png", 16, 16));
+
+            miAdd.addActionListener(ev -> onAddNewCustomer());
+            miEdit.addActionListener(ev -> onEditSelectedCustomer());
+            miDelete.addActionListener(ev -> onDeleteSelectedCustomer());
+            miExport.addActionListener(ev -> onExportExcel());
+            miPrint.addActionListener(ev -> JOptionPane.showMessageDialog(this, "Đã gửi dữ liệu sang máy in!", "In ấn", JOptionPane.INFORMATION_MESSAGE));
+            miRefresh.addActionListener(ev -> loadTableData(currentSelectedNhom, currentSelectedNhomId, txtSearch.getText().trim()));
+
+            popup.add(miAdd);
+            popup.add(miEdit);
+            popup.add(miDelete);
+            popup.addSeparator();
+            popup.add(miExport);
+            popup.add(miPrint);
+            popup.add(miRefresh);
+        }
 
         popup.show(tableKhachHang, e.getX(), e.getY());
     }
