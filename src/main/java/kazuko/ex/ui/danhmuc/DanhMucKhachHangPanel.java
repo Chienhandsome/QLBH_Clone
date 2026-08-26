@@ -4,6 +4,7 @@ import kazuko.ex.dao.KhachHangDAO;
 import kazuko.ex.dao.NhomKhachHangDAO;
 import kazuko.ex.model.danhmuc.KhachHang;
 import kazuko.ex.model.danhmuc.NhomKhachHang;
+import kazuko.ex.util.ExcelExporter;
 import kazuko.ex.util.IconHelper;
 
 import javax.swing.*;
@@ -266,8 +267,8 @@ public class DanhMucKhachHangPanel extends JPanel {
         btnAddKhachHang = createToolButton("Thêm mới (Insert)", "plus.png", new Color(0, 120, 50), true);
         JButton btnEdit = createToolButton("Chỉnh sửa (F4)", "pencil.png", Color.BLACK, false);
         JButton btnDelete = createToolButton("Xóa (Del)", "cross.png", new Color(180, 20, 20), false);
-        JButton btnImportExcel = createToolButton("Thêm excel", "Bookmark.png", Color.BLACK, false);
-        JButton btnExportExcel = createToolButton("Xuất excel", "Report.png", Color.BLACK, false);
+        JButton btnImportExcel = createToolButton("Thêm excel", "page_white_excel.png", Color.BLACK, false);
+        JButton btnExportExcel = createToolButton("Xuất excel", "export_excel.png", Color.BLACK, false);
         JButton btnPrint = createToolButton("In", "Preview.png", Color.BLACK, false);
         JButton btnSummary = createToolButton("∑ Tổng", null, Color.BLACK, false);
 
@@ -275,7 +276,7 @@ public class DanhMucKhachHangPanel extends JPanel {
         btnEdit.addActionListener(e -> onEditSelectedCustomer());
         btnDelete.addActionListener(e -> onDeleteSelectedCustomer());
         btnImportExcel.addActionListener(e -> JOptionPane.showMessageDialog(this, "Chức năng Nhập Excel đang hoàn thiện!", "Thông báo", JOptionPane.INFORMATION_MESSAGE));
-        btnExportExcel.addActionListener(e -> JOptionPane.showMessageDialog(this, "Chức năng Xuất Excel đang phát triển!", "Thông báo", JOptionPane.INFORMATION_MESSAGE));
+        btnExportExcel.addActionListener(e -> onExportExcel());
         btnPrint.addActionListener(e -> JOptionPane.showMessageDialog(this, "Đã gửi dữ liệu sang máy in!", "In ấn", JOptionPane.INFORMATION_MESSAGE));
         btnSummary.addActionListener(e -> showSummaryDialog());
 
@@ -349,6 +350,20 @@ public class DanhMucKhachHangPanel extends JPanel {
             public void mouseClicked(MouseEvent e) {
                 if (e.getClickCount() == 2 && SwingUtilities.isLeftMouseButton(e)) {
                     onEditSelectedCustomer();
+                }
+            }
+
+            @Override
+            public void mousePressed(MouseEvent e) {
+                if (e.isPopupTrigger()) {
+                    showTablePopup(e);
+                }
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                if (e.isPopupTrigger()) {
+                    showTablePopup(e);
                 }
             }
         });
@@ -829,6 +844,42 @@ public class DanhMucKhachHangPanel extends JPanel {
                 "Tổng số khách hàng hiển thị: " + total + " khách hàng\n" +
                 "Tổng điểm tích lũy: " + String.format("%,.0f", totalPoints) + " điểm",
                 "∑ Tổng hợp danh mục khách hàng", JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    private void onExportExcel() {
+        ExcelExporter.exportTable(tableKhachHang, "DanhMuc_KhachHang", "Khách hàng", this);
+    }
+
+    private void showTablePopup(MouseEvent e) {
+        int row = tableKhachHang.rowAtPoint(e.getPoint());
+        if (row >= 0) {
+            tableKhachHang.setRowSelectionInterval(row, row);
+        }
+
+        JPopupMenu popup = new JPopupMenu();
+        JMenuItem miAdd = new JMenuItem("Thêm khách hàng", IconHelper.getIcon("plus.png", 16, 16));
+        JMenuItem miEdit = new JMenuItem("Chỉnh sửa", IconHelper.getIcon("pencil.png", 16, 16));
+        JMenuItem miDelete = new JMenuItem("Xóa", IconHelper.getIcon("cross.png", 16, 16));
+        JMenuItem miExport = new JMenuItem("Xuất Excel", IconHelper.getIcon("export_excel.png", 16, 16));
+        JMenuItem miPrint = new JMenuItem("In danh sách", IconHelper.getIcon("Preview.png", 16, 16));
+        JMenuItem miRefresh = new JMenuItem("Làm mới", IconHelper.getIcon("Refresh.png", 16, 16));
+
+        miAdd.addActionListener(ev -> onAddNewCustomer());
+        miEdit.addActionListener(ev -> onEditSelectedCustomer());
+        miDelete.addActionListener(ev -> onDeleteSelectedCustomer());
+        miExport.addActionListener(ev -> onExportExcel());
+        miPrint.addActionListener(ev -> JOptionPane.showMessageDialog(this, "Đã gửi dữ liệu sang máy in!", "In ấn", JOptionPane.INFORMATION_MESSAGE));
+        miRefresh.addActionListener(ev -> loadTableData(currentSelectedNhom, currentSelectedNhomId, txtSearch.getText().trim()));
+
+        popup.add(miAdd);
+        popup.add(miEdit);
+        popup.add(miDelete);
+        popup.addSeparator();
+        popup.add(miExport);
+        popup.add(miPrint);
+        popup.add(miRefresh);
+
+        popup.show(tableKhachHang, e.getX(), e.getY());
     }
 
     private void setupShortcuts() {

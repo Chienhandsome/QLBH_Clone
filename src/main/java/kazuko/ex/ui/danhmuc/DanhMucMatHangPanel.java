@@ -9,6 +9,7 @@ import kazuko.ex.model.system.SystemConfig;
 import kazuko.ex.util.AppColors;
 import kazuko.ex.util.CurrencyUtil;
 import kazuko.ex.util.DateUtil;
+import kazuko.ex.util.ExcelExporter;
 import kazuko.ex.util.IconHelper;
 
 import javax.swing.*;
@@ -331,8 +332,8 @@ public class DanhMucMatHangPanel extends JPanel {
         btnAddMatHang = createToolButton("Thêm mới (Insert)", "plus.png", new Color(0, 120, 50), true);
         JButton btnEdit = createToolButton("Chỉnh sửa (F4)", "pencil.png", Color.BLACK, false);
         JButton btnDelete = createToolButton("Xóa (Del)", "cross.png", new Color(180, 20, 20), false);
-        JButton btnImportExcel = createToolButton("Thêm excel", "Bookmark.png", Color.BLACK, false);
-        JButton btnExportExcel = createToolButton("Xuất excel", "Report.png", Color.BLACK, false);
+        JButton btnImportExcel = createToolButton("Thêm excel", "page_white_excel.png", Color.BLACK, false);
+        JButton btnExportExcel = createToolButton("Xuất excel", "export_excel.png", Color.BLACK, false);
         JButton btnPrint = createToolButton("In", "Preview.png", Color.BLACK, false);
         JButton btnSummary = createToolButton("∑ Tổng", null, Color.BLACK, false);
         JButton btnBarcode = createToolButton("In mã vạch", "Barcode.png", Color.BLACK, false);
@@ -341,7 +342,7 @@ public class DanhMucMatHangPanel extends JPanel {
         btnEdit.addActionListener(e -> onEditSelectedProduct());
         btnDelete.addActionListener(e -> onDeleteSelectedProduct());
         btnImportExcel.addActionListener(e -> onOpenThemNhanhExcel());
-        btnExportExcel.addActionListener(e -> JOptionPane.showMessageDialog(this, "Chức năng Xuất Excel đang phát triển!", "Thông báo", JOptionPane.INFORMATION_MESSAGE));
+        btnExportExcel.addActionListener(e -> onExportExcel());
         btnPrint.addActionListener(e -> JOptionPane.showMessageDialog(this, "Đã gửi dữ liệu sang máy in!", "In ấn", JOptionPane.INFORMATION_MESSAGE));
         btnSummary.addActionListener(e -> showSummaryDialog());
         btnBarcode.addActionListener(e -> JOptionPane.showMessageDialog(this, "Chức năng In mã vạch đang phát triển!", "Thông báo", JOptionPane.INFORMATION_MESSAGE));
@@ -1303,6 +1304,7 @@ public class DanhMucMatHangPanel extends JPanel {
             JMenu mSort = createSortSubMenu();
             JMenuItem miRefresh = new JMenuItem("Refresh", IconHelper.getIcon("Refresh.png", 16, 16));
             JMenuItem miPrint = new JMenuItem("In danh sách");
+            JMenuItem miExport = new JMenuItem("Xuất Excel", IconHelper.getIcon("export_excel.png", 16, 16));
 
             JMenuItem miCopyCell = new JMenuItem("Sao chép ô", IconHelper.getIcon("Report.png", 16, 16));
             JMenuItem miCopySelection = new JMenuItem("Sao chép vùng chọn", IconHelper.getIcon("Report.png", 16, 16));
@@ -1326,6 +1328,7 @@ public class DanhMucMatHangPanel extends JPanel {
 
             miRefresh.addActionListener(ev -> loadTableData(currentSelectedNhom, txtSearch.getText().trim()));
             miPrint.addActionListener(ev -> JOptionPane.showMessageDialog(this, "Đã gửi dữ liệu sang máy in!", "In ấn", JOptionPane.INFORMATION_MESSAGE));
+            miExport.addActionListener(ev -> onExportExcel());
             miCopyCell.addActionListener(ev -> onCopySelectedProduct());
             miCopySelection.addActionListener(ev -> onCopySelectedProduct());
             miDelete.addActionListener(ev -> onDeleteSelectedProduct());
@@ -1346,6 +1349,7 @@ public class DanhMucMatHangPanel extends JPanel {
             popup.add(mSort);
             popup.add(miRefresh);
             popup.add(miPrint);
+            popup.add(miExport);
             popup.addSeparator();
             popup.add(miCopyCell);
             popup.add(miCopySelection);
@@ -1632,6 +1636,10 @@ public class DanhMucMatHangPanel extends JPanel {
         btn.setBackground(Color.WHITE);
         btn.setMargin(new Insets(1, 1, 1, 1));
         return btn;
+    }
+
+    private void onExportExcel() {
+        ExcelExporter.exportTable(tableMatHang, "DanhMuc_MatHang", "Mặt hàng", this);
     }
 
     private void onOpenTrash() {
