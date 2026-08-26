@@ -137,18 +137,12 @@ public class MatHangDAO extends BaseDAO {
 
     public List<MatHang> searchWithConfig(String keyword, String tenNhom, String nhomId, SystemConfig config) {
         List<MatHang> baseList = getByNhom(tenNhom, nhomId);
-        if (keyword == null || keyword.trim().isEmpty()) {
-            return baseList;
-        }
-        return filterListWithConfig(baseList, keyword.trim(), config);
+        return filterListWithConfig(baseList, keyword, config);
     }
 
     public List<MatHang> searchWithConfigByGroupSet(String keyword, Set<String> ids, Set<String> names, SystemConfig config) {
         List<MatHang> baseList = getByNhomIds(ids, names);
-        if (keyword == null || keyword.trim().isEmpty()) {
-            return baseList;
-        }
-        return filterListWithConfig(baseList, keyword.trim(), config);
+        return filterListWithConfig(baseList, keyword, config);
     }
 
     private List<MatHang> filterListWithConfig(List<MatHang> list, String keyword, SystemConfig config) {
@@ -156,22 +150,53 @@ public class MatHangDAO extends BaseDAO {
         String cachTim = config != null && config.getCachTim() != null ? config.getCachTim() : "Tìm có chứa";
 
         List<MatHang> result = new ArrayList<>();
+        boolean hasKeyword = keyword != null && !keyword.trim().isEmpty();
+        String kw = hasKeyword ? keyword.trim() : "";
+
         for (MatHang mh : list) {
+            if (!hasKeyword) {
+                result.add(mh);
+                continue;
+            }
             boolean match = false;
             if ("Tên hàng".equalsIgnoreCase(timTheo)) {
-                match = matchText(mh.getName(), keyword, cachTim);
+                match = matchText(mh.getName(), kw, cachTim);
             } else if ("Mã hàng".equalsIgnoreCase(timTheo)) {
-                match = matchText(mh.getCode(), keyword, cachTim);
+                match = matchText(mh.getCode(), kw, cachTim);
             } else {
                 // "Cả tên hàng và mã hàng" (kèm cả nhóm hàng)
-                match = matchText(mh.getName(), keyword, cachTim)
-                        || matchText(mh.getCode(), keyword, cachTim)
-                        || matchText(mh.getTenNhom(), keyword, cachTim);
+                match = matchText(mh.getName(), kw, cachTim)
+                        || matchText(mh.getCode(), kw, cachTim)
+                        || matchText(mh.getTenNhom(), kw, cachTim);
             }
             if (match) {
                 result.add(mh);
             }
         }
+
+        // Áp dụng cấu hình Sắp xếp thứ tự theo: Mã hàng hoặc Tên hàng
+        if (config != null && "Tên hàng".equalsIgnoreCase(config.getSapXepThuTuTheo())) {
+            result.sort((a, b) -> {
+                String na = a.getName() != null ? a.getName() : "";
+                String nb = b.getName() != null ? b.getName() : "";
+                int cmp = na.compareToIgnoreCase(nb);
+                if (cmp != 0) return cmp;
+                String ca = a.getCode() != null ? a.getCode() : "";
+                String cb = b.getCode() != null ? b.getCode() : "";
+                return ca.compareToIgnoreCase(cb);
+            });
+        } else {
+            result.sort((a, b) -> {
+                String ca = a.getCode() != null ? a.getCode() : "";
+                String cb = b.getCode() != null ? b.getCode() : "";
+                int cmp = ca.compareToIgnoreCase(cb);
+                if (cmp != 0) return cmp;
+                String na = a.getName() != null ? a.getName() : "";
+                String nb = b.getName() != null ? b.getName() : "";
+                return na.compareToIgnoreCase(nb);
+            });
+        }
+
         return result;
     }
 
@@ -553,7 +578,12 @@ public class MatHangDAO extends BaseDAO {
                 sql.append("AND n.NAME = ? ");
             }
         }
-        sql.append("ORDER BY m.CODE, m.NAME");
+        SystemConfig sysConfig = new SystemConfigDAO().loadConfig();
+        if (sysConfig != null && "Tên hàng".equalsIgnoreCase(sysConfig.getSapXepThuTuTheo())) {
+            sql.append("ORDER BY m.NAME, m.CODE");
+        } else {
+            sql.append("ORDER BY m.CODE, m.NAME");
+        }
 
         try (Connection conn = getConnection();
              PreparedStatement ps = conn.prepareStatement(sql.toString())) {
