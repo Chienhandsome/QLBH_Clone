@@ -160,7 +160,10 @@ public class DanhMucKhachHangPanel extends JPanel {
                             label.setFont(new Font("Segoe UI", Font.BOLD, 12));
                         } else {
                             label.setText(nh.getName());
-                            String iconName = nh.getIconName() != null ? nh.getIconName() : "Folder.png";
+                            String iconName = nh.getIconName();
+                            if (iconName == null || iconName.trim().isEmpty() || "Folder.png".equalsIgnoreCase(iconName.trim())) {
+                                iconName = "users.png";
+                            }
                             label.setIcon(IconHelper.getIcon(iconName, 16, 16));
                             label.setFont(new Font("Segoe UI", Font.PLAIN, 12));
                         }
@@ -936,7 +939,7 @@ public class DanhMucKhachHangPanel extends JPanel {
         }
 
         JPopupMenu popup = new JPopupMenu();
-        JMenuItem miAddGroup = new JMenuItem("Thêm nhóm khách hàng", IconHelper.getIcon("plus.png", 16, 16));
+        JMenuItem miAddGroup = new JMenuItem("Thêm nhóm khách hàng", IconHelper.getIcon("users.png", 16, 16));
         JMenuItem miAddFolder = new JMenuItem("Thêm thư mục", IconHelper.getIcon("Folder.png", 16, 16));
         JMenuItem miAddSubFolder = new JMenuItem("Thêm thư mục con", IconHelper.getIcon("folder-tree.png", 16, 16));
         JMenuItem miRename = new JMenuItem("Đổi tên", IconHelper.getIcon("pencil.png", 16, 16));

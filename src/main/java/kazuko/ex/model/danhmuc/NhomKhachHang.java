@@ -6,7 +6,7 @@ import java.util.List;
 public class NhomKhachHang {
     private String id;
     private String name;
-    private String iconName = "Folder.png";
+    private String iconName = "users.png";
     private double diemTichLuy = 0;
     private double tiLeGiamGia = 0;
     private String ghiChu;

@@ -87,7 +87,7 @@ public class NhomKhachHangDialog extends JDialog {
         JPanel leftHeader = new JPanel(new FlowLayout(FlowLayout.LEFT, 12, 8));
         leftHeader.setOpaque(false);
 
-        JLabel lblBoxIcon = new JLabel(IconHelper.getIcon("Folder.png", 34, 34));
+        JLabel lblBoxIcon = new JLabel(IconHelper.getIcon("users.png", 34, 34));
         JLabel lblHeaderTitle = new JLabel("Nhóm khách hàng");
         lblHeaderTitle.setFont(new Font("Segoe UI", Font.BOLD, 15));
         lblHeaderTitle.setForeground(COLOR_TEXT_DARK);
@@ -148,7 +148,7 @@ public class NhomKhachHangDialog extends JDialog {
         lblAnh.setBounds(380, 12, 30, 24);
         formPanel.add(lblAnh);
 
-        String[] iconOptions = {"Folder.png", "users.png", "1282529873_objects.png", "asterisk-yellow.png", "Tree.png"};
+        String[] iconOptions = {"users.png", "Folder.png", "1282529873_objects.png", "Tree.png"};
         cbIcon = new JComboBox<>(iconOptions);
         cbIcon.setBounds(415, 12, 85, 24);
         cbIcon.setRenderer(new DefaultListCellRenderer() {
@@ -337,9 +337,11 @@ public class NhomKhachHangDialog extends JDialog {
             txtDiemTichLuy.setText(String.valueOf((int) currentNhom.getDiemTichLuy()));
             txtTiLeGiamGia.setText(String.valueOf((int) currentNhom.getTiLeGiamGia()));
             txtGhiChu.setText(currentNhom.getGhiChu() != null ? currentNhom.getGhiChu() : "");
-            if (currentNhom.getIconName() != null) {
-                cbIcon.setSelectedItem(currentNhom.getIconName());
+            String ic = currentNhom.getIconName();
+            if (ic == null || ic.trim().isEmpty() || ("Folder.png".equalsIgnoreCase(ic) && !currentNhom.isFolder())) {
+                ic = "users.png";
             }
+            cbIcon.setSelectedItem(ic);
 
             modelGiamGia.setRowCount(0);
             int rowIdx = 1;

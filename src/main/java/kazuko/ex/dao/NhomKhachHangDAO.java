@@ -205,7 +205,12 @@ public class NhomKhachHangDAO extends BaseDAO {
                     nh.setStatus(rs.getInt("STATUS"));
                     nh.setParentId(rs.getString("PARENTID"));
                     nh.setItemType(rs.getObject("ITEMTYPE") != null ? rs.getInt("ITEMTYPE") : 0);
-                    nh.setIconName(rs.getString("SIMAGEID") != null ? rs.getString("SIMAGEID") : "Folder.png");
+                    String simage = rs.getString("SIMAGEID");
+                    if (simage == null || simage.trim().isEmpty() || ("Folder.png".equalsIgnoreCase(simage) && !nh.isFolder())) {
+                        nh.setIconName(nh.isFolder() ? "Folder.png" : "users.png");
+                    } else {
+                        nh.setIconName(simage);
+                    }
                     nh.setTiLeGiamGia(rs.getDouble("TILEGIAMGIA"));
                     nh.setDiemTichLuy(rs.getDouble("DIEMTICHLUY"));
                     list.add(nh);
