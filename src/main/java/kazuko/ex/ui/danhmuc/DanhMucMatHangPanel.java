@@ -285,7 +285,7 @@ public class DanhMucMatHangPanel extends JPanel {
             }
         });
 
-        // Phím Delete/Insert/F4 trên cây nhóm
+        // Phím Delete/Insert/F4/F2 trên cây nhóm
         treeNhomHang.addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
@@ -295,6 +295,8 @@ public class DanhMucMatHangPanel extends JPanel {
                     onAddNhom();
                 } else if (e.getKeyCode() == KeyEvent.VK_F4) {
                     onEditNhom();
+                } else if (e.getKeyCode() == KeyEvent.VK_F2) {
+                    onRenameNhom();
                 }
             }
         });
@@ -1540,6 +1542,46 @@ public class DanhMucMatHangPanel extends JPanel {
         }
     }
 
+    private void onRenameNhom() {
+        TreePath path = treeNhomHang.getSelectionPath();
+        if (path == null) {
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn nhóm mặt hàng cần đổi tên!", "Thông báo", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        DefaultMutableTreeNode node = (DefaultMutableTreeNode) path.getLastPathComponent();
+        if (node.getUserObject() instanceof NhomMatHang) {
+            NhomMatHang nh = (NhomMatHang) node.getUserObject();
+            if (nh.isSeparator()) return;
+
+            String currentName = nh.getName() != null ? nh.getName() : "";
+            String newName = (String) JOptionPane.showInputDialog(
+                    this,
+                    "Nhập tên mới cho " + (nh.isFolder() ? "thư mục" : "nhóm mặt hàng") + ":",
+                    "Đổi tên",
+                    JOptionPane.PLAIN_MESSAGE,
+                    IconHelper.getIcon("pencil.png", 32, 32),
+                    null,
+                    currentName
+            );
+
+            if (newName != null) {
+                newName = newName.trim();
+                if (newName.isEmpty()) {
+                    JOptionPane.showMessageDialog(this, "Tên không được để trống!", "Thông báo", JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+                if (!newName.equals(currentName)) {
+                    nh.setName(newName);
+                    nhomMatHangDAO.update(nh);
+                    loadNhomTree(newName);
+                    loadTableData(newName, nh.getId(), txtSearch.getText().trim());
+                }
+            }
+        } else {
+            JOptionPane.showMessageDialog(this, "Không thể đổi tên nhóm mặc định này!", "Thông báo", JOptionPane.WARNING_MESSAGE);
+        }
+    }
+
     private void showTreePopup(MouseEvent e) {
         int x = e.getX();
         int y = e.getY();
@@ -1552,25 +1594,31 @@ public class DanhMucMatHangPanel extends JPanel {
         JMenuItem miAddGroup = new JMenuItem("Thêm nhóm mặt hàng", IconHelper.getIcon("1282529873_objects.png", 16, 16));
         JMenuItem miAddFolder = new JMenuItem("Thêm thư mục", IconHelper.getIcon("Folder.png", 16, 16));
         JMenuItem miAddSubFolder = new JMenuItem("Thêm thư mục con", IconHelper.getIcon("folder-tree.png", 16, 16));
+        JMenuItem miRename = new JMenuItem("Đổi tên", IconHelper.getIcon("pencil.png", 16, 16));
         JMenuItem miEdit = new JMenuItem("Chỉnh sửa (F4)", IconHelper.getIcon("pencil.png", 16, 16));
         JMenuItem miDelete = new JMenuItem("Chuyển vào thùng rác (Del)", IconHelper.getIcon("cross.png", 16, 16));
         JMenuItem miTrash = new JMenuItem("Mở thùng rác...", IconHelper.getIcon("RecycleBin.png", 16, 16));
+        JMenuItem miRefresh = new JMenuItem("Làm mới cây nhóm", IconHelper.getIcon("Refresh.png", 16, 16));
 
         miAddGroup.addActionListener(ev -> onAddNhom());
         miAddFolder.addActionListener(ev -> onAddNewFolder(false));
         miAddSubFolder.addActionListener(ev -> onAddNewFolder(true));
+        miRename.addActionListener(ev -> onRenameNhom());
         miEdit.addActionListener(ev -> onEditNhom());
         miDelete.addActionListener(ev -> onDeleteNhom());
         miTrash.addActionListener(ev -> onOpenTrash());
+        miRefresh.addActionListener(ev -> loadNhomTree(currentSelectedNhom));
 
         popup.add(miAddGroup);
         popup.add(miAddFolder);
         popup.add(miAddSubFolder);
         popup.addSeparator();
+        popup.add(miRename);
         popup.add(miEdit);
         popup.add(miDelete);
         popup.addSeparator();
         popup.add(miTrash);
+        popup.add(miRefresh);
 
         popup.show(treeNhomHang, x, y);
     }

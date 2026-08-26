@@ -204,11 +204,11 @@ public class DanhMucKhachHangPanel extends JPanel {
             }
         });
 
-        // Double click vào nhóm khách hàng để sửa
+        // Double click vào nhóm khách hàng để sửa, Right click mở popup menu
         treeNhomKhachHang.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                if (e.getClickCount() == 2) {
+                if (e.getClickCount() == 2 && SwingUtilities.isLeftMouseButton(e)) {
                     TreePath path = treeNhomKhachHang.getPathForLocation(e.getX(), e.getY());
                     if (path != null) {
                         DefaultMutableTreeNode node = (DefaultMutableTreeNode) path.getLastPathComponent();
@@ -222,6 +222,31 @@ public class DanhMucKhachHangPanel extends JPanel {
                             }
                         }
                     }
+                }
+            }
+
+            @Override
+            public void mousePressed(MouseEvent e) {
+                if (e.isPopupTrigger()) showTreePopup(e);
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                if (e.isPopupTrigger()) showTreePopup(e);
+            }
+        });
+
+        treeNhomKhachHang.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+                if (e.getKeyCode() == KeyEvent.VK_DELETE) {
+                    onDeleteNhom();
+                } else if (e.getKeyCode() == KeyEvent.VK_INSERT) {
+                    onAddNhom();
+                } else if (e.getKeyCode() == KeyEvent.VK_F4) {
+                    onEditNhom();
+                } else if (e.getKeyCode() == KeyEvent.VK_F2) {
+                    onRenameNhom();
                 }
             }
         });
@@ -825,6 +850,113 @@ public class DanhMucKhachHangPanel extends JPanel {
                 loadNhomTree("Tất cả");
             }
         }
+    }
+
+    private void onRenameNhom() {
+        TreePath path = treeNhomKhachHang.getSelectionPath();
+        if (path == null) {
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn nhóm khách hàng cần đổi tên!", "Thông báo", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        DefaultMutableTreeNode node = (DefaultMutableTreeNode) path.getLastPathComponent();
+        if (node.getUserObject() instanceof NhomKhachHang) {
+            NhomKhachHang nh = (NhomKhachHang) node.getUserObject();
+            if (nh.isSeparator()) return;
+
+            String currentName = nh.getName() != null ? nh.getName() : "";
+            String newName = (String) JOptionPane.showInputDialog(
+                    this,
+                    "Nhập tên mới cho nhóm khách hàng:",
+                    "Đổi tên nhóm",
+                    JOptionPane.PLAIN_MESSAGE,
+                    IconHelper.getIcon("pencil.png", 32, 32),
+                    null,
+                    currentName
+            );
+
+            if (newName != null) {
+                newName = newName.trim();
+                if (newName.isEmpty()) {
+                    JOptionPane.showMessageDialog(this, "Tên không được để trống!", "Thông báo", JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+                if (!newName.equals(currentName)) {
+                    nh.setName(newName);
+                    nhomKhachHangDAO.update(nh);
+                    loadNhomTree(newName);
+                    loadTableData(newName, nh.getId(), txtSearch.getText().trim());
+                }
+            }
+        } else {
+            JOptionPane.showMessageDialog(this, "Không thể đổi tên nhóm hệ thống!", "Thông báo", JOptionPane.WARNING_MESSAGE);
+        }
+    }
+
+    private void onAddNewFolder(boolean isSubFolder) {
+        String input = JOptionPane.showInputDialog(this, "Nhập tên thư mục:", isSubFolder ? "Thêm thư mục con" : "Thêm thư mục", JOptionPane.PLAIN_MESSAGE);
+        if (input == null || input.trim().isEmpty()) {
+            return;
+        }
+
+        NhomKhachHang folder = new NhomKhachHang();
+        folder.setName(input.trim());
+        folder.setFolder(true);
+        folder.setIconName("Folder.png");
+
+        if (isSubFolder) {
+            TreePath path = treeNhomKhachHang.getSelectionPath();
+            if (path != null) {
+                DefaultMutableTreeNode node = (DefaultMutableTreeNode) path.getLastPathComponent();
+                if (node.getUserObject() instanceof NhomKhachHang) {
+                    NhomKhachHang parentObj = (NhomKhachHang) node.getUserObject();
+                    folder.setParentId(parentObj.getId());
+                }
+            }
+        }
+
+        nhomKhachHangDAO.insert(folder);
+        loadNhomTree(folder.getName());
+    }
+
+    private void showTreePopup(MouseEvent e) {
+        int x = e.getX();
+        int y = e.getY();
+        TreePath path = treeNhomKhachHang.getPathForLocation(x, y);
+        if (path != null) {
+            treeNhomKhachHang.setSelectionPath(path);
+        }
+
+        JPopupMenu popup = new JPopupMenu();
+        JMenuItem miAddGroup = new JMenuItem("Thêm nhóm khách hàng", IconHelper.getIcon("plus.png", 16, 16));
+        JMenuItem miAddFolder = new JMenuItem("Thêm thư mục", IconHelper.getIcon("Folder.png", 16, 16));
+        JMenuItem miAddSubFolder = new JMenuItem("Thêm thư mục con", IconHelper.getIcon("folder-tree.png", 16, 16));
+        JMenuItem miRename = new JMenuItem("Đổi tên", IconHelper.getIcon("pencil.png", 16, 16));
+        JMenuItem miEdit = new JMenuItem("Chỉnh sửa (F4)", IconHelper.getIcon("pencil.png", 16, 16));
+        JMenuItem miDelete = new JMenuItem("Chuyển vào thùng rác (Del)", IconHelper.getIcon("cross.png", 16, 16));
+        JMenuItem miTrash = new JMenuItem("Mở thùng rác...", IconHelper.getIcon("RecycleBin.png", 16, 16));
+        JMenuItem miRefresh = new JMenuItem("Làm mới cây nhóm", IconHelper.getIcon("Refresh.png", 16, 16));
+
+        miAddGroup.addActionListener(ev -> onAddNhom());
+        miAddFolder.addActionListener(ev -> onAddNewFolder(false));
+        miAddSubFolder.addActionListener(ev -> onAddNewFolder(true));
+        miRename.addActionListener(ev -> onRenameNhom());
+        miEdit.addActionListener(ev -> onEditNhom());
+        miDelete.addActionListener(ev -> onDeleteNhom());
+        miTrash.addActionListener(ev -> onOpenTrash());
+        miRefresh.addActionListener(ev -> loadNhomTree(currentSelectedNhom));
+
+        popup.add(miAddGroup);
+        popup.add(miAddFolder);
+        popup.add(miAddSubFolder);
+        popup.addSeparator();
+        popup.add(miRename);
+        popup.add(miEdit);
+        popup.add(miDelete);
+        popup.addSeparator();
+        popup.add(miTrash);
+        popup.add(miRefresh);
+
+        popup.show(treeNhomKhachHang, x, y);
     }
 
     private void onOpenTrash() {
