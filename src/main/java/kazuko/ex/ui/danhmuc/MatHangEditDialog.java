@@ -902,9 +902,20 @@ public class MatHangEditDialog extends JDialog {
                 selDvtChan = dvt;
             }
         }
-        if (selDvt != null) cbDonViTinh.setSelectedItem(selDvt);
+        if (selDvt != null) {
+            cbDonViTinh.setSelectedItem(selDvt);
+        } else if (currentItem.getTenDonViTinh() != null && !currentItem.getTenDonViTinh().trim().isEmpty()) {
+            DonViTinh custom = new DonViTinh(currentItem.getDonViTinhId() != null ? currentItem.getDonViTinhId() : "", "", currentItem.getTenDonViTinh().trim());
+            cbDonViTinh.addItem(custom);
+            cbDonViTinh.setSelectedItem(custom);
+        }
+
         if (selDvtChan != null) {
             cbDonViTinhChan.setSelectedItem(selDvtChan);
+        } else if (currentItem.getTenDonViTinhChan() != null && !currentItem.getTenDonViTinhChan().trim().isEmpty()) {
+            DonViTinh customChan = new DonViTinh(currentItem.getDonViTinhChanId() != null ? currentItem.getDonViTinhChanId() : "", "", currentItem.getTenDonViTinhChan().trim());
+            cbDonViTinhChan.addItem(customChan);
+            cbDonViTinhChan.setSelectedItem(customChan);
         } else {
             cbDonViTinhChan.setSelectedIndex(0);
         }
