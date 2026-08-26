@@ -340,7 +340,7 @@ public class DanhMucMatHangPanel extends JPanel {
         btnAddMatHang.addActionListener(e -> onAddNewProduct());
         btnEdit.addActionListener(e -> onEditSelectedProduct());
         btnDelete.addActionListener(e -> onDeleteSelectedProduct());
-        btnImportExcel.addActionListener(e -> JOptionPane.showMessageDialog(this, "Chức năng Thêm từ Excel đang phát triển!", "Thông báo", JOptionPane.INFORMATION_MESSAGE));
+        btnImportExcel.addActionListener(e -> onOpenThemNhanhExcel());
         btnExportExcel.addActionListener(e -> JOptionPane.showMessageDialog(this, "Chức năng Xuất Excel đang phát triển!", "Thông báo", JOptionPane.INFORMATION_MESSAGE));
         btnPrint.addActionListener(e -> JOptionPane.showMessageDialog(this, "Đã gửi dữ liệu sang máy in!", "In ấn", JOptionPane.INFORMATION_MESSAGE));
         btnSummary.addActionListener(e -> showSummaryDialog());
@@ -1021,6 +1021,14 @@ public class DanhMucMatHangPanel extends JPanel {
         dialog.setVisible(true);
     }
 
+    private void onOpenThemNhanhExcel() {
+        Window owner = SwingUtilities.getWindowAncestor(this);
+        ThemNhanhMatHangDialog dialog = new ThemNhanhMatHangDialog(owner, () -> {
+            loadTableData(currentSelectedNhom, txtSearch.getText().trim());
+        });
+        dialog.setVisible(true);
+    }
+
     private void showTableHeaderPopup(MouseEvent e) {
         JPopupMenu popup = new JPopupMenu();
 
@@ -1305,8 +1313,8 @@ public class DanhMucMatHangPanel extends JPanel {
             JMenuItem miProps = new JMenuItem("Thuộc tính");
 
             miAdd.addActionListener(ev -> onAddNewProduct());
-            miAddExcel.addActionListener(ev -> JOptionPane.showMessageDialog(this, "Chức năng Thêm từ Excel đang phát triển!", "Thông báo", JOptionPane.INFORMATION_MESSAGE));
-            miUpdateExcel.addActionListener(ev -> JOptionPane.showMessageDialog(this, "Chức năng Cập nhật từ Excel đang phát triển!", "Thông báo", JOptionPane.INFORMATION_MESSAGE));
+            miAddExcel.addActionListener(ev -> onOpenThemNhanhExcel());
+            miUpdateExcel.addActionListener(ev -> onOpenThemNhanhExcel());
             miEdit.addActionListener(ev -> onEditSelectedProduct());
             miRegenCode.addActionListener(ev -> onRegenerateCode());
             miSetItemName.addActionListener(ev -> onEditSelectedProduct());

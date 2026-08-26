@@ -7,10 +7,14 @@ import kazuko.ex.ui.auth.DoiMatKhauDialog;
 import kazuko.ex.ui.auth.LoginForm;
 import kazuko.ex.ui.common.StatusPanel;
 import kazuko.ex.ui.danhmuc.CuaHangDialog;
+import kazuko.ex.ui.danhmuc.DanhMucKhachHangPanel;
 import kazuko.ex.ui.danhmuc.DanhMucMatHangPanel;
 import kazuko.ex.ui.danhmuc.NhanVienDialog;
 import kazuko.ex.ui.khohang.QuanLyXuatKhoPanel;
 import kazuko.ex.ui.system.CauHinhToanHeThongDialog;
+import kazuko.ex.ui.system.KhoiPhucCSDLDialog;
+import kazuko.ex.ui.system.SaoLuuCSDLDialog;
+import kazuko.ex.ui.system.TaoMoiCSDLDialog;
 import kazuko.ex.util.AppColors;
 import kazuko.ex.util.IconHelper;
 
@@ -190,6 +194,11 @@ public class MainFrame extends JFrame {
         JMenuItem miTaoMoi = new JMenuItem("Tạo mới");
         JMenuItem miSaoLuu = new JMenuItem("Sao lưu");
         JMenuItem miPhucHoi = new JMenuItem("Phục hồi");
+        
+        miTaoMoi.addActionListener(e -> new TaoMoiCSDLDialog(this).setVisible(true));
+        miSaoLuu.addActionListener(e -> new SaoLuuCSDLDialog(this).setVisible(true));
+        miPhucHoi.addActionListener(e -> new KhoiPhucCSDLDialog(this).setVisible(true));
+
         mCSDL.add(miTaoMoi);
         mCSDL.add(miSaoLuu);
         mCSDL.add(miPhucHoi);
@@ -219,7 +228,7 @@ public class MainFrame extends JFrame {
         miMatHang.addActionListener(e -> openTab("Danh mục mặt hàng", new DanhMucMatHangPanel()));
 
         JMenuItem miKhachHang = new JMenuItem("Danh mục khách hàng");
-        miKhachHang.addActionListener(e -> openTab("Danh mục khách hàng", createPlaceholderPanel("Danh mục khách hàng")));
+        miKhachHang.addActionListener(e -> openTab("Danh mục khách hàng", new DanhMucKhachHangPanel()));
 
         JMenuItem miTinNhan = new JMenuItem("Gửi tin nhắn khách hàng");
         miTinNhan.addActionListener(e -> openTab("Gửi tin nhắn tới khách hàng", createPlaceholderPanel("Gửi tin nhắn tới khách hàng")));
@@ -439,7 +448,7 @@ public class MainFrame extends JFrame {
                 openTab("Quản lý xuất kho", new QuanLyXuatKhoPanel());
                 break;
             case "DANH MỤC KHÁCH HÀNG":
-                openTab("Danh mục khách hàng", createPlaceholderPanel("Danh mục khách hàng"));
+                openTab("Danh mục khách hàng", new DanhMucKhachHangPanel());
                 break;
             case "GỬI TIN NHẮN KHÁCH HÀNG":
                 openTab("Gửi tin nhắn tới khách hàng", createPlaceholderPanel("Gửi tin nhắn tới khách hàng"));
