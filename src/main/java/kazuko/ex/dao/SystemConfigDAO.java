@@ -155,6 +155,19 @@ public class SystemConfigDAO {
                 config.setKichHoatLuuVetHoatDong(Boolean.parseBoolean(props.getProperty("admin.enableAuditTrail", String.valueOf(config.isKichHoatLuuVetHoatDong()))));
                 config.setHeThongChayNhieuMayTram(Boolean.parseBoolean(props.getProperty("admin.multiWorkstations", String.valueOf(config.isHeThongChayNhieuMayTram()))));
 
+                // Load Cân điện tử
+                config.setKichHoatSuDungCanDienTu(Boolean.parseBoolean(props.getProperty("scale.enabled", String.valueOf(config.isKichHoatSuDungCanDienTu()))));
+                config.setCongComCanDienTu(props.getProperty("scale.comPort", config.getCongComCanDienTu()));
+                config.setBaudRateCanDienTu(props.getProperty("scale.baudRate", config.getBaudRateCanDienTu()));
+                config.setDatabitCanDienTu(props.getProperty("scale.databit", config.getDatabitCanDienTu()));
+                config.setParityCanDienTu(props.getProperty("scale.parity", config.getParityCanDienTu()));
+                config.setStopBitsCanDienTu(props.getProperty("scale.stopBits", config.getStopBitsCanDienTu()));
+                try { config.setTimeoutCanDienTu(Integer.parseInt(props.getProperty("scale.timeout", String.valueOf(config.getTimeoutCanDienTu())))); } catch (Exception ignored) {}
+                try { config.setViTriCanDienTu(Integer.parseInt(props.getProperty("scale.position", String.valueOf(config.getViTriCanDienTu())))); } catch (Exception ignored) {}
+                try { config.setDoDaiCanDienTu(Integer.parseInt(props.getProperty("scale.length", String.valueOf(config.getDoDaiCanDienTu())))); } catch (Exception ignored) {}
+                config.setTuDongNhanDangCanDienTu(Boolean.parseBoolean(props.getProperty("scale.autoDetect", String.valueOf(config.isTuDongNhanDangCanDienTu()))));
+                config.setDonViTrenCan(props.getProperty("scale.unit", config.getDonViTrenCan()));
+
             } catch (Exception ignored) {}
         }
 
@@ -293,6 +306,19 @@ public class SystemConfigDAO {
         props.setProperty("admin.autoReloadOnTabChange", String.valueOf(config.isTuDongTaiLaiDuLieuKhiChuyenTab()));
         props.setProperty("admin.enableAuditTrail", String.valueOf(config.isKichHoatLuuVetHoatDong()));
         props.setProperty("admin.multiWorkstations", String.valueOf(config.isHeThongChayNhieuMayTram()));
+
+        // Save Cân điện tử
+        props.setProperty("scale.enabled", String.valueOf(config.isKichHoatSuDungCanDienTu()));
+        props.setProperty("scale.comPort", config.getCongComCanDienTu() != null ? config.getCongComCanDienTu() : "");
+        props.setProperty("scale.baudRate", config.getBaudRateCanDienTu() != null ? config.getBaudRateCanDienTu() : "1200");
+        props.setProperty("scale.databit", config.getDatabitCanDienTu() != null ? config.getDatabitCanDienTu() : "0");
+        props.setProperty("scale.parity", config.getParityCanDienTu() != null ? config.getParityCanDienTu() : "None");
+        props.setProperty("scale.stopBits", config.getStopBitsCanDienTu() != null ? config.getStopBitsCanDienTu() : "");
+        props.setProperty("scale.timeout", String.valueOf(config.getTimeoutCanDienTu()));
+        props.setProperty("scale.position", String.valueOf(config.getViTriCanDienTu()));
+        props.setProperty("scale.length", String.valueOf(config.getDoDaiCanDienTu()));
+        props.setProperty("scale.autoDetect", String.valueOf(config.isTuDongNhanDangCanDienTu()));
+        props.setProperty("scale.unit", config.getDonViTrenCan() != null ? config.getDonViTrenCan() : "Gram");
 
         try (OutputStreamWriter writer = new OutputStreamWriter(new FileOutputStream(CONFIG_FILE), StandardCharsets.UTF_8)) {
             props.store(writer, "Cấu hình hệ thống QLBH");

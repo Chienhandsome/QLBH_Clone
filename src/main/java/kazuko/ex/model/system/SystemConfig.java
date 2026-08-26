@@ -129,6 +129,19 @@ public class SystemConfig {
     private boolean kichHoatLuuVetHoatDong = true;
     private boolean heThongChayNhieuMayTram = true;
 
+    // 12. Cân điện tử
+    private boolean kichHoatSuDungCanDienTu = false;
+    private String congComCanDienTu = "";
+    private String baudRateCanDienTu = "1200";
+    private String databitCanDienTu = "0";
+    private String parityCanDienTu = "None";
+    private String stopBitsCanDienTu = "";
+    private int timeoutCanDienTu = 0;
+    private int viTriCanDienTu = 0;
+    private int doDaiCanDienTu = 0;
+    private boolean tuDongNhanDangCanDienTu = false;
+    private String donViTrenCan = "Gram";
+
     public SystemConfig() {
         initDefaultPrinters();
         initDefaultVoucherRules();
@@ -474,4 +487,38 @@ public class SystemConfig {
 
     public boolean isHeThongChayNhieuMayTram() { return heThongChayNhieuMayTram; }
     public void setHeThongChayNhieuMayTram(boolean heThongChayNhieuMayTram) { this.heThongChayNhieuMayTram = heThongChayNhieuMayTram; }
+
+    // Getters & Setters Cân điện tử
+    public boolean isKichHoatSuDungCanDienTu() { return kichHoatSuDungCanDienTu; }
+    public void setKichHoatSuDungCanDienTu(boolean kichHoatSuDungCanDienTu) { this.kichHoatSuDungCanDienTu = kichHoatSuDungCanDienTu; }
+
+    public String getCongComCanDienTu() { return congComCanDienTu; }
+    public void setCongComCanDienTu(String congComCanDienTu) { this.congComCanDienTu = congComCanDienTu; }
+
+    public String getBaudRateCanDienTu() { return baudRateCanDienTu; }
+    public void setBaudRateCanDienTu(String baudRateCanDienTu) { this.baudRateCanDienTu = baudRateCanDienTu; }
+
+    public String getDatabitCanDienTu() { return databitCanDienTu; }
+    public void setDatabitCanDienTu(String databitCanDienTu) { this.databitCanDienTu = databitCanDienTu; }
+
+    public String getParityCanDienTu() { return parityCanDienTu; }
+    public void setParityCanDienTu(String parityCanDienTu) { this.parityCanDienTu = parityCanDienTu; }
+
+    public String getStopBitsCanDienTu() { return stopBitsCanDienTu; }
+    public void setStopBitsCanDienTu(String stopBitsCanDienTu) { this.stopBitsCanDienTu = stopBitsCanDienTu; }
+
+    public int getTimeoutCanDienTu() { return timeoutCanDienTu; }
+    public void setTimeoutCanDienTu(int timeoutCanDienTu) { this.timeoutCanDienTu = timeoutCanDienTu; }
+
+    public int getViTriCanDienTu() { return viTriCanDienTu; }
+    public void setViTriCanDienTu(int viTriCanDienTu) { this.viTriCanDienTu = viTriCanDienTu; }
+
+    public int getDoDaiCanDienTu() { return doDaiCanDienTu; }
+    public void setDoDaiCanDienTu(int doDaiCanDienTu) { this.doDaiCanDienTu = doDaiCanDienTu; }
+
+    public boolean isTuDongNhanDangCanDienTu() { return tuDongNhanDangCanDienTu; }
+    public void setTuDongNhanDangCanDienTu(boolean tuDongNhanDangCanDienTu) { this.tuDongNhanDangCanDienTu = tuDongNhanDangCanDienTu; }
+
+    public String getDonViTrenCan() { return donViTrenCan; }
+    public void setDonViTrenCan(String donViTrenCan) { this.donViTrenCan = donViTrenCan; }
 }

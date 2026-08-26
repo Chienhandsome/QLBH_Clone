@@ -580,6 +580,7 @@ public class MatHangEditDialog extends JDialog {
         chkKhoiLuongTheoCan.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         chkKhoiLuongTheoCan.setOpaque(false);
         chkKhoiLuongTheoCan.setBounds(120, startY, 200, 20);
+        chkKhoiLuongTheoCan.setEnabled(systemConfig.isKichHoatSuDungCanDienTu());
         panel.add(chkKhoiLuongTheoCan);
 
         startY += 24;
@@ -964,6 +965,7 @@ public class MatHangEditDialog extends JDialog {
         txtTonToiDa.setText(df.format(currentItem.getTonToiDa()));
         txtBaoHanh.setText(currentItem.getBaoHanh() != null ? currentItem.getBaoHanh() : "");
         txtHoaHong.setText(df.format(currentItem.getHoaHong()));
+        chkKhoiLuongTheoCan.setEnabled(systemConfig.isKichHoatSuDungCanDienTu());
         chkKhoiLuongTheoCan.setSelected(currentItem.isKhoiLuongTheoCan());
         chkCoHanSuDung.setEnabled(systemConfig.isMatHangCoHanSuDung());
         chkCoHanSuDung.setSelected(currentItem.isCoHanSuDung());

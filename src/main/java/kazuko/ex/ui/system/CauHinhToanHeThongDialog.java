@@ -136,6 +136,19 @@ public class CauHinhToanHeThongDialog extends JDialog {
     private JCheckBox chkMatHangCoKichThuoc;
     private JCheckBox chkMatHangCoVatTuDinhLuong;
 
+    // Tab Cân điện tử
+    private JCheckBox chkKichHoatSuDungCanDienTu;
+    private JTextField txtCongComCanDienTu;
+    private JComboBox<String> cbBaudRateCanDienTu;
+    private JTextField txtDatabitCanDienTu;
+    private JComboBox<String> cbParityCanDienTu;
+    private JComboBox<String> cbStopBitsCanDienTu;
+    private JTextField txtTimeoutCanDienTu;
+    private JTextField txtViTriCanDienTu;
+    private JTextField txtDoDaiCanDienTu;
+    private JCheckBox chkTuDongNhanDangCanDienTu;
+    private JComboBox<String> cbDonViTrenCan;
+
     // Tab 9: Cảnh báo
     private JCheckBox chkHienThiCanhBao;
     private JCheckBox chkThongBaoHangDuoiMucAnToan;
@@ -218,6 +231,7 @@ public class CauHinhToanHeThongDialog extends JDialog {
         pnlCardContainer.add(createTabTichDiem(), "Tích điểm");
         pnlCardContainer.add(createTabKhoHang(), "Kho hàng");
         pnlCardContainer.add(createTabMatHang(), "Mặt hàng");
+        pnlCardContainer.add(createTabCanDienTu(), "Cân điện tử");
         pnlCardContainer.add(createTabCanhBao(), "Cảnh báo");
         pnlCardContainer.add(createTabCamUng(), "Cảm ứng");
         pnlCardContainer.add(createTabQuanTri(), "Quản trị");
@@ -226,7 +240,7 @@ public class CauHinhToanHeThongDialog extends JDialog {
         for (MenuItem item : allMenuItems) {
             if (!"Thông tin chung".equals(item.name) && !"Mẫu hóa đơn".equals(item.name) && !"Máy in".equals(item.name) && !"Số phiếu".equals(item.name)
                     && !"Bán hàng".equals(item.name) && !"Thanh toán".equals(item.name) && !"Tích điểm".equals(item.name)
-                    && !"Kho hàng".equals(item.name) && !"Mặt hàng".equals(item.name) && !"Cảnh báo".equals(item.name)
+                    && !"Kho hàng".equals(item.name) && !"Mặt hàng".equals(item.name) && !"Cân điện tử".equals(item.name) && !"Cảnh báo".equals(item.name)
                     && !"Cảm ứng".equals(item.name) && !"Quản trị".equals(item.name)) {
                 pnlCardContainer.add(createPlaceholderCard(item.name), item.name);
             }
@@ -1532,6 +1546,154 @@ public class CauHinhToanHeThongDialog extends JDialog {
         return container;
     }
 
+    // ==================== TAB: CÂN ĐIỆN TỬ ====================
+    private JPanel createTabCanDienTu() {
+        JPanel panel = new JPanel(null);
+        panel.setBackground(Color.WHITE);
+
+        int startY = 15;
+        int fieldH = 22;
+        int rowGap = 28;
+        int lblW = 120;
+        int fieldX = 150;
+        int fieldW = 380;
+        int smallFieldW = 75;
+
+        // Row 1: Kích hoạt sử dụng cân điện tử
+        chkKichHoatSuDungCanDienTu = new JCheckBox("Kích hoạt sử dụng cân điện tử", false);
+        chkKichHoatSuDungCanDienTu.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        chkKichHoatSuDungCanDienTu.setOpaque(false);
+        chkKichHoatSuDungCanDienTu.setBounds(20, startY, 300, fieldH);
+        panel.add(chkKichHoatSuDungCanDienTu);
+
+        // Row 2: Cổng com
+        startY += rowGap;
+        JLabel lblCongCom = new JLabel("Cổng com");
+        lblCongCom.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblCongCom.setBounds(25, startY, lblW, fieldH);
+        panel.add(lblCongCom);
+
+        txtCongComCanDienTu = new JTextField();
+        txtCongComCanDienTu.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        txtCongComCanDienTu.setBounds(fieldX, startY, fieldW, fieldH);
+        panel.add(txtCongComCanDienTu);
+
+        // Row 3: Baud rate (1200, 2400, 4800, 9600)
+        startY += rowGap;
+        JLabel lblBaudRate = new JLabel("Baud rate");
+        lblBaudRate.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblBaudRate.setBounds(25, startY, lblW, fieldH);
+        panel.add(lblBaudRate);
+
+        cbBaudRateCanDienTu = new JComboBox<>(new String[]{"1200", "2400", "4800", "9600"});
+        cbBaudRateCanDienTu.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        cbBaudRateCanDienTu.setBackground(Color.WHITE);
+        cbBaudRateCanDienTu.setBounds(fieldX, startY, fieldW, fieldH);
+        panel.add(cbBaudRateCanDienTu);
+
+        // Row 4: Databit (8)
+        startY += rowGap;
+        JLabel lblDatabit = new JLabel("Databit (8)");
+        lblDatabit.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblDatabit.setBounds(25, startY, lblW, fieldH);
+        panel.add(lblDatabit);
+
+        txtDatabitCanDienTu = new JTextField("0");
+        txtDatabitCanDienTu.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        txtDatabitCanDienTu.setBounds(fieldX, startY, smallFieldW, fieldH);
+        panel.add(txtDatabitCanDienTu);
+
+        // Row 5: Parity (None, Odd, Even, Mark, Space)
+        startY += rowGap;
+        JLabel lblParity = new JLabel("Parity");
+        lblParity.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblParity.setBounds(25, startY, lblW, fieldH);
+        panel.add(lblParity);
+
+        cbParityCanDienTu = new JComboBox<>(new String[]{"None", "Odd", "Even", "Mark", "Space"});
+        cbParityCanDienTu.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        cbParityCanDienTu.setBackground(Color.WHITE);
+        cbParityCanDienTu.setBounds(fieldX, startY, fieldW, fieldH);
+        panel.add(cbParityCanDienTu);
+
+        // Row 6: Stop bits (để trống, 1, 2, 1.5)
+        startY += rowGap;
+        JLabel lblStopBits = new JLabel("Stop bits");
+        lblStopBits.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblStopBits.setBounds(25, startY, lblW, fieldH);
+        panel.add(lblStopBits);
+
+        cbStopBitsCanDienTu = new JComboBox<>(new String[]{"", "1", "2", "1.5"});
+        cbStopBitsCanDienTu.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        cbStopBitsCanDienTu.setBackground(Color.WHITE);
+        cbStopBitsCanDienTu.setBounds(fieldX, startY, fieldW, fieldH);
+        panel.add(cbStopBitsCanDienTu);
+
+        // Row 7: Timeout
+        startY += rowGap;
+        JLabel lblTimeout = new JLabel("Timeout");
+        lblTimeout.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblTimeout.setBounds(25, startY, lblW, fieldH);
+        panel.add(lblTimeout);
+
+        txtTimeoutCanDienTu = new JTextField("0");
+        txtTimeoutCanDienTu.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        txtTimeoutCanDienTu.setBounds(fieldX, startY, smallFieldW, fieldH);
+        panel.add(txtTimeoutCanDienTu);
+
+        // Row 8: Vị trí
+        startY += rowGap;
+        JLabel lblViTri = new JLabel("Vị trí");
+        lblViTri.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblViTri.setBounds(25, startY, lblW, fieldH);
+        panel.add(lblViTri);
+
+        txtViTriCanDienTu = new JTextField("0");
+        txtViTriCanDienTu.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        txtViTriCanDienTu.setBounds(fieldX, startY, smallFieldW, fieldH);
+        panel.add(txtViTriCanDienTu);
+
+        // Row 9: Độ dài
+        startY += rowGap;
+        JLabel lblDoDai = new JLabel("Độ dài");
+        lblDoDai.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblDoDai.setBounds(25, startY, lblW, fieldH);
+        panel.add(lblDoDai);
+
+        txtDoDaiCanDienTu = new JTextField("0");
+        txtDoDaiCanDienTu.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        txtDoDaiCanDienTu.setBounds(fieldX, startY, smallFieldW, fieldH);
+        panel.add(txtDoDaiCanDienTu);
+
+        // Row 10: Tự động nhận dạng
+        startY += rowGap;
+        chkTuDongNhanDangCanDienTu = new JCheckBox("Tự động nhận dạng", false);
+        chkTuDongNhanDangCanDienTu.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        chkTuDongNhanDangCanDienTu.setOpaque(false);
+        chkTuDongNhanDangCanDienTu.setBounds(20, startY, 300, fieldH);
+        panel.add(chkTuDongNhanDangCanDienTu);
+
+        // Row 11: Đơn vị trên cân (Gr, Kg, Gram)
+        startY += rowGap;
+        JLabel lblDonVi = new JLabel("Đơn vị trên cân");
+        lblDonVi.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblDonVi.setBounds(25, startY, lblW, fieldH);
+        panel.add(lblDonVi);
+
+        cbDonViTrenCan = new JComboBox<>(new String[]{"Gram", "Kg", "Gr"});
+        cbDonViTrenCan.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        cbDonViTrenCan.setBackground(Color.WHITE);
+        cbDonViTrenCan.setBounds(fieldX, startY, fieldW, fieldH);
+        panel.add(cbDonViTrenCan);
+
+        panel.setPreferredSize(new Dimension(580, startY + 40));
+        JScrollPane scrollPane = new JScrollPane(panel);
+        scrollPane.setBorder(null);
+        JPanel container = new JPanel(new BorderLayout());
+        container.add(scrollPane, BorderLayout.CENTER);
+        return container;
+    }
+
     // ==================== TAB 9: CẢNH BÁO ====================
     private JPanel createTabCanhBao() {
         JPanel panel = new JPanel(null);
@@ -2101,6 +2263,19 @@ public class CauHinhToanHeThongDialog extends JDialog {
         chkMatHangCoKichThuoc.setSelected(currentConfig.isMatHangCoKichThuoc());
         chkMatHangCoVatTuDinhLuong.setSelected(currentConfig.isMatHangCoVatTuDinhLuong());
 
+        // Tab Cân điện tử
+        chkKichHoatSuDungCanDienTu.setSelected(currentConfig.isKichHoatSuDungCanDienTu());
+        txtCongComCanDienTu.setText(currentConfig.getCongComCanDienTu() != null ? currentConfig.getCongComCanDienTu() : "");
+        selectOrAddItem(cbBaudRateCanDienTu, currentConfig.getBaudRateCanDienTu());
+        txtDatabitCanDienTu.setText(currentConfig.getDatabitCanDienTu() != null ? currentConfig.getDatabitCanDienTu() : "0");
+        selectOrAddItem(cbParityCanDienTu, currentConfig.getParityCanDienTu());
+        selectOrAddItem(cbStopBitsCanDienTu, currentConfig.getStopBitsCanDienTu());
+        txtTimeoutCanDienTu.setText(String.valueOf(currentConfig.getTimeoutCanDienTu()));
+        txtViTriCanDienTu.setText(String.valueOf(currentConfig.getViTriCanDienTu()));
+        txtDoDaiCanDienTu.setText(String.valueOf(currentConfig.getDoDaiCanDienTu()));
+        chkTuDongNhanDangCanDienTu.setSelected(currentConfig.isTuDongNhanDangCanDienTu());
+        selectOrAddItem(cbDonViTrenCan, currentConfig.getDonViTrenCan());
+
         // Tab 9: Cảnh báo
         chkHienThiCanhBao.setSelected(currentConfig.isHienThiCanhBao());
         chkThongBaoHangDuoiMucAnToan.setSelected(currentConfig.isThongBaoHangDuoiMucAnToan());
@@ -2233,6 +2408,19 @@ public class CauHinhToanHeThongDialog extends JDialog {
         currentConfig.setMatHangCoHanSuDung(chkMatHangCoHanSuDung.isSelected());
         currentConfig.setMatHangCoKichThuoc(chkMatHangCoKichThuoc.isSelected());
         currentConfig.setMatHangCoVatTuDinhLuong(chkMatHangCoVatTuDinhLuong.isSelected());
+
+        // Tab Cân điện tử
+        currentConfig.setKichHoatSuDungCanDienTu(chkKichHoatSuDungCanDienTu.isSelected());
+        currentConfig.setCongComCanDienTu(txtCongComCanDienTu.getText().trim());
+        currentConfig.setBaudRateCanDienTu(cbBaudRateCanDienTu.getSelectedItem() != null ? cbBaudRateCanDienTu.getSelectedItem().toString() : "1200");
+        currentConfig.setDatabitCanDienTu(txtDatabitCanDienTu.getText().trim());
+        currentConfig.setParityCanDienTu(cbParityCanDienTu.getSelectedItem() != null ? cbParityCanDienTu.getSelectedItem().toString() : "None");
+        currentConfig.setStopBitsCanDienTu(cbStopBitsCanDienTu.getSelectedItem() != null ? cbStopBitsCanDienTu.getSelectedItem().toString() : "");
+        try { currentConfig.setTimeoutCanDienTu(Integer.parseInt(txtTimeoutCanDienTu.getText().trim())); } catch (Exception ignored) {}
+        try { currentConfig.setViTriCanDienTu(Integer.parseInt(txtViTriCanDienTu.getText().trim())); } catch (Exception ignored) {}
+        try { currentConfig.setDoDaiCanDienTu(Integer.parseInt(txtDoDaiCanDienTu.getText().trim())); } catch (Exception ignored) {}
+        currentConfig.setTuDongNhanDangCanDienTu(chkTuDongNhanDangCanDienTu.isSelected());
+        currentConfig.setDonViTrenCan(cbDonViTrenCan.getSelectedItem() != null ? cbDonViTrenCan.getSelectedItem().toString() : "Gram");
 
         // Tab 9: Cảnh báo
         currentConfig.setHienThiCanhBao(chkHienThiCanhBao.isSelected());
