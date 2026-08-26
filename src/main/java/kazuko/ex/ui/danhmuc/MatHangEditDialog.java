@@ -128,8 +128,10 @@ public class MatHangEditDialog extends JDialog {
         tabbedPane.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         tabbedPane.addTab("Thông tin chính", createTabThongTinChinh());
         tabbedPane.addTab("Thông tin khác", createTabThongTinKhac());
+        
+        JPanel pnlDinhLuong = createTabDinhLuong();
         if (systemConfig.isMatHangCoVatTuDinhLuong()) {
-            tabbedPane.addTab("Định lượng", createTabDinhLuong());
+            tabbedPane.addTab("Định lượng", pnlDinhLuong);
         }
 
         pnlCenter.add(tabbedPane, BorderLayout.CENTER);
@@ -968,12 +970,14 @@ public class MatHangEditDialog extends JDialog {
         chkKhongInCheBien.setSelected(currentItem.isKhongInCheBien());
 
         // 5. Tab 3 Values
-        switch (currentItem.getPhuongThucTruKho()) {
-            case 1: rbDinhLuongCombo.setSelected(true); break;
-            case 2: rbBanKem.setSelected(true); break;
-            case 3: rbDichVu.setSelected(true); break;
-            case 4: rbVatTuNguyenLieu.setSelected(true); break;
-            default: rbKiemVatTu.setSelected(true); break;
+        if (rbKiemVatTu != null) {
+            switch (currentItem.getPhuongThucTruKho()) {
+                case 1: if (rbDinhLuongCombo != null) rbDinhLuongCombo.setSelected(true); break;
+                case 2: if (rbBanKem != null) rbBanKem.setSelected(true); break;
+                case 3: if (rbDichVu != null) rbDichVu.setSelected(true); break;
+                case 4: if (rbVatTuNguyenLieu != null) rbVatTuNguyenLieu.setSelected(true); break;
+                default: rbKiemVatTu.setSelected(true); break;
+            }
         }
 
         // 6. Image
@@ -1064,11 +1068,13 @@ public class MatHangEditDialog extends JDialog {
         currentItem.setKhongInCheBien(chkKhongInCheBien.isSelected());
 
         // Tab 3
-        if (rbDinhLuongCombo.isSelected()) currentItem.setPhuongThucTruKho(1);
-        else if (rbBanKem.isSelected()) currentItem.setPhuongThucTruKho(2);
-        else if (rbDichVu.isSelected()) currentItem.setPhuongThucTruKho(3);
-        else if (rbVatTuNguyenLieu.isSelected()) currentItem.setPhuongThucTruKho(4);
-        else currentItem.setPhuongThucTruKho(0);
+        if (rbDinhLuongCombo != null && rbBanKem != null && rbDichVu != null && rbVatTuNguyenLieu != null) {
+            if (rbDinhLuongCombo.isSelected()) currentItem.setPhuongThucTruKho(1);
+            else if (rbBanKem.isSelected()) currentItem.setPhuongThucTruKho(2);
+            else if (rbDichVu.isSelected()) currentItem.setPhuongThucTruKho(3);
+            else if (rbVatTuNguyenLieu.isSelected()) currentItem.setPhuongThucTruKho(4);
+            else currentItem.setPhuongThucTruKho(0);
+        }
 
         currentItem.setImagePath(currentImagePath);
 
@@ -1113,6 +1119,8 @@ public class MatHangEditDialog extends JDialog {
         txtKichThuoc.setText("");
         txtNote.setText("");
         if (cbDonViTinhChan.getItemCount() > 0) cbDonViTinhChan.setSelectedIndex(0);
+        if (rbKiemVatTu != null) rbKiemVatTu.setSelected(true);
+        if (modelDinhLuong != null) modelDinhLuong.setRowCount(0);
         removeImage();
         txtName.requestFocus();
     }
@@ -1142,6 +1150,7 @@ public class MatHangEditDialog extends JDialog {
             cloned.setDonViTinhChanId(selDvtChan.getId());
             cloned.setTenDonViTinhChan(selDvtChan.getName());
         }
+        cloned.setPhuongThucTruKho(currentItem.getPhuongThucTruKho());
         this.currentItem = cloned;
         txtName.setText(cloned.getName());
         txtCode.setText(nextCode);
