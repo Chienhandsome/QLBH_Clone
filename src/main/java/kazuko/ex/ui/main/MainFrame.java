@@ -223,22 +223,32 @@ public class MainFrame extends JFrame {
 
         // 2. HOẠT ĐỘNG
         JMenu mHoatDong = new JMenu("HOẠT ĐỘNG");
+
+        // Group 1: Danh mục & Khách hàng
         JMenuItem miCuaHang = new JMenuItem("Danh mục cửa hàng");
+        miCuaHang.setIcon(IconHelper.getIcon("Folder2.png", 16, 16));
         miCuaHang.addActionListener(e -> new CuaHangDialog(this).setVisible(true));
 
         JMenuItem miMatHang = new JMenuItem("Danh mục mặt hàng");
+        miMatHang.setIcon(IconHelper.getIcon("1282529873_objects.png", 16, 16));
+        miMatHang.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_M, InputEvent.CTRL_DOWN_MASK));
         miMatHang.addActionListener(e -> openTab("Danh mục mặt hàng", new DanhMucMatHangPanel()));
 
         JMenuItem miKhachHang = new JMenuItem("Danh mục khách hàng");
+        miKhachHang.setIcon(IconHelper.getIcon("users.png", 16, 16));
+        miKhachHang.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_K, InputEvent.CTRL_DOWN_MASK));
         miKhachHang.addActionListener(e -> openTab("Danh mục khách hàng", new DanhMucKhachHangPanel()));
 
-        JMenuItem miTinNhan = new JMenuItem("Gửi tin nhắn khách hàng");
+        JMenuItem miTinNhan = new JMenuItem("Gửi tin nhắn tới khách hàng");
+        miTinNhan.setIcon(IconHelper.getIcon("mail-send.png", 16, 16));
         miTinNhan.addActionListener(e -> openTab("Gửi tin nhắn tới khách hàng", createPlaceholderPanel("Gửi tin nhắn tới khách hàng")));
 
-        JMenuItem miKhuyenMai = new JMenuItem("Danh mục đợt khuyến mãi");
+        JMenuItem miKhuyenMai = new JMenuItem("Danh mục đợt khuyến mại");
+        miKhuyenMai.setIcon(IconHelper.getIcon("bookmark-import.png", 16, 16));
         miKhuyenMai.addActionListener(e -> openTab("Danh mục đợt khuyến mại", new DanhMucDotKhuyenMaiPanel()));
 
         JMenuItem miThanThiet = new JMenuItem("Khách hàng thân thiết");
+        miThanThiet.setIcon(IconHelper.getIcon("btnCard.Icon.png", 16, 16));
         miThanThiet.addActionListener(e -> openTab("Khách hàng thân thiết", new KhachHangThanThietPanel()));
 
         mHoatDong.add(miCuaHang);
@@ -247,71 +257,282 @@ public class MainFrame extends JFrame {
         mHoatDong.add(miTinNhan);
         mHoatDong.add(miKhuyenMai);
         mHoatDong.add(miThanThiet);
-        mHoatDong.add(new JMenuItem("Báo giá khách hàng"));
-        mHoatDong.add(new JMenuItem("Khách đặt hàng"));
-        mHoatDong.add(new JMenuItem("Hóa đơn bán hàng"));
-        mHoatDong.add(new JMenuItem("Quản lý bán hàng"));
-        mHoatDong.add(new JMenuItem("Lưu vết hoạt động"));
-        mHoatDong.add(new JMenuItem("Thống kê doanh thu"));
-        mHoatDong.add(new JMenuItem("Thống kê mặt hàng bán"));
-        mHoatDong.add(new JMenuItem("Tổng hợp kết quả kinh doanh"));
-        mHoatDong.add(new JMenuItem("Chi tiết hoạt động ngày"));
+
+        // Divider 1
+        mHoatDong.addSeparator();
+
+        // Group 2: Báo giá & Đặt hàng
+        JMenuItem miBaoGia = new JMenuItem("Báo giá bán hàng");
+        miBaoGia.setIcon(IconHelper.getIcon("report--pencil.png", 16, 16));
+        miBaoGia.addActionListener(e -> openTab("Báo giá bán hàng", createPlaceholderPanel("Báo giá bán hàng")));
+
+        JMenuItem miDatHang = new JMenuItem("Khách đặt hàng");
+        miDatHang.setIcon(IconHelper.getIcon("tsbLogedUser.Image.png", 16, 16));
+        miDatHang.addActionListener(e -> openTab("Khách đặt hàng", createPlaceholderPanel("Khách đặt hàng")));
+
+        mHoatDong.add(miBaoGia);
+        mHoatDong.add(miDatHang);
+
+        // Divider 2
+        mHoatDong.addSeparator();
+
+        // Group 3: Bán hàng & Hóa đơn
+        JMenuItem miHoaDon = new JMenuItem("Hóa đơn bán hàng");
+        miHoaDon.setIcon(IconHelper.getIcon("btnNew.Image.png", 16, 16));
+        miHoaDon.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_H, InputEvent.CTRL_DOWN_MASK));
+        miHoaDon.addActionListener(e -> openTab("Hóa đơn bán hàng", createPlaceholderPanel("Hóa đơn bán hàng")));
+
+        JMenuItem miQLBanHang = new JMenuItem("Quản lý bán hàng");
+        miQLBanHang.setIcon(IconHelper.getIcon("btnOpen.Image.png", 16, 16));
+        miQLBanHang.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Q, InputEvent.CTRL_DOWN_MASK));
+        miQLBanHang.addActionListener(e -> openTab("Quản lý bán hàng", createPlaceholderPanel("Quản lý bán hàng")));
+
+        mHoatDong.add(miHoaDon);
+        mHoatDong.add(miQLBanHang);
+
+        // Divider 3
+        mHoatDong.addSeparator();
+
+        // Group 4: Nhật ký
+        JMenuItem miLuuVet = new JMenuItem("Lưu vết hoạt động");
+        miLuuVet.setIcon(IconHelper.getIcon("tsbLog.Image.png", 16, 16));
+        miLuuVet.addActionListener(e -> openTab("Lưu vết hoạt động", createPlaceholderPanel("Lưu vết hoạt động")));
+
+        mHoatDong.add(miLuuVet);
+
+        // Divider 4
+        mHoatDong.addSeparator();
+
+        // Group 5: Thống kê & Báo cáo
+        JMenuItem miTKDoanhThu = new JMenuItem("Thống kê doanh thu");
+        miTKDoanhThu.setIcon(IconHelper.getIcon("Statistic16.png", 16, 16));
+        miTKDoanhThu.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_T, InputEvent.CTRL_DOWN_MASK));
+        miTKDoanhThu.addActionListener(e -> openTab("Thống kê doanh thu", createPlaceholderPanel("Thống kê doanh thu")));
+
+        JMenuItem miTKMatHang = new JMenuItem("Thống kê mặt hàng bán");
+        miTKMatHang.setIcon(IconHelper.getIcon("Tree.png", 16, 16));
+        miTKMatHang.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_L, InputEvent.CTRL_DOWN_MASK));
+        miTKMatHang.addActionListener(e -> openTab("Thống kê mặt hàng bán", createPlaceholderPanel("Thống kê mặt hàng bán")));
+
+        JMenuItem miTongHopKQKD = new JMenuItem("Tổng hợp kết quả kinh doanh");
+        miTongHopKQKD.setIcon(IconHelper.getIcon("Report.png", 16, 16));
+        miTongHopKQKD.addActionListener(e -> openTab("Tổng hợp KQKD", createPlaceholderPanel("Tổng hợp kết quả kinh doanh")));
+
+        JMenuItem miChiTietHD = new JMenuItem("Chi tiết hoạt động ngày");
+        miChiTietHD.setIcon(IconHelper.getIcon("arrow-000-medium.png", 16, 16));
+        miChiTietHD.addActionListener(e -> openTab("Chi tiết hoạt động", createPlaceholderPanel("Chi tiết hoạt động")));
+
+        mHoatDong.add(miTKDoanhThu);
+        mHoatDong.add(miTKMatHang);
+        mHoatDong.add(miTongHopKQKD);
+        mHoatDong.add(miChiTietHD);
 
         // 3. KHO HÀNG
         JMenu mKhoHang = new JMenu("KHO HÀNG");
-        JMenuItem miXuatKho = new JMenuItem("Xuất kho");
-        miXuatKho.addActionListener(e -> openTab("Quản lý xuất kho", new QuanLyXuatKhoPanel()));
 
-        mKhoHang.add(new JMenuItem("Danh mục kho hàng"));
-        mKhoHang.add(new JMenuItem("Danh mục nhà cung cấp"));
-        mKhoHang.add(new JMenuItem("Đặt hàng nhà cung cấp"));
-        mKhoHang.add(new JMenuItem("Nhập hàng vào kho"));
-        mKhoHang.add(miXuatKho);
-        mKhoHang.add(new JMenuItem("Chuyển kho"));
-        mKhoHang.add(new JMenuItem("Kiểm kê kho"));
-        mKhoHang.add(new JMenuItem("Tính lại giá vốn"));
-        mKhoHang.add(new JMenuItem("Tồn kho"));
-        mKhoHang.add(new JMenuItem("Tồn nhiều kho"));
+        JMenuItem miKhoHang = new JMenuItem("Danh mục kho hàng");
+        miKhoHang.setIcon(IconHelper.getIcon("Folder2.png", 16, 16));
+        miKhoHang.addActionListener(e -> openTab("Danh mục kho hàng", createPlaceholderPanel("Danh mục kho hàng")));
+
+        JMenuItem miNCC = new JMenuItem("Danh mục nhà cung cấp");
+        miNCC.setIcon(IconHelper.getIcon("users.png", 16, 16));
+        miNCC.addActionListener(e -> openTab("Danh mục nhà cung cấp", createPlaceholderPanel("Danh mục nhà cung cấp")));
+
+        mKhoHang.add(miKhoHang);
+        mKhoHang.add(miNCC);
+
+        mKhoHang.addSeparator();
+
+        JMenuItem miDatHangNCC = new JMenuItem("Đặt hàng nhà cung cấp");
+        miDatHangNCC.setIcon(IconHelper.getIcon("report--pencil.png", 16, 16));
+        miDatHangNCC.addActionListener(e -> openTab("Đặt hàng nhà cung cấp", createPlaceholderPanel("Đặt hàng nhà cung cấp")));
+
+        JMenuItem miNhapKho = new JMenuItem("Nhập hàng vào kho");
+        miNhapKho.setIcon(IconHelper.getIcon("navigation-000-frame.png", 16, 16));
+        miNhapKho.addActionListener(e -> openTab("Nhập hàng vào kho", createPlaceholderPanel("Nhập hàng vào kho")));
+
+        JMenuItem miXuatKhac = new JMenuItem("Xuất khác");
+        miXuatKhac.setIcon(IconHelper.getIcon("navigation-180-frame.png", 16, 16));
+        miXuatKhac.addActionListener(e -> openTab("Quản lý xuất kho", new QuanLyXuatKhoPanel()));
+
+        JMenuItem miChuyenKho = new JMenuItem("Chuyển kho");
+        miChuyenKho.setIcon(IconHelper.getIcon("document_valid.png", 16, 16));
+        miChuyenKho.addActionListener(e -> openTab("Chuyển kho", createPlaceholderPanel("Chuyển kho")));
+
+        JMenuItem miKiemKe = new JMenuItem("Kiểm kê kho");
+        miKiemKe.setIcon(IconHelper.getIcon("edit-column.png", 16, 16));
+        miKiemKe.addActionListener(e -> openTab("Kiểm kê kho", createPlaceholderPanel("Kiểm kê kho")));
+
+        JMenuItem miTinhGiaVon = new JMenuItem("Tính lại giá vốn");
+        miTinhGiaVon.setIcon(IconHelper.getIcon("Refresh.png", 16, 16));
+        miTinhGiaVon.addActionListener(e -> openTab("Tính lại giá vốn", createPlaceholderPanel("Tính lại giá vốn")));
+
+        mKhoHang.add(miDatHangNCC);
+        mKhoHang.add(miNhapKho);
+        mKhoHang.add(miXuatKhac);
+        mKhoHang.add(miChuyenKho);
+        mKhoHang.add(miKiemKe);
+        mKhoHang.add(miTinhGiaVon);
+
+        mKhoHang.addSeparator();
+
+        JMenuItem miTonKho = new JMenuItem("Tồn kho");
+        miTonKho.setIcon(IconHelper.getIcon("Folder.png", 16, 16));
+        miTonKho.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_T, InputEvent.CTRL_DOWN_MASK | InputEvent.SHIFT_DOWN_MASK));
+        miTonKho.addActionListener(e -> openTab("Tồn kho", createPlaceholderPanel("Tồn kho")));
+
+        JMenuItem miTonNhieuKho = new JMenuItem("Tồn nhiều kho");
+        miTonNhieuKho.setIcon(IconHelper.getIcon("tsbTimeStamp.Image.png", 16, 16));
+        miTonNhieuKho.addActionListener(e -> openTab("Tồn nhiều kho", createPlaceholderPanel("Tồn nhiều kho")));
+
+        mKhoHang.add(miTonKho);
+        mKhoHang.add(miTonNhieuKho);
 
         // 4. QUỸ
         JMenu mQuy = new JMenu("QUỸ");
-        mQuy.add(new JMenuItem("Danh mục lý do thu chi"));
-        mQuy.add(new JMenuItem("Danh mục tài khoản ngân hàng"));
-        mQuy.add(new JMenuItem("Tạo phiếu thu"));
-        mQuy.add(new JMenuItem("Tạo phiếu chi"));
-        mQuy.add(new JMenuItem("Danh mục phiếu thu"));
-        mQuy.add(new JMenuItem("Danh mục phiếu chi"));
-        mQuy.add(new JMenuItem("Tồn quỹ"));
+
+        JMenuItem miLyDoTC = new JMenuItem("Danh mục lý do thu chi");
+        miLyDoTC.setIcon(IconHelper.getIcon("congno.png", 16, 16));
+        miLyDoTC.addActionListener(e -> openTab("Danh mục lý do thu chi", createPlaceholderPanel("Danh mục lý do thu chi")));
+
+        JMenuItem miTKNH = new JMenuItem("Danh mục tài khoản ngân hàng");
+        miTKNH.setIcon(IconHelper.getIcon("database1.png", 16, 16));
+        miTKNH.addActionListener(e -> openTab("Danh mục tài khoản ngân hàng", createPlaceholderPanel("Danh mục tài khoản ngân hàng")));
+
+        mQuy.add(miLyDoTC);
+        mQuy.add(miTKNH);
+
+        mQuy.addSeparator();
+
+        JMenuItem miTaoThu = new JMenuItem("Tạo phiếu thu");
+        miTaoThu.setIcon(IconHelper.getIcon("arrow-000-medium.png", 16, 16));
+        miTaoThu.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_T, InputEvent.CTRL_DOWN_MASK | InputEvent.SHIFT_DOWN_MASK));
+        miTaoThu.addActionListener(e -> openTab("Tạo phiếu thu", createPlaceholderPanel("Tạo phiếu thu")));
+
+        JMenuItem miTaoChi = new JMenuItem("Tạo phiếu chi");
+        miTaoChi.setIcon(IconHelper.getIcon("arrow-180-medium.png", 16, 16));
+        miTaoChi.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C, InputEvent.CTRL_DOWN_MASK | InputEvent.SHIFT_DOWN_MASK));
+        miTaoChi.addActionListener(e -> openTab("Tạo phiếu chi", createPlaceholderPanel("Tạo phiếu chi")));
+
+        JMenuItem miDSThu = new JMenuItem("Danh mục phiếu thu");
+        miDSThu.setIcon(IconHelper.getIcon("btnCard.Icon.png", 16, 16));
+        miDSThu.addActionListener(e -> openTab("Danh mục phiếu thu", createPlaceholderPanel("Danh mục phiếu thu")));
+
+        JMenuItem miDSChi = new JMenuItem("Danh mục phiếu chi");
+        miDSChi.setIcon(IconHelper.getIcon("tsbTimeStamp.Image.png", 16, 16));
+        miDSChi.addActionListener(e -> openTab("Danh mục phiếu chi", createPlaceholderPanel("Danh mục phiếu chi")));
+
+        mQuy.add(miTaoThu);
+        mQuy.add(miTaoChi);
+        mQuy.add(miDSThu);
+        mQuy.add(miDSChi);
+
+        mQuy.addSeparator();
+
+        JMenuItem miTonQuy = new JMenuItem("Tồn quỹ");
+        miTonQuy.setIcon(IconHelper.getIcon("report--pencil.png", 16, 16));
+        miTonQuy.addActionListener(e -> openTab("Tồn quỹ", createPlaceholderPanel("Tồn quỹ")));
+
+        mQuy.add(miTonQuy);
 
         // 5. CÔNG NỢ
         JMenu mCongNo = new JMenu("CÔNG NỢ");
-        mCongNo.add(new JMenuItem("Công nợ khách hàng"));
-        mCongNo.add(new JMenuItem("Công nợ nhà cung cấp"));
+
+        JMenuItem miCongNoKH = new JMenuItem("Công nợ khách hàng");
+        miCongNoKH.setIcon(IconHelper.getIcon("congno.png", 16, 16));
+        miCongNoKH.addActionListener(e -> openTab("Công nợ khách hàng", createPlaceholderPanel("Công nợ khách hàng")));
+
+        JMenuItem miCongNoNCC = new JMenuItem("Công nợ nhà cung cấp");
+        miCongNoNCC.setIcon(IconHelper.getIcon("tsbGenTotal.Image.png", 16, 16));
+        miCongNoNCC.addActionListener(e -> openTab("Công nợ nhà cung cấp", createPlaceholderPanel("Công nợ nhà cung cấp")));
+
+        mCongNo.add(miCongNoKH);
+        mCongNo.add(miCongNoNCC);
 
         // 6. NHÂN SỰ
         JMenu mNhanSu = new JMenu("NHÂN SỰ");
+
         JMenuItem miNhanVien = new JMenuItem("Danh mục nhân viên");
+        miNhanVien.setIcon(IconHelper.getIcon("users.png", 16, 16));
         miNhanVien.addActionListener(e -> new NhanVienDialog(this).setVisible(true));
+
+        JMenuItem miCaLamViec = new JMenuItem("Danh mục ca làm việc");
+        miCaLamViec.setIcon(IconHelper.getIcon("property.png", 16, 16));
+        miCaLamViec.addActionListener(e -> openTab("Danh mục ca làm việc", createPlaceholderPanel("Danh mục ca làm việc")));
+
         mNhanSu.add(miNhanVien);
-        mNhanSu.add(new JMenuItem("Danh mục ca làm việc"));
-        mNhanSu.add(new JMenuItem("Tạm ứng lương"));
-        mNhanSu.add(new JMenuItem("Thưởng phạt"));
-        mNhanSu.add(new JMenuItem("Chấm công"));
-        mNhanSu.add(new JMenuItem("Tính lương"));
+        mNhanSu.add(miCaLamViec);
+
+        mNhanSu.addSeparator();
+
+        JMenuItem miTamUng = new JMenuItem("Tạm ứng lương");
+        miTamUng.setIcon(IconHelper.getIcon("receipt--pencil.png", 16, 16));
+        miTamUng.addActionListener(e -> openTab("Tạm ứng lương", createPlaceholderPanel("Tạm ứng lương")));
+
+        JMenuItem miThuongPhat = new JMenuItem("Thưởng phạt");
+        miThuongPhat.setIcon(IconHelper.getIcon("asterisk-yellow.png", 16, 16));
+        miThuongPhat.addActionListener(e -> openTab("Thưởng phạt", createPlaceholderPanel("Thưởng phạt")));
+
+        JMenuItem miChamCong = new JMenuItem("Chấm công");
+        miChamCong.setIcon(IconHelper.getIcon("document_valid.png", 16, 16));
+        miChamCong.addActionListener(e -> openTab("Chấm công", createPlaceholderPanel("Chấm công")));
+
+        JMenuItem miTinhLuong = new JMenuItem("Tính lương");
+        miTinhLuong.setIcon(IconHelper.getIcon("Statistic16.png", 16, 16));
+        miTinhLuong.addActionListener(e -> openTab("Tính lương", createPlaceholderPanel("Tính lương")));
+
+        mNhanSu.add(miTamUng);
+        mNhanSu.add(miThuongPhat);
+        mNhanSu.add(miChamCong);
+        mNhanSu.add(miTinhLuong);
 
         // 7. QUẢN TRỊ
         JMenu mQuanTri = new JMenu("QUẢN TRỊ");
-        mQuanTri.add(new JMenuItem("Thư viện ảnh"));
+
+        JMenuItem miThuVienAnh = new JMenuItem("Thư viện ảnh...");
+        miThuVienAnh.addActionListener(e -> openTab("Thư viện ảnh", createPlaceholderPanel("Thư viện ảnh")));
+        mQuanTri.add(miThuVienAnh);
+
+        mQuanTri.addSeparator();
+
         JMenu mDuLieuBanDau = new JMenu("Dữ liệu ban đầu");
-        mDuLieuBanDau.add(new JMenuItem("Công nợ khách hàng ban đầu"));
-        mDuLieuBanDau.add(new JMenuItem("Công nợ nhà cung cấp ban đầu"));
-        mDuLieuBanDau.add(new JMenuItem("Tồn kho ban đầu"));
+        JMenuItem miCongNoKHBD = new JMenuItem("Công nợ khách hàng ban đầu");
+        JMenuItem miCongNoNCCBD = new JMenuItem("Công nợ nhà cung cấp ban đầu");
+        JMenuItem miTonKhoBD = new JMenuItem("Tồn kho ban đầu");
+        miCongNoKHBD.addActionListener(e -> openTab("Công nợ khách hàng ban đầu", createPlaceholderPanel("Công nợ khách hàng ban đầu")));
+        miCongNoNCCBD.addActionListener(e -> openTab("Công nợ nhà cung cấp ban đầu", createPlaceholderPanel("Công nợ nhà cung cấp ban đầu")));
+        miTonKhoBD.addActionListener(e -> openTab("Tồn kho ban đầu", createPlaceholderPanel("Tồn kho ban đầu")));
+        mDuLieuBanDau.add(miCongNoKHBD);
+        mDuLieuBanDau.add(miCongNoNCCBD);
+        mDuLieuBanDau.add(miTonKhoBD);
         mQuanTri.add(mDuLieuBanDau);
-        mQuanTri.add(new JMenuItem("Chỉ tiêu doanh thu"));
-        mQuanTri.add(new JMenuItem("Xóa dữ liệu"));
-        mQuanTri.add(new JMenuItem("Công cụ nhà phát triển"));
-        mQuanTri.add(new JMenuItem("Người dùng và phân quyền"));
+
+        JMenuItem miChiTieuDT = new JMenuItem("Chỉ tiêu doanh thu");
+        miChiTieuDT.setIcon(IconHelper.getIcon("property.png", 16, 16));
+        miChiTieuDT.addActionListener(e -> openTab("Chỉ tiêu doanh thu", createPlaceholderPanel("Chỉ tiêu doanh thu")));
+
+        JMenuItem miXoaDuLieu = new JMenuItem("Xóa dữ liệu");
+        miXoaDuLieu.setIcon(IconHelper.getIcon("clear.png", 16, 16));
+        miXoaDuLieu.addActionListener(e -> openTab("Xóa dữ liệu", createPlaceholderPanel("Xóa dữ liệu")));
+
+        JMenuItem miDevTools = new JMenuItem("Công cụ nhà phát triển");
+        miDevTools.setIcon(IconHelper.getIcon("page_white_code.png", 16, 16));
+        miDevTools.addActionListener(e -> openTab("Công cụ nhà phát triển", createPlaceholderPanel("Công cụ nhà phát triển")));
+
+        JMenuItem miNguoiDung = new JMenuItem("Người dùng và phân quyền");
+        miNguoiDung.setIcon(IconHelper.getIcon("users.png", 16, 16));
+        miNguoiDung.addActionListener(e -> openTab("Người dùng và phân quyền", createPlaceholderPanel("Người dùng và phân quyền")));
+
+        mQuanTri.add(miChiTieuDT);
+        mQuanTri.add(miXoaDuLieu);
+        mQuanTri.add(miDevTools);
+        mQuanTri.add(miNguoiDung);
+
+        mQuanTri.addSeparator();
+
         JMenuItem miCauHinh = new JMenuItem("Cấu hình toàn hệ thống");
+        miCauHinh.setFont(miCauHinh.getFont().deriveFont(Font.BOLD));
+        miCauHinh.setIcon(IconHelper.getIcon("wrench-screwdriver.png", 16, 16));
         miCauHinh.addActionListener(e -> new CauHinhToanHeThongDialog(this).setVisible(true));
         mQuanTri.add(miCauHinh);
 
