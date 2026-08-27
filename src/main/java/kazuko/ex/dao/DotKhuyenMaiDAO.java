@@ -13,6 +13,7 @@ public class DotKhuyenMaiDAO extends BaseDAO {
     private static final Map<String, DotKhuyenMai> TRASH_PROMOTIONS = new ConcurrentHashMap<>();
     private static final Map<String, List<String>> PROMOTION_STORES = new ConcurrentHashMap<>();
     private static final Map<String, Map<String, Double>> PROMOTION_GROUP_DISCOUNTS = new ConcurrentHashMap<>();
+    private static final Map<String, Map<String, Double>> PROMOTION_PRODUCT_DISCOUNTS = new ConcurrentHashMap<>();
 
     private static String getEffectiveUserId() {
         if (AuthService.getCurrentUser() != null && AuthService.getCurrentUser().getId() != null && !AuthService.getCurrentUser().getId().trim().isEmpty()) {
@@ -125,6 +126,9 @@ public class DotKhuyenMaiDAO extends BaseDAO {
         if (km.getMapNhomGiamGia() != null) {
             saveGroupDiscounts(km.getId(), km.getMapNhomGiamGia());
         }
+        if (km.getMapSanPhamGiamGia() != null) {
+            saveProductDiscounts(km.getId(), km.getMapSanPhamGiamGia());
+        }
         return dbSuccess || true;
     }
 
@@ -145,6 +149,9 @@ public class DotKhuyenMaiDAO extends BaseDAO {
         }
         if (km.getMapNhomGiamGia() != null) {
             saveGroupDiscounts(km.getId(), km.getMapNhomGiamGia());
+        }
+        if (km.getMapSanPhamGiamGia() != null) {
+            saveProductDiscounts(km.getId(), km.getMapSanPhamGiamGia());
         }
         return dbSuccess || true;
     }
@@ -177,6 +184,8 @@ public class DotKhuyenMaiDAO extends BaseDAO {
         TRASH_PROMOTIONS.remove(id);
         MEMORY_PROMOTIONS.removeIf(p -> id.equals(p.getId()));
         PROMOTION_STORES.remove(id);
+        PROMOTION_GROUP_DISCOUNTS.remove(id);
+        PROMOTION_PRODUCT_DISCOUNTS.remove(id);
         return dbSuccess;
     }
 
@@ -290,6 +299,65 @@ public class DotKhuyenMaiDAO extends BaseDAO {
             return true;
         } catch (Exception e) {
             System.err.println("Lỗi saveGroupDiscounts: " + e.getMessage());
+            return false;
+        }
+    }
+
+    public Map<String, Double> getProductDiscounts(String dotKmId) {
+        if (dotKmId == null) return Collections.emptyMap();
+        Map<String, Double> map = new HashMap<>();
+        String sql = "SELECT DMATHANGID, TILEGIAMGIA FROM DDOTKHUYENMAICHITIET WHERE DDOTKHUYENMAIID=? AND DMATHANGID IS NOT NULL AND (STATUS IS NULL OR STATUS >= 0)";
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, dotKmId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    String mhId = rs.getString("DMATHANGID");
+                    double tile = rs.getDouble("TILEGIAMGIA");
+                    if (mhId != null) {
+                        map.put(mhId, tile);
+                    }
+                }
+            }
+            return map;
+        } catch (Exception e) {
+            if (PROMOTION_PRODUCT_DISCOUNTS.containsKey(dotKmId)) {
+                return new HashMap<>(PROMOTION_PRODUCT_DISCOUNTS.get(dotKmId));
+            }
+            return map;
+        }
+    }
+
+    public boolean saveProductDiscounts(String dotKmId, Map<String, Double> productDiscounts) {
+        if (dotKmId == null) return false;
+        PROMOTION_PRODUCT_DISCOUNTS.put(dotKmId, new HashMap<>(productDiscounts != null ? productDiscounts : Collections.emptyMap()));
+
+        String sqlDelete = "DELETE FROM DDOTKHUYENMAICHITIET WHERE DDOTKHUYENMAIID=? AND DMATHANGID IS NOT NULL";
+        String sqlInsert = "INSERT INTO DDOTKHUYENMAICHITIET (ID, DDOTKHUYENMAIID, DMATHANGID, TILEGIAMGIA, STATUS, TIMECREATED, USERCREATEDID) VALUES (?, ?, ?, ?, 30, CURRENT_TIMESTAMP, ?)";
+        try (Connection conn = getConnection()) {
+            conn.setAutoCommit(false);
+            try (PreparedStatement psDel = conn.prepareStatement(sqlDelete)) {
+                psDel.setString(1, dotKmId);
+                psDel.executeUpdate();
+            }
+            if (productDiscounts != null && !productDiscounts.isEmpty()) {
+                try (PreparedStatement psIns = conn.prepareStatement(sqlInsert)) {
+                    for (Map.Entry<String, Double> entry : productDiscounts.entrySet()) {
+                        psIns.setString(1, UUID.randomUUID().toString());
+                        psIns.setString(2, dotKmId);
+                        psIns.setString(3, entry.getKey());
+                        psIns.setDouble(4, entry.getValue() != null ? entry.getValue() : 0.0);
+                        psIns.setString(5, getEffectiveUserId());
+                        psIns.addBatch();
+                    }
+                    psIns.executeBatch();
+                }
+            }
+            conn.commit();
+            conn.setAutoCommit(true);
+            return true;
+        } catch (Exception e) {
+            System.err.println("Lỗi saveProductDiscounts: " + e.getMessage());
             return false;
         }
     }

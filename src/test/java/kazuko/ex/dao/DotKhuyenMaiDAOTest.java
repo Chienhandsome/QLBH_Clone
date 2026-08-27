@@ -89,4 +89,45 @@ public class DotKhuyenMaiDAOTest {
         dao.deletePermanently(km.getId());
         Assertions.assertNull(dao.findById(km.getId()));
     }
+
+    @Test
+    public void testSanPhamDiscountsCRUD() {
+        DotKhuyenMaiDAO dao = new DotKhuyenMaiDAO();
+        MatHangDAO mhDao = new MatHangDAO();
+        List<kazuko.ex.model.danhmuc.MatHang> products = mhDao.getAll();
+        Assertions.assertNotNull(products);
+        Assertions.assertFalse(products.isEmpty());
+
+        String prodId1 = products.get(0).getId();
+        String prodId2 = products.size() > 1 ? products.get(1).getId() : "PROD_2";
+
+        DotKhuyenMai km = new DotKhuyenMai();
+        km.setName("KM Giảm Giá Sản Phẩm Test " + System.currentTimeMillis());
+        km.setTenLoaiHinhKhuyenMai("Giảm giá theo sản phẩm");
+        km.setTuNgay(new Timestamp(System.currentTimeMillis()));
+        km.setDenNgay(new Timestamp(System.currentTimeMillis() + 86400000L * 7));
+
+        java.util.Map<String, Double> prodDiscounts = new java.util.HashMap<>();
+        prodDiscounts.put(prodId1, 15.5);
+        prodDiscounts.put(prodId2, 25.0);
+        km.setMapSanPhamGiamGia(prodDiscounts);
+
+        boolean insertOk = dao.insert(km);
+        Assertions.assertTrue(insertOk);
+
+        java.util.Map<String, Double> loadedDiscounts = dao.getProductDiscounts(km.getId());
+        Assertions.assertNotNull(loadedDiscounts);
+        Assertions.assertEquals(15.5, loadedDiscounts.get(prodId1));
+        Assertions.assertEquals(25.0, loadedDiscounts.get(prodId2));
+
+        // Update product discount
+        prodDiscounts.put(prodId1, 30.0);
+        dao.saveProductDiscounts(km.getId(), prodDiscounts);
+
+        java.util.Map<String, Double> reloadedDiscounts = dao.getProductDiscounts(km.getId());
+        Assertions.assertEquals(30.0, reloadedDiscounts.get(prodId1));
+
+        // Clean up
+        dao.deletePermanently(km.getId());
+    }
 }

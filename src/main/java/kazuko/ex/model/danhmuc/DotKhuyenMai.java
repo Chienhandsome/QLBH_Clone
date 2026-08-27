@@ -189,4 +189,14 @@ public class DotKhuyenMai {
     public void setMapNhomGiamGia(java.util.Map<String, Double> mapNhomGiamGia) {
         this.mapNhomGiamGia = mapNhomGiamGia != null ? mapNhomGiamGia : new java.util.HashMap<>();
     }
+
+    private java.util.Map<String, Double> mapSanPhamGiamGia = new java.util.HashMap<>();
+
+    public java.util.Map<String, Double> getMapSanPhamGiamGia() {
+        return mapSanPhamGiamGia;
+    }
+
+    public void setMapSanPhamGiamGia(java.util.Map<String, Double> mapSanPhamGiamGia) {
+        this.mapSanPhamGiamGia = mapSanPhamGiamGia != null ? mapSanPhamGiamGia : new java.util.HashMap<>();
+    }
 }
