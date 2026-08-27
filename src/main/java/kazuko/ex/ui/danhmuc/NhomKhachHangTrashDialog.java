@@ -23,6 +23,16 @@ public class NhomKhachHangTrashDialog extends JDialog {
     private DefaultTreeModel treeModel;
     private DefaultMutableTreeNode rootNode;
 
+    public NhomKhachHangTrashDialog(Component parentComponent, Runnable onDataChanged) {
+        super(SwingUtilities.getWindowAncestor(parentComponent), "Thùng rác - Nhóm khách hàng", ModalityType.APPLICATION_MODAL);
+        this.onDataChanged = onDataChanged;
+
+        initComponents();
+        loadTrashTree();
+        setSize(480, 500);
+        setLocationRelativeTo(parentComponent);
+    }
+
     public NhomKhachHangTrashDialog(Dialog parent, Runnable onDataChanged) {
         super(parent, "Thùng rác - Nhóm khách hàng", true);
         this.onDataChanged = onDataChanged;

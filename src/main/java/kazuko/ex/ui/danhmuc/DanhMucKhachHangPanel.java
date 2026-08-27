@@ -105,7 +105,7 @@ public class DanhMucKhachHangPanel extends JPanel {
         btnAddMenu.addActionListener(e -> onAddNhom());
         btnEditNhom.addActionListener(e -> onEditNhom());
         btnDeleteNhom.addActionListener(e -> onDeleteNhom());
-        btnTrash.addActionListener(e -> onOpenTrash());
+        btnTrash.addActionListener(e -> onOpenNhomTrash());
         btnRefreshNhom.addActionListener(e -> loadNhomTree());
 
         leftToolbar.add(btnAddMenu);
@@ -228,7 +228,7 @@ public class DanhMucKhachHangPanel extends JPanel {
                     if (path != null) {
                         DefaultMutableTreeNode node = (DefaultMutableTreeNode) path.getLastPathComponent();
                         if ("Thùng rác".equals(node.getUserObject())) {
-                            onOpenTrash();
+                            onOpenNhomTrash();
                         } else if (node.getUserObject() instanceof NhomKhachHang) {
                             NhomKhachHang nh = (NhomKhachHang) node.getUserObject();
                             if (!nh.isSeparator()) {
@@ -1042,7 +1042,7 @@ public class DanhMucKhachHangPanel extends JPanel {
         miRename.addActionListener(ev -> onRenameNhom());
         miEdit.addActionListener(ev -> onEditNhom());
         miDelete.addActionListener(ev -> onDeleteNhom());
-        miTrash.addActionListener(ev -> onOpenTrash());
+        miTrash.addActionListener(ev -> onOpenNhomTrash());
         miRefresh.addActionListener(ev -> loadNhomTree(currentSelectedNhom));
 
         popup.add(miAddGroup);
@@ -1057,6 +1057,13 @@ public class DanhMucKhachHangPanel extends JPanel {
         popup.add(miRefresh);
 
         popup.show(treeNhomKhachHang, x, y);
+    }
+
+    private void onOpenNhomTrash() {
+        NhomKhachHangTrashDialog dialog = new NhomKhachHangTrashDialog(this, () -> {
+            loadNhomTree(currentSelectedNhom);
+        });
+        dialog.setVisible(true);
     }
 
     private void onOpenTrash() {
