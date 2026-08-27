@@ -25,6 +25,13 @@ public class BaoGiaDAO extends BaseDAO {
      * Lấy danh sách phiếu báo giá theo bộ lọc
      */
     public List<BaoGia> getDanhSachBaoGia(Date tuNgay, Date denNgay, String soPhieu, String khachHangId) {
+        return getDanhSachBaoGia(tuNgay, denNgay, soPhieu, khachHangId, null);
+    }
+
+    /**
+     * Lấy danh sách phiếu báo giá theo bộ lọc nâng cao gồm từ khóa tên khách
+     */
+    public List<BaoGia> getDanhSachBaoGia(Date tuNgay, Date denNgay, String soPhieu, String khachHangId, String tenKhachKeyword) {
         List<BaoGia> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder("SELECT ID, NAME, NGAY, DKHACHHANGID, TENKHACH, DIACHI, DIENTHOAI, EMAIL, " +
                 "NOTE, TIENHANG, TILEGIAMGIA, TIENGIAMGIA, TILETHUE, TIENTHUE, PHIVANCHUYEN, TONGCONG, LOAI, " +
@@ -42,6 +49,8 @@ public class BaoGiaDAO extends BaseDAO {
         }
         if (khachHangId != null && !khachHangId.trim().isEmpty()) {
             sql.append("AND DKHACHHANGID = ? ");
+        } else if (tenKhachKeyword != null && !tenKhachKeyword.trim().isEmpty()) {
+            sql.append("AND (LOWER(TENKHACH) LIKE ? OR LOWER(DIENTHOAI) LIKE ? OR LOWER(DIACHI) LIKE ?) ");
         }
 
         sql.append("ORDER BY NGAY DESC, TIMECREATED DESC, NAME DESC");
@@ -62,6 +71,11 @@ public class BaoGiaDAO extends BaseDAO {
             }
             if (khachHangId != null && !khachHangId.trim().isEmpty()) {
                 ps.setString(idx++, khachHangId.trim());
+            } else if (tenKhachKeyword != null && !tenKhachKeyword.trim().isEmpty()) {
+                String kw = "%" + tenKhachKeyword.trim().toLowerCase() + "%";
+                ps.setString(idx++, kw);
+                ps.setString(idx++, kw);
+                ps.setString(idx++, kw);
             }
 
             try (ResultSet rs = ps.executeQuery()) {

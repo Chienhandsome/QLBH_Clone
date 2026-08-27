@@ -10,6 +10,8 @@ import kazuko.ex.model.danhmuc.KhachHang;
 import kazuko.ex.model.danhmuc.MatHang;
 import kazuko.ex.model.system.SystemConfig;
 import kazuko.ex.ui.common.DatePickerField;
+import kazuko.ex.ui.danhmuc.DanhMucKhachHangPanel;
+import kazuko.ex.ui.danhmuc.KhachHangEditDialog;
 import kazuko.ex.util.AppColors;
 import kazuko.ex.util.CurrencyUtil;
 import kazuko.ex.util.IconHelper;
@@ -49,7 +51,18 @@ public class BaoGiaEditDialog extends JDialog {
     // Header Controls
     private DatePickerField dpkNgay;
     private JTextField txtSoPhieu;
-    private JComboBox<KhachHang> cbKhachHang;
+
+    // Customer Lookup Controls
+    private JTextField txtKhachHang;
+    private JButton btnKhachHangDropdown;
+    private JPopupMenu popupKhachHang;
+    private JTable tableLookupKhachHang;
+    private DefaultTableModel lookupKhachHangModel;
+    private List<KhachHang> allKhachHangList = new ArrayList<>();
+    private List<KhachHang> filteredLookupKhachHangList = new ArrayList<>();
+    private KhachHang selectedKhachHang = null;
+    private boolean isUpdatingCustomerText = false;
+
     private JTextField txtTenKhach;
     private JTextField txtDiaChi;
     private JTextField txtDienThoai;
@@ -287,24 +300,8 @@ public class BaoGiaEditDialog extends JDialog {
         pnlLeftForm.add(lblKhach, gbc);
 
         gbc.gridx = 1; gbc.gridy = 1; gbc.gridwidth = 3; gbc.weightx = 1.0;
-        cbKhachHang = new JComboBox<>();
-        cbKhachHang.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        cbKhachHang.setBackground(Color.WHITE);
-        cbKhachHang.setRenderer(new DefaultListCellRenderer() {
-            @Override
-            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
-                JLabel l = (JLabel) super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-                if (value instanceof KhachHang) {
-                    KhachHang kh = (KhachHang) value;
-                    l.setText(kh.getName() + (kh.getDienThoai() != null && !kh.getDienThoai().isEmpty() ? " - " + kh.getDienThoai() : ""));
-                } else if (value == null) {
-                    l.setText("-- Chọn khách hàng --");
-                }
-                return l;
-            }
-        });
-        cbKhachHang.addActionListener(e -> onKhachHangSelected());
-        pnlLeftForm.add(cbKhachHang, gbc);
+        JPanel pnlKhachLookup = createKhachHangLookupPanel();
+        pnlLeftForm.add(pnlKhachLookup, gbc);
         gbc.gridwidth = 1;
 
         // Row 2: Tên khách
@@ -821,14 +818,336 @@ public class BaoGiaEditDialog extends JDialog {
         popup.show(comp, 0, comp.getHeight());
     }
 
-    private void loadCatalogData() {
-        // Load Customers into ComboBox
-        cbKhachHang.removeAllItems();
-        cbKhachHang.addItem(null); // Empty choice
-        List<KhachHang> khachList = khachHangDAO.getAll();
-        for (KhachHang kh : khachList) {
-            cbKhachHang.addItem(kh);
+    private JPanel createKhachHangLookupPanel() {
+        JPanel panel = new JPanel(new BorderLayout(0, 0));
+        panel.setBackground(Color.WHITE);
+        panel.setBorder(new LineBorder(new Color(185, 205, 230), 1));
+
+        txtKhachHang = new JTextField();
+        txtKhachHang.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        txtKhachHang.setBorder(BorderFactory.createEmptyBorder(2, 6, 2, 4));
+
+        btnKhachHangDropdown = new JButton("▾");
+        btnKhachHangDropdown.setFont(new Font("Segoe UI", Font.BOLD, 10));
+        btnKhachHangDropdown.setPreferredSize(new Dimension(24, 22));
+        btnKhachHangDropdown.setBackground(new Color(245, 248, 253));
+        btnKhachHangDropdown.setFocusPainted(false);
+        btnKhachHangDropdown.setBorder(BorderFactory.createMatteBorder(0, 1, 0, 0, new Color(185, 205, 230)));
+
+        panel.add(txtKhachHang, BorderLayout.CENTER);
+        panel.add(btnKhachHangDropdown, BorderLayout.EAST);
+
+        initKhachHangLookupPopup(panel);
+
+        btnKhachHangDropdown.addActionListener(e -> toggleKhachHangPopup(panel));
+        txtKhachHang.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                showKhachHangPopup(panel);
+            }
+        });
+
+        txtKhachHang.getDocument().addDocumentListener(new DocumentListener() {
+            @Override public void insertUpdate(DocumentEvent e) { onKhachHangTextChanged(panel); }
+            @Override public void removeUpdate(DocumentEvent e) { onKhachHangTextChanged(panel); }
+            @Override public void changedUpdate(DocumentEvent e) { onKhachHangTextChanged(panel); }
+        });
+
+        txtKhachHang.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+                if (e.getKeyCode() == KeyEvent.VK_DOWN) {
+                    if (!popupKhachHang.isVisible()) {
+                        showKhachHangPopup(panel);
+                    }
+                    tableLookupKhachHang.requestFocusInWindow();
+                    if (tableLookupKhachHang.getRowCount() > 0 && tableLookupKhachHang.getSelectedRow() < 0) {
+                        tableLookupKhachHang.setRowSelectionInterval(0, 0);
+                    }
+                } else if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
+                    popupKhachHang.setVisible(false);
+                } else if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                    if (popupKhachHang.isVisible()) {
+                        int sel = tableLookupKhachHang.getSelectedRow();
+                        if (sel >= 0 && sel < filteredLookupKhachHangList.size()) {
+                            selectCustomer(filteredLookupKhachHangList.get(sel));
+                        }
+                        popupKhachHang.setVisible(false);
+                    }
+                }
+            }
+        });
+
+        return panel;
+    }
+
+    private void initKhachHangLookupPopup(JPanel anchor) {
+        popupKhachHang = new JPopupMenu();
+        popupKhachHang.setFocusable(false);
+
+        JPanel pnlPopup = new JPanel(new BorderLayout(0, 0));
+        pnlPopup.setPreferredSize(new Dimension(580, 240));
+        pnlPopup.setBackground(Color.WHITE);
+        pnlPopup.setBorder(new LineBorder(new Color(175, 195, 225), 1));
+
+        String[] cols = {"Tên khách hàng", "Mã khách", "Địa chỉ", "Điện thoại", "Email"};
+        lookupKhachHangModel = new DefaultTableModel(cols, 0) {
+            @Override public boolean isCellEditable(int row, int column) { return false; }
+        };
+
+        tableLookupKhachHang = new JTable(lookupKhachHangModel);
+        tableLookupKhachHang.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        tableLookupKhachHang.setRowHeight(22);
+        tableLookupKhachHang.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        tableLookupKhachHang.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 12));
+        tableLookupKhachHang.getTableHeader().setBackground(new Color(255, 248, 225));
+        tableLookupKhachHang.setSelectionBackground(new Color(255, 243, 205));
+        tableLookupKhachHang.setSelectionForeground(Color.BLACK);
+
+        tableLookupKhachHang.getColumnModel().getColumn(0).setPreferredWidth(140);
+        tableLookupKhachHang.getColumnModel().getColumn(1).setPreferredWidth(80);
+        tableLookupKhachHang.getColumnModel().getColumn(2).setPreferredWidth(150);
+        tableLookupKhachHang.getColumnModel().getColumn(3).setPreferredWidth(95);
+        tableLookupKhachHang.getColumnModel().getColumn(4).setPreferredWidth(115);
+
+        tableLookupKhachHang.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                int sel = tableLookupKhachHang.getSelectedRow();
+                if (sel >= 0 && sel < filteredLookupKhachHangList.size()) {
+                    selectCustomer(filteredLookupKhachHangList.get(sel));
+                    if (e.getClickCount() == 2) {
+                        popupKhachHang.setVisible(false);
+                    }
+                }
+            }
+        });
+
+        tableLookupKhachHang.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+                if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                    int sel = tableLookupKhachHang.getSelectedRow();
+                    if (sel >= 0 && sel < filteredLookupKhachHangList.size()) {
+                        selectCustomer(filteredLookupKhachHangList.get(sel));
+                    }
+                    popupKhachHang.setVisible(false);
+                    e.consume();
+                } else if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
+                    popupKhachHang.setVisible(false);
+                    txtKhachHang.requestFocusInWindow();
+                }
+            }
+        });
+
+        JScrollPane scroll = new JScrollPane(tableLookupKhachHang);
+        pnlPopup.add(scroll, BorderLayout.CENTER);
+
+        // Bottom toolbar in Popup (3 buttons: + Thêm, Sửa, Tải, Danh mục)
+        JPanel pnlBottomToolbar = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 3));
+        pnlBottomToolbar.setBackground(new Color(240, 245, 252));
+        pnlBottomToolbar.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, new Color(205, 220, 240)));
+
+        JButton btnThem = createPopupMiniButton("+ Thêm", "plus.png", new Color(0, 130, 60));
+        JButton btnSua = createPopupMiniButton("Sửa", "pencil.png", Color.BLACK);
+        JButton btnTai = createPopupMiniButton("Tải", "Refresh.png", new Color(0, 80, 180));
+        JButton btnDanhMuc = createPopupMiniButton("Danh mục", "table.png", Color.BLACK);
+
+        btnThem.addActionListener(e -> {
+            popupKhachHang.setVisible(false);
+            onAddNewCustomerFromPopup();
+        });
+
+        btnSua.addActionListener(e -> {
+            int sel = tableLookupKhachHang.getSelectedRow();
+            if (sel >= 0 && sel < filteredLookupKhachHangList.size()) {
+                popupKhachHang.setVisible(false);
+                onEditCustomerFromPopup(filteredLookupKhachHangList.get(sel));
+            } else if (selectedKhachHang != null) {
+                popupKhachHang.setVisible(false);
+                onEditCustomerFromPopup(selectedKhachHang);
+            } else {
+                JOptionPane.showMessageDialog(this, "Vui lòng chọn khách hàng cần sửa!", "Thông báo", JOptionPane.WARNING_MESSAGE);
+            }
+        });
+
+        btnTai.addActionListener(e -> {
+            reloadCustomerData();
+            filterLookupCustomers(txtKhachHang.getText());
+        });
+
+        btnDanhMuc.addActionListener(e -> {
+            popupKhachHang.setVisible(false);
+            openDanhMucKhachHangDialog();
+        });
+
+        pnlBottomToolbar.add(btnThem);
+        pnlBottomToolbar.add(btnSua);
+        pnlBottomToolbar.add(btnTai);
+        pnlBottomToolbar.add(btnDanhMuc);
+
+        pnlPopup.add(pnlBottomToolbar, BorderLayout.SOUTH);
+        popupKhachHang.add(pnlPopup);
+    }
+
+    private JButton createPopupMiniButton(String text, String iconName, Color fgColor) {
+        JButton btn = new JButton(text, IconHelper.getIcon(iconName, 14, 14));
+        btn.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        btn.setForeground(fgColor);
+        btn.setBackground(Color.WHITE);
+        btn.setFocusPainted(false);
+        btn.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(190, 205, 225), 1),
+                BorderFactory.createEmptyBorder(3, 8, 3, 8)
+        ));
+        return btn;
+    }
+
+    private void showKhachHangPopup(JPanel anchor) {
+        if (!popupKhachHang.isVisible() && anchor.isShowing()) {
+            filterLookupCustomers(txtKhachHang.getText());
+            popupKhachHang.show(anchor, 0, anchor.getHeight());
         }
+    }
+
+    private void toggleKhachHangPopup(JPanel anchor) {
+        if (popupKhachHang.isVisible()) {
+            popupKhachHang.setVisible(false);
+        } else {
+            showKhachHangPopup(anchor);
+        }
+    }
+
+    private void onKhachHangTextChanged(JPanel anchor) {
+        if (isUpdatingCustomerText) return;
+        String query = txtKhachHang.getText().trim();
+        if (query.isEmpty()) {
+            selectedKhachHang = null;
+            setCustomerFieldsEditable(true);
+        }
+        filterLookupCustomers(query);
+        if (!popupKhachHang.isVisible() && anchor.isShowing() && txtKhachHang.hasFocus()) {
+            popupKhachHang.show(anchor, 0, anchor.getHeight());
+        }
+    }
+
+    private void filterLookupCustomers(String keyword) {
+        String kw = keyword != null ? keyword.trim().toLowerCase() : "";
+        filteredLookupKhachHangList.clear();
+        lookupKhachHangModel.setRowCount(0);
+
+        for (KhachHang kh : allKhachHangList) {
+            boolean match = kw.isEmpty() ||
+                    (kh.getName() != null && kh.getName().toLowerCase().contains(kw)) ||
+                    (kh.getMaKhach() != null && kh.getMaKhach().toLowerCase().contains(kw)) ||
+                    (kh.getDienThoai() != null && kh.getDienThoai().contains(kw)) ||
+                    (kh.getDiaChi() != null && kh.getDiaChi().toLowerCase().contains(kw)) ||
+                    (kh.getEmail() != null && kh.getEmail().toLowerCase().contains(kw));
+            if (match) {
+                filteredLookupKhachHangList.add(kh);
+                lookupKhachHangModel.addRow(new Object[]{
+                        kh.getName() != null ? kh.getName() : "",
+                        kh.getMaKhach() != null ? kh.getMaKhach() : "",
+                        kh.getDiaChi() != null ? kh.getDiaChi() : "",
+                        kh.getDienThoai() != null ? kh.getDienThoai() : "",
+                        kh.getEmail() != null ? kh.getEmail() : ""
+                });
+            }
+        }
+    }
+
+    private void selectCustomer(KhachHang kh) {
+        this.selectedKhachHang = kh;
+        isUpdatingCustomerText = true;
+        try {
+            if (kh != null) {
+                txtKhachHang.setText(kh.getName() != null ? kh.getName() : "");
+                txtTenKhach.setText(kh.getName() != null ? kh.getName() : "");
+                txtDiaChi.setText(kh.getDiaChi() != null ? kh.getDiaChi() : "");
+                txtDienThoai.setText(kh.getDienThoai() != null ? kh.getDienThoai() : "");
+                txtEmail.setText(kh.getEmail() != null ? kh.getEmail() : "");
+                setCustomerFieldsEditable(false);
+            } else {
+                txtKhachHang.setText("");
+                setCustomerFieldsEditable(true);
+            }
+        } finally {
+            isUpdatingCustomerText = false;
+        }
+    }
+
+    private void reloadCustomerData() {
+        allKhachHangList = khachHangDAO.getAll();
+    }
+
+    private void onAddNewCustomerFromPopup() {
+        KhachHangEditDialog dlg = new KhachHangEditDialog(this, null, () -> {
+            reloadCustomerData();
+            if (!allKhachHangList.isEmpty()) {
+                KhachHang newest = allKhachHangList.get(allKhachHangList.size() - 1);
+                selectCustomer(newest);
+            }
+        });
+        dlg.setVisible(true);
+    }
+
+    private void onEditCustomerFromPopup(KhachHang kh) {
+        if (kh == null) return;
+        KhachHangEditDialog dlg = new KhachHangEditDialog(this, kh, () -> {
+            reloadCustomerData();
+            KhachHang refreshed = khachHangDAO.findActiveById(kh.getId());
+            if (refreshed != null) {
+                selectCustomer(refreshed);
+            }
+        });
+        dlg.setVisible(true);
+    }
+
+    private void openDanhMucKhachHangDialog() {
+        JDialog dlg = new JDialog(this, "DANH SÁCH KHÁCH HÀNG", Dialog.ModalityType.APPLICATION_MODAL);
+        dlg.setSize(950, 580);
+        dlg.setLocationRelativeTo(this);
+        dlg.setLayout(new BorderLayout());
+
+        DanhMucKhachHangPanel pnl = new DanhMucKhachHangPanel();
+        dlg.add(pnl, BorderLayout.CENTER);
+
+        JPanel pnlBottom = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 8));
+        pnlBottom.setBackground(new Color(240, 245, 252));
+        pnlBottom.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, new Color(205, 220, 240)));
+
+        JButton btnChon = new JButton("Chọn khách hàng");
+        btnChon.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        btnChon.setBackground(new Color(230, 240, 255));
+        btnChon.addActionListener(e -> {
+            KhachHang sel = pnl.getSelectedKhachHang();
+            if (sel != null) {
+                selectCustomer(sel);
+                dlg.dispose();
+            } else {
+                JOptionPane.showMessageDialog(dlg, "Vui lòng chọn một khách hàng!", "Thông báo", JOptionPane.WARNING_MESSAGE);
+            }
+        });
+
+        JButton btnThoat = new JButton("Thoát");
+        btnThoat.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        btnThoat.addActionListener(e -> dlg.dispose());
+
+        pnlBottom.add(btnChon);
+        pnlBottom.add(btnThoat);
+        dlg.add(pnlBottom, BorderLayout.SOUTH);
+
+        pnl.setOnCustomerDoubleClickListener(kh -> {
+            selectCustomer(kh);
+            dlg.dispose();
+        });
+
+        dlg.setVisible(true);
+    }
+
+    private void loadCatalogData() {
+        // Load Customers into Lookup List
+        reloadCustomerData();
 
         // Load Products into Catalog Table
         allMatHangList = matHangDAO.getAll();
@@ -863,15 +1182,17 @@ public class BaoGiaEditDialog extends JDialog {
         }
     }
 
-    private void onKhachHangSelected() {
-        Object item = cbKhachHang.getSelectedItem();
-        if (item instanceof KhachHang) {
-            KhachHang kh = (KhachHang) item;
-            txtTenKhach.setText(kh.getName() != null ? kh.getName() : "");
-            txtDiaChi.setText(kh.getDiaChi() != null ? kh.getDiaChi() : "");
-            txtDienThoai.setText(kh.getDienThoai() != null ? kh.getDienThoai() : "");
-            txtEmail.setText(kh.getEmail() != null ? kh.getEmail() : "");
-        }
+    private void setCustomerFieldsEditable(boolean editable) {
+        txtTenKhach.setEditable(editable);
+        txtDiaChi.setEditable(editable);
+        txtDienThoai.setEditable(editable);
+        txtEmail.setEditable(editable);
+
+        Color bg = editable ? Color.WHITE : new Color(238, 238, 238);
+        txtTenKhach.setBackground(bg);
+        txtDiaChi.setBackground(bg);
+        txtDienThoai.setBackground(bg);
+        txtEmail.setBackground(bg);
     }
 
     private void addSelectedCatalogItemToDetails() {
@@ -992,12 +1313,13 @@ public class BaoGiaEditDialog extends JDialog {
 
         dpkNgay.setDate(new Date());
         txtSoPhieu.setText(baoGiaDAO.generateNextSoPhieu(new Date()));
-        cbKhachHang.setSelectedItem(null);
+        selectCustomer(null);
         txtTenKhach.setText("");
         txtDiaChi.setText("");
         txtDienThoai.setText("");
         txtEmail.setText("");
         txtGhiChu.setText("");
+        setCustomerFieldsEditable(true);
 
         txtGiamGiaPt.setText("0");
         txtThuePt.setText("0");
@@ -1019,21 +1341,35 @@ public class BaoGiaEditDialog extends JDialog {
         }
         txtSoPhieu.setText(bg.getName() != null ? bg.getName() : "");
 
-        // Select Customer in Combobox
+        // Select Customer in Lookup
         if (bg.getdKhachHangId() != null) {
-            for (int i = 0; i < cbKhachHang.getItemCount(); i++) {
-                KhachHang kh = cbKhachHang.getItemAt(i);
+            KhachHang found = null;
+            for (KhachHang kh : allKhachHangList) {
                 if (kh != null && bg.getdKhachHangId().equals(kh.getId())) {
-                    cbKhachHang.setSelectedIndex(i);
+                    found = kh;
                     break;
                 }
             }
+            if (found != null) {
+                selectCustomer(found);
+            } else {
+                this.selectedKhachHang = null;
+                txtKhachHang.setText(bg.getTenKhach() != null ? bg.getTenKhach() : "");
+                txtTenKhach.setText(bg.getTenKhach() != null ? bg.getTenKhach() : "");
+                txtDiaChi.setText(bg.getDiaChi() != null ? bg.getDiaChi() : "");
+                txtDienThoai.setText(bg.getDienThoai() != null ? bg.getDienThoai() : "");
+                txtEmail.setText(bg.getEmail() != null ? bg.getEmail() : "");
+                setCustomerFieldsEditable(false);
+            }
+        } else {
+            selectCustomer(null);
+            txtTenKhach.setText(bg.getTenKhach() != null ? bg.getTenKhach() : "");
+            txtDiaChi.setText(bg.getDiaChi() != null ? bg.getDiaChi() : "");
+            txtDienThoai.setText(bg.getDienThoai() != null ? bg.getDienThoai() : "");
+            txtEmail.setText(bg.getEmail() != null ? bg.getEmail() : "");
+            setCustomerFieldsEditable(true);
         }
 
-        txtTenKhach.setText(bg.getTenKhach() != null ? bg.getTenKhach() : "");
-        txtDiaChi.setText(bg.getDiaChi() != null ? bg.getDiaChi() : "");
-        txtDienThoai.setText(bg.getDienThoai() != null ? bg.getDienThoai() : "");
-        txtEmail.setText(bg.getEmail() != null ? bg.getEmail() : "");
         txtGhiChu.setText(bg.getNote() != null ? bg.getNote() : "");
 
         txtGiamGiaPt.setText(String.valueOf(bg.getTiLeGiamGia()));
@@ -1078,9 +1414,8 @@ public class BaoGiaEditDialog extends JDialog {
         Date date = dpkNgay.getDate();
         currentBaoGia.setNgay(date != null ? new Timestamp(date.getTime()) : new Timestamp(System.currentTimeMillis()));
 
-        Object selKh = cbKhachHang.getSelectedItem();
-        if (selKh instanceof KhachHang) {
-            currentBaoGia.setdKhachHangId(((KhachHang) selKh).getId());
+        if (selectedKhachHang != null) {
+            currentBaoGia.setdKhachHangId(selectedKhachHang.getId());
         } else {
             currentBaoGia.setdKhachHangId(null);
         }

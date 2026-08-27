@@ -38,6 +38,7 @@ public class BaoGiaBanHangPanel extends JPanel {
     private DatePickerField dpkDenNgay;
     private JTextField txtSoPhieuFilter;
     private JComboBox<KhachHang> cbKhachHangFilter;
+    private javax.swing.Timer autoFilterTimer;
 
     // Master Table & Toolbar
     private JTextField txtSearch;
@@ -158,12 +159,17 @@ public class BaoGiaBanHangPanel extends JPanel {
         gbc.gridx = 1; gbc.gridy = 3; gbc.gridwidth = 2; gbc.weightx = 0.7;
         txtSoPhieuFilter = new JTextField();
         txtSoPhieuFilter.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        txtSoPhieuFilter.getDocument().addDocumentListener(new DocumentListener() {
+            @Override public void insertUpdate(DocumentEvent e) { triggerAutoFilter(); }
+            @Override public void removeUpdate(DocumentEvent e) { triggerAutoFilter(); }
+            @Override public void changedUpdate(DocumentEvent e) { triggerAutoFilter(); }
+        });
         formPanel.add(txtSoPhieuFilter, gbc);
         gbc.gridwidth = 1;
 
-        // Row 4: Khách hàng
+        // Row 4: Khách hàng (Có thể nhập tìm kiếm trực tiếp)
         gbc.gridx = 0; gbc.gridy = 4; gbc.weightx = 0.3;
-        JLabel lblKhach = new JLabel("Khách hàng");
+        JLabel lblKhach = new JLabel("Khách h...");
         lblKhach.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         formPanel.add(lblKhach, gbc);
 
@@ -171,30 +177,37 @@ public class BaoGiaBanHangPanel extends JPanel {
         cbKhachHangFilter = new JComboBox<>();
         cbKhachHangFilter.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         cbKhachHangFilter.setBackground(Color.WHITE);
+        cbKhachHangFilter.setEditable(true);
+
+        Component editorComp = cbKhachHangFilter.getEditor().getEditorComponent();
+        if (editorComp instanceof JTextField) {
+            JTextField txtEditor = (JTextField) editorComp;
+            txtEditor.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+            txtEditor.getDocument().addDocumentListener(new DocumentListener() {
+                @Override public void insertUpdate(DocumentEvent e) { triggerAutoFilter(); }
+                @Override public void removeUpdate(DocumentEvent e) { triggerAutoFilter(); }
+                @Override public void changedUpdate(DocumentEvent e) { triggerAutoFilter(); }
+            });
+        }
+
         cbKhachHangFilter.setRenderer(new DefaultListCellRenderer() {
             @Override
             public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
                 JLabel l = (JLabel) super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
                 if (value instanceof KhachHang) {
-                    l.setText(((KhachHang) value).getName());
+                    KhachHang kh = (KhachHang) value;
+                    l.setText(kh.getName() + (kh.getDienThoai() != null && !kh.getDienThoai().isEmpty() ? " - " + kh.getDienThoai() : ""));
                 } else if (value == null) {
                     l.setText("-- Tất cả --");
+                } else {
+                    l.setText(value.toString());
                 }
                 return l;
             }
         });
+        cbKhachHangFilter.addActionListener(e -> triggerAutoFilter());
         formPanel.add(cbKhachHangFilter, gbc);
         gbc.gridwidth = 1;
-
-        // Row 5: Nút Xem dữ liệu
-        gbc.gridx = 0; gbc.gridy = 5; gbc.gridwidth = 3; gbc.weightx = 1.0;
-        gbc.insets = new Insets(10, 2, 4, 2);
-        JButton btnApplyFilter = new JButton("Xem dữ liệu", IconHelper.getIcon("Search43.png", 16, 16));
-        btnApplyFilter.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        btnApplyFilter.setBackground(new Color(240, 245, 252));
-        btnApplyFilter.setFocusPainted(false);
-        btnApplyFilter.addActionListener(e -> loadData());
-        formPanel.add(btnApplyFilter, gbc);
 
         panel.add(formPanel, BorderLayout.NORTH);
         return panel;
@@ -538,12 +551,31 @@ public class BaoGiaBanHangPanel extends JPanel {
                 KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0), JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
     }
 
+    private void triggerAutoFilter() {
+        if (autoFilterTimer != null && autoFilterTimer.isRunning()) {
+            autoFilterTimer.restart();
+        } else {
+            autoFilterTimer = new javax.swing.Timer(250, e -> loadData());
+            autoFilterTimer.setRepeats(false);
+            autoFilterTimer.start();
+        }
+    }
+
     private void initFilterDefaults() {
         // Default: 30 days range
         Calendar cal = Calendar.getInstance();
         dpkDenNgay.setDate(cal.getTime());
         cal.add(Calendar.DAY_OF_MONTH, -30);
         dpkTuNgay.setDate(cal.getTime());
+
+        // Attach listeners to date pickers for auto-filtering
+        DocumentListener dateListener = new DocumentListener() {
+            @Override public void insertUpdate(DocumentEvent e) { triggerAutoFilter(); }
+            @Override public void removeUpdate(DocumentEvent e) { triggerAutoFilter(); }
+            @Override public void changedUpdate(DocumentEvent e) { triggerAutoFilter(); }
+        };
+        dpkTuNgay.getTextField().getDocument().addDocumentListener(dateListener);
+        dpkDenNgay.getTextField().getDocument().addDocumentListener(dateListener);
 
         // Load Customers into Filter
         cbKhachHangFilter.removeAllItems();
@@ -640,10 +672,29 @@ public class BaoGiaBanHangPanel extends JPanel {
         Date tuNgay = dpkTuNgay.getDate();
         Date denNgay = dpkDenNgay.getDate();
         String soPhieu = txtSoPhieuFilter.getText() != null ? txtSoPhieuFilter.getText().trim() : null;
-        Object selKh = cbKhachHangFilter.getSelectedItem();
-        String khachId = (selKh instanceof KhachHang) ? ((KhachHang) selKh).getId() : null;
 
-        currentBaoGiaList = baoGiaDAO.getDanhSachBaoGia(tuNgay, denNgay, soPhieu, khachId);
+        String khachId = null;
+        String tenKhachKeyword = null;
+
+        Object selKh = cbKhachHangFilter.getSelectedItem();
+        if (selKh instanceof KhachHang) {
+            khachId = ((KhachHang) selKh).getId();
+        } else if (selKh != null) {
+            String text = selKh.toString().trim();
+            if (!text.isEmpty() && !text.equalsIgnoreCase("-- Tất cả --")) {
+                tenKhachKeyword = text;
+            }
+        } else {
+            Component editorComp = cbKhachHangFilter.getEditor().getEditorComponent();
+            if (editorComp instanceof JTextField) {
+                String text = ((JTextField) editorComp).getText().trim();
+                if (!text.isEmpty() && !text.equalsIgnoreCase("-- Tất cả --")) {
+                    tenKhachKeyword = text;
+                }
+            }
+        }
+
+        currentBaoGiaList = baoGiaDAO.getDanhSachBaoGia(tuNgay, denNgay, soPhieu, khachId, tenKhachKeyword);
         filterMasterTable();
     }
 

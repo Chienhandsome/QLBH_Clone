@@ -798,6 +798,28 @@ public class DanhMucKhachHangPanel extends JPanel {
         dialog.setVisible(true);
     }
 
+    public KhachHang getSelectedKhachHang() {
+        int selected = tableKhachHang.getSelectedRow();
+        if (selected >= 0 && selected < currentList.size()) {
+            return currentList.get(selected);
+        }
+        return null;
+    }
+
+    public void setOnCustomerDoubleClickListener(java.util.function.Consumer<KhachHang> listener) {
+        tableKhachHang.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() == 2) {
+                    KhachHang kh = getSelectedKhachHang();
+                    if (kh != null && listener != null) {
+                        listener.accept(kh);
+                    }
+                }
+            }
+        });
+    }
+
     private void onEditSelectedCustomer() {
         int selected = tableKhachHang.getSelectedRow();
         if (selected < 0 || selected >= currentList.size()) {
