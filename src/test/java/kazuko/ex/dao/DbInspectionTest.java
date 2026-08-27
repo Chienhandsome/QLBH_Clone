@@ -275,4 +275,25 @@ public class DbInspectionTest {
             e.printStackTrace();
         }
     }
+
+    @Test
+    public void testInspectLoyaltyTables() {
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            DatabaseMetaData meta = conn.getMetaData();
+            System.out.println("\n--- Columns in TTANGGIAMDIEM ---");
+            try (ResultSet cols = meta.getColumns(null, null, "TTANGGIAMDIEM", "%")) {
+                while (cols.next()) {
+                    System.out.println("   - " + cols.getString("COLUMN_NAME") + " (" + cols.getString("TYPE_NAME") + ")");
+                }
+            }
+            System.out.println("\n--- Columns in TDONHANG ---");
+            try (ResultSet cols = meta.getColumns(null, null, "TDONHANG", "%")) {
+                while (cols.next()) {
+                    System.out.println("   - " + cols.getString("COLUMN_NAME") + " (" + cols.getString("TYPE_NAME") + ")");
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 }

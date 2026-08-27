@@ -10,6 +10,7 @@ import kazuko.ex.ui.danhmuc.CuaHangDialog;
 import kazuko.ex.ui.danhmuc.DanhMucDotKhuyenMaiPanel;
 import kazuko.ex.ui.danhmuc.DanhMucKhachHangPanel;
 import kazuko.ex.ui.danhmuc.DanhMucMatHangPanel;
+import kazuko.ex.ui.danhmuc.KhachHangThanThietPanel;
 import kazuko.ex.ui.danhmuc.NhanVienDialog;
 import kazuko.ex.ui.khohang.QuanLyXuatKhoPanel;
 import kazuko.ex.ui.system.CauHinhToanHeThongDialog;
@@ -237,12 +238,15 @@ public class MainFrame extends JFrame {
         JMenuItem miKhuyenMai = new JMenuItem("Danh mục đợt khuyến mãi");
         miKhuyenMai.addActionListener(e -> openTab("Danh mục đợt khuyến mại", new DanhMucDotKhuyenMaiPanel()));
 
+        JMenuItem miThanThiet = new JMenuItem("Khách hàng thân thiết");
+        miThanThiet.addActionListener(e -> openTab("Khách hàng thân thiết", new KhachHangThanThietPanel()));
+
         mHoatDong.add(miCuaHang);
         mHoatDong.add(miMatHang);
         mHoatDong.add(miKhachHang);
         mHoatDong.add(miTinNhan);
         mHoatDong.add(miKhuyenMai);
-        mHoatDong.add(new JMenuItem("Khách hàng thân thiết"));
+        mHoatDong.add(miThanThiet);
         mHoatDong.add(new JMenuItem("Báo giá khách hàng"));
         mHoatDong.add(new JMenuItem("Khách đặt hàng"));
         mHoatDong.add(new JMenuItem("Hóa đơn bán hàng"));
