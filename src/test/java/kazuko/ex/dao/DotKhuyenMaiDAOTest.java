@@ -196,6 +196,7 @@ public class DotKhuyenMaiDAOTest {
         s1.setTenLoaiHinhKhuyenMai(loaiDgName);
         s1.setTuNgay(tuNgayS1);
         s1.setDenNgay(denNgayS1);
+        s1.setListCuaHangApDungIds(java.util.Arrays.asList("STORE_HN", "STORE_DN"));
 
         java.util.Map<String, Double> s1Prices = new java.util.HashMap<>();
         s1Prices.put(prodId1, 50000.0);
@@ -210,48 +211,64 @@ public class DotKhuyenMaiDAOTest {
         Assertions.assertNotNull(loadedPrices);
         Assertions.assertEquals(50000.0, loadedPrices.get(prodId1));
 
-        // Test 1: S2 overlapping with S1 (12/10 - 20/10) with prodId1 -> MUST CONFLICT
-        List<DotKhuyenMaiDAO.ConflictPromotionInfo> conflictsOverlap = dao.checkDongGiaConflicts(
+        // Test 1: S2 overlapping with S1 (12/10 - 20/10) with same store STORE_HN -> MUST CONFLICT
+        List<DotKhuyenMaiDAO.ConflictPromotionInfo> conflictsOverlapSameStore = dao.checkDongGiaConflicts(
                 null,
                 tuNgayOverlap,
                 denNgayOverlap,
                 null,
                 null,
+                java.util.Collections.singletonList("STORE_HN"),
                 java.util.Collections.singletonList(prodId1)
         );
-        Assertions.assertFalse(conflictsOverlap.isEmpty(), "Should detect conflict when dates overlap");
-        Assertions.assertEquals(s1.getId(), conflictsOverlap.get(0).getDotKmId());
-        Assertions.assertEquals(prodId1, conflictsOverlap.get(0).getMathangId());
+        Assertions.assertFalse(conflictsOverlapSameStore.isEmpty(), "Should detect conflict when dates and stores overlap");
+        Assertions.assertEquals(s1.getId(), conflictsOverlapSameStore.get(0).getDotKmId());
+        Assertions.assertEquals(prodId1, conflictsOverlapSameStore.get(0).getMathangId());
 
-        // Test 2: S3 before S1 (01/10 - 09/10) with prodId1 -> NO CONFLICT
+        // Test 2: S2 overlapping with S1 (12/10 - 20/10) with DIFFERENT store STORE_HCM -> NO CONFLICT!
+        List<DotKhuyenMaiDAO.ConflictPromotionInfo> conflictsOverlapDiffStore = dao.checkDongGiaConflicts(
+                null,
+                tuNgayOverlap,
+                denNgayOverlap,
+                null,
+                null,
+                java.util.Collections.singletonList("STORE_HCM"),
+                java.util.Collections.singletonList(prodId1)
+        );
+        Assertions.assertTrue(conflictsOverlapDiffStore.isEmpty(), "Should NOT conflict when applied stores are different");
+
+        // Test 3: S3 before S1 (01/10 - 09/10) with same store STORE_HN -> NO CONFLICT
         List<DotKhuyenMaiDAO.ConflictPromotionInfo> conflictsBefore = dao.checkDongGiaConflicts(
                 null,
                 tuNgayBefore,
                 denNgayBefore,
                 null,
                 null,
+                java.util.Collections.singletonList("STORE_HN"),
                 java.util.Collections.singletonList(prodId1)
         );
         Assertions.assertTrue(conflictsBefore.isEmpty(), "Should NOT conflict when date is before S1");
 
-        // Test 3: S4 after S1 (16/10 - 25/10) with prodId1 -> NO CONFLICT
+        // Test 4: S4 after S1 (16/10 - 25/10) with same store STORE_HN -> NO CONFLICT
         List<DotKhuyenMaiDAO.ConflictPromotionInfo> conflictsAfter = dao.checkDongGiaConflicts(
                 null,
                 tuNgayAfter,
                 denNgayAfter,
                 null,
                 null,
+                java.util.Collections.singletonList("STORE_HN"),
                 java.util.Collections.singletonList(prodId1)
         );
         Assertions.assertTrue(conflictsAfter.isEmpty(), "Should NOT conflict when date is after S1");
 
-        // Test 4: S1 editing itself -> Excludes itself, NO CONFLICT
+        // Test 5: S1 editing itself -> Excludes itself, NO CONFLICT
         List<DotKhuyenMaiDAO.ConflictPromotionInfo> conflictsSelf = dao.checkDongGiaConflicts(
                 s1.getId(),
                 tuNgayS1,
                 denNgayS1,
                 null,
                 null,
+                java.util.Collections.singletonList("STORE_HN"),
                 java.util.Collections.singletonList(prodId1)
         );
         Assertions.assertTrue(conflictsSelf.isEmpty(), "Should NOT conflict with itself");

@@ -474,8 +474,9 @@ public class DotKhuyenMaiDAO extends BaseDAO {
         private Timestamp tuGio;
         private Timestamp denGio;
         private String mathangId;
+        private List<String> conflictingStoreIds = new ArrayList<>();
 
-        public ConflictPromotionInfo(String dotKmId, String dotKmName, Timestamp tuNgay, Timestamp denNgay, Timestamp tuGio, Timestamp denGio, String mathangId) {
+        public ConflictPromotionInfo(String dotKmId, String dotKmName, Timestamp tuNgay, Timestamp denNgay, Timestamp tuGio, Timestamp denGio, String mathangId, List<String> conflictingStoreIds) {
             this.dotKmId = dotKmId;
             this.dotKmName = dotKmName;
             this.tuNgay = tuNgay;
@@ -483,6 +484,7 @@ public class DotKhuyenMaiDAO extends BaseDAO {
             this.tuGio = tuGio;
             this.denGio = denGio;
             this.mathangId = mathangId;
+            this.conflictingStoreIds = conflictingStoreIds != null ? conflictingStoreIds : new ArrayList<>();
         }
 
         public String getDotKmId() { return dotKmId; }
@@ -492,6 +494,7 @@ public class DotKhuyenMaiDAO extends BaseDAO {
         public Timestamp getTuGio() { return tuGio; }
         public Timestamp getDenGio() { return denGio; }
         public String getMathangId() { return mathangId; }
+        public List<String> getConflictingStoreIds() { return conflictingStoreIds; }
     }
 
     public static Timestamp combineDateTime(Timestamp date, Timestamp time, boolean isEndOfDayDefault) {
@@ -521,7 +524,14 @@ public class DotKhuyenMaiDAO extends BaseDAO {
         return new Timestamp(cal.getTimeInMillis());
     }
 
-    public List<ConflictPromotionInfo> checkDongGiaConflicts(String currentDotKmId, Timestamp tuNgay, Timestamp denNgay, Timestamp tuGio, Timestamp denGio, Collection<String> productIds) {
+    public List<ConflictPromotionInfo> checkDongGiaConflicts(
+            String currentDotKmId,
+            Timestamp tuNgay,
+            Timestamp denNgay,
+            Timestamp tuGio,
+            Timestamp denGio,
+            Collection<String> currentStoreIds,
+            Collection<String> productIds) {
         List<ConflictPromotionInfo> conflicts = new ArrayList<>();
         if (tuNgay == null || denNgay == null || productIds == null || productIds.isEmpty()) {
             return conflicts;
@@ -547,25 +557,56 @@ public class DotKhuyenMaiDAO extends BaseDAO {
             Timestamp otherEnd = combineDateTime(km.getDenNgay(), km.getDenGio(), true);
             if (otherStart == null || otherEnd == null) continue;
 
-            // Overlap check: targetStart <= otherEnd && targetEnd >= otherStart
-            if (!targetStart.after(otherEnd) && !targetEnd.before(otherStart)) {
-                Map<String, Double> kmProducts = getDongGiaProductPrices(km.getId());
-                for (String pId : productIds) {
-                    if (kmProducts.containsKey(pId)) {
-                        conflicts.add(new ConflictPromotionInfo(
-                                km.getId(),
-                                km.getName(),
-                                km.getTuNgay(),
-                                km.getDenNgay(),
-                                km.getTuGio(),
-                                km.getDenGio(),
-                                pId
-                        ));
+            // 1. Time range overlap check: targetStart <= otherEnd && targetEnd >= otherStart
+            if (targetStart.after(otherEnd) || targetEnd.before(otherStart)) {
+                continue;
+            }
+
+            // 2. Store overlap check:
+            // If stores are configured for both promotions and have NO intersection, they do NOT conflict!
+            List<String> otherStoreIds = getStoresForPromotion(km.getId());
+            List<String> overlappingStoreIds = new ArrayList<>();
+            if (currentStoreIds != null && !currentStoreIds.isEmpty() && otherStoreIds != null && !otherStoreIds.isEmpty()) {
+                for (String sId : currentStoreIds) {
+                    if (otherStoreIds.contains(sId)) {
+                        overlappingStoreIds.add(sId);
                     }
+                }
+                if (overlappingStoreIds.isEmpty()) {
+                    continue; // Completely different stores -> NO CONFLICT!
+                }
+            } else {
+                if (currentStoreIds != null) overlappingStoreIds.addAll(currentStoreIds);
+            }
+
+            // 3. Product check
+            Map<String, Double> kmProducts = getDongGiaProductPrices(km.getId());
+            for (String pId : productIds) {
+                if (kmProducts.containsKey(pId)) {
+                    conflicts.add(new ConflictPromotionInfo(
+                            km.getId(),
+                            km.getName(),
+                            km.getTuNgay(),
+                            km.getDenNgay(),
+                            km.getTuGio(),
+                            km.getDenGio(),
+                            pId,
+                            overlappingStoreIds
+                    ));
                 }
             }
         }
         return conflicts;
+    }
+
+    public List<ConflictPromotionInfo> checkDongGiaConflicts(
+            String currentDotKmId,
+            Timestamp tuNgay,
+            Timestamp denNgay,
+            Timestamp tuGio,
+            Timestamp denGio,
+            Collection<String> productIds) {
+        return checkDongGiaConflicts(currentDotKmId, tuNgay, denNgay, tuGio, denGio, null, productIds);
     }
 
     private List<DotKhuyenMai> tryLoadFromDb(int statusFilter) {

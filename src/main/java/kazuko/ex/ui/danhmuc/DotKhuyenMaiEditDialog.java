@@ -735,6 +735,56 @@ public class DotKhuyenMaiEditDialog extends JDialog {
         }
     }
 
+    private List<String> getSelectedStoreIds() {
+        List<String> chosenStoreIds = new ArrayList<>();
+        if (modelCuaHang == null) return chosenStoreIds;
+        boolean isDongGia = isDongGiaPromotion();
+        boolean isSanPham = isSanPhamPromotion();
+        boolean isNhom = isNhomPromotion();
+        int checkCol = (isDongGia || isSanPham || isNhom) ? 1 : 0;
+        for (int r = 0; r < modelCuaHang.getRowCount(); r++) {
+            Boolean checked = (Boolean) modelCuaHang.getValueAt(r, checkCol);
+            if (Boolean.TRUE.equals(checked) && r < allStores.size()) {
+                chosenStoreIds.add(allStores.get(r).getId());
+            }
+        }
+        return chosenStoreIds;
+    }
+
+    private String formatConflictMessage(List<DotKhuyenMaiDAO.ConflictPromotionInfo> conflicts, String prefix) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(prefix).append("\n\n");
+        Map<String, String> storeNameMap = new HashMap<>();
+        if (allStores != null) {
+            for (CuaHang ch : allStores) {
+                storeNameMap.put(ch.getId(), ch.getName());
+            }
+        }
+
+        for (DotKhuyenMaiDAO.ConflictPromotionInfo c : conflicts) {
+            MatHang mh = allProducts.stream().filter(p -> c.getMathangId().equals(p.getId())).findFirst().orElse(null);
+            String mhName = mh != null ? (mh.getCode() + " - " + mh.getName()) : c.getMathangId();
+            String tNgay = c.getTuNgay() != null ? new SimpleDateFormat("dd/MM/yyyy").format(c.getTuNgay()) : "";
+            String dNgay = c.getDenNgay() != null ? new SimpleDateFormat("dd/MM/yyyy").format(c.getDenNgay()) : "";
+
+            StringBuilder storeNames = new StringBuilder();
+            if (c.getConflictingStoreIds() != null && !c.getConflictingStoreIds().isEmpty()) {
+                for (String sId : c.getConflictingStoreIds()) {
+                    String sName = storeNameMap.get(sId);
+                    if (sName != null) {
+                        if (storeNames.length() > 0) storeNames.append(", ");
+                        storeNames.append(sName);
+                    }
+                }
+            }
+            String storeSuffix = storeNames.length() > 0 ? (" tại: " + storeNames) : "";
+
+            sb.append("• ").append(mhName).append(" đã có trong đợt '").append(c.getDotKmName())
+              .append("' (từ ").append(tNgay).append(" đến ").append(dNgay).append(storeSuffix).append(")\n");
+        }
+        return sb.toString();
+    }
+
     private void onAddSelectedProductsDG() {
         if (tableSanPhamNguonDG == null || modelSanPhamChiTietDG == null) return;
         int[] selectedRows = tableSanPhamNguonDG.getSelectedRows();
@@ -752,6 +802,12 @@ public class DotKhuyenMaiEditDialog extends JDialog {
         Date tuGio = (Date) spTuGio.getValue();
         Date denGio = (Date) spDenGio.getValue();
 
+        List<String> currentStoreIds = getSelectedStoreIds();
+        if (currentStoreIds.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn ít nhất một cửa hàng áp dụng!", "Thông báo", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
         List<String> productIdsToCheck = new ArrayList<>();
         for (int r : selectedRows) {
             if (r >= 0 && r < filteredSourceProductsDG.size()) {
@@ -759,30 +815,24 @@ public class DotKhuyenMaiEditDialog extends JDialog {
             }
         }
 
-        // Check conflict with other DongGia promotions in overlapping time
+        // Check conflict with other DongGia promotions in overlapping time & stores
         List<DotKhuyenMaiDAO.ConflictPromotionInfo> conflicts = dotKhuyenMaiDAO.checkDongGiaConflicts(
                 currentDotKM.getId(),
                 new Timestamp(tuNgay.getTime()),
                 new Timestamp(denNgay.getTime()),
                 new Timestamp(tuGio.getTime()),
                 new Timestamp(denGio.getTime()),
+                currentStoreIds,
                 productIdsToCheck
         );
 
         Set<String> conflictingProductIds = new HashSet<>();
         if (!conflicts.isEmpty()) {
-            StringBuilder sb = new StringBuilder();
-            sb.append("Không thể thêm mặt hàng do trùng thời gian với đợt khuyến mại đồng giá khác:\n\n");
+            String msg = formatConflictMessage(conflicts, "Không thể thêm mặt hàng do trùng thời gian và cửa hàng áp dụng với đợt đồng giá khác:");
+            JOptionPane.showMessageDialog(this, msg, "Cảnh báo trùng đợt khuyến mại", JOptionPane.WARNING_MESSAGE);
             for (DotKhuyenMaiDAO.ConflictPromotionInfo c : conflicts) {
                 conflictingProductIds.add(c.getMathangId());
-                MatHang mh = allProducts.stream().filter(p -> c.getMathangId().equals(p.getId())).findFirst().orElse(null);
-                String mhName = mh != null ? (mh.getCode() + " - " + mh.getName()) : c.getMathangId();
-                String tNgay = c.getTuNgay() != null ? new SimpleDateFormat("dd/MM/yyyy").format(c.getTuNgay()) : "";
-                String dNgay = c.getDenNgay() != null ? new SimpleDateFormat("dd/MM/yyyy").format(c.getDenNgay()) : "";
-                sb.append("• ").append(mhName).append(" đã có trong đợt '").append(c.getDotKmName())
-                  .append("' (từ ").append(tNgay).append(" đến ").append(dNgay).append(")\n");
             }
-            JOptionPane.showMessageDialog(this, sb.toString(), "Cảnh báo trùng đợt khuyến mại", JOptionPane.WARNING_MESSAGE);
         }
 
         double defaultPrice = 0.0;
@@ -833,6 +883,12 @@ public class DotKhuyenMaiEditDialog extends JDialog {
         Date tuGio = (Date) spTuGio.getValue();
         Date denGio = (Date) spDenGio.getValue();
 
+        List<String> currentStoreIds = getSelectedStoreIds();
+        if (currentStoreIds.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn ít nhất một cửa hàng áp dụng!", "Thông báo", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
         List<String> productIdsToCheck = new ArrayList<>();
         for (MatHang mh : filteredSourceProductsDG) {
             productIdsToCheck.add(mh.getId());
@@ -844,23 +900,17 @@ public class DotKhuyenMaiEditDialog extends JDialog {
                 new Timestamp(denNgay.getTime()),
                 new Timestamp(tuGio.getTime()),
                 new Timestamp(denGio.getTime()),
+                currentStoreIds,
                 productIdsToCheck
         );
 
         Set<String> conflictingProductIds = new HashSet<>();
         if (!conflicts.isEmpty()) {
-            StringBuilder sb = new StringBuilder();
-            sb.append("Một số mặt hàng bị trùng thời gian với đợt khuyến mại đồng giá khác và sẽ bị bỏ qua:\n\n");
+            String msg = formatConflictMessage(conflicts, "Một số mặt hàng bị trùng thời gian và cửa hàng áp dụng với đợt đồng giá khác và sẽ bị bỏ qua:");
+            JOptionPane.showMessageDialog(this, msg, "Cảnh báo trùng đợt khuyến mại", JOptionPane.WARNING_MESSAGE);
             for (DotKhuyenMaiDAO.ConflictPromotionInfo c : conflicts) {
                 conflictingProductIds.add(c.getMathangId());
-                MatHang mh = allProducts.stream().filter(p -> c.getMathangId().equals(p.getId())).findFirst().orElse(null);
-                String mhName = mh != null ? (mh.getCode() + " - " + mh.getName()) : c.getMathangId();
-                String tNgay = c.getTuNgay() != null ? new SimpleDateFormat("dd/MM/yyyy").format(c.getTuNgay()) : "";
-                String dNgay = c.getDenNgay() != null ? new SimpleDateFormat("dd/MM/yyyy").format(c.getDenNgay()) : "";
-                sb.append("• ").append(mhName).append(" đã có trong đợt '").append(c.getDotKmName())
-                  .append("' (từ ").append(tNgay).append(" đến ").append(dNgay).append(")\n");
             }
-            JOptionPane.showMessageDialog(this, sb.toString(), "Cảnh báo trùng đợt khuyến mại", JOptionPane.WARNING_MESSAGE);
         }
 
         double defaultPrice = 0.0;
@@ -2160,6 +2210,12 @@ public class DotKhuyenMaiEditDialog extends JDialog {
         Date tuGio = (Date) spTuGio.getValue();
         Date denGio = (Date) spDenGio.getValue();
 
+        List<String> chosenStoreIds = getSelectedStoreIds();
+        if (chosenStoreIds.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn ít nhất một cửa hàng áp dụng!", "Cảnh báo", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
         boolean isDongGia = isDongGiaPromotion();
         boolean isSanPham = isSanPhamPromotion();
         boolean isNhom = isNhomPromotion();
@@ -2187,29 +2243,21 @@ public class DotKhuyenMaiEditDialog extends JDialog {
                 }
             }
 
-            // Conflict check before saving
+            // Conflict check before saving (with store overlap)
             List<DotKhuyenMaiDAO.ConflictPromotionInfo> conflicts = dotKhuyenMaiDAO.checkDongGiaConflicts(
                     currentDotKM.getId(),
                     new Timestamp(tuNgay.getTime()),
                     new Timestamp(denNgay.getTime()),
                     new Timestamp(tuGio.getTime()),
                     new Timestamp(denGio.getTime()),
+                    chosenStoreIds,
                     productIdsInTable
             );
 
             if (!conflicts.isEmpty()) {
-                StringBuilder sb = new StringBuilder();
-                sb.append("Không thể lưu đợt khuyến mại do các mặt hàng sau bị trùng thời gian áp dụng với đợt đồng giá khác:\n\n");
-                for (DotKhuyenMaiDAO.ConflictPromotionInfo c : conflicts) {
-                    MatHang mh = allProducts.stream().filter(prod -> c.getMathangId().equals(prod.getId())).findFirst().orElse(null);
-                    String mhName = mh != null ? (mh.getCode() + " - " + mh.getName()) : c.getMathangId();
-                    String tNgay = c.getTuNgay() != null ? new SimpleDateFormat("dd/MM/yyyy").format(c.getTuNgay()) : "";
-                    String dNgay = c.getDenNgay() != null ? new SimpleDateFormat("dd/MM/yyyy").format(c.getDenNgay()) : "";
-                    sb.append("• ").append(mhName).append(" đã có trong đợt '").append(c.getDotKmName())
-                      .append("' (từ ").append(tNgay).append(" đến ").append(dNgay).append(")\n");
-                }
-                sb.append("\nVui lòng xóa các mặt hàng này hoặc điều chỉnh thời gian của đợt khuyến mại!");
-                JOptionPane.showMessageDialog(this, sb.toString(), "Lỗi trùng thời gian đợt khuyến mại", JOptionPane.ERROR_MESSAGE);
+                String msg = formatConflictMessage(conflicts, "Không thể lưu đợt khuyến mại do các mặt hàng sau bị trùng thời gian và cửa hàng áp dụng với đợt đồng giá khác:");
+                msg += "\nVui lòng xóa các mặt hàng này hoặc điều chỉnh thời gian/cửa hàng áp dụng của đợt khuyến mại!";
+                JOptionPane.showMessageDialog(this, msg, "Lỗi trùng thời gian đợt khuyến mại", JOptionPane.ERROR_MESSAGE);
                 return;
             }
 
@@ -2282,14 +2330,6 @@ public class DotKhuyenMaiEditDialog extends JDialog {
         currentDotKM.setDenGio(denGio != null ? new Timestamp(denGio.getTime()) : null);
 
         // Selected stores
-        List<String> chosenStoreIds = new ArrayList<>();
-        int checkCol = (isDongGia || isSanPham || isNhom) ? 1 : 0;
-        for (int r = 0; r < modelCuaHang.getRowCount(); r++) {
-            Boolean checked = (Boolean) modelCuaHang.getValueAt(r, checkCol);
-            if (Boolean.TRUE.equals(checked) && r < allStores.size()) {
-                chosenStoreIds.add(allStores.get(r).getId());
-            }
-        }
         currentDotKM.setListCuaHangApDungIds(chosenStoreIds);
 
         boolean success;
