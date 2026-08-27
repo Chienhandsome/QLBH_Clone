@@ -321,9 +321,9 @@ public class BaoGiaBanHangPanel extends JPanel {
         btnDelete = createToolButton("Xóa (Del)", "cross.png", new Color(180, 20, 20), false);
         btnImportExcel = createToolButton("Thêm excel", "page_white_excel.png", Color.BLACK, false);
         btnExportExcel = createToolButton("Xuất excel", "export_excel.png", Color.BLACK, false);
-        btnPrint = createToolButton("In", "Printer.png", Color.BLACK, false);
+        btnPrint = createToolButton("In", null, Color.BLACK, false);
         btnSummary = createToolButton("∑ Tổng", null, Color.BLACK, false);
-        btnAnalysis = createToolButton("P.tích", "chart_bar.png", Color.BLACK, false);
+        btnAnalysis = createToolButton("P.tích", null, Color.BLACK, false);
 
         btnAddNew.addActionListener(e -> onAddNewBaoGia());
         btnEdit.addActionListener(e -> onEditSelectedBaoGia());
@@ -348,17 +348,14 @@ public class BaoGiaBanHangPanel extends JPanel {
 
     private JButton createToolButton(String text, String iconName, Color textColor, boolean isBold) {
         JButton btn = new JButton(text);
-        if (iconName != null) {
+        if (iconName != null && !iconName.isEmpty()) {
             btn.setIcon(IconHelper.getIcon(iconName, 16, 16));
         }
         btn.setFont(new Font("Segoe UI", isBold ? Font.BOLD : Font.PLAIN, 12));
         btn.setForeground(textColor);
-        btn.setBackground(Color.WHITE);
         btn.setFocusPainted(false);
-        btn.setBorder(BorderFactory.createCompoundBorder(
-                new LineBorder(new Color(190, 205, 225), 1),
-                new EmptyBorder(3, 6, 3, 6)
-        ));
+        btn.setBackground(Color.WHITE);
+        btn.setMargin(new Insets(2, 6, 2, 6));
         return btn;
     }
 
