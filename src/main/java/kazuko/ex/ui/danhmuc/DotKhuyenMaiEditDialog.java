@@ -773,10 +773,17 @@ public class DotKhuyenMaiEditDialog extends JDialog {
         boolean isDongGia = isDongGiaPromotion();
         boolean isSanPham = isSanPhamPromotion();
         boolean isNhom = isNhomPromotion();
-        int checkCol = (isDongGia || isSanPham || isNhom) ? 1 : 0;
+        boolean isMuaTang = isMuaTangPromotion();
+        int checkCol = (isDongGia || isSanPham || isNhom || isMuaTang) ? 1 : 0;
         for (int r = 0; r < modelCuaHang.getRowCount(); r++) {
-            Boolean checked = (Boolean) modelCuaHang.getValueAt(r, checkCol);
-            if (Boolean.TRUE.equals(checked) && r < allStores.size()) {
+            Object val = modelCuaHang.getValueAt(r, checkCol);
+            boolean checked = false;
+            if (val instanceof Boolean) {
+                checked = (Boolean) val;
+            } else if (val != null) {
+                checked = Boolean.parseBoolean(val.toString());
+            }
+            if (checked && r < allStores.size()) {
                 chosenStoreIds.add(allStores.get(r).getId());
             }
         }
@@ -1124,12 +1131,11 @@ public class DotKhuyenMaiEditDialog extends JDialog {
         formPanel.add(lblCuaHang);
 
         ry += rowH;
-        String[] storeCols = {"Mã", "Tên cửa hàng", "Chọn"};
+        String[] storeCols = {"Cửa hàng", "Áp dụng"};
         modelCuaHang = new DefaultTableModel(storeCols, 0) {
             @Override
             public Class<?> getColumnClass(int columnIndex) {
-                if (columnIndex == 1) return Boolean.class;
-                return String.class;
+                return columnIndex == 1 ? Boolean.class : String.class;
             }
 
             @Override
@@ -1141,19 +1147,14 @@ public class DotKhuyenMaiEditDialog extends JDialog {
         tableCuaHang = new JTable(modelCuaHang);
         tableCuaHang.setRowHeight(20);
         tableCuaHang.setFont(new Font("Segoe UI", Font.PLAIN, 11));
-        tableCuaHang.getColumnModel().getColumn(0).setHeaderValue("Tên cửa hàng");
-        tableCuaHang.getColumnModel().getColumn(1).setHeaderValue("Áp dụng");
         tableCuaHang.getColumnModel().getColumn(0).setPreferredWidth(rightW - 140);
         tableCuaHang.getColumnModel().getColumn(1).setPreferredWidth(65);
         tableCuaHang.getColumnModel().getColumn(1).setMaxWidth(80);
-        tableCuaHang.removeColumn(tableCuaHang.getColumnModel().getColumn(2)); // hide col 2
 
-        allStores = cuaHangDAO.getAll();
+        allStores = cuaHangDAO.getRealStores();
         for (CuaHang ch : allStores) {
-            if (ch.isFolder()) continue;
             modelCuaHang.addRow(new Object[]{
                     ch.getName(),
-                    Boolean.TRUE,
                     Boolean.TRUE
             });
         }
