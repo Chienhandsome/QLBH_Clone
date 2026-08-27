@@ -247,12 +247,31 @@ public class KhachHangDAO extends BaseDAO {
 
     public Map<String, String> getAllNhanVienMap() {
         Map<String, String> map = new LinkedHashMap<>();
-        String sql = "SELECT ID, NAME FROM DNHANVIEN WHERE (STATUS IS NULL OR STATUS >= 0) ORDER BY NAME";
+        try {
+            NhanVienDAO nvDAO = new NhanVienDAO();
+            for (kazuko.ex.model.danhmuc.NhanVien nv : nvDAO.getAllActive()) {
+                if (!nv.isFolder() && !nv.isSeparator() && nv.getName() != null && !nv.getName().trim().isEmpty()) {
+                    map.put(nv.getId(), nv.getName().trim());
+                }
+            }
+            if (!map.isEmpty()) {
+                return map;
+            }
+        } catch (Exception ignored) {}
+
+        String sql = "SELECT ID, NAME, ITEMTYPE FROM DNHANVIEN WHERE (STATUS IS NULL OR STATUS >= 0) ORDER BY NAME";
         try (Connection conn = getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
-                map.put(rs.getString("ID"), rs.getString("NAME"));
+                Integer itemType = rs.getObject("ITEMTYPE") != null ? rs.getInt("ITEMTYPE") : null;
+                if (itemType != null && (itemType == 1 || itemType == 2)) {
+                    continue;
+                }
+                String name = rs.getString("NAME");
+                if (name != null && !name.trim().isEmpty()) {
+                    map.put(rs.getString("ID"), name.trim());
+                }
             }
         } catch (Exception e) {
             System.err.println("Lỗi getAllNhanVienMap: " + e.getMessage());

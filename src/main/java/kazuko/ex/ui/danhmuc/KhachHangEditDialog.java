@@ -1,9 +1,11 @@
 package kazuko.ex.ui.danhmuc;
 
 import kazuko.ex.dao.KhachHangDAO;
+import kazuko.ex.dao.NhanVienDAO;
 import kazuko.ex.dao.NhomKhachHangDAO;
 import kazuko.ex.dao.UserDAO;
 import kazuko.ex.model.danhmuc.KhachHang;
+import kazuko.ex.model.danhmuc.NhanVien;
 import kazuko.ex.model.danhmuc.NhomKhachHang;
 import kazuko.ex.model.system.SUser;
 import kazuko.ex.ui.common.DatePickerField;
@@ -27,6 +29,7 @@ import java.util.Map;
 public class KhachHangEditDialog extends JDialog {
     private final KhachHangDAO khachHangDAO = new KhachHangDAO();
     private final NhomKhachHangDAO nhomKhachHangDAO = new NhomKhachHangDAO();
+    private final NhanVienDAO nhanVienDAO = new NhanVienDAO();
     private final UserDAO userDAO = new UserDAO();
 
     private KhachHang currentKhachHang;
@@ -379,18 +382,25 @@ public class KhachHangEditDialog extends JDialog {
         dummy.setName("");
         cbNhanVien.addItem(dummy);
 
-        Map<String, String> nvMap = khachHangDAO.getAllNhanVienMap();
-        if (nvMap != null && !nvMap.isEmpty()) {
-            for (Map.Entry<String, String> entry : nvMap.entrySet()) {
-                SUser u = new SUser();
-                u.setId(entry.getKey());
-                u.setName(entry.getValue());
-                cbNhanVien.addItem(u);
+        List<NhanVien> activeEmployees = nhanVienDAO.getAllActive();
+        if (activeEmployees != null && !activeEmployees.isEmpty()) {
+            for (NhanVien nv : activeEmployees) {
+                if (!nv.isFolder() && !nv.isSeparator() && nv.getName() != null && !nv.getName().trim().isEmpty()) {
+                    SUser u = new SUser();
+                    u.setId(nv.getId());
+                    u.setName(nv.getName().trim());
+                    cbNhanVien.addItem(u);
+                }
             }
         } else {
-            List<SUser> users = userDAO.getAll();
-            for (SUser u : users) {
-                cbNhanVien.addItem(u);
+            Map<String, String> nvMap = khachHangDAO.getAllNhanVienMap();
+            if (nvMap != null && !nvMap.isEmpty()) {
+                for (Map.Entry<String, String> entry : nvMap.entrySet()) {
+                    SUser u = new SUser();
+                    u.setId(entry.getKey());
+                    u.setName(entry.getValue());
+                    cbNhanVien.addItem(u);
+                }
             }
         }
 
