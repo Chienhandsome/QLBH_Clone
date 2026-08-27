@@ -13,7 +13,10 @@ import kazuko.ex.ui.danhmuc.DanhMucDotKhuyenMaiPanel;
 import kazuko.ex.ui.danhmuc.DanhMucKhachHangPanel;
 import kazuko.ex.ui.danhmuc.DanhMucMatHangPanel;
 import kazuko.ex.ui.danhmuc.KhachHangThanThietPanel;
+import kazuko.ex.ui.danhmuc.KhoHangDialog;
+import kazuko.ex.ui.danhmuc.LyDoThuChiDialog;
 import kazuko.ex.ui.danhmuc.NhanVienDialog;
+import kazuko.ex.ui.danhmuc.TaiKhoanNganHangDialog;
 import kazuko.ex.ui.khohang.QuanLyXuatKhoPanel;
 import kazuko.ex.ui.system.CauHinhToanHeThongDialog;
 import kazuko.ex.ui.system.KhoiPhucCSDLDialog;
@@ -340,8 +343,8 @@ public class MainFrame extends JFrame {
         JMenu mKhoHang = new JMenu("KHO HÀNG");
 
         JMenuItem miKhoHang = new JMenuItem("Danh mục kho hàng");
-        miKhoHang.setIcon(IconHelper.getIcon("Folder2.png", 16, 16));
-        miKhoHang.addActionListener(e -> openTab("Danh mục kho hàng", createPlaceholderPanel("Danh mục kho hàng")));
+        miKhoHang.setIcon(IconHelper.getIcon("Home.png", 16, 16));
+        miKhoHang.addActionListener(e -> new KhoHangDialog(this).setVisible(true));
 
         JMenuItem miNCC = new JMenuItem("Danh mục nhà cung cấp");
         miNCC.setIcon(IconHelper.getIcon("users.png", 16, 16));
@@ -402,11 +405,11 @@ public class MainFrame extends JFrame {
 
         JMenuItem miLyDoTC = new JMenuItem("Danh mục lý do thu chi");
         miLyDoTC.setIcon(IconHelper.getIcon("congno.png", 16, 16));
-        miLyDoTC.addActionListener(e -> openTab("Danh mục lý do thu chi", createPlaceholderPanel("Danh mục lý do thu chi")));
+        miLyDoTC.addActionListener(e -> new LyDoThuChiDialog(this).setVisible(true));
 
         JMenuItem miTKNH = new JMenuItem("Danh mục tài khoản ngân hàng");
         miTKNH.setIcon(IconHelper.getIcon("database1.png", 16, 16));
-        miTKNH.addActionListener(e -> openTab("Danh mục tài khoản ngân hàng", createPlaceholderPanel("Danh mục tài khoản ngân hàng")));
+        miTKNH.addActionListener(e -> new TaiKhoanNganHangDialog(this).setVisible(true));
 
         mQuy.add(miLyDoTC);
         mQuy.add(miTKNH);
@@ -676,6 +679,18 @@ public class MainFrame extends JFrame {
             case "DANH MỤC CA LÀM VIỆC":
             case "CA LÀM VIỆC":
                 new CaLamViecDialog(this).setVisible(true);
+                break;
+            case "DANH MỤC LÝ DO THU CHI":
+            case "LÝ DO THU CHI":
+                new LyDoThuChiDialog(this).setVisible(true);
+                break;
+            case "DANH MỤC TÀI KHOẢN NGÂN HÀNG":
+            case "TÀI KHOẢN NGÂN HÀNG":
+                new TaiKhoanNganHangDialog(this).setVisible(true);
+                break;
+            case "DANH MỤC KHO HÀNG":
+            case "KHO HÀNG":
+                new KhoHangDialog(this).setVisible(true);
                 break;
             case "DANH MỤC CỬA HÀNG":
             case "CỬA HÀNG":
