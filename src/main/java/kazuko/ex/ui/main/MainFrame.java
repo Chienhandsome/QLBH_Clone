@@ -5,6 +5,7 @@ import kazuko.ex.service.AuthService;
 import kazuko.ex.ui.auth.DatabaseConfigDialog;
 import kazuko.ex.ui.auth.DoiMatKhauDialog;
 import kazuko.ex.ui.auth.LoginForm;
+import kazuko.ex.ui.baogia.BaoGiaBanHangPanel;
 import kazuko.ex.ui.common.StatusPanel;
 import kazuko.ex.ui.danhmuc.CuaHangDialog;
 import kazuko.ex.ui.danhmuc.DanhMucDotKhuyenMaiPanel;
@@ -193,6 +194,8 @@ public class MainFrame extends JFrame {
         // 1. HỆ THỐNG
         JMenu mHeThong = new JMenu("HỆ THỐNG");
         JMenu mCSDL = new JMenu("Cơ sở dữ liệu...");
+        mCSDL.setIcon(IconHelper.getIcon("database1.png", 16, 16));
+
         JMenuItem miTaoMoi = new JMenuItem("Tạo mới");
         JMenuItem miSaoLuu = new JMenuItem("Sao lưu");
         JMenuItem miPhucHoi = new JMenuItem("Phục hồi");
@@ -206,18 +209,23 @@ public class MainFrame extends JFrame {
         mCSDL.add(miPhucHoi);
 
         JMenuItem miDoiMK = new JMenuItem("Đổi mật khẩu đăng nhập");
-        JMenuItem miDangXuat = new JMenuItem("Đăng xuất khỏi hệ thống");
-        JMenuItem miThoat = new JMenuItem("Thoát khỏi hệ thống");
-
-        miDangXuat.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_L, InputEvent.CTRL_DOWN_MASK | InputEvent.SHIFT_DOWN_MASK));
-        miThoat.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Q, InputEvent.CTRL_DOWN_MASK));
-
         miDoiMK.addActionListener(e -> new DoiMatKhauDialog(this, currentUser).setVisible(true));
+
+        JMenuItem miDangXuat = new JMenuItem("Đăng xuất khỏi hệ thống");
+        miDangXuat.setIcon(IconHelper.getIcon("window-new.png", 16, 16));
+        miDangXuat.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_L, InputEvent.CTRL_DOWN_MASK | InputEvent.SHIFT_DOWN_MASK));
         miDangXuat.addActionListener(e -> onLogout());
+
+        JMenuItem miThoat = new JMenuItem("Thoát khỏi hệ thống");
+        miThoat.setFont(miThoat.getFont().deriveFont(Font.BOLD));
+        miThoat.setIcon(IconHelper.getIcon("Cancelled.png", 16, 16));
+        miThoat.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Q, InputEvent.CTRL_DOWN_MASK));
         miThoat.addActionListener(e -> onExit());
 
         mHeThong.add(mCSDL);
+        mHeThong.addSeparator();
         mHeThong.add(miDoiMK);
+        mHeThong.addSeparator();
         mHeThong.add(miDangXuat);
         mHeThong.add(miThoat);
 
@@ -264,7 +272,7 @@ public class MainFrame extends JFrame {
         // Group 2: Báo giá & Đặt hàng
         JMenuItem miBaoGia = new JMenuItem("Báo giá bán hàng");
         miBaoGia.setIcon(IconHelper.getIcon("report--pencil.png", 16, 16));
-        miBaoGia.addActionListener(e -> openTab("Báo giá bán hàng", createPlaceholderPanel("Báo giá bán hàng")));
+        miBaoGia.addActionListener(e -> openTab("Báo giá bán hàng", new BaoGiaBanHangPanel()));
 
         JMenuItem miDatHang = new JMenuItem("Khách đặt hàng");
         miDatHang.setIcon(IconHelper.getIcon("tsbLogedUser.Image.png", 16, 16));
@@ -675,6 +683,10 @@ public class MainFrame extends JFrame {
             case "QUẢN LÝ XUẤT KHO":
             case "XUẤT KHO":
                 openTab("Quản lý xuất kho", new QuanLyXuatKhoPanel());
+                break;
+            case "BÁO GIÁ BÁN HÀNG":
+            case "BÁO GIÁ KHÁCH HÀNG":
+                openTab("Báo giá bán hàng", new BaoGiaBanHangPanel());
                 break;
             case "DANH MỤC KHÁCH HÀNG":
                 openTab("Danh mục khách hàng", new DanhMucKhachHangPanel());
