@@ -182,6 +182,82 @@ public class CuaHangEditDialog extends JDialog {
         cbKhoHang = new JComboBox<>();
         cbKhoHang.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         cbKhoHang.setBackground(Color.WHITE);
+        cbKhoHang.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+                JLabel label = (JLabel) super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                if (value instanceof KhoHang) {
+                    KhoHang k = (KhoHang) value;
+                    label.setText(k.getName());
+                    if ("red_house".equals(k.getAvatarIcon()) || "KHO BÁN HÀNG".equalsIgnoreCase(k.getName())) {
+                        label.setIcon(KhoHangEditDialog.getStoreColoredIcon(new Color(220, 50, 50), 16, 16));
+                    } else if ("purple_house".equals(k.getAvatarIcon()) || "Kho chi nhánh 1".equalsIgnoreCase(k.getName())) {
+                        label.setIcon(KhoHangEditDialog.getStoreColoredIcon(new Color(110, 80, 180), 16, 16));
+                    } else if ("lightbulb".equals(k.getAvatarIcon()) || "KHO TỔNG".equalsIgnoreCase(k.getName())) {
+                        label.setIcon(KhoHangEditDialog.getLightbulbIcon(16, 16));
+                    } else {
+                        label.setIcon(null);
+                    }
+                }
+                return label;
+            }
+        });
+        cbKhoHang.setUI(new javax.swing.plaf.basic.BasicComboBoxUI() {
+            @Override
+            protected javax.swing.plaf.basic.ComboPopup createPopup() {
+                javax.swing.plaf.basic.BasicComboPopup popup = new javax.swing.plaf.basic.BasicComboPopup(comboBox) {
+                    @Override
+                    protected void configurePopup() {
+                        super.configurePopup();
+                        setBorder(new LineBorder(new Color(180, 200, 225), 1));
+                    }
+                };
+
+                JPanel bottomToolbar = new JPanel(new GridLayout(1, 3, 2, 0));
+                bottomToolbar.setBackground(new Color(245, 248, 252));
+                bottomToolbar.setBorder(new CompoundBorder(
+                        new MatteBorder(1, 0, 0, 0, new Color(200, 215, 235)),
+                        new EmptyBorder(2, 3, 2, 3)
+                ));
+
+                JButton btnThem = createPopupToolButton("Thêm", "plus.png", new Color(0, 120, 50));
+                JButton btnTai = createPopupToolButton("Tải", "Refresh.png", new Color(0, 80, 180));
+                JButton btnDanhMuc = createPopupToolButton("Danh mục", null, new Color(40, 40, 40));
+
+                btnThem.addActionListener(e -> {
+                    popup.hide();
+                    KhoHang newKho = new KhoHang();
+                    KhoHangEditDialog dialog = new KhoHangEditDialog(CuaHangEditDialog.this, newKho, null, () -> {
+                        loadKhoHangList();
+                        for (int i = 0; i < cbKhoHang.getItemCount(); i++) {
+                            if (cbKhoHang.getItemAt(i).getId().equals(newKho.getId())) {
+                                cbKhoHang.setSelectedIndex(i);
+                                break;
+                            }
+                        }
+                    });
+                    dialog.setVisible(true);
+                });
+
+                btnTai.addActionListener(e -> {
+                    loadKhoHangList();
+                });
+
+                btnDanhMuc.addActionListener(e -> {
+                    popup.hide();
+                    KhoHangDialog dialog = new KhoHangDialog(CuaHangEditDialog.this);
+                    dialog.setVisible(true);
+                    loadKhoHangList();
+                });
+
+                bottomToolbar.add(btnThem);
+                bottomToolbar.add(btnTai);
+                bottomToolbar.add(btnDanhMuc);
+
+                popup.add(bottomToolbar, BorderLayout.SOUTH);
+                return popup;
+            }
+        });
         loadKhoHangList();
         gbc.gridx = 1; gbc.gridy = 4;
         formPanel.add(cbKhoHang, gbc);
@@ -318,24 +394,46 @@ public class CuaHangEditDialog extends JDialog {
         return btn;
     }
 
+    private JButton createPopupToolButton(String text, String iconName, Color fgColor) {
+        JButton btn = new JButton(text);
+        if (iconName != null && !iconName.isEmpty()) {
+            btn.setIcon(IconHelper.getIcon(iconName, 14, 14));
+        }
+        btn.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        btn.setForeground(fgColor != null ? fgColor : Color.BLACK);
+        btn.setBackground(Color.WHITE);
+        btn.setFocusPainted(false);
+        btn.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(205, 220, 240), 1),
+                BorderFactory.createEmptyBorder(2, 4, 2, 4)
+        ));
+        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        return btn;
+    }
+
     private void loadKhoHangList() {
         try {
-            List<KhoHang> khoList = khoHangDAO.getAll();
+            KhoHang prevSelected = (KhoHang) cbKhoHang.getSelectedItem();
+            cbKhoHang.removeAllItems();
+            List<KhoHang> khoList = khoHangDAO.getAllActive();
             if (khoList != null && !khoList.isEmpty()) {
+                KhoHang toSelect = null;
                 for (KhoHang k : khoList) {
-                    cbKhoHang.addItem(k);
+                    if (!k.isFolder() && !k.isSeparator()) {
+                        cbKhoHang.addItem(k);
+                        if (prevSelected != null && k.getId().equals(prevSelected.getId())) {
+                            toSelect = k;
+                        } else if (toSelect == null && "KHO BÁN HÀNG".equalsIgnoreCase(k.getName())) {
+                            toSelect = k;
+                        }
+                    }
                 }
-            } else {
-                KhoHang defaultKho = new KhoHang();
-                defaultKho.setId("1");
-                defaultKho.setName("KHO BÁN HÀNG");
-                cbKhoHang.addItem(defaultKho);
+                if (toSelect != null) {
+                    cbKhoHang.setSelectedItem(toSelect);
+                }
             }
         } catch (Exception e) {
-            KhoHang defaultKho = new KhoHang();
-            defaultKho.setId("1");
-            defaultKho.setName("KHO BÁN HÀNG");
-            cbKhoHang.addItem(defaultKho);
+            e.printStackTrace();
         }
     }
 
