@@ -7,6 +7,7 @@ import kazuko.ex.ui.auth.DoiMatKhauDialog;
 import kazuko.ex.ui.auth.LoginForm;
 import kazuko.ex.ui.baogia.BaoGiaBanHangPanel;
 import kazuko.ex.ui.common.StatusPanel;
+import kazuko.ex.ui.danhmuc.CaLamViecDialog;
 import kazuko.ex.ui.danhmuc.CuaHangDialog;
 import kazuko.ex.ui.danhmuc.DanhMucDotKhuyenMaiPanel;
 import kazuko.ex.ui.danhmuc.DanhMucKhachHangPanel;
@@ -466,7 +467,7 @@ public class MainFrame extends JFrame {
 
         JMenuItem miCaLamViec = new JMenuItem("Danh mục ca làm việc");
         miCaLamViec.setIcon(IconHelper.getIcon("property.png", 16, 16));
-        miCaLamViec.addActionListener(e -> openTab("Danh mục ca làm việc", createPlaceholderPanel("Danh mục ca làm việc")));
+        miCaLamViec.addActionListener(e -> new CaLamViecDialog(this).setVisible(true));
 
         mNhanSu.add(miNhanVien);
         mNhanSu.add(miCaLamViec);
@@ -671,6 +672,10 @@ public class MainFrame extends JFrame {
         switch (action) {
             case "DANH MỤC NHÂN VIÊN":
                 new NhanVienDialog(this).setVisible(true);
+                break;
+            case "DANH MỤC CA LÀM VIỆC":
+            case "CA LÀM VIỆC":
+                new CaLamViecDialog(this).setVisible(true);
                 break;
             case "DANH MỤC CỬA HÀNG":
             case "CỬA HÀNG":
