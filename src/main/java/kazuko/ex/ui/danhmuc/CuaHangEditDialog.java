@@ -38,6 +38,20 @@ public class CuaHangEditDialog extends JDialog {
     private JComboBox<String> cbMauHoaDon;
     private JTextArea txtGhiChu;
 
+    public CuaHangEditDialog(Frame parent, CuaHang cuaHang, List<CuaHang> storeList, Runnable onDataChanged) {
+        super(parent, cuaHang != null && cuaHang.getId() != null ? "CỬA HÀNG - SỬA" : "CỬA HÀNG - THÊM", true);
+        this.currentCuaHang = cuaHang;
+        this.storeList = storeList;
+        this.currentIndex = (storeList != null && cuaHang != null) ? storeList.indexOf(cuaHang) : -1;
+        this.onDataChanged = onDataChanged;
+
+        initComponents();
+        loadDataToForm();
+        pack();
+        setResizable(false);
+        setLocationRelativeTo(parent);
+    }
+
     public CuaHangEditDialog(Dialog parent, CuaHang cuaHang, List<CuaHang> storeList, Runnable onDataChanged) {
         super(parent, cuaHang != null && cuaHang.getId() != null ? "CỬA HÀNG - SỬA" : "CỬA HÀNG - THÊM", true);
         this.currentCuaHang = cuaHang;

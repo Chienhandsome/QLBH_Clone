@@ -169,14 +169,64 @@ public class KhoHangEditDialog extends JDialog {
                 return lbl;
             }
         });
+        cbCuaHang.setUI(new javax.swing.plaf.basic.BasicComboBoxUI() {
+            @Override
+            protected javax.swing.plaf.basic.ComboPopup createPopup() {
+                javax.swing.plaf.basic.BasicComboPopup popup = new javax.swing.plaf.basic.BasicComboPopup(comboBox) {
+                    @Override
+                    protected void configurePopup() {
+                        super.configurePopup();
+                        setBorder(new LineBorder(new Color(180, 200, 225), 1));
+                    }
+                };
 
-        // Load stores into ComboBox
-        List<CuaHang> stores = cuaHangDAO.getAllActive();
-        for (CuaHang ch : stores) {
-            if (!ch.isFolder() && !ch.isSeparator()) {
-                cbCuaHang.addItem(ch);
+                JPanel bottomToolbar = new JPanel(new GridLayout(1, 3, 2, 0));
+                bottomToolbar.setBackground(new Color(245, 248, 252));
+                bottomToolbar.setBorder(new CompoundBorder(
+                        new MatteBorder(1, 0, 0, 0, new Color(200, 215, 235)),
+                        new EmptyBorder(2, 3, 2, 3)
+                ));
+
+                JButton btnThem = createPopupToolButton("Thêm", "plus.png", new Color(0, 120, 50));
+                JButton btnTai = createPopupToolButton("Tải", "Refresh.png", new Color(0, 80, 180));
+                JButton btnDanhMuc = createPopupToolButton("Danh mục", null, new Color(40, 40, 40));
+
+                btnThem.addActionListener(e -> {
+                    popup.hide();
+                    CuaHang newCH = new CuaHang();
+                    CuaHangEditDialog dialog = new CuaHangEditDialog(KhoHangEditDialog.this, newCH, null, () -> {
+                        loadCuaHangList();
+                        for (int i = 0; i < cbCuaHang.getItemCount(); i++) {
+                            if (cbCuaHang.getItemAt(i).getId().equals(newCH.getId())) {
+                                cbCuaHang.setSelectedIndex(i);
+                                break;
+                            }
+                        }
+                    });
+                    dialog.setVisible(true);
+                });
+
+                btnTai.addActionListener(e -> {
+                    loadCuaHangList();
+                });
+
+                btnDanhMuc.addActionListener(e -> {
+                    popup.hide();
+                    CuaHangDialog dialog = new CuaHangDialog(KhoHangEditDialog.this);
+                    dialog.setVisible(true);
+                    loadCuaHangList();
+                });
+
+                bottomToolbar.add(btnThem);
+                bottomToolbar.add(btnTai);
+                bottomToolbar.add(btnDanhMuc);
+
+                popup.add(bottomToolbar, BorderLayout.SOUTH);
+                return popup;
             }
-        }
+        });
+
+        loadCuaHangList();
         rowCuaHang.add(cbCuaHang, BorderLayout.CENTER);
 
         formPanel.add(rowCuaHang);
@@ -308,6 +358,49 @@ public class KhoHangEditDialog extends JDialog {
         btn.setBackground(Color.WHITE);
         btn.setPreferredSize(new Dimension(text.length() > 8 ? 98 : 78, 26));
         return btn;
+    }
+
+    private JButton createPopupToolButton(String text, String iconName, Color fgColor) {
+        JButton btn = new JButton(text);
+        if (iconName != null && !iconName.isEmpty()) {
+            btn.setIcon(IconHelper.getIcon(iconName, 14, 14));
+        }
+        btn.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        btn.setForeground(fgColor != null ? fgColor : Color.BLACK);
+        btn.setBackground(Color.WHITE);
+        btn.setFocusPainted(false);
+        btn.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(205, 220, 240), 1),
+                BorderFactory.createEmptyBorder(2, 4, 2, 4)
+        ));
+        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        return btn;
+    }
+
+    private void loadCuaHangList() {
+        try {
+            CuaHang prevSelected = (CuaHang) cbCuaHang.getSelectedItem();
+            cbCuaHang.removeAllItems();
+            List<CuaHang> stores = cuaHangDAO.getAllActive();
+            if (stores != null && !stores.isEmpty()) {
+                CuaHang toSelect = null;
+                for (CuaHang ch : stores) {
+                    if (!ch.isFolder() && !ch.isSeparator()) {
+                        cbCuaHang.addItem(ch);
+                        if (prevSelected != null && ch.getId().equals(prevSelected.getId())) {
+                            toSelect = ch;
+                        } else if (toSelect == null && currentKhoHang != null && ch.getId().equals(currentKhoHang.getCuaHangId())) {
+                            toSelect = ch;
+                        }
+                    }
+                }
+                if (toSelect != null) {
+                    cbCuaHang.setSelectedItem(toSelect);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public static Icon getWarehouseIcon(int width, int height) {

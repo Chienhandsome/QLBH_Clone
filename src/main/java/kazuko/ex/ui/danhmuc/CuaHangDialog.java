@@ -35,6 +35,15 @@ public class CuaHangDialog extends JDialog {
 
     public CuaHangDialog(Frame parent) {
         super(parent, "Cửa hàng", true);
+        initDialog(parent);
+    }
+
+    public CuaHangDialog(Dialog parent) {
+        super(parent, "Cửa hàng", true);
+        initDialog(parent);
+    }
+
+    private void initDialog(Window parent) {
         initComponents();
         loadTreeData();
         loadDefaultStoreComboBox();
