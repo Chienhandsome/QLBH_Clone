@@ -1,6 +1,7 @@
 package kazuko.ex.dao;
 
 import kazuko.ex.model.danhmuc.DotKhuyenMai;
+import kazuko.ex.model.danhmuc.DotKhuyenMaiMuaTangChiTiet;
 import kazuko.ex.model.danhmuc.LoaiHinhKhuyenMai;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -275,5 +276,95 @@ public class DotKhuyenMaiDAOTest {
 
         // Clean up
         dao.deletePermanently(s1.getId());
+    }
+
+    @Test
+    public void testMuaTangDiscountsCRUD() {
+        DotKhuyenMaiDAO dao = new DotKhuyenMaiDAO();
+        MatHangDAO mhDao = new MatHangDAO();
+        LoaiHinhKhuyenMaiDAO loaiDao = new LoaiHinhKhuyenMaiDAO();
+        List<LoaiHinhKhuyenMai> loaiList = loaiDao.getAll();
+        String loaiMtId = loaiList.stream()
+                .filter(l -> l.getName() != null && (l.getName().toLowerCase().contains("mua") || l.getName().toLowerCase().contains("tặng") || l.getName().toLowerCase().contains("tang")))
+                .map(LoaiHinhKhuyenMai::getId)
+                .findFirst().orElse("e5d39bb6-41a4-43ff-bc4d-e170ae4aeba2");
+        String loaiMtName = loaiList.stream()
+                .filter(l -> l.getName() != null && (l.getName().toLowerCase().contains("mua") || l.getName().toLowerCase().contains("tặng") || l.getName().toLowerCase().contains("tang")))
+                .map(LoaiHinhKhuyenMai::getName)
+                .findFirst().orElse("Mua/Tặng");
+
+        List<kazuko.ex.model.danhmuc.MatHang> products = mhDao.getAll();
+        Assertions.assertNotNull(products);
+        Assertions.assertFalse(products.isEmpty());
+
+        String prodId1 = products.get(0).getId();
+        String prodId2 = products.size() > 1 ? products.get(1).getId() : products.get(0).getId();
+
+        DotKhuyenMai km = new DotKhuyenMai();
+        km.setName("KM Mua 1 Tặng 1 Test " + System.currentTimeMillis());
+        km.setdLoaiHinhKhuyenMaiId(loaiMtId);
+        km.setTenLoaiHinhKhuyenMai(loaiMtName);
+        km.setTuNgay(new Timestamp(System.currentTimeMillis()));
+        km.setDenNgay(new Timestamp(System.currentTimeMillis() + 86400000L * 7));
+
+        DotKhuyenMaiMuaTangChiTiet rule1 = new DotKhuyenMaiMuaTangChiTiet();
+        rule1.setMathangMuaId(prodId1);
+        rule1.setSoLuongMua(2.0);
+        rule1.setTangCungLoai(true);
+        rule1.setMathangTangId(prodId1);
+        rule1.setSoLuongTang(1.0);
+
+        DotKhuyenMaiMuaTangChiTiet rule2 = new DotKhuyenMaiMuaTangChiTiet();
+        rule2.setMathangMuaId(prodId1);
+        rule2.setSoLuongMua(3.0);
+        rule2.setTangCungLoai(false);
+        rule2.setMathangTangId(prodId2);
+        rule2.setSoLuongTang(2.0);
+
+        km.setListMuaTangChiTiet(java.util.Arrays.asList(rule1, rule2));
+
+        // 1. Insert promotion
+        boolean insertOk = dao.insert(km);
+        Assertions.assertTrue(insertOk);
+        Assertions.assertNotNull(km.getId());
+
+        // 2. Retrieve details
+        List<DotKhuyenMaiMuaTangChiTiet> loadedDetails = dao.getMuaTangDetails(km.getId());
+        Assertions.assertNotNull(loadedDetails);
+        Assertions.assertEquals(2, loadedDetails.size());
+
+        DotKhuyenMaiMuaTangChiTiet loadedRule1 = loadedDetails.stream()
+                .filter(DotKhuyenMaiMuaTangChiTiet::isTangCungLoai)
+                .findFirst().orElse(null);
+        Assertions.assertNotNull(loadedRule1);
+        Assertions.assertEquals(prodId1, loadedRule1.getMathangMuaId());
+        Assertions.assertEquals(2.0, loadedRule1.getSoLuongMua());
+        Assertions.assertTrue(loadedRule1.isTangCungLoai());
+        Assertions.assertEquals(prodId1, loadedRule1.getMathangTangId());
+        Assertions.assertEquals(1.0, loadedRule1.getSoLuongTang());
+
+        DotKhuyenMaiMuaTangChiTiet loadedRule2 = loadedDetails.stream()
+                .filter(r -> !r.isTangCungLoai())
+                .findFirst().orElse(null);
+        Assertions.assertNotNull(loadedRule2);
+        Assertions.assertEquals(prodId1, loadedRule2.getMathangMuaId());
+        Assertions.assertEquals(3.0, loadedRule2.getSoLuongMua());
+        Assertions.assertFalse(loadedRule2.isTangCungLoai());
+        Assertions.assertEquals(prodId2, loadedRule2.getMathangTangId());
+        Assertions.assertEquals(2.0, loadedRule2.getSoLuongTang());
+
+        // 3. Update details
+        rule1.setSoLuongMua(5.0);
+        rule1.setSoLuongTang(3.0);
+        dao.saveMuaTangDetails(km.getId(), java.util.Collections.singletonList(rule1));
+
+        List<DotKhuyenMaiMuaTangChiTiet> reloaded = dao.getMuaTangDetails(km.getId());
+        Assertions.assertEquals(1, reloaded.size());
+        Assertions.assertEquals(5.0, reloaded.get(0).getSoLuongMua());
+        Assertions.assertEquals(3.0, reloaded.get(0).getSoLuongTang());
+
+        // 4. Clean up
+        dao.deletePermanently(km.getId());
+        Assertions.assertTrue(dao.getMuaTangDetails(km.getId()).isEmpty());
     }
 }

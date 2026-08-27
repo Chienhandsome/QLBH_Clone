@@ -7,6 +7,7 @@ import kazuko.ex.dao.MatHangDAO;
 import kazuko.ex.dao.NhomMatHangDAO;
 import kazuko.ex.model.danhmuc.CuaHang;
 import kazuko.ex.model.danhmuc.DotKhuyenMai;
+import kazuko.ex.model.danhmuc.DotKhuyenMaiMuaTangChiTiet;
 import kazuko.ex.model.danhmuc.LoaiHinhKhuyenMai;
 import kazuko.ex.model.danhmuc.MatHang;
 import kazuko.ex.model.danhmuc.NhomMatHang;
@@ -100,6 +101,24 @@ public class DotKhuyenMaiEditDialog extends JDialog {
     private String currentSelectedNhomDG = "Tất cả";
     private String currentSelectedNhomIdDG = null;
 
+    // Components cho "Mua/Tặng"
+    private JTree treeNhomHangMT;
+    private DefaultTreeModel treeModelMT;
+    private JTable tableSanPhamNguonMT;
+    private DefaultTableModel modelSanPhamNguonMT;
+    private JTextField txtSearchSanPhamMT;
+    private List<MatHang> filteredSourceProductsMT = new ArrayList<>();
+
+    private JTable tableMuaTangChiTiet;
+    private DefaultTableModel modelMuaTangChiTiet;
+    private JCheckBox chkTangCungMatHangMT;
+    private JSpinner spSoLuongMuaMT;
+    private JSpinner spSoLuongTangMT;
+    private JButton btnApplyQuickSLMT;
+    private JButton btnSelectGiftItemMT;
+    private String currentSelectedNhomMT = "Tất cả";
+    private String currentSelectedNhomIdMT = null;
+
     private static final DecimalFormat DF_CURRENCY = new DecimalFormat("#,##0");
 
     private static final Color COLOR_HEADER_BG = new Color(255, 254, 230);
@@ -152,6 +171,16 @@ public class DotKhuyenMaiEditDialog extends JDialog {
         return typeName != null && (typeName.toLowerCase().contains("nhóm") || typeName.toLowerCase().contains("nhom"));
     }
 
+    private boolean isMuaTangPromotion() {
+        String typeName = currentDotKM != null ? currentDotKM.getTenLoaiHinhKhuyenMai() : "";
+        if ((typeName == null || typeName.isEmpty()) && currentDotKM != null && currentDotKM.getdLoaiHinhKhuyenMaiId() != null) {
+            LoaiHinhKhuyenMai l = loaiHinhKhuyenMaiDAO.findById(currentDotKM.getdLoaiHinhKhuyenMaiId());
+            if (l != null) typeName = l.getName();
+        }
+        return (typeName != null && (typeName.toLowerCase().contains("mua") || typeName.toLowerCase().contains("tặng") || typeName.toLowerCase().contains("tang")))
+                || "e5d39bb6-41a4-43ff-bc4d-e170ae4aeba2".equals(currentDotKM != null ? currentDotKM.getdLoaiHinhKhuyenMaiId() : null);
+    }
+
     private void findCurrentIndex() {
         if (currentDotKM != null && currentDotKM.getId() != null) {
             for (int i = 0; i < allPromotions.size(); i++) {
@@ -169,10 +198,11 @@ public class DotKhuyenMaiEditDialog extends JDialog {
         boolean isDongGia = isDongGiaPromotion();
         boolean isSanPham = isSanPhamPromotion();
         boolean isNhom = isNhomPromotion();
-        if (isDongGia || isSanPham) {
-            setPreferredSize(new Dimension(1020, 680));
+        boolean isMuaTang = isMuaTangPromotion();
+        if (isDongGia || isSanPham || isMuaTang) {
+            setPreferredSize(new Dimension(1080, 690));
             setResizable(true);
-            setMinimumSize(new Dimension(850, 580));
+            setMinimumSize(new Dimension(880, 580));
         } else if (isNhom) {
             setPreferredSize(new Dimension(780, 590));
             setResizable(false);
@@ -249,6 +279,8 @@ public class DotKhuyenMaiEditDialog extends JDialog {
             buildDongGiaPromotionForm(centerContainer);
         } else if (isSanPham) {
             buildSanPhamPromotionForm(centerContainer);
+        } else if (isMuaTang) {
+            buildMuaTangPromotionForm(centerContainer);
         } else if (isNhom) {
             buildNhomPromotionForm(centerContainer);
         } else {
@@ -986,6 +1018,750 @@ public class DotKhuyenMaiEditDialog extends JDialog {
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Giá bán đồng giá không hợp lệ!", "Lỗi", JOptionPane.ERROR_MESSAGE);
         }
+    }
+
+    private void buildMuaTangPromotionForm(JPanel centerContainer) {
+        JPanel formPanel = new JPanel(null);
+        formPanel.setBackground(COLOR_FORM_BG);
+        formPanel.setPreferredSize(new Dimension(1080, 160));
+        formPanel.setBorder(new EmptyBorder(6, 12, 6, 12));
+
+        int rowH = 24;
+        int gap = 5;
+        int y = 8;
+
+        // ===== CỘT TRÁI =====
+        JLabel lblName = new JLabel("Tên đợt khuyến mại");
+        lblName.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblName.setBounds(12, y, 130, rowH);
+        formPanel.add(lblName);
+
+        txtName = new JTextField();
+        txtName.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        txtName.setBackground(COLOR_REQUIRED_FIELD);
+        txtName.setBounds(145, y, 240, rowH);
+        formPanel.add(txtName);
+
+        y += rowH + gap;
+        JLabel lblLoaiHinh = new JLabel("Loại hình khuyến mại");
+        lblLoaiHinh.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblLoaiHinh.setBounds(12, y, 130, rowH);
+        formPanel.add(lblLoaiHinh);
+
+        cbLoaiHinhKM = new JComboBox<>();
+        cbLoaiHinhKM.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        cbLoaiHinhKM.setBounds(145, y, 240, rowH);
+        populateLoaiHinhKMComboBox();
+        formPanel.add(cbLoaiHinhKM);
+
+        y += rowH + gap;
+        JLabel lblTuNgay = new JLabel("Từ ngày");
+        lblTuNgay.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblTuNgay.setBounds(12, y, 60, rowH);
+        formPanel.add(lblTuNgay);
+
+        dpTuNgay = new DatePickerField();
+        dpTuNgay.setBounds(75, y, 110, rowH);
+        formPanel.add(dpTuNgay);
+
+        JLabel lblDenNgay = new JLabel("Đến ngày");
+        lblDenNgay.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblDenNgay.setBounds(195, y, 60, rowH);
+        formPanel.add(lblDenNgay);
+
+        dpDenNgay = new DatePickerField();
+        dpDenNgay.setBounds(265, y, 120, rowH);
+        formPanel.add(dpDenNgay);
+
+        y += rowH + gap;
+        JLabel lblTuGio = new JLabel("Từ giờ");
+        lblTuGio.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblTuGio.setBounds(12, y, 60, rowH);
+        formPanel.add(lblTuGio);
+
+        spTuGio = new JSpinner(new SpinnerDateModel());
+        spTuGio.setEditor(new JSpinner.DateEditor(spTuGio, "HH:mm"));
+        spTuGio.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        spTuGio.setBounds(75, y, 65, rowH);
+        formPanel.add(spTuGio);
+
+        JLabel lblDenGio = new JLabel("Đến giờ");
+        lblDenGio.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblDenGio.setBounds(150, y, 50, rowH);
+        formPanel.add(lblDenGio);
+
+        spDenGio = new JSpinner(new SpinnerDateModel());
+        spDenGio.setEditor(new JSpinner.DateEditor(spDenGio, "HH:mm"));
+        spDenGio.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        spDenGio.setBounds(205, y, 65, rowH);
+        formPanel.add(spDenGio);
+
+        chkNgungApDung = new JCheckBox("Ngừng áp dụng");
+        chkNgungApDung.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        chkNgungApDung.setOpaque(false);
+        chkNgungApDung.setBounds(280, y, 110, rowH);
+        formPanel.add(chkNgungApDung);
+
+        // ===== CỘT PHẢI =====
+        int rightX = 405;
+        int rightW = 650;
+        int ry = 8;
+
+        JLabel lblNote = new JLabel("Ghi chú");
+        lblNote.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblNote.setBounds(rightX, ry, 60, rowH);
+        formPanel.add(lblNote);
+
+        txtNote = new JTextField();
+        txtNote.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        txtNote.setBounds(rightX + 65, ry, rightW - 65, rowH);
+        formPanel.add(txtNote);
+
+        ry += rowH + gap;
+        JLabel lblCuaHang = new JLabel("Cửa hàng áp dụng:");
+        lblCuaHang.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        lblCuaHang.setBounds(rightX, ry, 150, rowH);
+        formPanel.add(lblCuaHang);
+
+        ry += rowH;
+        String[] storeCols = {"Mã", "Tên cửa hàng", "Chọn"};
+        modelCuaHang = new DefaultTableModel(storeCols, 0) {
+            @Override
+            public Class<?> getColumnClass(int columnIndex) {
+                if (columnIndex == 1) return Boolean.class;
+                return String.class;
+            }
+
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return column == 1;
+            }
+        };
+
+        tableCuaHang = new JTable(modelCuaHang);
+        tableCuaHang.setRowHeight(20);
+        tableCuaHang.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        tableCuaHang.getColumnModel().getColumn(0).setHeaderValue("Tên cửa hàng");
+        tableCuaHang.getColumnModel().getColumn(1).setHeaderValue("Áp dụng");
+        tableCuaHang.getColumnModel().getColumn(0).setPreferredWidth(rightW - 140);
+        tableCuaHang.getColumnModel().getColumn(1).setPreferredWidth(65);
+        tableCuaHang.getColumnModel().getColumn(1).setMaxWidth(80);
+        tableCuaHang.removeColumn(tableCuaHang.getColumnModel().getColumn(2)); // hide col 2
+
+        allStores = cuaHangDAO.getAll();
+        for (CuaHang ch : allStores) {
+            if (ch.isFolder()) continue;
+            modelCuaHang.addRow(new Object[]{
+                    ch.getName(),
+                    Boolean.TRUE,
+                    Boolean.TRUE
+            });
+        }
+
+        JScrollPane scrollCuaHang = new JScrollPane(tableCuaHang);
+        scrollCuaHang.setBorder(new LineBorder(new Color(185, 205, 230), 1));
+        scrollCuaHang.setBounds(rightX, ry, rightW, 70);
+        formPanel.add(scrollCuaHang);
+
+        // ===== PHẦN DƯỚI: 3 DANH SÁCH (GridBagLayout) =====
+        JPanel bottomContainer = new JPanel(new GridBagLayout());
+        bottomContainer.setBorder(new EmptyBorder(4, 8, 4, 8));
+
+        // 1. Nhóm hàng
+        JPanel panelList1 = new JPanel(new BorderLayout());
+        panelList1.setBorder(new MatteBorder(1, 1, 1, 1, new Color(185, 205, 230)));
+        panelList1.add(createListTitlePanel("1. Nhóm mặt hàng", "Folders.png"), BorderLayout.NORTH);
+
+        DefaultMutableTreeNode root = new DefaultMutableTreeNode("Tất cả");
+        treeModelMT = new DefaultTreeModel(root);
+        treeNhomHangMT = new JTree(treeModelMT);
+        treeNhomHangMT.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        treeNhomHangMT.setRowHeight(20);
+
+        DefaultTreeCellRenderer treeRenderer = new DefaultTreeCellRenderer();
+        treeRenderer.setClosedIcon(IconHelper.getIcon("Folders.png", 16, 16));
+        treeRenderer.setOpenIcon(IconHelper.getIcon("Folders.png", 16, 16));
+        treeRenderer.setLeafIcon(IconHelper.getIcon("Folders.png", 16, 16));
+        treeNhomHangMT.setCellRenderer(treeRenderer);
+
+        treeNhomHangMT.addTreeSelectionListener(e -> {
+            TreePath path = e.getPath();
+            if (path != null) {
+                DefaultMutableTreeNode node = (DefaultMutableTreeNode) path.getLastPathComponent();
+                if (node != null) {
+                    Object userObj = node.getUserObject();
+                    if (userObj instanceof NhomMatHang) {
+                        NhomMatHang n = (NhomMatHang) userObj;
+                        currentSelectedNhomMT = n.getName();
+                        currentSelectedNhomIdMT = n.getId();
+                    } else {
+                        currentSelectedNhomMT = "Tất cả";
+                        currentSelectedNhomIdMT = null;
+                    }
+                    filterSourceProductsMT();
+                }
+            }
+        });
+
+        JScrollPane scrollTree = new JScrollPane(treeNhomHangMT);
+        scrollTree.setBorder(null);
+        panelList1.add(scrollTree, BorderLayout.CENTER);
+
+        // 2. Danh sách mặt hàng nguồn
+        JPanel panelList2 = new JPanel(new BorderLayout());
+        panelList2.setBorder(new MatteBorder(1, 1, 1, 1, new Color(185, 205, 230)));
+
+        JPanel topList2 = new JPanel(new BorderLayout());
+        topList2.add(createListTitlePanel("2. Danh sách mặt hàng", "box.png"), BorderLayout.WEST);
+
+        JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 2, 2));
+        searchPanel.setOpaque(false);
+        txtSearchSanPhamMT = new JTextField(10);
+        txtSearchSanPhamMT.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        txtSearchSanPhamMT.getDocument().addDocumentListener(new DocumentListener() {
+            public void insertUpdate(DocumentEvent e) { filterSourceProductsMT(); }
+            public void removeUpdate(DocumentEvent e) { filterSourceProductsMT(); }
+            public void changedUpdate(DocumentEvent e) { filterSourceProductsMT(); }
+        });
+        searchPanel.add(new JLabel("Tìm: "));
+        searchPanel.add(txtSearchSanPhamMT);
+        topList2.add(searchPanel, BorderLayout.EAST);
+        panelList2.add(topList2, BorderLayout.NORTH);
+
+        String[] srcCols = {"STT", "Mã hàng", "Tên mặt hàng", "ĐVT", "Giá bán", "_ID"};
+        modelSanPhamNguonMT = new DefaultTableModel(srcCols, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) { return false; }
+        };
+        tableSanPhamNguonMT = new JTable(modelSanPhamNguonMT);
+        tableSanPhamNguonMT.setRowHeight(22);
+        tableSanPhamNguonMT.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        tableSanPhamNguonMT.removeColumn(tableSanPhamNguonMT.getColumnModel().getColumn(5)); // hide _ID
+
+        tableSanPhamNguonMT.getColumnModel().getColumn(0).setPreferredWidth(35);
+        tableSanPhamNguonMT.getColumnModel().getColumn(0).setMaxWidth(40);
+        tableSanPhamNguonMT.getColumnModel().getColumn(1).setPreferredWidth(75);
+        tableSanPhamNguonMT.getColumnModel().getColumn(2).setPreferredWidth(140);
+        tableSanPhamNguonMT.getColumnModel().getColumn(3).setPreferredWidth(45);
+        tableSanPhamNguonMT.getColumnModel().getColumn(4).setPreferredWidth(75);
+
+        tableSanPhamNguonMT.getColumnModel().getColumn(0).setCellRenderer(createCenterRenderer());
+        tableSanPhamNguonMT.getColumnModel().getColumn(4).setCellRenderer(createRightRenderer());
+
+        tableSanPhamNguonMT.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() == 2) {
+                    onAddSelectedProductsMT();
+                }
+            }
+        });
+
+        JScrollPane scrollList2 = new JScrollPane(tableSanPhamNguonMT);
+        scrollList2.setBorder(null);
+        panelList2.add(scrollList2, BorderLayout.CENTER);
+
+        // Buttons chuyển
+        JPanel panelTransfer = new JPanel(new GridBagLayout());
+        panelTransfer.setPreferredSize(new Dimension(42, 300));
+        GridBagConstraints gbcBtn = new GridBagConstraints();
+        gbcBtn.gridx = 0;
+        gbcBtn.fill = GridBagConstraints.HORIZONTAL;
+        gbcBtn.insets = new Insets(4, 2, 4, 2);
+
+        JButton btnAddSel = new JButton(">");
+        JButton btnAddAll = new JButton(">>");
+        JButton btnRemSel = new JButton("<");
+        JButton btnRemAll = new JButton("<<");
+
+        Font btnFont = new Font("Segoe UI", Font.BOLD, 12);
+        btnAddSel.setFont(btnFont);
+        btnAddAll.setFont(btnFont);
+        btnRemSel.setFont(btnFont);
+        btnRemAll.setFont(btnFont);
+
+        btnAddSel.setMargin(new Insets(2, 6, 2, 6));
+        btnAddAll.setMargin(new Insets(2, 6, 2, 6));
+        btnRemSel.setMargin(new Insets(2, 6, 2, 6));
+        btnRemAll.setMargin(new Insets(2, 6, 2, 6));
+
+        btnAddSel.addActionListener(e -> onAddSelectedProductsMT());
+        btnAddAll.addActionListener(e -> onAddAllProductsMT());
+        btnRemSel.addActionListener(e -> onRemoveSelectedProductsMT());
+        btnRemAll.addActionListener(e -> onRemoveAllProductsMT());
+
+        gbcBtn.gridy = 0; panelTransfer.add(btnAddSel, gbcBtn);
+        gbcBtn.gridy = 1; panelTransfer.add(btnAddAll, gbcBtn);
+        gbcBtn.gridy = 2; panelTransfer.add(btnRemSel, gbcBtn);
+        gbcBtn.gridy = 3; panelTransfer.add(btnRemAll, gbcBtn);
+
+        // 3. Cấu hình Mua / Tặng
+        JPanel panelList3 = new JPanel(new BorderLayout());
+        panelList3.setBorder(new MatteBorder(1, 1, 1, 1, new Color(185, 205, 230)));
+
+        JPanel topList3 = new JPanel(new BorderLayout());
+        JPanel titlePanel3 = createListTitlePanel("3. Thiết lập Mua / Tặng", "asterisk-yellow.png");
+        topList3.add(titlePanel3, BorderLayout.WEST);
+
+        JPanel quickToolbarMT = new JPanel(new FlowLayout(FlowLayout.RIGHT, 4, 2));
+        quickToolbarMT.setOpaque(false);
+
+        chkTangCungMatHangMT = new JCheckBox("Tặng cùng mặt hàng", true);
+        chkTangCungMatHangMT.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        chkTangCungMatHangMT.setOpaque(false);
+
+        JLabel lblSlMua = new JLabel("SL mua:");
+        lblSlMua.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        spSoLuongMuaMT = new JSpinner(new SpinnerNumberModel(1.0, 0.01, 99999.0, 1.0));
+        spSoLuongMuaMT.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        spSoLuongMuaMT.setPreferredSize(new Dimension(48, 22));
+
+        JLabel lblSlTang = new JLabel("SL tặng:");
+        lblSlTang.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        spSoLuongTangMT = new JSpinner(new SpinnerNumberModel(1.0, 0.01, 99999.0, 1.0));
+        spSoLuongTangMT.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        spSoLuongTangMT.setPreferredSize(new Dimension(48, 22));
+
+        btnApplyQuickSLMT = new JButton("Gán SL");
+        btnApplyQuickSLMT.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        btnApplyQuickSLMT.setMargin(new Insets(1, 4, 1, 4));
+        btnApplyQuickSLMT.setFocusPainted(false);
+        btnApplyQuickSLMT.addActionListener(e -> onApplyQuickSLMT());
+
+        btnSelectGiftItemMT = new JButton("Chọn hàng tặng...");
+        btnSelectGiftItemMT.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        btnSelectGiftItemMT.setMargin(new Insets(1, 4, 1, 4));
+        btnSelectGiftItemMT.setFocusPainted(false);
+        btnSelectGiftItemMT.addActionListener(e -> {
+            int sel = tableMuaTangChiTiet.getSelectedRow();
+            if (sel >= 0) {
+                showChooseGiftProductDialog(sel);
+            } else {
+                JOptionPane.showMessageDialog(this, "Vui lòng chọn dòng trong danh sách cấu hình để đổi mặt hàng tặng!", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+            }
+        });
+
+        quickToolbarMT.add(chkTangCungMatHangMT);
+        quickToolbarMT.add(lblSlMua);
+        quickToolbarMT.add(spSoLuongMuaMT);
+        quickToolbarMT.add(lblSlTang);
+        quickToolbarMT.add(spSoLuongTangMT);
+        quickToolbarMT.add(btnApplyQuickSLMT);
+        quickToolbarMT.add(btnSelectGiftItemMT);
+
+        topList3.add(quickToolbarMT, BorderLayout.CENTER);
+        panelList3.add(topList3, BorderLayout.NORTH);
+
+        String[] mtCols = {"STT", "Mã mua", "Tên mặt hàng mua", "ĐVT", "SL mua", "Tặng cùng loại", "Mã tặng", "Tên mặt hàng tặng", "ĐVT", "SL tặng", "_ID_MUA", "_ID_TANG"};
+        modelMuaTangChiTiet = new DefaultTableModel(mtCols, 0) {
+            @Override
+            public Class<?> getColumnClass(int columnIndex) {
+                if (columnIndex == 5) return Boolean.class;
+                return Object.class;
+            }
+
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return column == 4 || column == 5 || column == 9;
+            }
+        };
+
+        modelMuaTangChiTiet.addTableModelListener(e -> {
+            if (e.getColumn() == 5 && e.getFirstRow() >= 0 && e.getFirstRow() < modelMuaTangChiTiet.getRowCount()) {
+                int row = e.getFirstRow();
+                Boolean isSame = (Boolean) modelMuaTangChiTiet.getValueAt(row, 5);
+                if (Boolean.TRUE.equals(isSame)) {
+                    modelMuaTangChiTiet.setValueAt(modelMuaTangChiTiet.getValueAt(row, 1), row, 6);
+                    modelMuaTangChiTiet.setValueAt(modelMuaTangChiTiet.getValueAt(row, 2), row, 7);
+                    modelMuaTangChiTiet.setValueAt(modelMuaTangChiTiet.getValueAt(row, 3), row, 8);
+                    modelMuaTangChiTiet.setValueAt(modelMuaTangChiTiet.getValueAt(row, 10), row, 11);
+                }
+            }
+        });
+
+        tableMuaTangChiTiet = new JTable(modelMuaTangChiTiet);
+        tableMuaTangChiTiet.setRowHeight(22);
+        tableMuaTangChiTiet.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        tableMuaTangChiTiet.removeColumn(tableMuaTangChiTiet.getColumnModel().getColumn(11)); // hide _ID_TANG
+        tableMuaTangChiTiet.removeColumn(tableMuaTangChiTiet.getColumnModel().getColumn(10)); // hide _ID_MUA
+
+        tableMuaTangChiTiet.getColumnModel().getColumn(0).setPreferredWidth(32);
+        tableMuaTangChiTiet.getColumnModel().getColumn(0).setMaxWidth(38);
+        tableMuaTangChiTiet.getColumnModel().getColumn(1).setPreferredWidth(65);
+        tableMuaTangChiTiet.getColumnModel().getColumn(2).setPreferredWidth(125);
+        tableMuaTangChiTiet.getColumnModel().getColumn(3).setPreferredWidth(40);
+        tableMuaTangChiTiet.getColumnModel().getColumn(4).setPreferredWidth(50);
+        tableMuaTangChiTiet.getColumnModel().getColumn(5).setPreferredWidth(85);
+        tableMuaTangChiTiet.getColumnModel().getColumn(6).setPreferredWidth(65);
+        tableMuaTangChiTiet.getColumnModel().getColumn(7).setPreferredWidth(125);
+        tableMuaTangChiTiet.getColumnModel().getColumn(8).setPreferredWidth(40);
+        tableMuaTangChiTiet.getColumnModel().getColumn(9).setPreferredWidth(50);
+
+        tableMuaTangChiTiet.getColumnModel().getColumn(0).setCellRenderer(createCenterRenderer());
+        tableMuaTangChiTiet.getColumnModel().getColumn(3).setCellRenderer(createCenterRenderer());
+        tableMuaTangChiTiet.getColumnModel().getColumn(8).setCellRenderer(createCenterRenderer());
+
+        DefaultTableCellRenderer qtyRenderer = new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+                JLabel lbl = (JLabel) super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                lbl.setHorizontalAlignment(SwingConstants.RIGHT);
+                lbl.setFont(new Font("Segoe UI", Font.BOLD, 12));
+                if (!isSelected) {
+                    lbl.setBackground(new Color(255, 255, 225));
+                }
+                return lbl;
+            }
+        };
+        tableMuaTangChiTiet.getColumnModel().getColumn(4).setCellRenderer(qtyRenderer);
+        tableMuaTangChiTiet.getColumnModel().getColumn(9).setCellRenderer(qtyRenderer);
+
+        tableMuaTangChiTiet.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() == 2) {
+                    int col = tableMuaTangChiTiet.columnAtPoint(e.getPoint());
+                    int row = tableMuaTangChiTiet.rowAtPoint(e.getPoint());
+                    if (row >= 0 && (col == 6 || col == 7 || col == 8)) {
+                        showChooseGiftProductDialog(row);
+                    }
+                }
+            }
+        });
+
+        tableMuaTangChiTiet.addKeyListener(new java.awt.event.KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+                if (e.getKeyCode() == KeyEvent.VK_DELETE) {
+                    onRemoveSelectedProductsMT();
+                }
+            }
+        });
+
+        JScrollPane scrollList3 = new JScrollPane(tableMuaTangChiTiet);
+        scrollList3.setBorder(new LineBorder(new Color(185, 205, 230), 1));
+        panelList3.add(scrollList3, BorderLayout.CENTER);
+
+        // Put lists into bottomContainer with GridBagConstraints
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.weighty = 1.0;
+
+        // 1. Nhóm hàng (20%)
+        gbc.gridx = 0;
+        gbc.weightx = 0.20;
+        gbc.insets = new Insets(0, 0, 0, 4);
+        bottomContainer.add(panelList1, gbc);
+
+        // 2. Mặt hàng nguồn (32%)
+        gbc.gridx = 1;
+        gbc.weightx = 0.32;
+        gbc.insets = new Insets(0, 0, 0, 2);
+        bottomContainer.add(panelList2, gbc);
+
+        // Buttons chuyển (Fixed)
+        gbc.gridx = 2;
+        gbc.weightx = 0.0;
+        gbc.insets = new Insets(0, 0, 0, 2);
+        bottomContainer.add(panelTransfer, gbc);
+
+        // 3. Mặt hàng áp dụng (48%)
+        gbc.gridx = 3;
+        gbc.weightx = 0.48;
+        gbc.insets = new Insets(0, 0, 0, 0);
+        bottomContainer.add(panelList3, gbc);
+
+        centerContainer.add(formPanel, BorderLayout.NORTH);
+        centerContainer.add(bottomContainer, BorderLayout.CENTER);
+    }
+
+    private void loadTreeNhomHangMT() {
+        if (treeModelMT == null) return;
+        DefaultMutableTreeNode root = new DefaultMutableTreeNode("Tất cả");
+        List<NhomMatHang> allGroups = nhomMatHangDAO.getAll();
+        Map<String, DefaultMutableTreeNode> nodeMap = new HashMap<>();
+
+        for (NhomMatHang g : allGroups) {
+            if (g.isSeparator()) continue;
+            DefaultMutableTreeNode node = new DefaultMutableTreeNode(g);
+            nodeMap.put(g.getId(), node);
+        }
+
+        for (NhomMatHang g : allGroups) {
+            if (g.isSeparator()) continue;
+            DefaultMutableTreeNode node = nodeMap.get(g.getId());
+            if (g.getParentId() != null && nodeMap.containsKey(g.getParentId())) {
+                nodeMap.get(g.getParentId()).add(node);
+            } else {
+                root.add(node);
+            }
+        }
+
+        treeModelMT.setRoot(root);
+        treeModelMT.reload();
+        for (int i = 0; i < treeNhomHangMT.getRowCount(); i++) {
+            treeNhomHangMT.expandRow(i);
+        }
+    }
+
+    private void filterSourceProductsMT() {
+        if (modelSanPhamNguonMT == null) return;
+        modelSanPhamNguonMT.setRowCount(0);
+        filteredSourceProductsMT.clear();
+
+        List<MatHang> productsByGroup;
+        if (currentSelectedNhomMT == null || "Tất cả".equalsIgnoreCase(currentSelectedNhomMT)) {
+            productsByGroup = allProducts != null && !allProducts.isEmpty() ? allProducts : matHangDAO.getAll();
+        } else if (currentSelectedNhomIdMT != null) {
+            NhomMatHang selGroup = nhomMatHangDAO.findById(currentSelectedNhomIdMT);
+            if (selGroup != null && selGroup.isFolder()) {
+                Set<String> descIds = nhomMatHangDAO.getAllDescendantIds(selGroup.getId());
+                Set<String> descNames = new HashSet<>();
+                for (NhomMatHang g : nhomMatHangDAO.getAll()) {
+                    if (descIds.contains(g.getId()) && g.getName() != null) descNames.add(g.getName());
+                }
+                productsByGroup = matHangDAO.getByNhomIds(descIds, descNames);
+            } else {
+                productsByGroup = matHangDAO.getByNhom(currentSelectedNhomMT, currentSelectedNhomIdMT);
+            }
+        } else {
+            productsByGroup = matHangDAO.getByNhom(currentSelectedNhomMT, null);
+        }
+
+        String search = txtSearchSanPhamMT != null ? txtSearchSanPhamMT.getText().trim().toLowerCase() : "";
+        int stt = 1;
+        for (MatHang mh : productsByGroup) {
+            if (!search.isEmpty()) {
+                boolean matchCode = mh.getCode() != null && mh.getCode().toLowerCase().contains(search);
+                boolean matchName = mh.getName() != null && mh.getName().toLowerCase().contains(search);
+                if (!matchCode && !matchName) continue;
+            }
+            filteredSourceProductsMT.add(mh);
+            modelSanPhamNguonMT.addRow(new Object[]{
+                    String.format("%02d", stt++),
+                    mh.getCode() != null ? mh.getCode() : "",
+                    mh.getName() != null ? mh.getName() : "",
+                    mh.getTenDonViTinh() != null ? mh.getTenDonViTinh() : "",
+                    DF_CURRENCY.format(mh.getGiaBan()),
+                    mh.getId()
+            });
+        }
+    }
+
+    private void onAddSelectedProductsMT() {
+        if (tableSanPhamNguonMT == null || modelMuaTangChiTiet == null) return;
+        int[] selectedRows = tableSanPhamNguonMT.getSelectedRows();
+        if (selectedRows.length == 0) {
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn ít nhất một mặt hàng từ danh sách!", "Thông báo", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        double slMua = ((Number) spSoLuongMuaMT.getValue()).doubleValue();
+        double slTang = ((Number) spSoLuongTangMT.getValue()).doubleValue();
+        boolean tangCungLoai = chkTangCungMatHangMT.isSelected();
+
+        String slMuaStr = slMua == (long) slMua ? String.valueOf((long) slMua) : String.valueOf(slMua);
+        String slTangStr = slTang == (long) slTang ? String.valueOf((long) slTang) : String.valueOf(slTang);
+
+        for (int r : selectedRows) {
+            if (r >= 0 && r < filteredSourceProductsMT.size()) {
+                MatHang mh = filteredSourceProductsMT.get(r);
+                modelMuaTangChiTiet.addRow(new Object[]{
+                        String.format("%02d", modelMuaTangChiTiet.getRowCount() + 1),
+                        mh.getCode() != null ? mh.getCode() : "",
+                        mh.getName() != null ? mh.getName() : "",
+                        mh.getTenDonViTinh() != null ? mh.getTenDonViTinh() : "",
+                        slMuaStr,
+                        tangCungLoai,
+                        mh.getCode() != null ? mh.getCode() : "",
+                        mh.getName() != null ? mh.getName() : "",
+                        mh.getTenDonViTinh() != null ? mh.getTenDonViTinh() : "",
+                        slTangStr,
+                        mh.getId(),
+                        mh.getId()
+                });
+            }
+        }
+        renumberSTT(modelMuaTangChiTiet);
+    }
+
+    private void onAddAllProductsMT() {
+        if (filteredSourceProductsMT == null || modelMuaTangChiTiet == null) return;
+        double slMua = ((Number) spSoLuongMuaMT.getValue()).doubleValue();
+        double slTang = ((Number) spSoLuongTangMT.getValue()).doubleValue();
+        boolean tangCungLoai = chkTangCungMatHangMT.isSelected();
+
+        String slMuaStr = slMua == (long) slMua ? String.valueOf((long) slMua) : String.valueOf(slMua);
+        String slTangStr = slTang == (long) slTang ? String.valueOf((long) slTang) : String.valueOf(slTang);
+
+        for (MatHang mh : filteredSourceProductsMT) {
+            modelMuaTangChiTiet.addRow(new Object[]{
+                    String.format("%02d", modelMuaTangChiTiet.getRowCount() + 1),
+                    mh.getCode() != null ? mh.getCode() : "",
+                    mh.getName() != null ? mh.getName() : "",
+                    mh.getTenDonViTinh() != null ? mh.getTenDonViTinh() : "",
+                    slMuaStr,
+                    tangCungLoai,
+                    mh.getCode() != null ? mh.getCode() : "",
+                    mh.getName() != null ? mh.getName() : "",
+                    mh.getTenDonViTinh() != null ? mh.getTenDonViTinh() : "",
+                    slTangStr,
+                    mh.getId(),
+                    mh.getId()
+            });
+        }
+        renumberSTT(modelMuaTangChiTiet);
+    }
+
+    private void onRemoveSelectedProductsMT() {
+        if (tableMuaTangChiTiet == null || modelMuaTangChiTiet == null) return;
+        int[] selectedRows = tableMuaTangChiTiet.getSelectedRows();
+        if (selectedRows.length == 0) return;
+        for (int i = selectedRows.length - 1; i >= 0; i--) {
+            modelMuaTangChiTiet.removeRow(selectedRows[i]);
+        }
+        renumberSTT(modelMuaTangChiTiet);
+    }
+
+    private void onRemoveAllProductsMT() {
+        if (modelMuaTangChiTiet == null) return;
+        modelMuaTangChiTiet.setRowCount(0);
+    }
+
+    private void onApplyQuickSLMT() {
+        if (spSoLuongMuaMT == null || spSoLuongTangMT == null || modelMuaTangChiTiet == null) return;
+        double slMua = ((Number) spSoLuongMuaMT.getValue()).doubleValue();
+        double slTang = ((Number) spSoLuongTangMT.getValue()).doubleValue();
+        String slMuaStr = slMua == (long) slMua ? String.valueOf((long) slMua) : String.valueOf(slMua);
+        String slTangStr = slTang == (long) slTang ? String.valueOf((long) slTang) : String.valueOf(slTang);
+
+        int[] selRows = tableMuaTangChiTiet.getSelectedRows();
+        if (selRows.length > 0) {
+            for (int r : selRows) {
+                modelMuaTangChiTiet.setValueAt(slMuaStr, r, 4);
+                modelMuaTangChiTiet.setValueAt(slTangStr, r, 9);
+            }
+        } else {
+            for (int r = 0; r < modelMuaTangChiTiet.getRowCount(); r++) {
+                modelMuaTangChiTiet.setValueAt(slMuaStr, r, 4);
+                modelMuaTangChiTiet.setValueAt(slTangStr, r, 9);
+            }
+        }
+    }
+
+    private void showChooseGiftProductDialog(int targetRow) {
+        if (modelMuaTangChiTiet == null || targetRow < 0 || targetRow >= modelMuaTangChiTiet.getRowCount()) {
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn một dòng cấu hình mua/tặng để chọn mặt hàng tặng!", "Thông báo", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        JDialog dialog = new JDialog(this, "Chọn mặt hàng tặng kèm", true);
+        dialog.setLayout(new BorderLayout());
+        dialog.setSize(650, 480);
+        dialog.setLocationRelativeTo(this);
+
+        JPanel topPanel = new JPanel(new BorderLayout(8, 8));
+        topPanel.setBackground(COLOR_TOOLBAR_BG);
+        topPanel.setBorder(new EmptyBorder(8, 10, 8, 10));
+
+        JLabel lblSearch = new JLabel("Tìm kiếm mặt hàng tặng:");
+        lblSearch.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        JTextField txtSearch = new JTextField();
+        txtSearch.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        topPanel.add(lblSearch, BorderLayout.WEST);
+        topPanel.add(txtSearch, BorderLayout.CENTER);
+        dialog.add(topPanel, BorderLayout.NORTH);
+
+        String[] cols = {"STT", "Mã hàng", "Tên mặt hàng", "ĐVT", "Giá bán", "_ID"};
+        DefaultTableModel model = new DefaultTableModel(cols, 0) {
+            @Override
+            public boolean isCellEditable(int r, int c) { return false; }
+        };
+        JTable table = new JTable(model);
+        table.setRowHeight(22);
+        table.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        table.removeColumn(table.getColumnModel().getColumn(5)); // hide _ID
+        table.getColumnModel().getColumn(0).setPreferredWidth(35);
+        table.getColumnModel().getColumn(0).setMaxWidth(40);
+        table.getColumnModel().getColumn(1).setPreferredWidth(90);
+        table.getColumnModel().getColumn(2).setPreferredWidth(220);
+        table.getColumnModel().getColumn(3).setPreferredWidth(50);
+        table.getColumnModel().getColumn(4).setPreferredWidth(85);
+        table.getColumnModel().getColumn(0).setCellRenderer(createCenterRenderer());
+        table.getColumnModel().getColumn(4).setCellRenderer(createRightRenderer());
+
+        List<MatHang> pList = allProducts != null && !allProducts.isEmpty() ? allProducts : matHangDAO.getAll();
+        List<MatHang> filtered = new ArrayList<>(pList);
+
+        Runnable refreshTable = () -> {
+            model.setRowCount(0);
+            String q = txtSearch.getText().trim().toLowerCase();
+            filtered.clear();
+            int stt = 1;
+            for (MatHang mh : pList) {
+                if (!q.isEmpty()) {
+                    boolean matchCode = mh.getCode() != null && mh.getCode().toLowerCase().contains(q);
+                    boolean matchName = mh.getName() != null && mh.getName().toLowerCase().contains(q);
+                    if (!matchCode && !matchName) continue;
+                }
+                filtered.add(mh);
+                model.addRow(new Object[]{
+                        String.format("%02d", stt++),
+                        mh.getCode() != null ? mh.getCode() : "",
+                        mh.getName() != null ? mh.getName() : "",
+                        mh.getTenDonViTinh() != null ? mh.getTenDonViTinh() : "",
+                        DF_CURRENCY.format(mh.getGiaBan()),
+                        mh.getId()
+                });
+            }
+        };
+        refreshTable.run();
+
+        txtSearch.getDocument().addDocumentListener(new DocumentListener() {
+            public void insertUpdate(DocumentEvent e) { refreshTable.run(); }
+            public void removeUpdate(DocumentEvent e) { refreshTable.run(); }
+            public void changedUpdate(DocumentEvent e) { refreshTable.run(); }
+        });
+
+        dialog.add(new JScrollPane(table), BorderLayout.CENTER);
+
+        JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 8));
+        JButton btnSelect = new JButton("Chọn làm hàng tặng");
+        JButton btnCancel = new JButton("Bỏ qua");
+        btnSelect.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        btnCancel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+
+        Runnable doSelect = () -> {
+            int sel = table.getSelectedRow();
+            if (sel >= 0 && sel < filtered.size()) {
+                MatHang giftMH = filtered.get(sel);
+                modelMuaTangChiTiet.setValueAt(Boolean.FALSE, targetRow, 5); // Uncheck "Tặng cùng loại"
+                modelMuaTangChiTiet.setValueAt(giftMH.getCode(), targetRow, 6);
+                modelMuaTangChiTiet.setValueAt(giftMH.getName(), targetRow, 7);
+                modelMuaTangChiTiet.setValueAt(giftMH.getTenDonViTinh(), targetRow, 8);
+                modelMuaTangChiTiet.setValueAt(giftMH.getId(), targetRow, 11);
+                dialog.dispose();
+            } else {
+                JOptionPane.showMessageDialog(dialog, "Vui lòng chọn một mặt hàng trong danh sách!", "Thông báo", JOptionPane.WARNING_MESSAGE);
+            }
+        };
+
+        btnSelect.addActionListener(e -> doSelect.run());
+        btnCancel.addActionListener(e -> dialog.dispose());
+        table.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() == 2) {
+                    doSelect.run();
+                }
+            }
+        });
+
+        bottomPanel.add(btnSelect);
+        bottomPanel.add(btnCancel);
+        dialog.add(bottomPanel, BorderLayout.SOUTH);
+
+        dialog.setVisible(true);
     }
 
     private void buildSanPhamPromotionForm(JPanel centerContainer) {
@@ -1974,9 +2750,10 @@ public class DotKhuyenMaiEditDialog extends JDialog {
         boolean isDongGia = isDongGiaPromotion();
         boolean isSanPham = isSanPhamPromotion();
         boolean isNhom = isNhomPromotion();
+        boolean isMuaTang = isMuaTangPromotion();
         for (CuaHang ch : allStores) {
             boolean checked = selectedStoreIds.contains(ch.getId()) || (currentDotKM.getId() == null);
-            if (isDongGia || isSanPham || isNhom) {
+            if (isDongGia || isSanPham || isNhom || isMuaTang) {
                 modelCuaHang.addRow(new Object[]{ch.getName(), checked});
             } else {
                 modelCuaHang.addRow(new Object[]{checked, ch.getName(), ch.getDiaChi() != null ? ch.getDiaChi() : ""});
@@ -2154,6 +2931,38 @@ public class DotKhuyenMaiEditDialog extends JDialog {
                 }
             }
         }
+
+        // Tải chi tiết khuyến mãi nếu là Mua / Tặng
+        if (isMuaTang && modelMuaTangChiTiet != null) {
+            allProducts = matHangDAO.getAll();
+            loadTreeNhomHangMT();
+            filterSourceProductsMT();
+
+            List<DotKhuyenMaiMuaTangChiTiet> mtList = currentDotKM.getId() != null ? dotKhuyenMaiDAO.getMuaTangDetails(currentDotKM.getId()) : currentDotKM.getListMuaTangChiTiet();
+            modelMuaTangChiTiet.setRowCount(0);
+            if (mtList != null && !mtList.isEmpty()) {
+                int idx = 1;
+                for (DotKhuyenMaiMuaTangChiTiet ct : mtList) {
+                    String slMuaStr = ct.getSoLuongMua() == (long) ct.getSoLuongMua() ? String.valueOf((long) ct.getSoLuongMua()) : String.valueOf(ct.getSoLuongMua());
+                    String slTangStr = ct.getSoLuongTang() == (long) ct.getSoLuongTang() ? String.valueOf((long) ct.getSoLuongTang()) : String.valueOf(ct.getSoLuongTang());
+
+                    modelMuaTangChiTiet.addRow(new Object[]{
+                            String.format("%02d", idx++),
+                            ct.getMaHangMua() != null ? ct.getMaHangMua() : "",
+                            ct.getTenHangMua() != null ? ct.getTenHangMua() : "",
+                            ct.getDonViTinhMua() != null ? ct.getDonViTinhMua() : "",
+                            slMuaStr,
+                            ct.isTangCungLoai(),
+                            ct.getMaHangTang() != null ? ct.getMaHangTang() : "",
+                            ct.getTenHangTang() != null ? ct.getTenHangTang() : "",
+                            ct.getDonViTinhTang() != null ? ct.getDonViTinhTang() : "",
+                            slTangStr,
+                            ct.getMathangMuaId(),
+                            ct.getMathangTangId()
+                    });
+                }
+            }
+        }
     }
 
     private void setSpinnerTime(JSpinner spinner, int hour, int minute) {
@@ -2171,6 +2980,9 @@ public class DotKhuyenMaiEditDialog extends JDialog {
         }
         if (tableSanPhamChiTiet != null && tableSanPhamChiTiet.isEditing()) {
             tableSanPhamChiTiet.getCellEditor().stopCellEditing();
+        }
+        if (tableMuaTangChiTiet != null && tableMuaTangChiTiet.isEditing()) {
+            tableMuaTangChiTiet.getCellEditor().stopCellEditing();
         }
         if (tableNhomChiTiet != null && tableNhomChiTiet.isEditing()) {
             tableNhomChiTiet.getCellEditor().stopCellEditing();
@@ -2219,6 +3031,7 @@ public class DotKhuyenMaiEditDialog extends JDialog {
         boolean isDongGia = isDongGiaPromotion();
         boolean isSanPham = isSanPhamPromotion();
         boolean isNhom = isNhomPromotion();
+        boolean isMuaTang = isMuaTangPromotion();
 
         if (isDongGia) {
             List<String> productIdsInTable = new ArrayList<>();
@@ -2287,6 +3100,51 @@ public class DotKhuyenMaiEditDialog extends JDialog {
             }
             currentDotKM.setMapSanPhamGiamGia(mapDiscounts);
             currentDotKM.setTiLeGiamGia(maxTiLe);
+        } else if (isMuaTang) {
+            List<DotKhuyenMaiMuaTangChiTiet> mtList = new ArrayList<>();
+            if (modelMuaTangChiTiet != null) {
+                for (int r = 0; r < modelMuaTangChiTiet.getRowCount(); r++) {
+                    String maMua = (String) modelMuaTangChiTiet.getValueAt(r, 1);
+                    String tenMua = (String) modelMuaTangChiTiet.getValueAt(r, 2);
+                    String dvtMua = (String) modelMuaTangChiTiet.getValueAt(r, 3);
+                    Object slMuaObj = modelMuaTangChiTiet.getValueAt(r, 4);
+                    double slMua = 1.0;
+                    if (slMuaObj instanceof Number) {
+                        slMua = ((Number) slMuaObj).doubleValue();
+                    } else if (slMuaObj != null) {
+                        try { slMua = Double.parseDouble(slMuaObj.toString().trim().replace(",", ".")); } catch (Exception ignored) {}
+                    }
+                    Boolean tangCungLoai = (Boolean) modelMuaTangChiTiet.getValueAt(r, 5);
+                    String maTang = (String) modelMuaTangChiTiet.getValueAt(r, 6);
+                    String tenTang = (String) modelMuaTangChiTiet.getValueAt(r, 7);
+                    String dvtTang = (String) modelMuaTangChiTiet.getValueAt(r, 8);
+                    Object slTangObj = modelMuaTangChiTiet.getValueAt(r, 9);
+                    double slTang = 1.0;
+                    if (slTangObj instanceof Number) {
+                        slTang = ((Number) slTangObj).doubleValue();
+                    } else if (slTangObj != null) {
+                        try { slTang = Double.parseDouble(slTangObj.toString().trim().replace(",", ".")); } catch (Exception ignored) {}
+                    }
+                    String idMua = modelMuaTangChiTiet.getValueAt(r, 10) != null ? modelMuaTangChiTiet.getValueAt(r, 10).toString() : null;
+                    String idTang = modelMuaTangChiTiet.getValueAt(r, 11) != null ? modelMuaTangChiTiet.getValueAt(r, 11).toString() : idMua;
+
+                    DotKhuyenMaiMuaTangChiTiet item = new DotKhuyenMaiMuaTangChiTiet();
+                    item.setMathangMuaId(idMua);
+                    item.setMaHangMua(maMua);
+                    item.setTenHangMua(tenMua);
+                    item.setDonViTinhMua(dvtMua);
+                    item.setSoLuongMua(slMua > 0 ? slMua : 1.0);
+                    item.setTangCungLoai(Boolean.TRUE.equals(tangCungLoai));
+                    item.setMathangTangId(item.isTangCungLoai() ? idMua : (idTang != null ? idTang : idMua));
+                    item.setMaHangTang(item.isTangCungLoai() ? maMua : maTang);
+                    item.setTenHangTang(item.isTangCungLoai() ? tenMua : tenTang);
+                    item.setDonViTinhTang(item.isTangCungLoai() ? dvtMua : dvtTang);
+                    item.setSoLuongTang(slTang > 0 ? slTang : 1.0);
+                    mtList.add(item);
+                }
+            }
+            currentDotKM.setListMuaTangChiTiet(mtList);
+            currentDotKM.setTiLeGiamGia(0.0);
         } else if (isNhom) {
             Map<String, Double> mapDiscounts = new HashMap<>();
             double maxTiLe = 0;
@@ -2418,6 +3276,50 @@ public class DotKhuyenMaiEditDialog extends JDialog {
                 }
             }
             copy.setMapSanPhamGiamGia(copiedDiscounts);
+        } else if (isMuaTangPromotion()) {
+            List<DotKhuyenMaiMuaTangChiTiet> copiedMT = new ArrayList<>();
+            if (modelMuaTangChiTiet != null) {
+                for (int r = 0; r < modelMuaTangChiTiet.getRowCount(); r++) {
+                    String maMua = (String) modelMuaTangChiTiet.getValueAt(r, 1);
+                    String tenMua = (String) modelMuaTangChiTiet.getValueAt(r, 2);
+                    String dvtMua = (String) modelMuaTangChiTiet.getValueAt(r, 3);
+                    Object slMuaObj = modelMuaTangChiTiet.getValueAt(r, 4);
+                    double slMua = 1.0;
+                    if (slMuaObj instanceof Number) {
+                        slMua = ((Number) slMuaObj).doubleValue();
+                    } else if (slMuaObj != null) {
+                        try { slMua = Double.parseDouble(slMuaObj.toString().trim().replace(",", ".")); } catch (Exception ignored) {}
+                    }
+                    Boolean tangCungLoai = (Boolean) modelMuaTangChiTiet.getValueAt(r, 5);
+                    String maTang = (String) modelMuaTangChiTiet.getValueAt(r, 6);
+                    String tenTang = (String) modelMuaTangChiTiet.getValueAt(r, 7);
+                    String dvtTang = (String) modelMuaTangChiTiet.getValueAt(r, 8);
+                    Object slTangObj = modelMuaTangChiTiet.getValueAt(r, 9);
+                    double slTang = 1.0;
+                    if (slTangObj instanceof Number) {
+                        slTang = ((Number) slTangObj).doubleValue();
+                    } else if (slTangObj != null) {
+                        try { slTang = Double.parseDouble(slTangObj.toString().trim().replace(",", ".")); } catch (Exception ignored) {}
+                    }
+                    String idMua = modelMuaTangChiTiet.getValueAt(r, 10) != null ? modelMuaTangChiTiet.getValueAt(r, 10).toString() : null;
+                    String idTang = modelMuaTangChiTiet.getValueAt(r, 11) != null ? modelMuaTangChiTiet.getValueAt(r, 11).toString() : idMua;
+
+                    DotKhuyenMaiMuaTangChiTiet item = new DotKhuyenMaiMuaTangChiTiet();
+                    item.setMathangMuaId(idMua);
+                    item.setMaHangMua(maMua);
+                    item.setTenHangMua(tenMua);
+                    item.setDonViTinhMua(dvtMua);
+                    item.setSoLuongMua(slMua > 0 ? slMua : 1.0);
+                    item.setTangCungLoai(Boolean.TRUE.equals(tangCungLoai));
+                    item.setMathangTangId(item.isTangCungLoai() ? idMua : (idTang != null ? idTang : idMua));
+                    item.setMaHangTang(item.isTangCungLoai() ? maMua : maTang);
+                    item.setTenHangTang(item.isTangCungLoai() ? tenMua : tenTang);
+                    item.setDonViTinhTang(item.isTangCungLoai() ? dvtMua : dvtTang);
+                    item.setSoLuongTang(slTang > 0 ? slTang : 1.0);
+                    copiedMT.add(item);
+                }
+            }
+            copy.setListMuaTangChiTiet(copiedMT);
         } else if (isNhomPromotion()) {
             Map<String, Double> copiedDiscounts = new HashMap<>();
             if (modelNhomChiTiet != null) {

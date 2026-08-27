@@ -209,4 +209,14 @@ public class DotKhuyenMai {
     public void setMapDongGiaSanPham(java.util.Map<String, Double> mapDongGiaSanPham) {
         this.mapDongGiaSanPham = mapDongGiaSanPham != null ? mapDongGiaSanPham : new java.util.HashMap<>();
     }
+
+    private List<DotKhuyenMaiMuaTangChiTiet> listMuaTangChiTiet = new ArrayList<>();
+
+    public List<DotKhuyenMaiMuaTangChiTiet> getListMuaTangChiTiet() {
+        return listMuaTangChiTiet;
+    }
+
+    public void setListMuaTangChiTiet(List<DotKhuyenMaiMuaTangChiTiet> listMuaTangChiTiet) {
+        this.listMuaTangChiTiet = listMuaTangChiTiet != null ? listMuaTangChiTiet : new ArrayList<>();
+    }
 }

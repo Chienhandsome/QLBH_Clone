@@ -1,6 +1,7 @@
 package kazuko.ex.dao;
 
 import kazuko.ex.model.danhmuc.DotKhuyenMai;
+import kazuko.ex.model.danhmuc.DotKhuyenMaiMuaTangChiTiet;
 import kazuko.ex.service.AuthService;
 
 import java.sql.*;
@@ -15,6 +16,7 @@ public class DotKhuyenMaiDAO extends BaseDAO {
     private static final Map<String, Map<String, Double>> PROMOTION_GROUP_DISCOUNTS = new ConcurrentHashMap<>();
     private static final Map<String, Map<String, Double>> PROMOTION_PRODUCT_DISCOUNTS = new ConcurrentHashMap<>();
     private static final Map<String, Map<String, Double>> PROMOTION_DONG_GIA_PRICES = new ConcurrentHashMap<>();
+    private static final Map<String, List<DotKhuyenMaiMuaTangChiTiet>> PROMOTION_MUA_TANG_DETAILS = new ConcurrentHashMap<>();
 
     private static String getEffectiveUserId() {
         if (AuthService.getCurrentUser() != null && AuthService.getCurrentUser().getId() != null && !AuthService.getCurrentUser().getId().trim().isEmpty()) {
@@ -130,6 +132,8 @@ public class DotKhuyenMaiDAO extends BaseDAO {
             saveProductDiscounts(km.getId(), km.getMapSanPhamGiamGia());
         } else if (isNhom(km)) {
             saveGroupDiscounts(km.getId(), km.getMapNhomGiamGia());
+        } else if (isMuaTang(km)) {
+            saveMuaTangDetails(km.getId(), km.getListMuaTangChiTiet());
         } else {
             if (km.getMapNhomGiamGia() != null && !km.getMapNhomGiamGia().isEmpty()) {
                 saveGroupDiscounts(km.getId(), km.getMapNhomGiamGia());
@@ -139,6 +143,9 @@ public class DotKhuyenMaiDAO extends BaseDAO {
             }
             if (km.getMapDongGiaSanPham() != null && !km.getMapDongGiaSanPham().isEmpty()) {
                 saveDongGiaProducts(km.getId(), km.getMapDongGiaSanPham());
+            }
+            if (km.getListMuaTangChiTiet() != null && !km.getListMuaTangChiTiet().isEmpty()) {
+                saveMuaTangDetails(km.getId(), km.getListMuaTangChiTiet());
             }
         }
         return dbSuccess || true;
@@ -165,6 +172,8 @@ public class DotKhuyenMaiDAO extends BaseDAO {
             saveProductDiscounts(km.getId(), km.getMapSanPhamGiamGia());
         } else if (isNhom(km)) {
             saveGroupDiscounts(km.getId(), km.getMapNhomGiamGia());
+        } else if (isMuaTang(km)) {
+            saveMuaTangDetails(km.getId(), km.getListMuaTangChiTiet());
         } else {
             if (km.getMapNhomGiamGia() != null && !km.getMapNhomGiamGia().isEmpty()) {
                 saveGroupDiscounts(km.getId(), km.getMapNhomGiamGia());
@@ -174,6 +183,9 @@ public class DotKhuyenMaiDAO extends BaseDAO {
             }
             if (km.getMapDongGiaSanPham() != null && !km.getMapDongGiaSanPham().isEmpty()) {
                 saveDongGiaProducts(km.getId(), km.getMapDongGiaSanPham());
+            }
+            if (km.getListMuaTangChiTiet() != null && !km.getListMuaTangChiTiet().isEmpty()) {
+                saveMuaTangDetails(km.getId(), km.getListMuaTangChiTiet());
             }
         }
         return dbSuccess || true;
@@ -200,6 +212,13 @@ public class DotKhuyenMaiDAO extends BaseDAO {
         return "7c566d6f-6386-4e93-a01c-3645e1aba5e7".equals(km.getdLoaiHinhKhuyenMaiId());
     }
 
+    private boolean isMuaTang(DotKhuyenMai km) {
+        if (km == null) return false;
+        String typeName = km.getTenLoaiHinhKhuyenMai();
+        if (typeName != null && (typeName.toLowerCase().contains("mua") || typeName.toLowerCase().contains("tặng") || typeName.toLowerCase().contains("tang"))) return true;
+        return "e5d39bb6-41a4-43ff-bc4d-e170ae4aeba2".equals(km.getdLoaiHinhKhuyenMaiId());
+    }
+
     public boolean moveToTrash(String id) {
         if (id == null) return false;
         boolean dbSuccess = trySetStatusDb(id, -1);
@@ -224,6 +243,18 @@ public class DotKhuyenMaiDAO extends BaseDAO {
 
     public boolean deletePermanently(String id) {
         if (id == null) return false;
+        try (Connection conn = getConnection()) {
+            try (PreparedStatement ps = conn.prepareStatement("DELETE FROM DDOTKHUYENMAICHITIET WHERE DDOTKHUYENMAIID=?")) {
+                ps.setString(1, id);
+                ps.executeUpdate();
+            }
+            try (PreparedStatement ps = conn.prepareStatement("DELETE FROM DDOTKHUYENMAIAPDUNG WHERE DDOTKHUYENMAIID=?")) {
+                ps.setString(1, id);
+                ps.executeUpdate();
+            }
+        } catch (Exception e) {
+            System.err.println("Lỗi deletePermanently child tables: " + e.getMessage());
+        }
         boolean dbSuccess = tryDeleteFromDb(id);
         TRASH_PROMOTIONS.remove(id);
         MEMORY_PROMOTIONS.removeIf(p -> id.equals(p.getId()));
@@ -231,6 +262,7 @@ public class DotKhuyenMaiDAO extends BaseDAO {
         PROMOTION_GROUP_DISCOUNTS.remove(id);
         PROMOTION_PRODUCT_DISCOUNTS.remove(id);
         PROMOTION_DONG_GIA_PRICES.remove(id);
+        PROMOTION_MUA_TANG_DETAILS.remove(id);
         return dbSuccess;
     }
 
@@ -462,6 +494,98 @@ public class DotKhuyenMaiDAO extends BaseDAO {
             return true;
         } catch (Exception e) {
             System.err.println("Lỗi saveDongGiaProducts: " + e.getMessage());
+            return false;
+        }
+    }
+
+    public List<DotKhuyenMaiMuaTangChiTiet> getMuaTangDetails(String dotKmId) {
+        if (dotKmId == null) return new ArrayList<>();
+        List<DotKhuyenMaiMuaTangChiTiet> list = new ArrayList<>();
+        String sql = "SELECT c.ID, c.DDOTKHUYENMAIID, c.DMATHANGID, c.SOLUONGMUA, c.DMATHANGTANGID, c.SOLUONGTANG, " +
+                     "m1.CODE as MAMUA, m1.NAME as TENMUA, d1.NAME as DVTMUA, " +
+                     "m2.CODE as MATANG, m2.NAME as TENTANG, d2.NAME as DVTTANG " +
+                     "FROM DDOTKHUYENMAICHITIET c " +
+                     "LEFT JOIN DMATHANG m1 ON c.DMATHANGID = m1.ID " +
+                     "LEFT JOIN DDONVITINH d1 ON m1.DDONVITINHID = d1.ID " +
+                     "LEFT JOIN DMATHANG m2 ON c.DMATHANGTANGID = m2.ID " +
+                     "LEFT JOIN DDONVITINH d2 ON m2.DDONVITINHID = d2.ID " +
+                     "WHERE c.DDOTKHUYENMAIID = ? AND (c.DMATHANGID IS NOT NULL OR c.DMATHANGTANGID IS NOT NULL) " +
+                     "ORDER BY c.TIMECREATED, m1.CODE";
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, dotKmId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    DotKhuyenMaiMuaTangChiTiet ct = new DotKhuyenMaiMuaTangChiTiet();
+                    ct.setId(rs.getString("ID"));
+                    ct.setDotKhuyenMaiId(rs.getString("DDOTKHUYENMAIID"));
+                    ct.setMathangMuaId(rs.getString("DMATHANGID"));
+                    ct.setMaHangMua(rs.getString("MAMUA"));
+                    ct.setTenHangMua(rs.getString("TENMUA"));
+                    ct.setDonViTinhMua(rs.getString("DVTMUA"));
+                    double slMua = rs.getDouble("SOLUONGMUA");
+                    ct.setSoLuongMua(slMua > 0 ? slMua : 1.0);
+
+                    ct.setMathangTangId(rs.getString("DMATHANGTANGID"));
+                    ct.setMaHangTang(rs.getString("MATANG"));
+                    ct.setTenHangTang(rs.getString("TENTANG"));
+                    ct.setDonViTinhTang(rs.getString("DVTTANG"));
+                    double slTang = rs.getDouble("SOLUONGTANG");
+                    ct.setSoLuongTang(slTang > 0 ? slTang : 1.0);
+
+                    boolean sameItem = ct.getMathangMuaId() != null && ct.getMathangMuaId().equals(ct.getMathangTangId());
+                    ct.setTangCungLoai(sameItem);
+
+                    list.add(ct);
+                }
+            }
+            if (!list.isEmpty() || PROMOTION_MUA_TANG_DETAILS.containsKey(dotKmId)) {
+                PROMOTION_MUA_TANG_DETAILS.put(dotKmId, new ArrayList<>(list));
+            }
+            return list;
+        } catch (Exception e) {
+            List<DotKhuyenMaiMuaTangChiTiet> cached = PROMOTION_MUA_TANG_DETAILS.get(dotKmId);
+            if (cached != null) {
+                return new ArrayList<>(cached);
+            }
+            return list;
+        }
+    }
+
+    public boolean saveMuaTangDetails(String dotKmId, List<DotKhuyenMaiMuaTangChiTiet> list) {
+        if (dotKmId == null) return false;
+        PROMOTION_MUA_TANG_DETAILS.put(dotKmId, new ArrayList<>(list != null ? list : Collections.emptyList()));
+
+        String sqlDelete = "DELETE FROM DDOTKHUYENMAICHITIET WHERE DDOTKHUYENMAIID=? AND (DMATHANGID IS NOT NULL OR DMATHANGTANGID IS NOT NULL)";
+        String sqlInsert = "INSERT INTO DDOTKHUYENMAICHITIET (ID, DDOTKHUYENMAIID, DMATHANGID, SOLUONGMUA, DMATHANGTANGID, SOLUONGTANG, STATUS, TIMECREATED, USERCREATEDID) " +
+                           "VALUES (?, ?, ?, ?, ?, ?, 30, CURRENT_TIMESTAMP, ?)";
+        try (Connection conn = getConnection()) {
+            conn.setAutoCommit(false);
+            try (PreparedStatement psDel = conn.prepareStatement(sqlDelete)) {
+                psDel.setString(1, dotKmId);
+                psDel.executeUpdate();
+            }
+            if (list != null && !list.isEmpty()) {
+                try (PreparedStatement psIns = conn.prepareStatement(sqlInsert)) {
+                    for (DotKhuyenMaiMuaTangChiTiet item : list) {
+                        psIns.setString(1, item.getId() != null ? item.getId() : UUID.randomUUID().toString());
+                        psIns.setString(2, dotKmId);
+                        psIns.setString(3, item.getMathangMuaId());
+                        psIns.setDouble(4, item.getSoLuongMua() > 0 ? item.getSoLuongMua() : 1.0);
+                        String tangId = item.isTangCungLoai() ? item.getMathangMuaId() : item.getMathangTangId();
+                        psIns.setString(5, tangId != null ? tangId : item.getMathangMuaId());
+                        psIns.setDouble(6, item.getSoLuongTang() > 0 ? item.getSoLuongTang() : 1.0);
+                        psIns.setString(7, getEffectiveUserId());
+                        psIns.addBatch();
+                    }
+                    psIns.executeBatch();
+                }
+            }
+            conn.commit();
+            conn.setAutoCommit(true);
+            return true;
+        } catch (Exception e) {
+            System.err.println("Lỗi saveMuaTangDetails: " + e.getMessage());
             return false;
         }
     }
