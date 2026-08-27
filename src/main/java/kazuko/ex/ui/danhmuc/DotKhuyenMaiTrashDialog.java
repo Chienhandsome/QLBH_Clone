@@ -45,7 +45,7 @@ public class DotKhuyenMaiTrashDialog extends JDialog {
         add(headerPanel, BorderLayout.NORTH);
 
         // Table
-        String[] columns = {"STT", "Tên đợt khuyến mại", "Loại hình khuyến mại", "Từ ngày", "Đến ngày", "Tỉ lệ giảm", "Ghi chú"};
+        String[] columns = {"STT", "Tên đợt khuyến mại", "Loại hình khuyến mại", "Từ ngày", "Đến ngày", "Ghi chú"};
         modelTrash = new DefaultTableModel(columns, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -61,12 +61,11 @@ public class DotKhuyenMaiTrashDialog extends JDialog {
         tableTrash.setGridColor(new Color(225, 232, 240));
 
         tableTrash.getColumnModel().getColumn(0).setPreferredWidth(40);
-        tableTrash.getColumnModel().getColumn(1).setPreferredWidth(180);
-        tableTrash.getColumnModel().getColumn(2).setPreferredWidth(140);
-        tableTrash.getColumnModel().getColumn(3).setPreferredWidth(85);
-        tableTrash.getColumnModel().getColumn(4).setPreferredWidth(85);
-        tableTrash.getColumnModel().getColumn(5).setPreferredWidth(80);
-        tableTrash.getColumnModel().getColumn(6).setPreferredWidth(140);
+        tableTrash.getColumnModel().getColumn(1).setPreferredWidth(200);
+        tableTrash.getColumnModel().getColumn(2).setPreferredWidth(160);
+        tableTrash.getColumnModel().getColumn(3).setPreferredWidth(90);
+        tableTrash.getColumnModel().getColumn(4).setPreferredWidth(90);
+        tableTrash.getColumnModel().getColumn(5).setPreferredWidth(160);
 
         JScrollPane scrollTable = new JScrollPane(tableTrash);
         scrollTable.setBorder(null);
@@ -114,7 +113,6 @@ public class DotKhuyenMaiTrashDialog extends JDialog {
                     km.getTenLoaiHinhKhuyenMai() != null ? km.getTenLoaiHinhKhuyenMai() : "",
                     tuNgay,
                     denNgay,
-                    km.getTiLeGiamGia(),
                     km.getNote() != null ? km.getNote() : ""
             });
         }

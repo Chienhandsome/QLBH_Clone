@@ -94,6 +94,17 @@ public class DotKhuyenMaiDAOTest {
     public void testSanPhamDiscountsCRUD() {
         DotKhuyenMaiDAO dao = new DotKhuyenMaiDAO();
         MatHangDAO mhDao = new MatHangDAO();
+        LoaiHinhKhuyenMaiDAO loaiDao = new LoaiHinhKhuyenMaiDAO();
+        List<LoaiHinhKhuyenMai> loaiList = loaiDao.getAll();
+        String loaiSpId = loaiList.stream()
+                .filter(l -> l.getName() != null && (l.getName().toLowerCase().contains("sản phẩm") || l.getName().toLowerCase().contains("san pham")))
+                .map(LoaiHinhKhuyenMai::getId)
+                .findFirst().orElse(loaiList.isEmpty() ? "TEST_SP" : loaiList.get(0).getId());
+        String loaiSpName = loaiList.stream()
+                .filter(l -> l.getName() != null && (l.getName().toLowerCase().contains("sản phẩm") || l.getName().toLowerCase().contains("san pham")))
+                .map(LoaiHinhKhuyenMai::getName)
+                .findFirst().orElse("Giảm giá theo sản phẩm");
+
         List<kazuko.ex.model.danhmuc.MatHang> products = mhDao.getAll();
         Assertions.assertNotNull(products);
         Assertions.assertFalse(products.isEmpty());
@@ -103,7 +114,8 @@ public class DotKhuyenMaiDAOTest {
 
         DotKhuyenMai km = new DotKhuyenMai();
         km.setName("KM Giảm Giá Sản Phẩm Test " + System.currentTimeMillis());
-        km.setTenLoaiHinhKhuyenMai("Giảm giá theo sản phẩm");
+        km.setdLoaiHinhKhuyenMaiId(loaiSpId);
+        km.setTenLoaiHinhKhuyenMai(loaiSpName);
         km.setTuNgay(new Timestamp(System.currentTimeMillis()));
         km.setDenNgay(new Timestamp(System.currentTimeMillis() + 86400000L * 7));
 
@@ -129,5 +141,122 @@ public class DotKhuyenMaiDAOTest {
 
         // Clean up
         dao.deletePermanently(km.getId());
+    }
+
+    @Test
+    public void testDongGiaDiscountsAndConflictValidation() {
+        DotKhuyenMaiDAO dao = new DotKhuyenMaiDAO();
+        MatHangDAO mhDao = new MatHangDAO();
+        LoaiHinhKhuyenMaiDAO loaiDao = new LoaiHinhKhuyenMaiDAO();
+        List<LoaiHinhKhuyenMai> loaiList = loaiDao.getAll();
+        String loaiDgId = loaiList.stream()
+                .filter(l -> l.getName() != null && (l.getName().toLowerCase().contains("đồng giá") || l.getName().toLowerCase().contains("dong gia")))
+                .map(LoaiHinhKhuyenMai::getId)
+                .findFirst().orElse("8be106e5-37b5-4523-8eec-a7c6ea0d40f9");
+        String loaiDgName = loaiList.stream()
+                .filter(l -> l.getName() != null && (l.getName().toLowerCase().contains("đồng giá") || l.getName().toLowerCase().contains("dong gia")))
+                .map(LoaiHinhKhuyenMai::getName)
+                .findFirst().orElse("Mặt hàng đồng giá");
+
+        List<kazuko.ex.model.danhmuc.MatHang> products = mhDao.getAll();
+        Assertions.assertNotNull(products);
+        Assertions.assertFalse(products.isEmpty());
+
+        String prodId1 = products.get(0).getId();
+
+        // 1. Create S1: 10/10/2026 -> 15/10/2026
+        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd");
+        Timestamp tuNgayS1 = null;
+        Timestamp denNgayS1 = null;
+        Timestamp tuNgayOverlap = null;
+        Timestamp denNgayOverlap = null;
+        Timestamp tuNgayBefore = null;
+        Timestamp denNgayBefore = null;
+        Timestamp tuNgayAfter = null;
+        Timestamp denNgayAfter = null;
+        try {
+            tuNgayS1 = new Timestamp(sdf.parse("2026-10-10").getTime());
+            denNgayS1 = new Timestamp(sdf.parse("2026-10-15").getTime());
+
+            tuNgayOverlap = new Timestamp(sdf.parse("2026-10-12").getTime());
+            denNgayOverlap = new Timestamp(sdf.parse("2026-10-20").getTime());
+
+            tuNgayBefore = new Timestamp(sdf.parse("2026-10-01").getTime());
+            denNgayBefore = new Timestamp(sdf.parse("2026-10-09").getTime());
+
+            tuNgayAfter = new Timestamp(sdf.parse("2026-10-16").getTime());
+            denNgayAfter = new Timestamp(sdf.parse("2026-10-25").getTime());
+        } catch (Exception e) {
+            Assertions.fail(e.getMessage());
+        }
+
+        DotKhuyenMai s1 = new DotKhuyenMai();
+        s1.setName("Sale Đồng Giá 50k - S1");
+        s1.setdLoaiHinhKhuyenMaiId(loaiDgId);
+        s1.setTenLoaiHinhKhuyenMai(loaiDgName);
+        s1.setTuNgay(tuNgayS1);
+        s1.setDenNgay(denNgayS1);
+
+        java.util.Map<String, Double> s1Prices = new java.util.HashMap<>();
+        s1Prices.put(prodId1, 50000.0);
+        s1.setMapDongGiaSanPham(s1Prices);
+
+        boolean insertOk = dao.insert(s1);
+        Assertions.assertTrue(insertOk);
+        Assertions.assertNotNull(s1.getId());
+
+        // Verify retrieval
+        java.util.Map<String, Double> loadedPrices = dao.getDongGiaProductPrices(s1.getId());
+        Assertions.assertNotNull(loadedPrices);
+        Assertions.assertEquals(50000.0, loadedPrices.get(prodId1));
+
+        // Test 1: S2 overlapping with S1 (12/10 - 20/10) with prodId1 -> MUST CONFLICT
+        List<DotKhuyenMaiDAO.ConflictPromotionInfo> conflictsOverlap = dao.checkDongGiaConflicts(
+                null,
+                tuNgayOverlap,
+                denNgayOverlap,
+                null,
+                null,
+                java.util.Collections.singletonList(prodId1)
+        );
+        Assertions.assertFalse(conflictsOverlap.isEmpty(), "Should detect conflict when dates overlap");
+        Assertions.assertEquals(s1.getId(), conflictsOverlap.get(0).getDotKmId());
+        Assertions.assertEquals(prodId1, conflictsOverlap.get(0).getMathangId());
+
+        // Test 2: S3 before S1 (01/10 - 09/10) with prodId1 -> NO CONFLICT
+        List<DotKhuyenMaiDAO.ConflictPromotionInfo> conflictsBefore = dao.checkDongGiaConflicts(
+                null,
+                tuNgayBefore,
+                denNgayBefore,
+                null,
+                null,
+                java.util.Collections.singletonList(prodId1)
+        );
+        Assertions.assertTrue(conflictsBefore.isEmpty(), "Should NOT conflict when date is before S1");
+
+        // Test 3: S4 after S1 (16/10 - 25/10) with prodId1 -> NO CONFLICT
+        List<DotKhuyenMaiDAO.ConflictPromotionInfo> conflictsAfter = dao.checkDongGiaConflicts(
+                null,
+                tuNgayAfter,
+                denNgayAfter,
+                null,
+                null,
+                java.util.Collections.singletonList(prodId1)
+        );
+        Assertions.assertTrue(conflictsAfter.isEmpty(), "Should NOT conflict when date is after S1");
+
+        // Test 4: S1 editing itself -> Excludes itself, NO CONFLICT
+        List<DotKhuyenMaiDAO.ConflictPromotionInfo> conflictsSelf = dao.checkDongGiaConflicts(
+                s1.getId(),
+                tuNgayS1,
+                denNgayS1,
+                null,
+                null,
+                java.util.Collections.singletonList(prodId1)
+        );
+        Assertions.assertTrue(conflictsSelf.isEmpty(), "Should NOT conflict with itself");
+
+        // Clean up
+        dao.deletePermanently(s1.getId());
     }
 }

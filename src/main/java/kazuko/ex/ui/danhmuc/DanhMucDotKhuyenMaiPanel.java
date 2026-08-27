@@ -287,7 +287,7 @@ public class DanhMucDotKhuyenMaiPanel extends JPanel {
         rightPanel.add(topBar, BorderLayout.NORTH);
 
         // 2. Table Đợt khuyến mại
-        String[] columns = {"", "Tên đợt khuyến mại", "Loại hình khuyến mại", "Từ ngày", "Đến ngày", "Ngừng áp dụng", "Ghi chú", "Tỉ lệ giảm giá", "Từ giờ", "Đến giờ"};
+        String[] columns = {"", "Tên đợt khuyến mại", "Loại hình khuyến mại", "Từ ngày", "Đến ngày", "Ngừng áp dụng", "Ghi chú", "Từ giờ", "Đến giờ"};
 
         tableModel = new DefaultTableModel(columns, 0) {
             @Override
@@ -395,15 +395,14 @@ public class DanhMucDotKhuyenMaiPanel extends JPanel {
     private void setupTableRenderers() {
         tableDotKhuyenMai.getColumnModel().getColumn(0).setPreferredWidth(30);
         tableDotKhuyenMai.getColumnModel().getColumn(0).setMaxWidth(35);
-        tableDotKhuyenMai.getColumnModel().getColumn(1).setPreferredWidth(180);
-        tableDotKhuyenMai.getColumnModel().getColumn(2).setPreferredWidth(150);
+        tableDotKhuyenMai.getColumnModel().getColumn(1).setPreferredWidth(190);
+        tableDotKhuyenMai.getColumnModel().getColumn(2).setPreferredWidth(160);
         tableDotKhuyenMai.getColumnModel().getColumn(3).setPreferredWidth(90);
         tableDotKhuyenMai.getColumnModel().getColumn(4).setPreferredWidth(90);
         tableDotKhuyenMai.getColumnModel().getColumn(5).setPreferredWidth(95);
-        tableDotKhuyenMai.getColumnModel().getColumn(6).setPreferredWidth(150);
-        tableDotKhuyenMai.getColumnModel().getColumn(7).setPreferredWidth(90);
+        tableDotKhuyenMai.getColumnModel().getColumn(6).setPreferredWidth(180);
+        tableDotKhuyenMai.getColumnModel().getColumn(7).setPreferredWidth(65);
         tableDotKhuyenMai.getColumnModel().getColumn(8).setPreferredWidth(65);
-        tableDotKhuyenMai.getColumnModel().getColumn(9).setPreferredWidth(65);
 
         // Pointer renderer for col 0
         tableDotKhuyenMai.getColumnModel().getColumn(0).setCellRenderer(new DefaultTableCellRenderer() {
@@ -421,18 +420,14 @@ public class DanhMucDotKhuyenMaiPanel extends JPanel {
             }
         });
 
-        // Center / Right alignment renderers
+        // Center alignment renderers
         DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
         centerRenderer.setHorizontalAlignment(SwingConstants.CENTER);
 
-        DefaultTableCellRenderer rightRenderer = new DefaultTableCellRenderer();
-        rightRenderer.setHorizontalAlignment(SwingConstants.RIGHT);
-
         tableDotKhuyenMai.getColumnModel().getColumn(3).setCellRenderer(centerRenderer);
         tableDotKhuyenMai.getColumnModel().getColumn(4).setCellRenderer(centerRenderer);
-        tableDotKhuyenMai.getColumnModel().getColumn(7).setCellRenderer(rightRenderer);
+        tableDotKhuyenMai.getColumnModel().getColumn(7).setCellRenderer(centerRenderer);
         tableDotKhuyenMai.getColumnModel().getColumn(8).setCellRenderer(centerRenderer);
-        tableDotKhuyenMai.getColumnModel().getColumn(9).setCellRenderer(centerRenderer);
     }
 
     private JPanel createBottomInfoPanel() {
@@ -710,7 +705,6 @@ public class DanhMucDotKhuyenMaiPanel extends JPanel {
                     denNgay,
                     km.isNgungApDung(),
                     km.getNote() != null ? km.getNote() : "",
-                    km.getTiLeGiamGia(),
                     tuGio,
                     denGio
             });

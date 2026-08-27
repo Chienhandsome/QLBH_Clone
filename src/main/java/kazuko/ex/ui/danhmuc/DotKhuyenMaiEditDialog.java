@@ -84,6 +84,22 @@ public class DotKhuyenMaiEditDialog extends JDialog {
     private JButton btnApplyQuickRateSP;
     private String currentSelectedNhomSP = "Tất cả";
     private String currentSelectedNhomIdSP = null;
+
+    // Components cho "Mặt hàng đồng giá"
+    private JTree treeNhomHangDG;
+    private DefaultTreeModel treeModelDG;
+    private JTable tableSanPhamNguonDG;
+    private DefaultTableModel modelSanPhamNguonDG;
+    private JTextField txtSearchSanPhamDG;
+    private List<MatHang> filteredSourceProductsDG = new ArrayList<>();
+
+    private JTable tableSanPhamChiTietDG;
+    private DefaultTableModel modelSanPhamChiTietDG;
+    private JTextField txtQuickPriceDG;
+    private JButton btnApplyQuickPriceDG;
+    private String currentSelectedNhomDG = "Tất cả";
+    private String currentSelectedNhomIdDG = null;
+
     private static final DecimalFormat DF_CURRENCY = new DecimalFormat("#,##0");
 
     private static final Color COLOR_HEADER_BG = new Color(255, 254, 230);
@@ -107,6 +123,15 @@ public class DotKhuyenMaiEditDialog extends JDialog {
         setupShortcuts();
         pack();
         setLocationRelativeTo(parent);
+    }
+
+    private boolean isDongGiaPromotion() {
+        String typeName = currentDotKM != null ? currentDotKM.getTenLoaiHinhKhuyenMai() : "";
+        if ((typeName == null || typeName.isEmpty()) && currentDotKM != null && currentDotKM.getdLoaiHinhKhuyenMaiId() != null) {
+            LoaiHinhKhuyenMai l = loaiHinhKhuyenMaiDAO.findById(currentDotKM.getdLoaiHinhKhuyenMaiId());
+            if (l != null) typeName = l.getName();
+        }
+        return typeName != null && (typeName.toLowerCase().contains("đồng giá") || typeName.toLowerCase().contains("dong gia"));
     }
 
     private boolean isSanPhamPromotion() {
@@ -141,9 +166,10 @@ public class DotKhuyenMaiEditDialog extends JDialog {
     private void initUI() {
         setLayout(new BorderLayout());
 
+        boolean isDongGia = isDongGiaPromotion();
         boolean isSanPham = isSanPhamPromotion();
         boolean isNhom = isNhomPromotion();
-        if (isSanPham) {
+        if (isDongGia || isSanPham) {
             setPreferredSize(new Dimension(1020, 680));
             setResizable(true);
             setMinimumSize(new Dimension(850, 580));
@@ -219,7 +245,9 @@ public class DotKhuyenMaiEditDialog extends JDialog {
         ribbonBar.add(rightRibbon, BorderLayout.EAST);
         centerContainer.add(ribbonBar, BorderLayout.NORTH);
 
-        if (isSanPham) {
+        if (isDongGia) {
+            buildDongGiaPromotionForm(centerContainer);
+        } else if (isSanPham) {
             buildSanPhamPromotionForm(centerContainer);
         } else if (isNhom) {
             buildNhomPromotionForm(centerContainer);
@@ -249,6 +277,665 @@ public class DotKhuyenMaiEditDialog extends JDialog {
         footerPanel.add(btnSaveExit);
         footerPanel.add(btnExit);
         add(footerPanel, BorderLayout.SOUTH);
+    }
+
+    private void buildDongGiaPromotionForm(JPanel centerContainer) {
+        JPanel formPanel = new JPanel(null);
+        formPanel.setBackground(COLOR_FORM_BG);
+        formPanel.setPreferredSize(new Dimension(1020, 160));
+        formPanel.setBorder(new EmptyBorder(6, 12, 6, 12));
+
+        int rowH = 24;
+        int gap = 5;
+        int y = 8;
+
+        // ===== CỘT TRÁI =====
+        JLabel lblName = new JLabel("Tên đợt khuyến mại");
+        lblName.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblName.setBounds(12, y, 130, rowH);
+        formPanel.add(lblName);
+
+        txtName = new JTextField();
+        txtName.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        txtName.setBackground(COLOR_REQUIRED_FIELD);
+        txtName.setBounds(145, y, 240, rowH);
+        formPanel.add(txtName);
+
+        y += rowH + gap;
+        JLabel lblLoaiHinh = new JLabel("Loại hình khuyến mại");
+        lblLoaiHinh.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblLoaiHinh.setBounds(12, y, 130, rowH);
+        formPanel.add(lblLoaiHinh);
+
+        cbLoaiHinhKM = new JComboBox<>();
+        cbLoaiHinhKM.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        cbLoaiHinhKM.setBounds(145, y, 240, rowH);
+        populateLoaiHinhKMComboBox();
+        formPanel.add(cbLoaiHinhKM);
+
+        y += rowH + gap;
+        JLabel lblTuNgay = new JLabel("Từ ngày");
+        lblTuNgay.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblTuNgay.setBounds(12, y, 60, rowH);
+        formPanel.add(lblTuNgay);
+
+        dpTuNgay = new DatePickerField();
+        dpTuNgay.setBounds(75, y, 110, rowH);
+        formPanel.add(dpTuNgay);
+
+        JLabel lblDenNgay = new JLabel("Đến ngày");
+        lblDenNgay.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblDenNgay.setBounds(195, y, 60, rowH);
+        formPanel.add(lblDenNgay);
+
+        dpDenNgay = new DatePickerField();
+        dpDenNgay.setBounds(265, y, 120, rowH);
+        formPanel.add(dpDenNgay);
+
+        y += rowH + gap;
+        JLabel lblTuGio = new JLabel("Từ giờ");
+        lblTuGio.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblTuGio.setBounds(12, y, 60, rowH);
+        formPanel.add(lblTuGio);
+
+        spTuGio = new JSpinner(new SpinnerDateModel());
+        spTuGio.setEditor(new JSpinner.DateEditor(spTuGio, "HH:mm"));
+        spTuGio.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        spTuGio.setBounds(75, y, 80, rowH);
+        formPanel.add(spTuGio);
+
+        JLabel lblDenGio = new JLabel("Đến giờ");
+        lblDenGio.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblDenGio.setBounds(195, y, 60, rowH);
+        formPanel.add(lblDenGio);
+
+        spDenGio = new JSpinner(new SpinnerDateModel());
+        spDenGio.setEditor(new JSpinner.DateEditor(spDenGio, "HH:mm"));
+        spDenGio.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        spDenGio.setBounds(265, y, 80, rowH);
+        formPanel.add(spDenGio);
+
+        y += rowH + gap;
+        chkNgungApDung = new JCheckBox("Ngừng áp dụng");
+        chkNgungApDung.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        chkNgungApDung.setOpaque(false);
+        chkNgungApDung.setBounds(75, y, 160, rowH);
+        formPanel.add(chkNgungApDung);
+
+        // ===== CỘT PHẢI =====
+        JLabel lblNote = new JLabel("Ghi chú");
+        lblNote.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblNote.setBounds(415, 8, 55, rowH);
+        formPanel.add(lblNote);
+
+        txtNote = new JTextField();
+        txtNote.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        txtNote.setBounds(475, 8, 520, rowH);
+        formPanel.add(txtNote);
+
+        JLabel lblStores = new JLabel("Cửa hàng áp dụng");
+        lblStores.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblStores.setBounds(415, 36, 110, rowH);
+        formPanel.add(lblStores);
+
+        String[] storeCols = {"Cửa hàng", "Áp dụng"};
+        modelCuaHang = new DefaultTableModel(storeCols, 0) {
+            @Override
+            public Class<?> getColumnClass(int columnIndex) {
+                return columnIndex == 1 ? Boolean.class : String.class;
+            }
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return column == 1;
+            }
+        };
+
+        tableCuaHang = new JTable(modelCuaHang);
+        tableCuaHang.setRowHeight(20);
+        tableCuaHang.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        tableCuaHang.getColumnModel().getColumn(0).setPreferredWidth(300);
+        tableCuaHang.getColumnModel().getColumn(1).setPreferredWidth(80);
+
+        JScrollPane scrollStores = new JScrollPane(tableCuaHang);
+        scrollStores.setBounds(530, 36, 465, 110);
+        scrollStores.setBorder(new LineBorder(new Color(175, 195, 220), 1));
+        formPanel.add(scrollStores);
+
+        // ===== BOTTOM 3-LISTS CONTAINER =====
+        JPanel bottomContainer = new JPanel(new GridBagLayout());
+        bottomContainer.setBorder(new EmptyBorder(4, 8, 4, 8));
+        bottomContainer.setBackground(new Color(240, 243, 248));
+
+        // 1. LIST 1: Nhóm mặt hàng
+        JPanel panelList1 = new JPanel(new BorderLayout(0, 4));
+        panelList1.setBackground(new Color(240, 243, 248));
+
+        JPanel titlePanel1 = createListTitlePanel("1. Nhóm mặt hàng", "Folder.png");
+        panelList1.add(titlePanel1, BorderLayout.NORTH);
+
+        DefaultMutableTreeNode rootNode = new DefaultMutableTreeNode("Tất cả");
+        treeModelDG = new DefaultTreeModel(rootNode);
+        treeNhomHangDG = new JTree(treeModelDG);
+        treeNhomHangDG.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        treeNhomHangDG.setRowHeight(22);
+        treeNhomHangDG.setCellRenderer(new DefaultTreeCellRenderer() {
+            @Override
+            public Component getTreeCellRendererComponent(JTree tree, Object value, boolean sel, boolean expanded, boolean leaf, int row, boolean hasFocus) {
+                JLabel lbl = (JLabel) super.getTreeCellRendererComponent(tree, value, sel, expanded, leaf, row, hasFocus);
+                if (value instanceof DefaultMutableTreeNode) {
+                    Object userObj = ((DefaultMutableTreeNode) value).getUserObject();
+                    if ("Tất cả".equals(userObj)) {
+                        lbl.setText("Tất cả nhóm hàng");
+                        lbl.setIcon(IconHelper.getIcon("1282529873_objects.png", 16, 16));
+                    } else if (userObj instanceof NhomMatHang) {
+                        NhomMatHang n = (NhomMatHang) userObj;
+                        lbl.setText(n.getName());
+                        String icon = n.isFolder() ? "Folder.png" : (n.getIconName() != null ? n.getIconName() : "1282529873_objects.png");
+                        lbl.setIcon(IconHelper.getIcon(icon, 16, 16));
+                    }
+                }
+                return lbl;
+            }
+        });
+
+        treeNhomHangDG.addTreeSelectionListener(e -> {
+            TreePath path = treeNhomHangDG.getSelectionPath();
+            if (path != null) {
+                DefaultMutableTreeNode node = (DefaultMutableTreeNode) path.getLastPathComponent();
+                Object userObj = node.getUserObject();
+                if ("Tất cả".equals(userObj)) {
+                    currentSelectedNhomDG = "Tất cả";
+                    currentSelectedNhomIdDG = null;
+                } else if (userObj instanceof NhomMatHang) {
+                    NhomMatHang n = (NhomMatHang) userObj;
+                    currentSelectedNhomDG = n.getName();
+                    currentSelectedNhomIdDG = n.getId();
+                }
+                filterSourceProductsDG();
+            }
+        });
+
+        JScrollPane scrollList1 = new JScrollPane(treeNhomHangDG);
+        scrollList1.setBorder(new LineBorder(new Color(185, 205, 230), 1));
+        panelList1.add(scrollList1, BorderLayout.CENTER);
+
+        // 2. LIST 2: Danh sách mặt hàng nguồn
+        JPanel panelList2 = new JPanel(new BorderLayout(0, 4));
+        panelList2.setBackground(new Color(240, 243, 248));
+
+        JPanel topList2 = new JPanel(new BorderLayout(4, 0));
+        topList2.setOpaque(false);
+        JPanel titlePanel2 = createListTitlePanel("2. Danh sách mặt hàng", "1282529873_objects.png");
+        topList2.add(titlePanel2, BorderLayout.WEST);
+
+        txtSearchSanPhamDG = new JTextField();
+        txtSearchSanPhamDG.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        txtSearchSanPhamDG.setPreferredSize(new Dimension(130, 24));
+        txtSearchSanPhamDG.setToolTipText("Nhập mã hoặc tên mặt hàng để lọc nhanh");
+        txtSearchSanPhamDG.getDocument().addDocumentListener(new DocumentListener() {
+            @Override public void insertUpdate(DocumentEvent e) { filterSourceProductsDG(); }
+            @Override public void removeUpdate(DocumentEvent e) { filterSourceProductsDG(); }
+            @Override public void changedUpdate(DocumentEvent e) { filterSourceProductsDG(); }
+        });
+        JPanel searchBox = new JPanel(new BorderLayout(2, 0));
+        searchBox.setOpaque(false);
+        searchBox.add(new JLabel(IconHelper.getIcon("Find.png", 14, 14)), BorderLayout.WEST);
+        searchBox.add(txtSearchSanPhamDG, BorderLayout.CENTER);
+        topList2.add(searchBox, BorderLayout.CENTER);
+        panelList2.add(topList2, BorderLayout.NORTH);
+
+        String[] srcCols = {"STT", "Mã hàng", "Tên mặt hàng", "ĐVT", "Giá bán", "_ID"};
+        modelSanPhamNguonDG = new DefaultTableModel(srcCols, 0) {
+            @Override public boolean isCellEditable(int row, int column) { return false; }
+        };
+
+        tableSanPhamNguonDG = new JTable(modelSanPhamNguonDG);
+        tableSanPhamNguonDG.setRowHeight(22);
+        tableSanPhamNguonDG.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        tableSanPhamNguonDG.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+        tableSanPhamNguonDG.removeColumn(tableSanPhamNguonDG.getColumnModel().getColumn(5)); // hide _ID
+
+        tableSanPhamNguonDG.getColumnModel().getColumn(0).setPreferredWidth(35);
+        tableSanPhamNguonDG.getColumnModel().getColumn(0).setMaxWidth(40);
+        tableSanPhamNguonDG.getColumnModel().getColumn(1).setPreferredWidth(75);
+        tableSanPhamNguonDG.getColumnModel().getColumn(2).setPreferredWidth(140);
+        tableSanPhamNguonDG.getColumnModel().getColumn(3).setPreferredWidth(45);
+        tableSanPhamNguonDG.getColumnModel().getColumn(4).setPreferredWidth(75);
+
+        tableSanPhamNguonDG.getColumnModel().getColumn(0).setCellRenderer(createCenterRenderer());
+        tableSanPhamNguonDG.getColumnModel().getColumn(4).setCellRenderer(createRightRenderer());
+
+        tableSanPhamNguonDG.addMouseListener(new MouseAdapter() {
+            @Override public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() == 2 && SwingUtilities.isLeftMouseButton(e)) {
+                    onAddSelectedProductsDG();
+                }
+            }
+        });
+
+        JScrollPane scrollList2 = new JScrollPane(tableSanPhamNguonDG);
+        scrollList2.setBorder(new LineBorder(new Color(185, 205, 230), 1));
+        panelList2.add(scrollList2, BorderLayout.CENTER);
+
+        // Nút chuyển giữa List 2 và List 3
+        JPanel panelTransfer = new JPanel();
+        panelTransfer.setLayout(new BoxLayout(panelTransfer, BoxLayout.Y_AXIS));
+        panelTransfer.setOpaque(false);
+        panelTransfer.setBorder(new EmptyBorder(60, 4, 10, 4));
+
+        JButton btnThem = createMiniActionButton(">", "Thêm mặt hàng đang chọn vào đợt đồng giá");
+        JButton btnThemAll = createMiniActionButton(">>", "Thêm toàn bộ mặt hàng trong danh sách");
+        JButton btnXoa = createMiniActionButton("<", "Bỏ mặt hàng đang chọn khỏi đợt đồng giá");
+        JButton btnXoaAll = createMiniActionButton("<<", "Bỏ toàn bộ mặt hàng đã chọn");
+
+        btnThem.addActionListener(e -> onAddSelectedProductsDG());
+        btnThemAll.addActionListener(e -> onAddAllProductsDG());
+        btnXoa.addActionListener(e -> onRemoveSelectedProductsDG());
+        btnXoaAll.addActionListener(e -> onRemoveAllProductsDG());
+
+        panelTransfer.add(btnThem);
+        panelTransfer.add(Box.createVerticalStrut(6));
+        panelTransfer.add(btnThemAll);
+        panelTransfer.add(Box.createVerticalStrut(14));
+        panelTransfer.add(btnXoa);
+        panelTransfer.add(Box.createVerticalStrut(6));
+        panelTransfer.add(btnXoaAll);
+
+        // 3. LIST 3: Mặt hàng áp dụng & Giá bán đồng giá
+        JPanel panelList3 = new JPanel(new BorderLayout(0, 4));
+        panelList3.setBackground(new Color(240, 243, 248));
+
+        JPanel topList3 = new JPanel(new BorderLayout(4, 0));
+        topList3.setOpaque(false);
+        JPanel titlePanel3 = createListTitlePanel("3. Mặt hàng áp dụng & Giá đồng giá", "asterisk-yellow.png");
+        topList3.add(titlePanel3, BorderLayout.WEST);
+
+        JPanel quickPricePanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 4, 0));
+        quickPricePanel.setOpaque(false);
+        JLabel lblQuickPrice = new JLabel("Giá đồng giá:");
+        lblQuickPrice.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        txtQuickPriceDG = new JTextField("50000", 6);
+        txtQuickPriceDG.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        txtQuickPriceDG.setHorizontalAlignment(JTextField.RIGHT);
+        btnApplyQuickPriceDG = new JButton("Gán giá");
+        btnApplyQuickPriceDG.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        btnApplyQuickPriceDG.setMargin(new Insets(1, 4, 1, 4));
+        btnApplyQuickPriceDG.setFocusPainted(false);
+        btnApplyQuickPriceDG.addActionListener(e -> onApplyQuickPriceDG());
+
+        quickPricePanel.add(lblQuickPrice);
+        quickPricePanel.add(txtQuickPriceDG);
+        quickPricePanel.add(btnApplyQuickPriceDG);
+        topList3.add(quickPricePanel, BorderLayout.CENTER);
+        panelList3.add(topList3, BorderLayout.NORTH);
+
+        String[] appliedCols = {"STT", "Mã hàng", "Tên mặt hàng", "ĐVT", "Giá bán gốc", "Giá đồng giá", "_ID"};
+        modelSanPhamChiTietDG = new DefaultTableModel(appliedCols, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return column == 5; // Giá đồng giá is editable
+            }
+        };
+
+        tableSanPhamChiTietDG = new JTable(modelSanPhamChiTietDG);
+        tableSanPhamChiTietDG.setRowHeight(22);
+        tableSanPhamChiTietDG.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        tableSanPhamChiTietDG.removeColumn(tableSanPhamChiTietDG.getColumnModel().getColumn(6)); // hide _ID
+
+        tableSanPhamChiTietDG.getColumnModel().getColumn(0).setPreferredWidth(35);
+        tableSanPhamChiTietDG.getColumnModel().getColumn(0).setMaxWidth(40);
+        tableSanPhamChiTietDG.getColumnModel().getColumn(1).setPreferredWidth(75);
+        tableSanPhamChiTietDG.getColumnModel().getColumn(2).setPreferredWidth(140);
+        tableSanPhamChiTietDG.getColumnModel().getColumn(3).setPreferredWidth(45);
+        tableSanPhamChiTietDG.getColumnModel().getColumn(4).setPreferredWidth(75);
+        tableSanPhamChiTietDG.getColumnModel().getColumn(5).setPreferredWidth(85);
+
+        tableSanPhamChiTietDG.getColumnModel().getColumn(0).setCellRenderer(createCenterRenderer());
+        tableSanPhamChiTietDG.getColumnModel().getColumn(4).setCellRenderer(createRightRenderer());
+
+        // Highlight editable column 5
+        DefaultTableCellRenderer priceRenderer = new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+                JLabel lbl = (JLabel) super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                lbl.setHorizontalAlignment(SwingConstants.RIGHT);
+                lbl.setFont(new Font("Segoe UI", Font.BOLD, 12));
+                if (!isSelected) {
+                    lbl.setBackground(new Color(255, 255, 225));
+                }
+                return lbl;
+            }
+        };
+        tableSanPhamChiTietDG.getColumnModel().getColumn(5).setCellRenderer(priceRenderer);
+
+        tableSanPhamChiTietDG.addKeyListener(new java.awt.event.KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+                if (e.getKeyCode() == KeyEvent.VK_DELETE) {
+                    onRemoveSelectedProductsDG();
+                }
+            }
+        });
+
+        JScrollPane scrollList3 = new JScrollPane(tableSanPhamChiTietDG);
+        scrollList3.setBorder(new LineBorder(new Color(185, 205, 230), 1));
+        panelList3.add(scrollList3, BorderLayout.CENTER);
+
+        // Put lists into bottomContainer with GridBagConstraints
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.weighty = 1.0;
+
+        // 1. Nhóm hàng (22%)
+        gbc.gridx = 0;
+        gbc.weightx = 0.22;
+        gbc.insets = new Insets(0, 0, 0, 4);
+        bottomContainer.add(panelList1, gbc);
+
+        // 2. Mặt hàng nguồn (36%)
+        gbc.gridx = 1;
+        gbc.weightx = 0.36;
+        gbc.insets = new Insets(0, 0, 0, 2);
+        bottomContainer.add(panelList2, gbc);
+
+        // Buttons chuyển (Fixed)
+        gbc.gridx = 2;
+        gbc.weightx = 0.0;
+        gbc.insets = new Insets(0, 0, 0, 2);
+        bottomContainer.add(panelTransfer, gbc);
+
+        // 3. Mặt hàng áp dụng (42%)
+        gbc.gridx = 3;
+        gbc.weightx = 0.42;
+        gbc.insets = new Insets(0, 0, 0, 0);
+        bottomContainer.add(panelList3, gbc);
+
+        centerContainer.add(formPanel, BorderLayout.NORTH);
+        centerContainer.add(bottomContainer, BorderLayout.CENTER);
+    }
+
+    private void loadTreeNhomHangDG() {
+        if (treeModelDG == null) return;
+        DefaultMutableTreeNode root = new DefaultMutableTreeNode("Tất cả");
+        List<NhomMatHang> allGroups = nhomMatHangDAO.getAll();
+        Map<String, DefaultMutableTreeNode> nodeMap = new HashMap<>();
+        List<NhomMatHang> remaining = new ArrayList<>();
+
+        for (NhomMatHang n : allGroups) {
+            if (n.isSeparator()) continue;
+            DefaultMutableTreeNode node = new DefaultMutableTreeNode(n);
+            nodeMap.put(n.getId(), node);
+            if (n.getParentId() == null || n.getParentId().trim().isEmpty() || "0".equals(n.getParentId())) {
+                root.add(node);
+            } else {
+                remaining.add(n);
+            }
+        }
+
+        for (NhomMatHang n : remaining) {
+            DefaultMutableTreeNode parentNode = nodeMap.get(n.getParentId());
+            DefaultMutableTreeNode currentNode = nodeMap.get(n.getId());
+            if (parentNode != null && currentNode != null) {
+                parentNode.add(currentNode);
+            } else if (currentNode != null) {
+                root.add(currentNode);
+            }
+        }
+
+        treeModelDG.setRoot(root);
+        treeModelDG.reload();
+
+        for (int i = 0; i < treeNhomHangDG.getRowCount(); i++) {
+            treeNhomHangDG.expandRow(i);
+        }
+        treeNhomHangDG.setSelectionRow(0);
+    }
+
+    private void filterSourceProductsDG() {
+        if (modelSanPhamNguonDG == null) return;
+        modelSanPhamNguonDG.setRowCount(0);
+        filteredSourceProductsDG.clear();
+
+        List<MatHang> productsByGroup;
+        if (currentSelectedNhomDG == null || "Tất cả".equalsIgnoreCase(currentSelectedNhomDG)) {
+            productsByGroup = allProducts != null && !allProducts.isEmpty() ? allProducts : matHangDAO.getAll();
+        } else if (currentSelectedNhomIdDG != null) {
+            NhomMatHang selGroup = nhomMatHangDAO.findById(currentSelectedNhomIdDG);
+            if (selGroup != null && selGroup.isFolder()) {
+                Set<String> descIds = nhomMatHangDAO.getAllDescendantIds(selGroup.getId());
+                Set<String> descNames = new HashSet<>();
+                for (NhomMatHang g : nhomMatHangDAO.getAll()) {
+                    if (descIds.contains(g.getId()) && g.getName() != null) descNames.add(g.getName());
+                }
+                productsByGroup = matHangDAO.getByNhomIds(descIds, descNames);
+            } else {
+                productsByGroup = matHangDAO.getByNhom(currentSelectedNhomDG, currentSelectedNhomIdDG);
+            }
+        } else {
+            productsByGroup = matHangDAO.getByNhom(currentSelectedNhomDG, null);
+        }
+
+        String search = txtSearchSanPhamDG != null ? txtSearchSanPhamDG.getText().trim().toLowerCase() : "";
+        int stt = 1;
+        for (MatHang mh : productsByGroup) {
+            if (!search.isEmpty()) {
+                boolean matchCode = mh.getCode() != null && mh.getCode().toLowerCase().contains(search);
+                boolean matchName = mh.getName() != null && mh.getName().toLowerCase().contains(search);
+                if (!matchCode && !matchName) continue;
+            }
+            filteredSourceProductsDG.add(mh);
+            modelSanPhamNguonDG.addRow(new Object[]{
+                    String.format("%02d", stt++),
+                    mh.getCode() != null ? mh.getCode() : "",
+                    mh.getName() != null ? mh.getName() : "",
+                    mh.getTenDonViTinh() != null ? mh.getTenDonViTinh() : "",
+                    DF_CURRENCY.format(mh.getGiaBan()),
+                    mh.getId()
+            });
+        }
+    }
+
+    private void onAddSelectedProductsDG() {
+        if (tableSanPhamNguonDG == null || modelSanPhamChiTietDG == null) return;
+        int[] selectedRows = tableSanPhamNguonDG.getSelectedRows();
+        if (selectedRows.length == 0) {
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn ít nhất một mặt hàng từ danh sách!", "Thông báo", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        Date tuNgay = dpTuNgay.getDate();
+        Date denNgay = dpDenNgay.getDate();
+        if (tuNgay == null || denNgay == null) {
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn Từ ngày và Đến ngày trước khi thêm mặt hàng!", "Thông báo", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        Date tuGio = (Date) spTuGio.getValue();
+        Date denGio = (Date) spDenGio.getValue();
+
+        List<String> productIdsToCheck = new ArrayList<>();
+        for (int r : selectedRows) {
+            if (r >= 0 && r < filteredSourceProductsDG.size()) {
+                productIdsToCheck.add(filteredSourceProductsDG.get(r).getId());
+            }
+        }
+
+        // Check conflict with other DongGia promotions in overlapping time
+        List<DotKhuyenMaiDAO.ConflictPromotionInfo> conflicts = dotKhuyenMaiDAO.checkDongGiaConflicts(
+                currentDotKM.getId(),
+                new Timestamp(tuNgay.getTime()),
+                new Timestamp(denNgay.getTime()),
+                new Timestamp(tuGio.getTime()),
+                new Timestamp(denGio.getTime()),
+                productIdsToCheck
+        );
+
+        Set<String> conflictingProductIds = new HashSet<>();
+        if (!conflicts.isEmpty()) {
+            StringBuilder sb = new StringBuilder();
+            sb.append("Không thể thêm mặt hàng do trùng thời gian với đợt khuyến mại đồng giá khác:\n\n");
+            for (DotKhuyenMaiDAO.ConflictPromotionInfo c : conflicts) {
+                conflictingProductIds.add(c.getMathangId());
+                MatHang mh = allProducts.stream().filter(p -> c.getMathangId().equals(p.getId())).findFirst().orElse(null);
+                String mhName = mh != null ? (mh.getCode() + " - " + mh.getName()) : c.getMathangId();
+                String tNgay = c.getTuNgay() != null ? new SimpleDateFormat("dd/MM/yyyy").format(c.getTuNgay()) : "";
+                String dNgay = c.getDenNgay() != null ? new SimpleDateFormat("dd/MM/yyyy").format(c.getDenNgay()) : "";
+                sb.append("• ").append(mhName).append(" đã có trong đợt '").append(c.getDotKmName())
+                  .append("' (từ ").append(tNgay).append(" đến ").append(dNgay).append(")\n");
+            }
+            JOptionPane.showMessageDialog(this, sb.toString(), "Cảnh báo trùng đợt khuyến mại", JOptionPane.WARNING_MESSAGE);
+        }
+
+        double defaultPrice = 0.0;
+        if (txtQuickPriceDG != null && !txtQuickPriceDG.getText().trim().isEmpty()) {
+            try {
+                defaultPrice = Double.parseDouble(txtQuickPriceDG.getText().trim().replace(",", "").replace(".", ""));
+            } catch (Exception ignored) {}
+        }
+        String priceStr = defaultPrice > 0 ? DF_CURRENCY.format(defaultPrice) : "";
+
+        Set<String> existingIds = new HashSet<>();
+        for (int r = 0; r < modelSanPhamChiTietDG.getRowCount(); r++) {
+            Object id = modelSanPhamChiTietDG.getValueAt(r, 6);
+            if (id != null) existingIds.add(id.toString());
+        }
+
+        for (int r : selectedRows) {
+            if (r >= 0 && r < filteredSourceProductsDG.size()) {
+                MatHang mh = filteredSourceProductsDG.get(r);
+                if (conflictingProductIds.contains(mh.getId())) {
+                    continue; // Skip conflicting product
+                }
+                if (!existingIds.contains(mh.getId())) {
+                    existingIds.add(mh.getId());
+                    modelSanPhamChiTietDG.addRow(new Object[]{
+                            String.format("%02d", modelSanPhamChiTietDG.getRowCount() + 1),
+                            mh.getCode() != null ? mh.getCode() : "",
+                            mh.getName() != null ? mh.getName() : "",
+                            mh.getTenDonViTinh() != null ? mh.getTenDonViTinh() : "",
+                            DF_CURRENCY.format(mh.getGiaBan()),
+                            priceStr,
+                            mh.getId()
+                    });
+                }
+            }
+        }
+        renumberSTT(modelSanPhamChiTietDG);
+    }
+
+    private void onAddAllProductsDG() {
+        if (filteredSourceProductsDG == null || modelSanPhamChiTietDG == null) return;
+        Date tuNgay = dpTuNgay.getDate();
+        Date denNgay = dpDenNgay.getDate();
+        if (tuNgay == null || denNgay == null) {
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn Từ ngày và Đến ngày trước khi thêm mặt hàng!", "Thông báo", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        Date tuGio = (Date) spTuGio.getValue();
+        Date denGio = (Date) spDenGio.getValue();
+
+        List<String> productIdsToCheck = new ArrayList<>();
+        for (MatHang mh : filteredSourceProductsDG) {
+            productIdsToCheck.add(mh.getId());
+        }
+
+        List<DotKhuyenMaiDAO.ConflictPromotionInfo> conflicts = dotKhuyenMaiDAO.checkDongGiaConflicts(
+                currentDotKM.getId(),
+                new Timestamp(tuNgay.getTime()),
+                new Timestamp(denNgay.getTime()),
+                new Timestamp(tuGio.getTime()),
+                new Timestamp(denGio.getTime()),
+                productIdsToCheck
+        );
+
+        Set<String> conflictingProductIds = new HashSet<>();
+        if (!conflicts.isEmpty()) {
+            StringBuilder sb = new StringBuilder();
+            sb.append("Một số mặt hàng bị trùng thời gian với đợt khuyến mại đồng giá khác và sẽ bị bỏ qua:\n\n");
+            for (DotKhuyenMaiDAO.ConflictPromotionInfo c : conflicts) {
+                conflictingProductIds.add(c.getMathangId());
+                MatHang mh = allProducts.stream().filter(p -> c.getMathangId().equals(p.getId())).findFirst().orElse(null);
+                String mhName = mh != null ? (mh.getCode() + " - " + mh.getName()) : c.getMathangId();
+                String tNgay = c.getTuNgay() != null ? new SimpleDateFormat("dd/MM/yyyy").format(c.getTuNgay()) : "";
+                String dNgay = c.getDenNgay() != null ? new SimpleDateFormat("dd/MM/yyyy").format(c.getDenNgay()) : "";
+                sb.append("• ").append(mhName).append(" đã có trong đợt '").append(c.getDotKmName())
+                  .append("' (từ ").append(tNgay).append(" đến ").append(dNgay).append(")\n");
+            }
+            JOptionPane.showMessageDialog(this, sb.toString(), "Cảnh báo trùng đợt khuyến mại", JOptionPane.WARNING_MESSAGE);
+        }
+
+        double defaultPrice = 0.0;
+        if (txtQuickPriceDG != null && !txtQuickPriceDG.getText().trim().isEmpty()) {
+            try {
+                defaultPrice = Double.parseDouble(txtQuickPriceDG.getText().trim().replace(",", "").replace(".", ""));
+            } catch (Exception ignored) {}
+        }
+        String priceStr = defaultPrice > 0 ? DF_CURRENCY.format(defaultPrice) : "";
+
+        Set<String> existingIds = new HashSet<>();
+        for (int r = 0; r < modelSanPhamChiTietDG.getRowCount(); r++) {
+            Object id = modelSanPhamChiTietDG.getValueAt(r, 6);
+            if (id != null) existingIds.add(id.toString());
+        }
+
+        for (MatHang mh : filteredSourceProductsDG) {
+            if (conflictingProductIds.contains(mh.getId())) {
+                continue;
+            }
+            if (!existingIds.contains(mh.getId())) {
+                existingIds.add(mh.getId());
+                modelSanPhamChiTietDG.addRow(new Object[]{
+                        String.format("%02d", modelSanPhamChiTietDG.getRowCount() + 1),
+                        mh.getCode() != null ? mh.getCode() : "",
+                        mh.getName() != null ? mh.getName() : "",
+                        mh.getTenDonViTinh() != null ? mh.getTenDonViTinh() : "",
+                        DF_CURRENCY.format(mh.getGiaBan()),
+                        priceStr,
+                        mh.getId()
+                });
+            }
+        }
+        renumberSTT(modelSanPhamChiTietDG);
+    }
+
+    private void onRemoveSelectedProductsDG() {
+        if (tableSanPhamChiTietDG == null || modelSanPhamChiTietDG == null) return;
+        int[] selectedRows = tableSanPhamChiTietDG.getSelectedRows();
+        if (selectedRows.length == 0) return;
+        for (int i = selectedRows.length - 1; i >= 0; i--) {
+            modelSanPhamChiTietDG.removeRow(selectedRows[i]);
+        }
+        renumberSTT(modelSanPhamChiTietDG);
+    }
+
+    private void onRemoveAllProductsDG() {
+        if (modelSanPhamChiTietDG == null) return;
+        modelSanPhamChiTietDG.setRowCount(0);
+    }
+
+    private void onApplyQuickPriceDG() {
+        if (txtQuickPriceDG == null || modelSanPhamChiTietDG == null) return;
+        String priceText = txtQuickPriceDG.getText().trim();
+        if (priceText.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Vui lòng nhập giá bán đồng giá!", "Thông báo", JOptionPane.WARNING_MESSAGE);
+            txtQuickPriceDG.requestFocus();
+            return;
+        }
+        try {
+            double price = Double.parseDouble(priceText.replace(",", "").replace(".", ""));
+            String priceStr = DF_CURRENCY.format(price);
+            int[] selRows = tableSanPhamChiTietDG.getSelectedRows();
+            if (selRows.length > 0) {
+                for (int r : selRows) {
+                    modelSanPhamChiTietDG.setValueAt(priceStr, r, 5);
+                }
+            } else {
+                for (int r = 0; r < modelSanPhamChiTietDG.getRowCount(); r++) {
+                    modelSanPhamChiTietDG.setValueAt(priceStr, r, 5);
+                }
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Giá bán đồng giá không hợp lệ!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     private void buildSanPhamPromotionForm(JPanel centerContainer) {
@@ -1234,11 +1921,12 @@ public class DotKhuyenMaiEditDialog extends JDialog {
         List<String> selectedStoreIds = currentDotKM.getId() != null ? dotKhuyenMaiDAO.getStoresForPromotion(currentDotKM.getId()) : new ArrayList<>();
 
         modelCuaHang.setRowCount(0);
+        boolean isDongGia = isDongGiaPromotion();
         boolean isSanPham = isSanPhamPromotion();
         boolean isNhom = isNhomPromotion();
         for (CuaHang ch : allStores) {
             boolean checked = selectedStoreIds.contains(ch.getId()) || (currentDotKM.getId() == null);
-            if (isSanPham || isNhom) {
+            if (isDongGia || isSanPham || isNhom) {
                 modelCuaHang.addRow(new Object[]{ch.getName(), checked});
             } else {
                 modelCuaHang.addRow(new Object[]{checked, ch.getName(), ch.getDiaChi() != null ? ch.getDiaChi() : ""});
@@ -1377,6 +2065,45 @@ public class DotKhuyenMaiEditDialog extends JDialog {
                 }
             }
         }
+
+        // Tải chi tiết sản phẩm nếu là khuyến mãi đồng giá
+        if (isDongGia && modelSanPhamChiTietDG != null) {
+            allProducts = matHangDAO.getAll();
+            loadTreeNhomHangDG();
+            filterSourceProductsDG();
+
+            Map<String, Double> dongGiaPrices = currentDotKM.getId() != null ? dotKhuyenMaiDAO.getDongGiaProductPrices(currentDotKM.getId()) : currentDotKM.getMapDongGiaSanPham();
+            modelSanPhamChiTietDG.setRowCount(0);
+            if (dongGiaPrices != null && !dongGiaPrices.isEmpty()) {
+                int idx = 1;
+                for (Map.Entry<String, Double> entry : dongGiaPrices.entrySet()) {
+                    String mhId = entry.getKey();
+                    Double price = entry.getValue();
+                    MatHang mh = null;
+                    if (allProducts != null) {
+                        for (MatHang p : allProducts) {
+                            if (mhId.equals(p.getId())) {
+                                mh = p;
+                                break;
+                            }
+                        }
+                    }
+                    if (mh == null) mh = matHangDAO.findById(mhId);
+                    if (mh != null) {
+                        String priceStr = (price != null && price > 0) ? DF_CURRENCY.format(price) : "";
+                        modelSanPhamChiTietDG.addRow(new Object[]{
+                                String.format("%02d", idx++),
+                                mh.getCode() != null ? mh.getCode() : "",
+                                mh.getName() != null ? mh.getName() : "",
+                                mh.getTenDonViTinh() != null ? mh.getTenDonViTinh() : "",
+                                DF_CURRENCY.format(mh.getGiaBan()),
+                                priceStr,
+                                mh.getId()
+                        });
+                    }
+                }
+            }
+        }
     }
 
     private void setSpinnerTime(JSpinner spinner, int hour, int minute) {
@@ -1389,6 +2116,9 @@ public class DotKhuyenMaiEditDialog extends JDialog {
 
     private void onSave(boolean isSaveAndNew, boolean isSaveAndExit) {
         // Stop any active table cell editing
+        if (tableSanPhamChiTietDG != null && tableSanPhamChiTietDG.isEditing()) {
+            tableSanPhamChiTietDG.getCellEditor().stopCellEditing();
+        }
         if (tableSanPhamChiTiet != null && tableSanPhamChiTiet.isEditing()) {
             tableSanPhamChiTiet.getCellEditor().stopCellEditing();
         }
@@ -1413,21 +2143,79 @@ public class DotKhuyenMaiEditDialog extends JDialog {
             return;
         }
 
-        currentDotKM.setName(name);
-        currentDotKM.setdLoaiHinhKhuyenMaiId(selectedLoai.getId());
-        currentDotKM.setTenLoaiHinhKhuyenMai(selectedLoai.getName());
-        currentDotKM.setNote(txtNote.getText().trim());
-        currentDotKM.setNgungApDung(chkNgungApDung.isSelected());
-
         Date tuNgay = dpTuNgay.getDate();
-        currentDotKM.setTuNgay(tuNgay != null ? new Timestamp(tuNgay.getTime()) : null);
+        if (tuNgay == null) {
+            JOptionPane.showMessageDialog(this, "Từ ngày không hợp lệ!", "Cảnh báo", JOptionPane.WARNING_MESSAGE);
+            dpTuNgay.requestFocus();
+            return;
+        }
 
         Date denNgay = dpDenNgay.getDate();
-        currentDotKM.setDenNgay(denNgay != null ? new Timestamp(denNgay.getTime()) : null);
+        if (denNgay == null) {
+            JOptionPane.showMessageDialog(this, "Đến ngày không hợp lệ!", "Cảnh báo", JOptionPane.WARNING_MESSAGE);
+            dpDenNgay.requestFocus();
+            return;
+        }
 
+        Date tuGio = (Date) spTuGio.getValue();
+        Date denGio = (Date) spDenGio.getValue();
+
+        boolean isDongGia = isDongGiaPromotion();
         boolean isSanPham = isSanPhamPromotion();
         boolean isNhom = isNhomPromotion();
-        if (isSanPham) {
+
+        if (isDongGia) {
+            List<String> productIdsInTable = new ArrayList<>();
+            Map<String, Double> mapDongGia = new HashMap<>();
+            if (modelSanPhamChiTietDG != null) {
+                for (int r = 0; r < modelSanPhamChiTietDG.getRowCount(); r++) {
+                    Object idVal = modelSanPhamChiTietDG.getValueAt(r, 6);
+                    Object priceVal = modelSanPhamChiTietDG.getValueAt(r, 5);
+                    if (idVal != null) {
+                        productIdsInTable.add(idVal.toString());
+                        double p = 0;
+                        if (priceVal != null) {
+                            String pStr = priceVal.toString().trim().replace(",", "").replace(".", "");
+                            if (!pStr.isEmpty()) {
+                                try {
+                                    p = Double.parseDouble(pStr);
+                                } catch (Exception ignored) {}
+                            }
+                        }
+                        mapDongGia.put(idVal.toString(), p);
+                    }
+                }
+            }
+
+            // Conflict check before saving
+            List<DotKhuyenMaiDAO.ConflictPromotionInfo> conflicts = dotKhuyenMaiDAO.checkDongGiaConflicts(
+                    currentDotKM.getId(),
+                    new Timestamp(tuNgay.getTime()),
+                    new Timestamp(denNgay.getTime()),
+                    new Timestamp(tuGio.getTime()),
+                    new Timestamp(denGio.getTime()),
+                    productIdsInTable
+            );
+
+            if (!conflicts.isEmpty()) {
+                StringBuilder sb = new StringBuilder();
+                sb.append("Không thể lưu đợt khuyến mại do các mặt hàng sau bị trùng thời gian áp dụng với đợt đồng giá khác:\n\n");
+                for (DotKhuyenMaiDAO.ConflictPromotionInfo c : conflicts) {
+                    MatHang mh = allProducts.stream().filter(prod -> c.getMathangId().equals(prod.getId())).findFirst().orElse(null);
+                    String mhName = mh != null ? (mh.getCode() + " - " + mh.getName()) : c.getMathangId();
+                    String tNgay = c.getTuNgay() != null ? new SimpleDateFormat("dd/MM/yyyy").format(c.getTuNgay()) : "";
+                    String dNgay = c.getDenNgay() != null ? new SimpleDateFormat("dd/MM/yyyy").format(c.getDenNgay()) : "";
+                    sb.append("• ").append(mhName).append(" đã có trong đợt '").append(c.getDotKmName())
+                      .append("' (từ ").append(tNgay).append(" đến ").append(dNgay).append(")\n");
+                }
+                sb.append("\nVui lòng xóa các mặt hàng này hoặc điều chỉnh thời gian của đợt khuyến mại!");
+                JOptionPane.showMessageDialog(this, sb.toString(), "Lỗi trùng thời gian đợt khuyến mại", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            currentDotKM.setMapDongGiaSanPham(mapDongGia);
+            currentDotKM.setTiLeGiamGia(0.0);
+        } else if (isSanPham) {
             Map<String, Double> mapDiscounts = new HashMap<>();
             double maxTiLe = 0;
             if (modelSanPhamChiTiet != null) {
@@ -1483,15 +2271,19 @@ public class DotKhuyenMaiEditDialog extends JDialog {
             }
         }
 
-        Date tuGio = (Date) spTuGio.getValue();
+        currentDotKM.setName(name);
+        currentDotKM.setdLoaiHinhKhuyenMaiId(selectedLoai.getId());
+        currentDotKM.setTenLoaiHinhKhuyenMai(selectedLoai.getName());
+        currentDotKM.setNote(txtNote.getText().trim());
+        currentDotKM.setNgungApDung(chkNgungApDung.isSelected());
+        currentDotKM.setTuNgay(new Timestamp(tuNgay.getTime()));
+        currentDotKM.setDenNgay(new Timestamp(denNgay.getTime()));
         currentDotKM.setTuGio(tuGio != null ? new Timestamp(tuGio.getTime()) : null);
-
-        Date denGio = (Date) spDenGio.getValue();
         currentDotKM.setDenGio(denGio != null ? new Timestamp(denGio.getTime()) : null);
 
         // Selected stores
         List<String> chosenStoreIds = new ArrayList<>();
-        int checkCol = (isSanPham || isNhom) ? 1 : 0;
+        int checkCol = (isDongGia || isSanPham || isNhom) ? 1 : 0;
         for (int r = 0; r < modelCuaHang.getRowCount(); r++) {
             Boolean checked = (Boolean) modelCuaHang.getValueAt(r, checkCol);
             if (Boolean.TRUE.equals(checked) && r < allStores.size()) {
@@ -1550,7 +2342,25 @@ public class DotKhuyenMaiEditDialog extends JDialog {
         copy.setDenGio(new Timestamp(((Date) spDenGio.getValue()).getTime()));
         copy.setNgungApDung(chkNgungApDung.isSelected());
 
-        if (isSanPhamPromotion()) {
+        if (isDongGiaPromotion()) {
+            Map<String, Double> copiedPrices = new HashMap<>();
+            if (modelSanPhamChiTietDG != null) {
+                for (int r = 0; r < modelSanPhamChiTietDG.getRowCount(); r++) {
+                    Object idVal = modelSanPhamChiTietDG.getValueAt(r, 6);
+                    Object priceVal = modelSanPhamChiTietDG.getValueAt(r, 5);
+                    if (idVal != null) {
+                        double p = 0;
+                        if (priceVal != null && !priceVal.toString().trim().isEmpty()) {
+                            try {
+                                p = Double.parseDouble(priceVal.toString().trim().replace(",", "").replace(".", ""));
+                            } catch (Exception ignored) {}
+                        }
+                        copiedPrices.put(idVal.toString(), p);
+                    }
+                }
+            }
+            copy.setMapDongGiaSanPham(copiedPrices);
+        } else if (isSanPhamPromotion()) {
             Map<String, Double> copiedDiscounts = new HashMap<>();
             if (modelSanPhamChiTiet != null) {
                 for (int r = 0; r < modelSanPhamChiTiet.getRowCount(); r++) {

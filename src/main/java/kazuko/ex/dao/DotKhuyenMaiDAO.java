@@ -14,6 +14,7 @@ public class DotKhuyenMaiDAO extends BaseDAO {
     private static final Map<String, List<String>> PROMOTION_STORES = new ConcurrentHashMap<>();
     private static final Map<String, Map<String, Double>> PROMOTION_GROUP_DISCOUNTS = new ConcurrentHashMap<>();
     private static final Map<String, Map<String, Double>> PROMOTION_PRODUCT_DISCOUNTS = new ConcurrentHashMap<>();
+    private static final Map<String, Map<String, Double>> PROMOTION_DONG_GIA_PRICES = new ConcurrentHashMap<>();
 
     private static String getEffectiveUserId() {
         if (AuthService.getCurrentUser() != null && AuthService.getCurrentUser().getId() != null && !AuthService.getCurrentUser().getId().trim().isEmpty()) {
@@ -123,11 +124,22 @@ public class DotKhuyenMaiDAO extends BaseDAO {
         if (km.getListCuaHangApDungIds() != null) {
             saveStoresForPromotion(km.getId(), km.getListCuaHangApDungIds());
         }
-        if (km.getMapNhomGiamGia() != null) {
-            saveGroupDiscounts(km.getId(), km.getMapNhomGiamGia());
-        }
-        if (km.getMapSanPhamGiamGia() != null) {
+        if (isDongGia(km)) {
+            saveDongGiaProducts(km.getId(), km.getMapDongGiaSanPham());
+        } else if (isSanPham(km)) {
             saveProductDiscounts(km.getId(), km.getMapSanPhamGiamGia());
+        } else if (isNhom(km)) {
+            saveGroupDiscounts(km.getId(), km.getMapNhomGiamGia());
+        } else {
+            if (km.getMapNhomGiamGia() != null && !km.getMapNhomGiamGia().isEmpty()) {
+                saveGroupDiscounts(km.getId(), km.getMapNhomGiamGia());
+            }
+            if (km.getMapSanPhamGiamGia() != null && !km.getMapSanPhamGiamGia().isEmpty()) {
+                saveProductDiscounts(km.getId(), km.getMapSanPhamGiamGia());
+            }
+            if (km.getMapDongGiaSanPham() != null && !km.getMapDongGiaSanPham().isEmpty()) {
+                saveDongGiaProducts(km.getId(), km.getMapDongGiaSanPham());
+            }
         }
         return dbSuccess || true;
     }
@@ -147,13 +159,45 @@ public class DotKhuyenMaiDAO extends BaseDAO {
         if (km.getListCuaHangApDungIds() != null) {
             saveStoresForPromotion(km.getId(), km.getListCuaHangApDungIds());
         }
-        if (km.getMapNhomGiamGia() != null) {
-            saveGroupDiscounts(km.getId(), km.getMapNhomGiamGia());
-        }
-        if (km.getMapSanPhamGiamGia() != null) {
+        if (isDongGia(km)) {
+            saveDongGiaProducts(km.getId(), km.getMapDongGiaSanPham());
+        } else if (isSanPham(km)) {
             saveProductDiscounts(km.getId(), km.getMapSanPhamGiamGia());
+        } else if (isNhom(km)) {
+            saveGroupDiscounts(km.getId(), km.getMapNhomGiamGia());
+        } else {
+            if (km.getMapNhomGiamGia() != null && !km.getMapNhomGiamGia().isEmpty()) {
+                saveGroupDiscounts(km.getId(), km.getMapNhomGiamGia());
+            }
+            if (km.getMapSanPhamGiamGia() != null && !km.getMapSanPhamGiamGia().isEmpty()) {
+                saveProductDiscounts(km.getId(), km.getMapSanPhamGiamGia());
+            }
+            if (km.getMapDongGiaSanPham() != null && !km.getMapDongGiaSanPham().isEmpty()) {
+                saveDongGiaProducts(km.getId(), km.getMapDongGiaSanPham());
+            }
         }
         return dbSuccess || true;
+    }
+
+    private boolean isDongGia(DotKhuyenMai km) {
+        if (km == null) return false;
+        String typeName = km.getTenLoaiHinhKhuyenMai();
+        if (typeName != null && (typeName.toLowerCase().contains("đồng giá") || typeName.toLowerCase().contains("dong gia"))) return true;
+        return "8be106e5-37b5-4523-8eec-a7c6ea0d40f9".equals(km.getdLoaiHinhKhuyenMaiId());
+    }
+
+    private boolean isSanPham(DotKhuyenMai km) {
+        if (km == null) return false;
+        String typeName = km.getTenLoaiHinhKhuyenMai();
+        if (typeName != null && (typeName.toLowerCase().contains("sản phẩm") || typeName.toLowerCase().contains("san pham"))) return true;
+        return "8402c931-8a13-4d19-a693-53f9f683647e".equals(km.getdLoaiHinhKhuyenMaiId()) || "ef644cf0-f1db-4966-9dc4-83921868449c".equals(km.getdLoaiHinhKhuyenMaiId());
+    }
+
+    private boolean isNhom(DotKhuyenMai km) {
+        if (km == null) return false;
+        String typeName = km.getTenLoaiHinhKhuyenMai();
+        if (typeName != null && (typeName.toLowerCase().contains("nhóm") || typeName.toLowerCase().contains("nhom"))) return true;
+        return "7c566d6f-6386-4e93-a01c-3645e1aba5e7".equals(km.getdLoaiHinhKhuyenMaiId());
     }
 
     public boolean moveToTrash(String id) {
@@ -186,6 +230,7 @@ public class DotKhuyenMaiDAO extends BaseDAO {
         PROMOTION_STORES.remove(id);
         PROMOTION_GROUP_DISCOUNTS.remove(id);
         PROMOTION_PRODUCT_DISCOUNTS.remove(id);
+        PROMOTION_DONG_GIA_PRICES.remove(id);
         return dbSuccess;
     }
 
@@ -360,6 +405,167 @@ public class DotKhuyenMaiDAO extends BaseDAO {
             System.err.println("Lỗi saveProductDiscounts: " + e.getMessage());
             return false;
         }
+    }
+
+    public Map<String, Double> getDongGiaProductPrices(String dotKmId) {
+        if (dotKmId == null) return Collections.emptyMap();
+        Map<String, Double> map = new HashMap<>();
+        String sql = "SELECT DMATHANGID, GIABAN FROM DDOTKHUYENMAICHITIET WHERE DDOTKHUYENMAIID=? AND DMATHANGID IS NOT NULL AND (STATUS IS NULL OR STATUS >= 0)";
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, dotKmId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    String mhId = rs.getString("DMATHANGID");
+                    double giaBan = rs.getDouble("GIABAN");
+                    if (mhId != null) {
+                        map.put(mhId, giaBan);
+                    }
+                }
+            }
+            return map;
+        } catch (Exception e) {
+            if (PROMOTION_DONG_GIA_PRICES.containsKey(dotKmId)) {
+                return new HashMap<>(PROMOTION_DONG_GIA_PRICES.get(dotKmId));
+            }
+            return map;
+        }
+    }
+
+    public boolean saveDongGiaProducts(String dotKmId, Map<String, Double> productPrices) {
+        if (dotKmId == null) return false;
+        PROMOTION_DONG_GIA_PRICES.put(dotKmId, new HashMap<>(productPrices != null ? productPrices : Collections.emptyMap()));
+
+        String sqlDelete = "DELETE FROM DDOTKHUYENMAICHITIET WHERE DDOTKHUYENMAIID=? AND DMATHANGID IS NOT NULL";
+        String sqlInsert = "INSERT INTO DDOTKHUYENMAICHITIET (ID, DDOTKHUYENMAIID, DMATHANGID, GIABAN, STATUS, TIMECREATED, USERCREATEDID) VALUES (?, ?, ?, ?, 30, CURRENT_TIMESTAMP, ?)";
+        try (Connection conn = getConnection()) {
+            conn.setAutoCommit(false);
+            try (PreparedStatement psDel = conn.prepareStatement(sqlDelete)) {
+                psDel.setString(1, dotKmId);
+                psDel.executeUpdate();
+            }
+            if (productPrices != null && !productPrices.isEmpty()) {
+                try (PreparedStatement psIns = conn.prepareStatement(sqlInsert)) {
+                    for (Map.Entry<String, Double> entry : productPrices.entrySet()) {
+                        psIns.setString(1, UUID.randomUUID().toString());
+                        psIns.setString(2, dotKmId);
+                        psIns.setString(3, entry.getKey());
+                        psIns.setDouble(4, entry.getValue() != null ? entry.getValue() : 0.0);
+                        psIns.setString(5, getEffectiveUserId());
+                        psIns.addBatch();
+                    }
+                    psIns.executeBatch();
+                }
+            }
+            conn.commit();
+            conn.setAutoCommit(true);
+            return true;
+        } catch (Exception e) {
+            System.err.println("Lỗi saveDongGiaProducts: " + e.getMessage());
+            return false;
+        }
+    }
+
+    public static class ConflictPromotionInfo {
+        private String dotKmId;
+        private String dotKmName;
+        private Timestamp tuNgay;
+        private Timestamp denNgay;
+        private Timestamp tuGio;
+        private Timestamp denGio;
+        private String mathangId;
+
+        public ConflictPromotionInfo(String dotKmId, String dotKmName, Timestamp tuNgay, Timestamp denNgay, Timestamp tuGio, Timestamp denGio, String mathangId) {
+            this.dotKmId = dotKmId;
+            this.dotKmName = dotKmName;
+            this.tuNgay = tuNgay;
+            this.denNgay = denNgay;
+            this.tuGio = tuGio;
+            this.denGio = denGio;
+            this.mathangId = mathangId;
+        }
+
+        public String getDotKmId() { return dotKmId; }
+        public String getDotKmName() { return dotKmName; }
+        public Timestamp getTuNgay() { return tuNgay; }
+        public Timestamp getDenNgay() { return denNgay; }
+        public Timestamp getTuGio() { return tuGio; }
+        public Timestamp getDenGio() { return denGio; }
+        public String getMathangId() { return mathangId; }
+    }
+
+    public static Timestamp combineDateTime(Timestamp date, Timestamp time, boolean isEndOfDayDefault) {
+        if (date == null) return null;
+        Calendar cal = Calendar.getInstance();
+        cal.setTimeInMillis(date.getTime());
+        if (time != null) {
+            Calendar tCal = Calendar.getInstance();
+            tCal.setTimeInMillis(time.getTime());
+            cal.set(Calendar.HOUR_OF_DAY, tCal.get(Calendar.HOUR_OF_DAY));
+            cal.set(Calendar.MINUTE, tCal.get(Calendar.MINUTE));
+            cal.set(Calendar.SECOND, tCal.get(Calendar.SECOND));
+            cal.set(Calendar.MILLISECOND, 0);
+        } else {
+            if (isEndOfDayDefault) {
+                cal.set(Calendar.HOUR_OF_DAY, 23);
+                cal.set(Calendar.MINUTE, 59);
+                cal.set(Calendar.SECOND, 59);
+                cal.set(Calendar.MILLISECOND, 999);
+            } else {
+                cal.set(Calendar.HOUR_OF_DAY, 0);
+                cal.set(Calendar.MINUTE, 0);
+                cal.set(Calendar.SECOND, 0);
+                cal.set(Calendar.MILLISECOND, 0);
+            }
+        }
+        return new Timestamp(cal.getTimeInMillis());
+    }
+
+    public List<ConflictPromotionInfo> checkDongGiaConflicts(String currentDotKmId, Timestamp tuNgay, Timestamp denNgay, Timestamp tuGio, Timestamp denGio, Collection<String> productIds) {
+        List<ConflictPromotionInfo> conflicts = new ArrayList<>();
+        if (tuNgay == null || denNgay == null || productIds == null || productIds.isEmpty()) {
+            return conflicts;
+        }
+
+        Timestamp targetStart = combineDateTime(tuNgay, tuGio, false);
+        Timestamp targetEnd = combineDateTime(denNgay, denGio, true);
+        if (targetStart == null || targetEnd == null) return conflicts;
+
+        List<DotKhuyenMai> allKMs = getAll();
+        for (DotKhuyenMai km : allKMs) {
+            if (km.getId() != null && km.getId().equals(currentDotKmId)) {
+                continue;
+            }
+            String loaiName = km.getTenLoaiHinhKhuyenMai();
+            boolean isDongGia = (loaiName != null && (loaiName.toLowerCase().contains("đồng giá") || loaiName.toLowerCase().contains("dong gia")))
+                    || "8be106e5-37b5-4523-8eec-a7c6ea0d40f9".equals(km.getdLoaiHinhKhuyenMaiId());
+            if (!isDongGia) {
+                continue;
+            }
+
+            Timestamp otherStart = combineDateTime(km.getTuNgay(), km.getTuGio(), false);
+            Timestamp otherEnd = combineDateTime(km.getDenNgay(), km.getDenGio(), true);
+            if (otherStart == null || otherEnd == null) continue;
+
+            // Overlap check: targetStart <= otherEnd && targetEnd >= otherStart
+            if (!targetStart.after(otherEnd) && !targetEnd.before(otherStart)) {
+                Map<String, Double> kmProducts = getDongGiaProductPrices(km.getId());
+                for (String pId : productIds) {
+                    if (kmProducts.containsKey(pId)) {
+                        conflicts.add(new ConflictPromotionInfo(
+                                km.getId(),
+                                km.getName(),
+                                km.getTuNgay(),
+                                km.getDenNgay(),
+                                km.getTuGio(),
+                                km.getDenGio(),
+                                pId
+                        ));
+                    }
+                }
+            }
+        }
+        return conflicts;
     }
 
     private List<DotKhuyenMai> tryLoadFromDb(int statusFilter) {
