@@ -1,10 +1,13 @@
 package kazuko.ex.ui.danhmuc;
 
+import kazuko.ex.dao.DonViTinhDAO;
 import kazuko.ex.dao.MatHangDAO;
 import kazuko.ex.dao.NhomMatHangDAO;
 import kazuko.ex.dao.SystemConfigDAO;
+import kazuko.ex.model.danhmuc.DonViTinh;
 import kazuko.ex.model.danhmuc.MatHang;
 import kazuko.ex.model.danhmuc.NhomMatHang;
+import kazuko.ex.model.danhmuc.TieuChiPhanLoai;
 import kazuko.ex.model.system.SystemConfig;
 import kazuko.ex.util.AppColors;
 import kazuko.ex.util.CurrencyUtil;
@@ -37,6 +40,7 @@ import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
 import java.awt.event.*;
+import java.text.Collator;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -46,12 +50,19 @@ import java.util.stream.Collectors;
 public class DanhMucMatHangPanel extends JPanel {
     private final MatHangDAO matHangDAO = new MatHangDAO();
     private final NhomMatHangDAO nhomMatHangDAO = new NhomMatHangDAO();
+    private final DonViTinhDAO donViTinhDAO = new DonViTinhDAO();
     private final SystemConfigDAO systemConfigDAO = new SystemConfigDAO();
     private SystemConfig systemConfig;
+
+    private TieuChiPhanLoai currentTieuChi = TieuChiPhanLoai.NHOM_MAT_HANG;
 
     private JTree treeNhomHang;
     private DefaultTreeModel treeModel;
     private DefaultMutableTreeNode rootTreeNode;
+    private JLabel lblLeftTitle;
+    private JButton btnAddMenu;
+    private JButton btnTrash;
+    private JPopupMenu popupAdd;
 
     private JTable tableMatHang;
     private DefaultTableModel tableModel;
@@ -85,8 +96,8 @@ public class DanhMucMatHangPanel extends JPanel {
             this.currentSortField = "Mã hàng";
         }
         initUI();
-        loadNhomTree();
-        loadTableData("Tất cả", null, "");
+        loadCriteriaTree(currentTieuChi, "Tất cả");
+        loadTableDataForCurrentCriteria("");
         setupShortcuts();
     }
 
@@ -98,7 +109,7 @@ public class DanhMucMatHangPanel extends JPanel {
         mainSplit.setDividerLocation(220);
         mainSplit.setDividerSize(5);
 
-        // ==================== KHUNG TRÁI: NHÓM MẶT HÀNG ====================
+        // ==================== KHUNG TRÁI: TIÊU CHÍ PHÂN LOẠI ====================
         JPanel leftPanel = new JPanel(new BorderLayout());
         leftPanel.setBackground(Color.WHITE);
         leftPanel.setBorder(new MatteBorder(1, 1, 1, 0, new Color(185, 205, 230)));
@@ -109,23 +120,33 @@ public class DanhMucMatHangPanel extends JPanel {
         leftHeader.setBorder(new MatteBorder(0, 0, 1, 0, new Color(180, 200, 225)));
         leftHeader.setPreferredSize(new Dimension(240, 28));
 
-        JLabel lblLeftTitle = new JLabel(" Nhóm mặt hàng");
+        JPanel leftTitleContainer = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 3));
+        leftTitleContainer.setOpaque(false);
+        lblLeftTitle = new JLabel(" Nhóm mặt hàng");
         lblLeftTitle.setFont(new Font("Segoe UI", Font.BOLD, 12));
         lblLeftTitle.setForeground(new Color(25, 55, 105));
-        leftHeader.add(lblLeftTitle, BorderLayout.WEST);
+        leftTitleContainer.add(lblLeftTitle);
 
-        // Toolbar nhỏ cho Nhóm hàng: [Thêm mới ▾], [Sửa], [Xóa], [Thùng rác], [Refresh]
+        JLabel lblSettings = new JLabel();
+        lblSettings.setIcon(IconHelper.getIcon("settings.png", 14, 14));
+        lblSettings.setToolTipText("Thiết lập tiêu chí");
+        leftTitleContainer.add(lblSettings);
+
+        leftHeader.add(leftTitleContainer, BorderLayout.WEST);
+
+        // Toolbar nhỏ cho Khung Trái: [Thêm mới ▾], [Sửa], [Xóa], [Thùng rác], [Refresh], [Tiêu chí phân loại ▾]
         JPanel leftToolbar = new JPanel(new FlowLayout(FlowLayout.RIGHT, 2, 2));
         leftToolbar.setOpaque(false);
 
-        JButton btnAddMenu = createMiniToolButton("plus.png", "Thêm mới...");
-        JButton btnEditNhom = createMiniToolButton("pencil.png", "Sửa nhóm mặt hàng");
-        JButton btnDeleteNhom = createMiniToolButton("cross.png", "Chuyển vào thùng rác");
-        JButton btnTrash = createMiniToolButton("RecycleBin.png", "Thùng rác");
-        JButton btnRefreshNhom = createMiniToolButton("Refresh.png", "Làm mới danh mục nhóm");
+        btnAddMenu = createMiniToolButton("plus.png", "Thêm mới...");
+        JButton btnEditNhom = createMiniToolButton("pencil.png", "Chỉnh sửa");
+        JButton btnDeleteNhom = createMiniToolButton("cross.png", "Xóa");
+        btnTrash = createMiniToolButton("RecycleBin.png", "Thùng rác");
+        JButton btnRefreshNhom = createMiniToolButton("Refresh.png", "Làm mới");
+        JButton btnTieuChi = createDropDownMiniButton("toolStripDropDownButton1.Image.png", "Tiêu chí phân loại");
 
-        // Popup Menu cho "Thêm mới ▾"
-        JPopupMenu popupAdd = new JPopupMenu();
+        // Popup Menu cho "Thêm mới ▾" (Nhóm mặt hàng)
+        popupAdd = new JPopupMenu();
         JMenuItem miAddGroup = new JMenuItem("Thêm nhóm mặt hàng", IconHelper.getIcon("1282529873_objects.png", 16, 16));
         JMenuItem miAddFolder = new JMenuItem("Thêm thư mục", IconHelper.getIcon("Folder.png", 16, 16));
         JMenuItem miAddSubFolder = new JMenuItem("Thêm thư mục con", IconHelper.getIcon("folder-tree.png", 16, 16));
@@ -141,21 +162,43 @@ public class DanhMucMatHangPanel extends JPanel {
         popupAdd.add(miAddSubFolder);
         popupAdd.add(miAddSeparator);
 
-        btnAddMenu.addActionListener(e -> popupAdd.show(btnAddMenu, 0, btnAddMenu.getHeight()));
-        btnEditNhom.addActionListener(e -> onEditNhom());
-        btnDeleteNhom.addActionListener(e -> onDeleteNhom());
+        // Popup Menu cho "Tiêu chí phân loại ▾" (Khớp 100% Ảnh 1)
+        JPopupMenu popupTieuChi = new JPopupMenu();
+        JMenuItem miTcNhom = new JMenuItem("Nhóm mặt hàng", IconHelper.getIcon("Folder.png", 16, 16));
+        JMenuItem miTcDvt = new JMenuItem("Đơn vị tính", IconHelper.getIcon("1282529873_objects.png", 16, 16));
+        JMenuItem miTcHsx = new JMenuItem("Hãng sản xuất", IconHelper.getIcon("1282529873_objects.png", 16, 16));
+        JMenuItem miTcDvtChan = new JMenuItem("Đơn vị tính chẵn", IconHelper.getIcon("1282529873_objects.png", 16, 16));
+        JMenuItem miTcDoiTac = new JMenuItem("Đối tác ký gửi", IconHelper.getIcon("users.png", 16, 16));
+
+        miTcNhom.addActionListener(e -> switchTieuChi(TieuChiPhanLoai.NHOM_MAT_HANG));
+        miTcDvt.addActionListener(e -> switchTieuChi(TieuChiPhanLoai.DON_VI_TINH));
+        miTcHsx.addActionListener(e -> switchTieuChi(TieuChiPhanLoai.HANG_SAN_XUAT));
+        miTcDvtChan.addActionListener(e -> switchTieuChi(TieuChiPhanLoai.DON_VI_TINH_CHAN));
+        miTcDoiTac.addActionListener(e -> switchTieuChi(TieuChiPhanLoai.DOI_TAC_KY_GUI));
+
+        popupTieuChi.add(miTcNhom);
+        popupTieuChi.add(miTcDvt);
+        popupTieuChi.add(miTcHsx);
+        popupTieuChi.add(miTcDvtChan);
+        popupTieuChi.add(miTcDoiTac);
+
+        btnAddMenu.addActionListener(e -> onAddCriteriaItem());
+        btnEditNhom.addActionListener(e -> onEditCriteriaItem());
+        btnDeleteNhom.addActionListener(e -> onDeleteCriteriaItem());
         btnTrash.addActionListener(e -> onOpenTrash());
-        btnRefreshNhom.addActionListener(e -> loadNhomTree());
+        btnRefreshNhom.addActionListener(e -> loadCriteriaTree(currentTieuChi, currentSelectedNhom));
+        btnTieuChi.addActionListener(e -> popupTieuChi.show(btnTieuChi, 0, btnTieuChi.getHeight()));
 
         leftToolbar.add(btnAddMenu);
         leftToolbar.add(btnEditNhom);
         leftToolbar.add(btnDeleteNhom);
         leftToolbar.add(btnTrash);
         leftToolbar.add(btnRefreshNhom);
+        leftToolbar.add(btnTieuChi);
         leftHeader.add(leftToolbar, BorderLayout.EAST);
         leftPanel.add(leftHeader, BorderLayout.NORTH);
 
-        // Tree Nhóm mặt hàng
+        // Tree Tiêu chí phân loại
         rootTreeNode = new DefaultMutableTreeNode("Root");
         treeModel = new DefaultTreeModel(rootTreeNode);
         treeNhomHang = new JTree(treeModel);
@@ -164,10 +207,10 @@ public class DanhMucMatHangPanel extends JPanel {
         treeNhomHang.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         treeNhomHang.setRowHeight(22);
 
-        // Drag and drop sắp xếp / phân cấp
+        // Drag and drop sắp xếp / phân cấp (cho Nhóm hàng)
         treeNhomHang.setDragEnabled(true);
         treeNhomHang.setDropMode(DropMode.ON_OR_INSERT);
-        treeNhomHang.setTransferHandler(new TreeTransferHandler(nhomMatHangDAO, () -> loadNhomTree(currentSelectedNhom)));
+        treeNhomHang.setTransferHandler(new TreeTransferHandler(nhomMatHangDAO, () -> loadCriteriaTree(currentTieuChi, currentSelectedNhom)));
 
         treeNhomHang.setCellRenderer(new DefaultTreeCellRenderer() {
             @Override
@@ -177,12 +220,14 @@ public class DanhMucMatHangPanel extends JPanel {
                     Object userObj = ((DefaultMutableTreeNode) value).getUserObject();
                     if ("Tất cả".equals(userObj)) {
                         label.setText("Tất cả");
-                        label.setIcon(IconHelper.getIcon("Folder.png", 16, 16));
+                        label.setIcon(IconHelper.getIcon("globe.png", 16, 16));
+                        if (label.getIcon() == null) label.setIcon(IconHelper.getIcon("Folder.png", 16, 16));
                         label.setFont(new Font("Segoe UI", Font.BOLD, 12));
                         label.setForeground(new Color(25, 55, 105));
                     } else if ("Chưa thiết lập".equals(userObj)) {
                         label.setText("Chưa thiết lập");
-                        label.setIcon(IconHelper.getIcon("Folder.png", 16, 16));
+                        label.setIcon(IconHelper.getIcon("asterisk-yellow.png", 14, 14));
+                        if (label.getIcon() == null) label.setIcon(IconHelper.getIcon("Folder.png", 16, 16));
                         label.setFont(new Font("Segoe UI", Font.PLAIN, 12));
                         label.setForeground(Color.DARK_GRAY);
                     } else if ("Thùng rác".equals(userObj)) {
@@ -206,6 +251,16 @@ public class DanhMucMatHangPanel extends JPanel {
                             label.setIcon(IconHelper.getIcon(iconName, 16, 16));
                             label.setFont(new Font("Segoe UI", Font.PLAIN, 12));
                         }
+                    } else if (userObj instanceof String) {
+                        String name = (String) userObj;
+                        label.setText(name);
+                        label.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+                        if (name.startsWith("Thư mục") || name.startsWith("Folder")) {
+                            label.setIcon(IconHelper.getIcon("Folder.png", 16, 16));
+                        } else {
+                            label.setIcon(IconHelper.getIcon("asterisk-yellow.png", 14, 14));
+                            if (label.getIcon() == null) label.setIcon(IconHelper.getIcon("1282529873_objects.png", 14, 14));
+                        }
                     }
                 }
                 return label;
@@ -221,12 +276,12 @@ public class DanhMucMatHangPanel extends JPanel {
                     currentSelectedNhom = "Tất cả";
                     currentSelectedNhomId = null;
                     updateToolbarState();
-                    loadTableData(currentSelectedNhom, currentSelectedNhomId, txtSearch.getText().trim());
+                    loadTableDataForCurrentCriteria(txtSearch.getText().trim());
                 } else if ("Chưa thiết lập".equals(userObj)) {
                     currentSelectedNhom = "Chưa thiết lập";
                     currentSelectedNhomId = null;
                     updateToolbarState();
-                    loadTableData(currentSelectedNhom, currentSelectedNhomId, txtSearch.getText().trim());
+                    loadTableDataForCurrentCriteria(txtSearch.getText().trim());
                 } else if ("Thùng rác".equals(userObj)) {
                     currentSelectedNhom = "Thùng rác";
                     currentSelectedNhomId = null;
@@ -240,7 +295,6 @@ public class DanhMucMatHangPanel extends JPanel {
                     updateToolbarState();
 
                     if (nh.isFolder()) {
-                        // Thư mục cha: Lấy tất cả ID của cây con để lọc
                         Set<String> descIds = nhomMatHangDAO.getAllDescendantIds(nh.getId());
                         Set<String> descNames = new HashSet<>();
                         for (NhomMatHang item : nhomMatHangDAO.getAll()) {
@@ -252,11 +306,16 @@ public class DanhMucMatHangPanel extends JPanel {
                     } else {
                         loadTableData(currentSelectedNhom, currentSelectedNhomId, txtSearch.getText().trim());
                     }
+                } else if (userObj instanceof String) {
+                    currentSelectedNhom = (String) userObj;
+                    currentSelectedNhomId = null;
+                    updateToolbarState();
+                    loadTableDataForCurrentCriteria(txtSearch.getText().trim());
                 }
             }
         });
 
-        // Double click vào nhóm mặt hàng để mở hộp thoại chỉnh sửa + Right-click context menu
+        // Double click vào item trên cây để mở hộp thoại chỉnh sửa + Right-click context menu
         treeNhomHang.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
@@ -270,10 +329,12 @@ public class DanhMucMatHangPanel extends JPanel {
                             NhomMatHang nh = (NhomMatHang) node.getUserObject();
                             if (!nh.isSeparator()) {
                                 NhomMatHangDialog dialog = new NhomMatHangDialog(DanhMucMatHangPanel.this, nh, () -> {
-                                    loadNhomTree(nh.getName());
+                                    loadCriteriaTree(currentTieuChi, nh.getName());
                                 });
                                 dialog.setVisible(true);
                             }
+                        } else if (node.getUserObject() instanceof String) {
+                            onEditCriteriaItem();
                         }
                     }
                 }
@@ -290,18 +351,18 @@ public class DanhMucMatHangPanel extends JPanel {
             }
         });
 
-        // Phím Delete/Insert/F4/F2 trên cây nhóm
+        // Phím Delete/Insert/F4/F2 trên cây
         treeNhomHang.addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
                 if (e.getKeyCode() == KeyEvent.VK_DELETE) {
-                    onDeleteNhom();
+                    onDeleteCriteriaItem();
                 } else if (e.getKeyCode() == KeyEvent.VK_INSERT) {
-                    onAddNhom();
+                    onAddCriteriaItem();
                 } else if (e.getKeyCode() == KeyEvent.VK_F4) {
-                    onEditNhom();
+                    onEditCriteriaItem();
                 } else if (e.getKeyCode() == KeyEvent.VK_F2) {
-                    onRenameNhom();
+                    onRenameCriteriaItem();
                 }
             }
         });
@@ -683,6 +744,95 @@ public class DanhMucMatHangPanel extends JPanel {
         });
     }
 
+    private void switchTieuChi(TieuChiPhanLoai tieuChi) {
+        this.currentTieuChi = tieuChi;
+        lblLeftTitle.setText(" " + tieuChi.getTitle());
+
+        boolean isNhom = (tieuChi == TieuChiPhanLoai.NHOM_MAT_HANG);
+        btnTrash.setVisible(isNhom);
+        if (isNhom) {
+            treeNhomHang.setDragEnabled(true);
+            treeNhomHang.setTransferHandler(new TreeTransferHandler(nhomMatHangDAO, () -> loadCriteriaTree(currentTieuChi, currentSelectedNhom)));
+        } else {
+            treeNhomHang.setDragEnabled(false);
+            treeNhomHang.setTransferHandler(null);
+        }
+
+        loadCriteriaTree(tieuChi, "Tất cả");
+    }
+
+    public void loadCriteriaTree(TieuChiPhanLoai tieuChi, String selectName) {
+        if (tieuChi == null || tieuChi == TieuChiPhanLoai.NHOM_MAT_HANG) {
+            loadNhomTree(selectName);
+            return;
+        }
+
+        rootTreeNode.removeAllChildren();
+        DefaultMutableTreeNode nodeAll = new DefaultMutableTreeNode("Tất cả");
+        DefaultMutableTreeNode nodeUnassigned = new DefaultMutableTreeNode("Chưa thiết lập");
+
+        rootTreeNode.add(nodeAll);
+        rootTreeNode.add(nodeUnassigned);
+
+        DefaultMutableTreeNode targetNode = nodeAll;
+
+        List<String> items = new ArrayList<>();
+        switch (tieuChi) {
+            case DON_VI_TINH:
+                for (DonViTinh dv : donViTinhDAO.getAll()) {
+                    if (dv.getName() != null && !dv.getName().trim().isEmpty() && !items.contains(dv.getName().trim())) {
+                        items.add(dv.getName().trim());
+                    }
+                }
+                for (MatHang mh : matHangDAO.getAll()) {
+                    if (mh.getTenDonViTinh() != null && !mh.getTenDonViTinh().trim().isEmpty() && !items.contains(mh.getTenDonViTinh().trim())) {
+                        items.add(mh.getTenDonViTinh().trim());
+                    }
+                }
+                break;
+
+            case HANG_SAN_XUAT:
+                items = matHangDAO.getDistinctHangSanXuat();
+                break;
+
+            case DON_VI_TINH_CHAN:
+                items = matHangDAO.getDistinctDonViTinhChan();
+                break;
+
+            case DOI_TAC_KY_GUI:
+                items = matHangDAO.getDistinctDoiTacKyGui();
+                break;
+
+            default:
+                break;
+        }
+
+        Collator collator = Collator.getInstance(new Locale("vi", "VN"));
+        items.sort(collator);
+
+        for (String item : items) {
+            DefaultMutableTreeNode n = new DefaultMutableTreeNode(item);
+            rootTreeNode.add(n);
+            if (selectName != null && selectName.equalsIgnoreCase(item)) {
+                targetNode = n;
+            }
+        }
+
+        treeModel.reload();
+        for (int i = 0; i < treeNhomHang.getRowCount(); i++) {
+            treeNhomHang.expandRow(i);
+        }
+
+        TreePath path = new TreePath(targetNode.getPath());
+        treeNhomHang.setSelectionPath(path);
+        treeNhomHang.scrollPathToVisible(path);
+
+        currentSelectedNhom = targetNode.getUserObject().toString();
+        currentSelectedNhomId = null;
+        if (btnAddMatHang != null) btnAddMatHang.setEnabled(true);
+        loadTableDataForCurrentCriteria(txtSearch.getText().trim());
+    }
+
     private void loadNhomTree() {
         loadNhomTree(currentSelectedNhom);
     }
@@ -793,6 +943,21 @@ public class DanhMucMatHangPanel extends JPanel {
         } else {
             currentList = new ArrayList<>(trash);
         }
+        applyCurrentSort();
+        renderTableData();
+    }
+
+    public void loadTableDataForCurrentCriteria(String keyword) {
+        if (currentTieuChi == TieuChiPhanLoai.NHOM_MAT_HANG) {
+            if ("Thùng rác".equals(currentSelectedNhom)) {
+                loadTrashTableData(keyword);
+            } else {
+                loadTableData(currentSelectedNhom, currentSelectedNhomId, keyword);
+            }
+            return;
+        }
+        this.systemConfig = systemConfigDAO.loadConfig();
+        currentList = matHangDAO.searchWithConfigByCriteria(keyword, currentTieuChi, currentSelectedNhom, currentSelectedNhomId, null, null, systemConfig);
         applyCurrentSort();
         renderTableData();
     }
@@ -1153,7 +1318,7 @@ public class DanhMucMatHangPanel extends JPanel {
         if ("Thùng rác".equals(currentSelectedNhom)) {
             loadTrashTableData(txtSearch.getText().trim());
         } else {
-            loadTableData(currentSelectedNhom, txtSearch.getText().trim());
+            loadTableDataForCurrentCriteria(txtSearch.getText().trim());
         }
     }
 
@@ -1168,11 +1333,29 @@ public class DanhMucMatHangPanel extends JPanel {
     private void onAddNewProduct() {
         MatHang newMH = new MatHang();
         if (currentSelectedNhom != null && !"Tất cả".equals(currentSelectedNhom) && !"Chưa thiết lập".equals(currentSelectedNhom) && !"Thùng rác".equals(currentSelectedNhom)) {
-            newMH.setTenNhom(currentSelectedNhom);
-            newMH.setNhomMatHangId(currentSelectedNhomId);
+            switch (currentTieuChi) {
+                case NHOM_MAT_HANG:
+                    newMH.setTenNhom(currentSelectedNhom);
+                    newMH.setNhomMatHangId(currentSelectedNhomId);
+                    break;
+                case DON_VI_TINH:
+                    newMH.setTenDonViTinh(currentSelectedNhom);
+                    newMH.setDonViTinhId(currentSelectedNhomId);
+                    break;
+                case HANG_SAN_XUAT:
+                    newMH.setHangSanXuat(currentSelectedNhom);
+                    break;
+                case DON_VI_TINH_CHAN:
+                    newMH.setTenDonViTinhChan(currentSelectedNhom);
+                    newMH.setDonViTinhChanId(currentSelectedNhomId);
+                    break;
+                case DOI_TAC_KY_GUI:
+                    newMH.setDoiTacKyGui(currentSelectedNhom);
+                    break;
+            }
         }
         MatHangEditDialog dialog = new MatHangEditDialog(this, newMH, () -> {
-            loadTableData(currentSelectedNhom, txtSearch.getText().trim());
+            loadTableDataForCurrentCriteria(txtSearch.getText().trim());
         });
         dialog.setVisible(true);
     }
@@ -1187,7 +1370,7 @@ public class DanhMucMatHangPanel extends JPanel {
             if ("Thùng rác".equals(currentSelectedNhom)) {
                 loadTrashTableData(txtSearch.getText().trim());
             } else {
-                loadTableData(currentSelectedNhom, txtSearch.getText().trim());
+                loadTableDataForCurrentCriteria(txtSearch.getText().trim());
             }
         });
         dialog.setVisible(true);
@@ -1245,7 +1428,7 @@ public class DanhMucMatHangPanel extends JPanel {
             boolean ok = matHangDAO.moveToTrash(sel.getId());
             if (ok) {
                 JOptionPane.showMessageDialog(this, "Đã chuyển mặt hàng vào Thùng rác!", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
-                loadTableData(currentSelectedNhom, txtSearch.getText().trim());
+                loadTableDataForCurrentCriteria(txtSearch.getText().trim());
             }
         }
     }
@@ -1468,6 +1651,115 @@ public class DanhMucMatHangPanel extends JPanel {
         return mSort;
     }
 
+    private void onAddCriteriaItem() {
+        if (currentTieuChi == TieuChiPhanLoai.NHOM_MAT_HANG) {
+            popupAdd.show(btnAddMenu, 0, btnAddMenu.getHeight());
+            return;
+        }
+
+        String input = JOptionPane.showInputDialog(
+                this,
+                "Nhập tên " + currentTieuChi.getTitle().toLowerCase() + " mới:",
+                "Thêm " + currentTieuChi.getTitle(),
+                JOptionPane.PLAIN_MESSAGE
+        );
+        if (input == null || input.trim().isEmpty()) return;
+        String val = input.trim();
+
+        if (currentTieuChi == TieuChiPhanLoai.DON_VI_TINH || currentTieuChi == TieuChiPhanLoai.DON_VI_TINH_CHAN) {
+            DonViTinh dv = new DonViTinh();
+            dv.setName(val);
+            donViTinhDAO.insert(dv);
+        }
+        loadCriteriaTree(currentTieuChi, val);
+    }
+
+    private void onEditCriteriaItem() {
+        if (currentTieuChi == TieuChiPhanLoai.NHOM_MAT_HANG) {
+            onEditNhom();
+            return;
+        }
+
+        TreePath path = treeNhomHang.getSelectionPath();
+        if (path == null) {
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn mục cần sửa!", "Thông báo", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        DefaultMutableTreeNode node = (DefaultMutableTreeNode) path.getLastPathComponent();
+        Object userObj = node.getUserObject();
+        if ("Tất cả".equals(userObj) || "Chưa thiết lập".equals(userObj) || "Thùng rác".equals(userObj)) {
+            JOptionPane.showMessageDialog(this, "Không thể sửa mục mặc định này!", "Thông báo", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        String currentVal = userObj.toString();
+        String newVal = (String) JOptionPane.showInputDialog(
+                this,
+                "Nhập tên mới cho " + currentTieuChi.getTitle().toLowerCase() + ":",
+                "Sửa " + currentTieuChi.getTitle(),
+                JOptionPane.PLAIN_MESSAGE,
+                IconHelper.getIcon("pencil.png", 32, 32),
+                null,
+                currentVal
+        );
+
+        if (newVal != null && !newVal.trim().isEmpty() && !newVal.trim().equals(currentVal)) {
+            String updated = newVal.trim();
+            matHangDAO.updateCriteriaValue(currentTieuChi, currentVal, updated);
+            if (currentTieuChi == TieuChiPhanLoai.DON_VI_TINH || currentTieuChi == TieuChiPhanLoai.DON_VI_TINH_CHAN) {
+                DonViTinh dv = donViTinhDAO.findByName(currentVal);
+                if (dv != null) {
+                    dv.setName(updated);
+                    donViTinhDAO.update(dv);
+                }
+            }
+            loadCriteriaTree(currentTieuChi, updated);
+            loadTableDataForCurrentCriteria(txtSearch.getText().trim());
+        }
+    }
+
+    private void onDeleteCriteriaItem() {
+        if (currentTieuChi == TieuChiPhanLoai.NHOM_MAT_HANG) {
+            onDeleteNhom();
+            return;
+        }
+
+        TreePath path = treeNhomHang.getSelectionPath();
+        if (path == null) {
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn mục cần xóa!", "Thông báo", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        DefaultMutableTreeNode node = (DefaultMutableTreeNode) path.getLastPathComponent();
+        Object userObj = node.getUserObject();
+        if ("Tất cả".equals(userObj) || "Chưa thiết lập".equals(userObj) || "Thùng rác".equals(userObj)) {
+            JOptionPane.showMessageDialog(this, "Không thể xóa mục mặc định này!", "Thông báo", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        String val = userObj.toString();
+        int confirm = JOptionPane.showConfirmDialog(
+                this,
+                "Bạn có chắc chắn muốn xóa '" + val + "' khỏi danh mục " + currentTieuChi.getTitle().toLowerCase() + " không?",
+                "Xác nhận xóa",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.WARNING_MESSAGE
+        );
+
+        if (confirm == JOptionPane.YES_OPTION) {
+            matHangDAO.deleteCriteriaValue(currentTieuChi, val);
+            if (currentTieuChi == TieuChiPhanLoai.DON_VI_TINH || currentTieuChi == TieuChiPhanLoai.DON_VI_TINH_CHAN) {
+                donViTinhDAO.delete(val);
+            }
+            loadCriteriaTree(currentTieuChi, "Tất cả");
+            loadTableDataForCurrentCriteria(txtSearch.getText().trim());
+            JOptionPane.showMessageDialog(this, "Đã xóa '" + val + "' thành công!", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+        }
+    }
+
+    private void onRenameCriteriaItem() {
+        onEditCriteriaItem();
+    }
+
     private void onAddNhom() {
         NhomMatHang newNhom = new NhomMatHang();
         TreePath path = treeNhomHang.getSelectionPath();
@@ -1484,7 +1776,7 @@ public class DanhMucMatHangPanel extends JPanel {
         }
 
         NhomMatHangDialog dialog = new NhomMatHangDialog(this, newNhom, () -> {
-            loadNhomTree(newNhom.getName());
+            loadCriteriaTree(currentTieuChi, newNhom.getName());
         });
         dialog.setVisible(true);
     }
@@ -1512,7 +1804,7 @@ public class DanhMucMatHangPanel extends JPanel {
         }
 
         nhomMatHangDAO.insert(folder);
-        loadNhomTree(folder.getName());
+        loadCriteriaTree(currentTieuChi, folder.getName());
     }
 
     private void onAddSeparator() {
@@ -1529,7 +1821,7 @@ public class DanhMucMatHangPanel extends JPanel {
         }
 
         nhomMatHangDAO.insert(sep);
-        loadNhomTree();
+        loadCriteriaTree(currentTieuChi, currentSelectedNhom);
     }
 
     private void onEditNhom() {
@@ -1543,7 +1835,7 @@ public class DanhMucMatHangPanel extends JPanel {
             NhomMatHang nh = (NhomMatHang) node.getUserObject();
             if (nh.isSeparator()) return;
             NhomMatHangDialog dialog = new NhomMatHangDialog(this, nh, () -> {
-                loadNhomTree(nh.getName());
+                loadCriteriaTree(currentTieuChi, nh.getName());
             });
             dialog.setVisible(true);
         } else {
@@ -1570,8 +1862,8 @@ public class DanhMucMatHangPanel extends JPanel {
 
             if (confirm == JOptionPane.YES_OPTION) {
                 nhomMatHangDAO.moveToTrash(nh.getId());
-                loadNhomTree("Tất cả");
-                loadTableData("Tất cả", "");
+                loadCriteriaTree(currentTieuChi, "Tất cả");
+                loadTableDataForCurrentCriteria("");
                 JOptionPane.showMessageDialog(this, "Đã chuyển '" + nh.getName() + "' vào Thùng rác!", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
             }
         } else {
@@ -1610,8 +1902,8 @@ public class DanhMucMatHangPanel extends JPanel {
                 if (!newName.equals(currentName)) {
                     nh.setName(newName);
                     nhomMatHangDAO.update(nh);
-                    loadNhomTree(newName);
-                    loadTableData(newName, nh.getId(), txtSearch.getText().trim());
+                    loadCriteriaTree(currentTieuChi, newName);
+                    loadTableDataForCurrentCriteria(txtSearch.getText().trim());
                 }
             }
         } else {
@@ -1628,34 +1920,53 @@ public class DanhMucMatHangPanel extends JPanel {
         }
 
         JPopupMenu popup = new JPopupMenu();
-        JMenuItem miAddGroup = new JMenuItem("Thêm nhóm mặt hàng", IconHelper.getIcon("1282529873_objects.png", 16, 16));
-        JMenuItem miAddFolder = new JMenuItem("Thêm thư mục", IconHelper.getIcon("Folder.png", 16, 16));
-        JMenuItem miAddSubFolder = new JMenuItem("Thêm thư mục con", IconHelper.getIcon("folder-tree.png", 16, 16));
-        JMenuItem miRename = new JMenuItem("Đổi tên", IconHelper.getIcon("pencil.png", 16, 16));
-        JMenuItem miEdit = new JMenuItem("Chỉnh sửa (F4)", IconHelper.getIcon("pencil.png", 16, 16));
-        JMenuItem miDelete = new JMenuItem("Chuyển vào thùng rác (Del)", IconHelper.getIcon("cross.png", 16, 16));
-        JMenuItem miTrash = new JMenuItem("Mở thùng rác...", IconHelper.getIcon("RecycleBin.png", 16, 16));
-        JMenuItem miRefresh = new JMenuItem("Làm mới cây nhóm", IconHelper.getIcon("Refresh.png", 16, 16));
+        if (currentTieuChi == TieuChiPhanLoai.NHOM_MAT_HANG) {
+            JMenuItem miAddGroup = new JMenuItem("Thêm nhóm mặt hàng", IconHelper.getIcon("1282529873_objects.png", 16, 16));
+            JMenuItem miAddFolder = new JMenuItem("Thêm thư mục", IconHelper.getIcon("Folder.png", 16, 16));
+            JMenuItem miAddSubFolder = new JMenuItem("Thêm thư mục con", IconHelper.getIcon("folder-tree.png", 16, 16));
+            JMenuItem miRename = new JMenuItem("Đổi tên", IconHelper.getIcon("pencil.png", 16, 16));
+            JMenuItem miEdit = new JMenuItem("Chỉnh sửa (F4)", IconHelper.getIcon("pencil.png", 16, 16));
+            JMenuItem miDelete = new JMenuItem("Chuyển vào thùng rác (Del)", IconHelper.getIcon("cross.png", 16, 16));
+            JMenuItem miTrash = new JMenuItem("Mở thùng rác...", IconHelper.getIcon("RecycleBin.png", 16, 16));
+            JMenuItem miRefresh = new JMenuItem("Làm mới cây nhóm", IconHelper.getIcon("Refresh.png", 16, 16));
 
-        miAddGroup.addActionListener(ev -> onAddNhom());
-        miAddFolder.addActionListener(ev -> onAddNewFolder(false));
-        miAddSubFolder.addActionListener(ev -> onAddNewFolder(true));
-        miRename.addActionListener(ev -> onRenameNhom());
-        miEdit.addActionListener(ev -> onEditNhom());
-        miDelete.addActionListener(ev -> onDeleteNhom());
-        miTrash.addActionListener(ev -> onOpenTrash());
-        miRefresh.addActionListener(ev -> loadNhomTree(currentSelectedNhom));
+            miAddGroup.addActionListener(ev -> onAddNhom());
+            miAddFolder.addActionListener(ev -> onAddNewFolder(false));
+            miAddSubFolder.addActionListener(ev -> onAddNewFolder(true));
+            miRename.addActionListener(ev -> onRenameNhom());
+            miEdit.addActionListener(ev -> onEditNhom());
+            miDelete.addActionListener(ev -> onDeleteNhom());
+            miTrash.addActionListener(ev -> onOpenTrash());
+            miRefresh.addActionListener(ev -> loadCriteriaTree(currentTieuChi, currentSelectedNhom));
 
-        popup.add(miAddGroup);
-        popup.add(miAddFolder);
-        popup.add(miAddSubFolder);
-        popup.addSeparator();
-        popup.add(miRename);
-        popup.add(miEdit);
-        popup.add(miDelete);
-        popup.addSeparator();
-        popup.add(miTrash);
-        popup.add(miRefresh);
+            popup.add(miAddGroup);
+            popup.add(miAddFolder);
+            popup.add(miAddSubFolder);
+            popup.addSeparator();
+            popup.add(miRename);
+            popup.add(miEdit);
+            popup.add(miDelete);
+            popup.addSeparator();
+            popup.add(miTrash);
+            popup.add(miRefresh);
+        } else {
+            JMenuItem miAdd = new JMenuItem("Thêm " + currentTieuChi.getTitle(), IconHelper.getIcon("plus.png", 16, 16));
+            JMenuItem miRename = new JMenuItem("Đổi tên", IconHelper.getIcon("pencil.png", 16, 16));
+            JMenuItem miDelete = new JMenuItem("Xóa (Del)", IconHelper.getIcon("cross.png", 16, 16));
+            JMenuItem miRefresh = new JMenuItem("Làm mới", IconHelper.getIcon("Refresh.png", 16, 16));
+
+            miAdd.addActionListener(ev -> onAddCriteriaItem());
+            miRename.addActionListener(ev -> onEditCriteriaItem());
+            miDelete.addActionListener(ev -> onDeleteCriteriaItem());
+            miRefresh.addActionListener(ev -> loadCriteriaTree(currentTieuChi, currentSelectedNhom));
+
+            popup.add(miAdd);
+            popup.addSeparator();
+            popup.add(miRename);
+            popup.add(miDelete);
+            popup.addSeparator();
+            popup.add(miRefresh);
+        }
 
         popup.show(treeNhomHang, x, y);
     }
@@ -1890,13 +2201,42 @@ public class DanhMucMatHangPanel extends JPanel {
         return btn;
     }
 
+    private JButton createDropDownMiniButton(String iconName, String tooltip) {
+        JButton btn = new JButton() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                int w = getWidth();
+                int h = getHeight();
+                int arrowX = w - 7;
+                int arrowY = h / 2 - 1;
+                g2.setColor(new Color(70, 70, 70));
+                int[] xPoints = {arrowX, arrowX + 5, arrowX + 2};
+                int[] yPoints = {arrowY, arrowY, arrowY + 3};
+                g2.fillPolygon(xPoints, yPoints, 3);
+                g2.dispose();
+            }
+        };
+        if (iconName != null && !iconName.isEmpty()) {
+            btn.setIcon(IconHelper.getIcon(iconName, 14, 14));
+        }
+        btn.setToolTipText(tooltip);
+        btn.setPreferredSize(new Dimension(30, 22));
+        btn.setFocusPainted(false);
+        btn.setBackground(Color.WHITE);
+        btn.setMargin(new Insets(1, 1, 1, 8));
+        return btn;
+    }
+
     private void onExportExcel() {
         ExcelExporter.exportTable(tableMatHang, "DanhMuc_MatHang", "Mặt hàng", this);
     }
 
     private void onOpenTrash() {
         NhomMatHangTrashDialog trashDialog = new NhomMatHangTrashDialog(SwingUtilities.getWindowAncestor(this) instanceof Frame ? (Frame) SwingUtilities.getWindowAncestor(this) : null, () -> {
-            loadNhomTree(currentSelectedNhom);
+            loadCriteriaTree(currentTieuChi, currentSelectedNhom);
         });
         trashDialog.setVisible(true);
     }

@@ -323,6 +323,11 @@ public class BaoGiaBanHangPanel extends JPanel {
         btnExportExcel = createToolButton("Xuất excel", "export_excel.png", Color.BLACK, false);
         btnPrint = createToolButton("In", null, Color.BLACK, false);
         btnSummary = createToolButton("∑ Tổng", null, Color.BLACK, false);
+        if (isSummaryVisible) {
+            btnSummary.setBackground(new Color(255, 235, 140));
+        } else {
+            btnSummary.setBackground(Color.WHITE);
+        }
         btnAnalysis = createToolButton("P.tích", null, Color.BLACK, false);
 
         btnAddNew.addActionListener(e -> onAddNewBaoGia());
@@ -835,6 +840,11 @@ public class BaoGiaBanHangPanel extends JPanel {
     private void toggleSummaryBar() {
         isSummaryVisible = !isSummaryVisible;
         summaryBarPanel.setVisible(isSummaryVisible);
+        if (isSummaryVisible) {
+            btnSummary.setBackground(new Color(255, 235, 140));
+        } else {
+            btnSummary.setBackground(Color.WHITE);
+        }
         revalidate();
         repaint();
     }

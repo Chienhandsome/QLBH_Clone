@@ -13,14 +13,18 @@ public class DonViTinhDAO extends BaseDAO {
     private static final List<DonViTinh> MEMORY_UNITS = new CopyOnWriteArrayList<>();
 
     static {
-        MEMORY_UNITS.add(new DonViTinh("DVT1", "C", "Chiếc"));
-        MEMORY_UNITS.add(new DonViTinh("DVT2", "CAI", "Cái"));
-        MEMORY_UNITS.add(new DonViTinh("DVT3", "HOP", "Hộp"));
-        MEMORY_UNITS.add(new DonViTinh("DVT4", "M", "m"));
-        MEMORY_UNITS.add(new DonViTinh("DVT5", "BO", "Bộ"));
-        MEMORY_UNITS.add(new DonViTinh("DVT6", "KG", "Kg"));
-        MEMORY_UNITS.add(new DonViTinh("DVT7", "THUNG", "Thùng"));
-        MEMORY_UNITS.add(new DonViTinh("DVT8", "GOI", "Gói"));
+        String[] sampleNames = {
+                "bao", "Bịch", "Bộ", "Cái", "Can", "Cặp", "Cây", "chai", "Chiếc", "Chục",
+                "Cục", "Dây", "đĩa", "Đôi", "gói", "Gói", "Gram", "Hộp", "Hộp nhỏ", "Hũ",
+                "kg", "Lá", "Lọ", "lốc", "ly", "m", "Ml", "phong", "quả", "Sợi", "Suất",
+                "Thỏi", "Thư mục 1", "Túi", "Tuýp", "Tuýt"
+        };
+        int idx = 1;
+        for (String name : sampleNames) {
+            DonViTinh dv = new DonViTinh("DVT" + idx, "DVT" + idx, name);
+            MEMORY_UNITS.add(dv);
+            idx++;
+        }
     }
 
     public List<DonViTinh> getAll() {
@@ -51,6 +55,79 @@ public class DonViTinhDAO extends BaseDAO {
             }
         }
         return null;
+    }
+
+    public boolean existsByName(String name, String excludeId) {
+        if (name == null || name.trim().isEmpty()) return false;
+        String trimmed = name.trim().toLowerCase();
+        for (DonViTinh dv : getAll()) {
+            if (excludeId != null && excludeId.equalsIgnoreCase(dv.getId())) continue;
+            if (dv.getName() != null && dv.getName().trim().equalsIgnoreCase(trimmed)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean insert(DonViTinh dv) {
+        if (dv == null || dv.getName() == null || dv.getName().trim().isEmpty()) return false;
+        if (dv.getId() == null || dv.getId().trim().isEmpty()) {
+            dv.setId("DVT_" + System.currentTimeMillis());
+        }
+        MEMORY_UNITS.add(dv);
+        String sql = "INSERT INTO DDONVITINH (ID, CODE, NAME, NOTE, STATUS) VALUES (?, ?, ?, ?, 1)";
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, dv.getId());
+            ps.setString(2, dv.getCode() != null ? dv.getCode() : dv.getId());
+            ps.setString(3, dv.getName().trim());
+            ps.setString(4, dv.getGhiChu() != null ? dv.getGhiChu() : "");
+            int rows = ps.executeUpdate();
+            if (!conn.getAutoCommit()) conn.commit();
+            return rows > 0;
+        } catch (Exception ignored) {
+            return true;
+        }
+    }
+
+    public boolean update(DonViTinh dv) {
+        if (dv == null || dv.getId() == null) return false;
+        for (DonViTinh item : MEMORY_UNITS) {
+            if (dv.getId().equals(item.getId())) {
+                item.setName(dv.getName());
+                item.setCode(dv.getCode());
+                item.setGhiChu(dv.getGhiChu());
+                break;
+            }
+        }
+        String sql = "UPDATE DDONVITINH SET NAME = ?, NOTE = ? WHERE ID = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, dv.getName());
+            ps.setString(2, dv.getGhiChu() != null ? dv.getGhiChu() : "");
+            ps.setString(3, dv.getId());
+            int rows = ps.executeUpdate();
+            if (!conn.getAutoCommit()) conn.commit();
+            return rows > 0;
+        } catch (Exception ignored) {
+            return true;
+        }
+    }
+
+    public boolean delete(String idOrName) {
+        if (idOrName == null) return false;
+        MEMORY_UNITS.removeIf(u -> idOrName.equalsIgnoreCase(u.getId()) || idOrName.equalsIgnoreCase(u.getName()));
+        String sql = "DELETE FROM DDONVITINH WHERE ID = ? OR NAME = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, idOrName);
+            ps.setString(2, idOrName);
+            int rows = ps.executeUpdate();
+            if (!conn.getAutoCommit()) conn.commit();
+            return rows > 0;
+        } catch (Exception ignored) {
+            return true;
+        }
     }
 
     private List<DonViTinh> tryLoadFromDb() {

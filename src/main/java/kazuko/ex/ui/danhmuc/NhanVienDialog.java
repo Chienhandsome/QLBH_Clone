@@ -1,117 +1,546 @@
 package kazuko.ex.ui.danhmuc;
 
-import kazuko.ex.dao.UserDAO;
-import kazuko.ex.model.system.SUser;
-import kazuko.ex.util.AppColors;
+import kazuko.ex.dao.NhanVienDAO;
+import kazuko.ex.model.danhmuc.NhanVien;
 import kazuko.ex.util.IconHelper;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.MatteBorder;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeCellRenderer;
+import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.TreePath;
 import java.awt.*;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.Transferable;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class NhanVienDialog extends JDialog {
-    private DefaultListModel<SUser> listModel;
-    private JList<SUser> listNhanVien;
-    private final UserDAO userDAO = new UserDAO();
+    private final NhanVienDAO nhanVienDAO = new NhanVienDAO();
+
+    private JTree treeNhanVien;
+    private DefaultTreeModel treeModel;
+    private DefaultMutableTreeNode rootNode;
+    private JComboBox<NhanVien> cbDefaultEmployee;
+    private boolean isUpdatingDefaultCb = false;
 
     public NhanVienDialog(Frame parent) {
         super(parent, "Nhân viên", true);
+        initDialog(parent);
+    }
+
+    public NhanVienDialog(Dialog parent) {
+        super(parent, "Nhân viên", true);
+        initDialog(parent);
+    }
+
+    private void initDialog(Window parent) {
         initComponents();
-        loadData();
-        setSize(420, 520);
+        loadTreeData();
+        loadDefaultEmployeeComboBox();
+        setSize(480, 560);
         setLocationRelativeTo(parent);
     }
 
     private void initComponents() {
         setLayout(new BorderLayout());
 
-        // Header Panel: Icon & Mô tả
+        // 1. Header Panel: Nền trắng + Icon report--pencil + Tiêu đề (Khớp 100% Ảnh 1)
         JPanel headerPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 12));
-        headerPanel.setBackground(AppColors.WHITE);
-        headerPanel.setBorder(new MatteBorder(0, 0, 1, 0, AppColors.BORDER_GRAY));
+        headerPanel.setBackground(Color.WHITE);
+        headerPanel.setBorder(new MatteBorder(0, 0, 1, 0, new Color(185, 205, 235)));
 
-        JLabel lblIcon = new JLabel(IconHelper.getIcon("Folder2.png", 32, 32));
-        JLabel lblDesc = new JLabel("<html><b>Cho phép bạn quản lý và chỉnh sửa danh mục nhân viên</b></html>");
-        lblDesc.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        JLabel lblIcon = new JLabel(IconHelper.getIcon("report--pencil.png", 32, 32));
+        JLabel lblTitle = new JLabel("Cho phép bạn quản lý và chỉnh sửa danh mục nhân viên");
+        lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        lblTitle.setForeground(new Color(20, 20, 20));
 
         headerPanel.add(lblIcon);
-        headerPanel.add(lblDesc);
+        headerPanel.add(lblTitle);
         add(headerPanel, BorderLayout.NORTH);
 
-        // Center Panel: Toolbar + ComboBox + List
+        // 2. Center Panel: Toolbar + ComboBox Giá trị mặc định + JTree
         JPanel centerPanel = new JPanel(new BorderLayout());
-        centerPanel.setBorder(new EmptyBorder(5, 10, 10, 10));
+        centerPanel.setBorder(new EmptyBorder(4, 8, 8, 8));
 
-        // Toolbar: Thêm mới, Xóa, Chỉnh sửa, Thùng rác
-        JPanel toolBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
-        JButton btnAdd = new JButton("Thêm mới ▾", IconHelper.getIcon("plus.png", 16, 16));
-        JButton btnDelete = new JButton("Xóa", IconHelper.getIcon("cross.png", 16, 16));
-        JButton btnEdit = new JButton("Chỉnh sửa", IconHelper.getIcon("pencil.png", 16, 16));
-        JButton btnTrash = new JButton("Thùng rác", IconHelper.getIcon("RecycleBin.png", 16, 16));
+        // Top Controls: Toolbar + Default Value
+        JPanel topControls = new JPanel(new BorderLayout());
+        topControls.setOpaque(false);
 
-        btnAdd.setFont(new Font("Segoe UI", Font.BOLD, 12));
-        btnAdd.setForeground(AppColors.SUCCESS_GREEN);
-        btnDelete.setForeground(AppColors.DANGER_RED);
+        // Toolbar: Thêm mới ▾, Xóa, Chỉnh sửa, Icon sort/tree, Thùng rác
+        JPanel toolBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 4));
+        toolBar.setBackground(new Color(218, 230, 245));
+        toolBar.setBorder(new MatteBorder(0, 0, 1, 0, new Color(180, 200, 225)));
 
-        toolBar.add(btnAdd);
+        JButton btnAddMenu = createToolButton("Thêm mới ▾", "plus.png");
+        JButton btnDelete = createToolButton("Xóa", "cross.png");
+        JButton btnEdit = createToolButton("Chỉnh sửa", "pencil.png");
+        JButton btnOrganize = createToolButton("", "folder-tree.png");
+        JButton btnTrash = createToolButton("Thùng rác", "RecycleBin.png");
+
+        btnAddMenu.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        btnAddMenu.setForeground(new Color(0, 120, 50));
+        btnDelete.setForeground(new Color(180, 20, 20));
+
+        // Dropdown Popup Menu cho "Thêm mới ▾" (Khớp 100% Ảnh 2)
+        JPopupMenu popupAdd = new JPopupMenu();
+        JMenuItem miAddEmployee = new JMenuItem("Thêm nhân viên", IconHelper.getIcon("1282529873_objects.png", 16, 16));
+        JMenuItem miAddFolder = new JMenuItem("Thêm thư mục", IconHelper.getIcon("Folder.png", 16, 16));
+        JMenuItem miAddSubFolder = new JMenuItem("Thêm thư mục con", IconHelper.getIcon("folder-tree.png", 16, 16));
+        JMenuItem miAddSeparator = new JMenuItem("Thêm phân cách", IconHelper.getIcon("ui-separator.png", 16, 16));
+
+        miAddEmployee.addActionListener(e -> onAddNewEmployee());
+        miAddFolder.addActionListener(e -> onAddNewFolder(false));
+        miAddSubFolder.addActionListener(e -> onAddNewFolder(true));
+        miAddSeparator.addActionListener(e -> onAddSeparator());
+
+        popupAdd.add(miAddEmployee);
+        popupAdd.add(miAddFolder);
+        popupAdd.add(miAddSubFolder);
+        popupAdd.add(miAddSeparator);
+
+        btnAddMenu.addActionListener(e -> popupAdd.show(btnAddMenu, 0, btnAddMenu.getHeight()));
+
+        btnDelete.addActionListener(e -> onDeleteSelected());
+        btnEdit.addActionListener(e -> onEditSelected());
+        btnTrash.addActionListener(e -> onOpenTrash());
+
+        toolBar.add(btnAddMenu);
         toolBar.add(btnDelete);
         toolBar.add(btnEdit);
+        toolBar.add(btnOrganize);
         toolBar.add(btnTrash);
+        topControls.add(toolBar, BorderLayout.NORTH);
 
-        // Sub Header: Giá trị mặc định
-        JPanel defaultValPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 4));
-        defaultValPanel.add(new JLabel("Giá trị mặc định:"));
-        JComboBox<String> cbDefault = new JComboBox<>(new String[]{"", "Hoàng Giang", "Phạm Quế Chi", "Phạm Huyền Trang"});
-        cbDefault.setPreferredSize(new Dimension(200, 25));
-        defaultValPanel.add(cbDefault);
+        // Sub Bar: Giá trị mặc định: [ Hoàng Giang ▾ ]
+        JPanel defaultPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 6));
+        defaultPanel.setOpaque(false);
+        JLabel lblDefault = new JLabel("Giá trị mặc định:");
+        lblDefault.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        defaultPanel.add(lblDefault);
 
-        JPanel topBox = new JPanel(new BorderLayout());
-        topBox.add(toolBar, BorderLayout.NORTH);
-        topBox.add(defaultValPanel, BorderLayout.SOUTH);
-        centerPanel.add(topBox, BorderLayout.NORTH);
+        cbDefaultEmployee = new JComboBox<>();
+        cbDefaultEmployee.setPreferredSize(new Dimension(220, 24));
+        cbDefaultEmployee.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        cbDefaultEmployee.setBackground(Color.WHITE);
+        cbDefaultEmployee.addActionListener(e -> onDefaultEmployeeChanged());
+        defaultPanel.add(cbDefaultEmployee);
 
-        // Danh sách nhân viên (JList có icon users.png)
-        listModel = new DefaultListModel<>();
-        listNhanVien = new JList<>(listModel);
-        listNhanVien.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        listNhanVien.setCellRenderer(new DefaultListCellRenderer() {
+        topControls.add(defaultPanel, BorderLayout.SOUTH);
+        centerPanel.add(topControls, BorderLayout.NORTH);
+
+        // Center View: JTree
+        rootNode = new DefaultMutableTreeNode("Root");
+        treeModel = new DefaultTreeModel(rootNode);
+        treeNhanVien = new JTree(treeModel);
+        treeNhanVien.setRootVisible(false);
+        treeNhanVien.setShowsRootHandles(true);
+        treeNhanVien.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        treeNhanVien.setRowHeight(24);
+
+        // Custom Cell Renderer hiển thị icon avatar cá nhân hoặc thư mục
+        treeNhanVien.setCellRenderer(new DefaultTreeCellRenderer() {
             @Override
-            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
-                JLabel label = (JLabel) super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-                if (value instanceof SUser) {
-                    SUser u = (SUser) value;
-                    label.setIcon(IconHelper.getIcon("users.png", 16, 16));
-                    label.setText(" " + u.getName());
-                    label.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+            public Component getTreeCellRendererComponent(JTree tree, Object value, boolean sel, boolean expanded, boolean leaf, int row, boolean hasFocus) {
+                JLabel label = (JLabel) super.getTreeCellRendererComponent(tree, value, sel, expanded, leaf, row, hasFocus);
+                if (value instanceof DefaultMutableTreeNode) {
+                    Object userObj = ((DefaultMutableTreeNode) value).getUserObject();
+                    if (userObj instanceof NhanVien) {
+                        NhanVien nv = (NhanVien) userObj;
+                        if (nv.isSeparator()) {
+                            label.setText("----------------------------------------------");
+                            label.setForeground(Color.LIGHT_GRAY);
+                            label.setIcon(null);
+                        } else if (nv.isFolder()) {
+                            label.setText(nv.getName());
+                            label.setIcon(IconHelper.getIcon("Folder.png", 16, 16));
+                            label.setFont(new Font("Segoe UI", Font.BOLD, 13));
+                        } else {
+                            label.setText(nv.getName());
+                            label.setIcon(NhanVienEditDialog.getAvatarIcon(nv.getAvatarIcon(), 16, 16));
+                            label.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+                        }
+                    }
                 }
                 return label;
             }
         });
 
-        JScrollPane scrollPane = new JScrollPane(listNhanVien);
-        centerPanel.add(scrollPane, BorderLayout.CENTER);
+        // Double click để mở form sửa
+        treeNhanVien.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() == 2) {
+                    onEditSelected();
+                }
+            }
+        });
 
+        // Phím tắt bàn phím
+        treeNhanVien.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+                if (e.getKeyCode() == KeyEvent.VK_DELETE) {
+                    onDeleteSelected();
+                } else if (e.getKeyCode() == KeyEvent.VK_INSERT) {
+                    onAddNewEmployee();
+                } else if (e.getKeyCode() == KeyEvent.VK_F4) {
+                    onEditSelected();
+                }
+            }
+        });
+
+        // Bật tính năng Kéo & Thả (Drag & Drop)
+        treeNhanVien.setDragEnabled(true);
+        treeNhanVien.setDropMode(DropMode.ON);
+        treeNhanVien.setTransferHandler(new TreeTransferHandler(nhanVienDAO, () -> {
+            loadTreeData();
+            loadDefaultEmployeeComboBox();
+        }));
+
+        JScrollPane scrollPane = new JScrollPane(treeNhanVien);
+        scrollPane.setBorder(new MatteBorder(1, 1, 1, 1, new Color(180, 200, 225)));
+        centerPanel.add(scrollPane, BorderLayout.CENTER);
         add(centerPanel, BorderLayout.CENTER);
 
-        // Bottom: Nút Thoát
-        JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 10));
-        JButton btnClose = new JButton("Thoát");
-        btnClose.setPreferredSize(new Dimension(90, 30));
-        btnClose.addActionListener(e -> dispose());
-        bottomPanel.add(btnClose);
+        // 3. Bottom: Nút Thoát
+        JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 12, 10));
+        JButton btnExit = new JButton("Thoát");
+        btnExit.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        btnExit.setPreferredSize(new Dimension(85, 28));
+        btnExit.setBackground(Color.WHITE);
+        btnExit.addActionListener(e -> dispose());
+        bottomPanel.add(btnExit);
         add(bottomPanel, BorderLayout.SOUTH);
     }
 
-    private void loadData() {
-        listModel.clear();
-        List<SUser> list = userDAO.getAll();
-        for (SUser u : list) {
-            listModel.addElement(u);
+    private JButton createToolButton(String text, String iconName) {
+        JButton btn = new JButton(text);
+        if (iconName != null && !iconName.isEmpty()) {
+            btn.setIcon(IconHelper.getIcon(iconName, 16, 16));
         }
-        if (!listModel.isEmpty()) {
-            listNhanVien.setSelectedIndex(0);
+        btn.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        btn.setFocusPainted(false);
+        btn.setBackground(Color.WHITE);
+        btn.setMargin(new Insets(2, 6, 2, 6));
+        return btn;
+    }
+
+    public void loadTreeData() {
+        rootNode.removeAllChildren();
+        List<NhanVien> employees = nhanVienDAO.getAllActive();
+
+        Map<String, DefaultMutableTreeNode> nodeMap = new HashMap<>();
+
+        // Pass 1: Tạo TreeNode cho tất cả các phần tử
+        for (NhanVien nv : employees) {
+            if (nv.getId() != null) {
+                nodeMap.put(nv.getId(), new DefaultMutableTreeNode(nv));
+            }
+        }
+
+        // Pass 2: Gắn vào cây phân cấp theo parentId
+        for (NhanVien nv : employees) {
+            DefaultMutableTreeNode currentNode = nodeMap.get(nv.getId());
+            if (currentNode == null) continue;
+
+            String parentId = nv.getParentId();
+            DefaultMutableTreeNode parentNode = null;
+            if (parentId != null && !parentId.trim().isEmpty()) {
+                parentNode = nodeMap.get(parentId.trim());
+            }
+
+            if (parentNode != null && parentNode != currentNode) {
+                parentNode.add(currentNode);
+            } else {
+                rootNode.add(currentNode);
+            }
+        }
+
+        treeModel.reload();
+        for (int i = 0; i < treeNhanVien.getRowCount(); i++) {
+            treeNhanVien.expandRow(i);
+        }
+    }
+
+    private void loadDefaultEmployeeComboBox() {
+        isUpdatingDefaultCb = true;
+        cbDefaultEmployee.removeAllItems();
+        List<NhanVien> employees = nhanVienDAO.getAllActive();
+        String defaultId = nhanVienDAO.getDefaultEmployeeId();
+        NhanVien selectedItem = null;
+
+        for (NhanVien nv : employees) {
+            if (!nv.isFolder() && !nv.isSeparator()) {
+                cbDefaultEmployee.addItem(nv);
+                if (nv.getId().equals(defaultId)) {
+                    selectedItem = nv;
+                }
+            }
+        }
+
+        if (selectedItem != null) {
+            cbDefaultEmployee.setSelectedItem(selectedItem);
+        }
+        isUpdatingDefaultCb = false;
+    }
+
+    private void onDefaultEmployeeChanged() {
+        if (isUpdatingDefaultCb) return;
+        NhanVien selected = (NhanVien) cbDefaultEmployee.getSelectedItem();
+        if (selected != null) {
+            nhanVienDAO.setDefaultEmployeeId(selected.getId());
+        }
+    }
+
+    private NhanVien getSelectedEmployee() {
+        TreePath path = treeNhanVien.getSelectionPath();
+        if (path != null) {
+            DefaultMutableTreeNode node = (DefaultMutableTreeNode) path.getLastPathComponent();
+            if (node.getUserObject() instanceof NhanVien) {
+                return (NhanVien) node.getUserObject();
+            }
+        }
+        return null;
+    }
+
+    private void onAddNewEmployee() {
+        NhanVien selected = getSelectedEmployee();
+        NhanVien newEmployee = new NhanVien();
+        if (selected != null && selected.isFolder()) {
+            newEmployee.setParentId(selected.getId());
+        }
+        newEmployee.setAvatarIcon("user_female_1");
+
+        List<NhanVien> employees = nhanVienDAO.getAllActive();
+        NhanVienEditDialog editDialog = new NhanVienEditDialog(this, newEmployee, employees, () -> {
+            loadTreeData();
+            loadDefaultEmployeeComboBox();
+        });
+        editDialog.setVisible(true);
+    }
+
+    private void onAddNewFolder(boolean isSub) {
+        String title = isSub ? "Thêm thư mục con" : "Thêm thư mục";
+        String folderName = JOptionPane.showInputDialog(this, "Nhập tên thư mục:", title, JOptionPane.PLAIN_MESSAGE);
+        if (folderName != null && !folderName.trim().isEmpty()) {
+            NhanVien folder = new NhanVien();
+            folder.setName(folderName.trim());
+            folder.setFolder(true);
+            folder.setAvatarIcon("Folder.png");
+
+            NhanVien selected = getSelectedEmployee();
+            if (isSub && selected != null && selected.isFolder()) {
+                folder.setParentId(selected.getId());
+            }
+
+            nhanVienDAO.insert(folder);
+            loadTreeData();
+        }
+    }
+
+    private void onAddSeparator() {
+        NhanVien sep = new NhanVien();
+        sep.setName("----------------------------------------");
+        sep.setSeparator(true);
+        nhanVienDAO.insert(sep);
+        loadTreeData();
+    }
+
+    private void onEditSelected() {
+        NhanVien selected = getSelectedEmployee();
+        if (selected == null) {
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn nhân viên cần chỉnh sửa!", "Thông báo", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        if (selected.isSeparator()) return;
+
+        if (selected.isFolder()) {
+            String newName = JOptionPane.showInputDialog(this, "Đổi tên thư mục:", selected.getName());
+            if (newName != null && !newName.trim().isEmpty()) {
+                selected.setName(newName.trim());
+                nhanVienDAO.update(selected);
+                loadTreeData();
+            }
+            return;
+        }
+
+        List<NhanVien> employees = new ArrayList<>();
+        for (NhanVien nv : nhanVienDAO.getAllActive()) {
+            if (!nv.isFolder() && !nv.isSeparator()) {
+                employees.add(nv);
+            }
+        }
+
+        NhanVienEditDialog editDialog = new NhanVienEditDialog(this, selected, employees, () -> {
+            loadTreeData();
+            loadDefaultEmployeeComboBox();
+        });
+        editDialog.setVisible(true);
+    }
+
+    private void onDeleteSelected() {
+        NhanVien selected = getSelectedEmployee();
+        if (selected == null) {
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn nhân viên hoặc thư mục cần xóa!", "Thông báo", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        if (selected.isSeparator()) {
+            return;
+        }
+
+        int confirm = JOptionPane.showConfirmDialog(
+                this,
+                "Bạn có chắc chắn muốn chuyển '" + selected.getName() + "' vào Thùng rác không?",
+                "Xác nhận xóa",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.QUESTION_MESSAGE
+        );
+
+        if (confirm == JOptionPane.YES_OPTION) {
+            if (selected.getId() != null && selected.getId().equals(nhanVienDAO.getDefaultEmployeeId())) {
+                nhanVienDAO.setDefaultEmployeeId(null);
+            }
+            boolean success = nhanVienDAO.moveToTrash(selected.getId());
+            if (success) {
+                JOptionPane.showMessageDialog(this, "Đã chuyển '" + selected.getName() + "' vào Thùng rác!", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+            }
+            loadTreeData();
+            loadDefaultEmployeeComboBox();
+        }
+    }
+
+    private void onOpenTrash() {
+        NhanVienTrashDialog trashDialog = new NhanVienTrashDialog(this, () -> {
+            loadTreeData();
+            loadDefaultEmployeeComboBox();
+        });
+        trashDialog.setVisible(true);
+    }
+
+    private static class TreeTransferHandler extends TransferHandler {
+        private final NhanVienDAO nhanVienDAO;
+        private final Runnable onDataChanged;
+        private DefaultMutableTreeNode draggedNode;
+
+        public TreeTransferHandler(NhanVienDAO nhanVienDAO, Runnable onDataChanged) {
+            this.nhanVienDAO = nhanVienDAO;
+            this.onDataChanged = onDataChanged;
+        }
+
+        @Override
+        public int getSourceActions(JComponent c) {
+            return TransferHandler.MOVE;
+        }
+
+        @Override
+        protected Transferable createTransferable(JComponent c) {
+            JTree tree = (JTree) c;
+            TreePath path = tree.getSelectionPath();
+            if (path == null) {
+                return null;
+            }
+            DefaultMutableTreeNode node = (DefaultMutableTreeNode) path.getLastPathComponent();
+            if (node == null || !(node.getUserObject() instanceof NhanVien)) {
+                return null;
+            }
+            draggedNode = node;
+            NhanVien nv = (NhanVien) node.getUserObject();
+            return new StringSelection(nv.getId());
+        }
+
+        @Override
+        public boolean canImport(TransferSupport support) {
+            if (!support.isDrop() || !support.isDataFlavorSupported(DataFlavor.stringFlavor)) {
+                return false;
+            }
+
+            support.setShowDropLocation(true);
+            JTree.DropLocation dl = (JTree.DropLocation) support.getDropLocation();
+            TreePath dropPath = dl.getPath();
+
+            if (dropPath == null) {
+                return true;
+            }
+
+            DefaultMutableTreeNode targetNode = (DefaultMutableTreeNode) dropPath.getLastPathComponent();
+            if (draggedNode == null || draggedNode == targetNode) {
+                return false;
+            }
+
+            if (draggedNode.isNodeDescendant(targetNode)) {
+                return false;
+            }
+
+            return true;
+        }
+
+        @Override
+        public boolean importData(TransferSupport support) {
+            if (!canImport(support)) {
+                return false;
+            }
+
+            try {
+                String draggedId = (String) support.getTransferable().getTransferData(DataFlavor.stringFlavor);
+                if (draggedId == null || draggedId.trim().isEmpty()) {
+                    return false;
+                }
+
+                JTree.DropLocation dl = (JTree.DropLocation) support.getDropLocation();
+                TreePath dropPath = dl.getPath();
+
+                String newParentId = "";
+                if (dropPath != null) {
+                    DefaultMutableTreeNode targetNode = (DefaultMutableTreeNode) dropPath.getLastPathComponent();
+                    Object targetUserObj = targetNode.getUserObject();
+                    if (targetUserObj instanceof NhanVien) {
+                        NhanVien targetItem = (NhanVien) targetUserObj;
+                        if (targetItem.isFolder()) {
+                            newParentId = targetItem.getId();
+                        } else {
+                            newParentId = targetItem.getParentId() != null ? targetItem.getParentId() : "";
+                        }
+                    }
+                }
+
+                boolean ok = nhanVienDAO.updateParentId(draggedId, newParentId);
+                if (ok) {
+                    if (onDataChanged != null) {
+                        onDataChanged.run();
+                    }
+                    JTree tree = (JTree) support.getComponent();
+                    SwingUtilities.invokeLater(() -> {
+                        for (int i = 0; i < tree.getRowCount(); i++) {
+                            TreePath p = tree.getPathForRow(i);
+                            DefaultMutableTreeNode n = (DefaultMutableTreeNode) p.getLastPathComponent();
+                            if (n.getUserObject() instanceof NhanVien) {
+                                NhanVien nv = (NhanVien) n.getUserObject();
+                                if (draggedId.equals(nv.getId())) {
+                                    tree.setSelectionPath(p);
+                                    tree.scrollPathToVisible(p);
+                                    break;
+                                }
+                            }
+                        }
+                    });
+                    return true;
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+            return false;
         }
     }
 }

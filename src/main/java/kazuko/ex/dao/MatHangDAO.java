@@ -1,14 +1,12 @@
 package kazuko.ex.dao;
 
 import kazuko.ex.model.danhmuc.MatHang;
+import kazuko.ex.model.danhmuc.TieuChiPhanLoai;
 import kazuko.ex.model.system.SystemConfig;
 import kazuko.ex.service.AuthService;
 
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public class MatHangDAO extends BaseDAO {
@@ -17,28 +15,50 @@ public class MatHangDAO extends BaseDAO {
     static {
         // Dữ liệu mẫu phong phú chuẩn 100% theo ảnh giao diện của người dùng
         Object[][] sampleData = {
-                {"02B", "Bếp ga 02B", "Bếp Ga", "Chiếc", 638000.02, 170000.0, false, false},
-                {"02E", "Bếp ga 02E", "Bếp Ga", "Chiếc", 649000.0, 519200.0, false, false},
-                {"05IC-A", "Bếp từ Sato 05IC", "Việt Nhật", "Chiếc", 1083500.0, 866800.0, true, false},
-                {"1", "Nồi 01 ANYCOOK", "ANY COOK", "Chiếc", 489500.0, 391600.0, false, false},
-                {"1000001", "Bài NI LONG", "Bài", "Hộp", 45000.0, 0.0, false, false},
-                {"1000081", "Lẩu cá", "Khaluck", "Chiếc", 682000.0, 545600.0, false, false},
-                {"1011", "Bếp từ SANAKY 1011BT", "Sanaky", "Chiếc", 970200.0, 776160.0, false, false},
-                {"1012", "Bếp từ SANAKY 1012", "Sanaky", "Chiếc", 970200.0, 776160.0, false, false},
-                {"1014", "Bếp từ sanaky AT1014", "Sanaky", "Chiếc", 946000.0, 756800.0, false, false},
-                {"1015", "Bếp từ sanaky AT1015", "Sanaky", "Chiếc", 946000.0, 756800.0, false, false},
-                {"1016", "Bếp từ sanaky AT1016", "Sanaky", "Chiếc", 572000.0, 457600.0, false, false},
-                {"108", "Siêu tốc KL 108", "Khaluck", "Chiếc", 280500.0, 224400.0, false, false},
-                {"1080", "Sinh tố Hàn Quốc 1080", "Nissei + Dura", "Chiếc", 770000.0, 616000.0, false, false},
-                {"108cl", "Lọc feroli 108 cường lực", "Feroli", "Chiếc", 3520000.0, 2816000.0, false, false},
-                {"109CL", "Lọc Feroli 109 Kính cường lực", "Feroli", "Chiếc", 3630000.0, 2904000.0, false, false},
-                {"10A", "Quạt Sưởi longer 10A", "Nissei + Dura", "Chiếc", 39600.0, 31680.0, false, false},
-                {"10KVA-50", "Máy ổn áp STANDA 10KVA-50", "Standa", "Chiếc", 4565000.0, 3652000.0, false, false},
-                {"10KVA-90", "Máy ổn áp STANDA 10KVA-90", "Standa", "Chiếc", 4235000.0, 3388000.0, false, false},
-                {"10L", "Nồi shap 10L", "Chi", "Chiếc", 2530000.0, 2024000.0, false, false},
-                {"11", "Dây 1*1.0 ht", "Hoatung", "m", 3630.0, 2904.0, false, false},
-                {"1100001", "Bàn chải mủ hình chân", "Bàn chải đánh răng", "Cái", 7000.0, 0.0, false, false},
-                {"1100002", "Bàn chải mủ rẻ", "Bàn chải đánh răng", "Cái", 4000.0, 0.0, false, false}
+                {"am00002", "2900001", "ấm sắc thuốc", "bao", 0.0, 0.0, false, false, "Việt Nhật", "Công ty ABC", "Bao"},
+                {"3k0", "3K0", "Sopoka", "Chiếc", 20900.0, 30000.0, false, false, "Sopoka", "Đại lý phân phối", "Hộp"},
+                {"4k0", "4K0", "Sopoka", "Chiếc", 33000.0, 40000.0, false, false, "Sopoka", "Đại lý phân phối", "Hộp"},
+                {"4k9", "4K9", "Sopoka", "Chiếc", 108900.0, 87120.0, false, false, "Sopoka", "Đại lý phân phối", "Thùng"},
+                {"1900001", "ALYNA Bấm móng lớn", "Kiềm", "Cây", 18000.0, 0.0, false, false, "Kiềm", "Nhà cung cấp chính", "Hộp"},
+                {"1900002", "ALYNA Bấm móng nhỏ", "Kiềm", "Cây", 10000.0, 0.0, false, false, "Kiềm", "Nhà cung cấp chính", "Hộp"},
+                {"1300002", "ALYNA BB Cream 2 màu kem pu...", "Công ty", "Hộp", 120000.0, 0.0, false, false, "Công ty", "Công ty ABC", "Thùng"},
+                {"1300003", "ALYNA Đắp mặt nạ đủ loại", "Công ty", "Bịch", 3000.0, 0.0, false, false, "Công ty", "Công ty ABC", "Hộp"},
+                {"1300004", "ALYNA Gòn tẩy trang 100 miếng", "Công ty", "Bịch", 20000.0, 0.0, false, false, "Công ty", "Công ty ABC", "Hộp"},
+                {"1300005", "ALYNA Hair Coat 80ml", "Công ty", "chai", 35000.0, 0.0, false, false, "Công ty", "Công ty ABC", "Thùng"},
+                {"2600001", "ALYNA Kéo tỉa mày", "Nhíp", "Cây", 18000.0, 0.0, false, false, "Nhíp", "Đại lý phân phối", "Hộp"},
+                {"2600002", "ALYNA Nhíp", "Nhíp", "Cây", 10000.0, 0.0, false, false, "Nhíp", "Đại lý phân phối", "Hộp"},
+                {"528", "Ấm đun 528", "Dawo", "Chiếc", 385000.0, 308000.0, false, false, "Dawo", "Nhà cung cấp chính", "Thùng"},
+                {"538", "Ấm đun 538", "Dawo", "Chiếc", 429000.0, 343200.0, false, false, "Dawo", "Nhà cung cấp chính", "Thùng"},
+                {"539", "Ấm đun 539", "Dawo", "Chiếc", 579700.0, 463760.0, false, false, "Dawo", "Nhà cung cấp chính", "Thùng"},
+                {"stv", "Ấm Sắc Thuốc", "Livingcook", "Chiếc", 214500.0, 171600.0, false, false, "Livingcook", "Đại lý phân phối", "Thùng"},
+                {"TTBT", "Ấm sắc thuốc Bát Tiên", "Trường Thọ", "Chiếc", 192500.0, 154000.0, false, false, "Bát Tiên", "Công ty ABC", "Thùng"},
+                {"lorente", "Ấm sắc thuốc Lorente", "ấm sắc thuốc", "Chiếc", 198000.0, 158400.0, false, false, "Lorente", "Công ty ABC", "Thùng"},
+                {"amstlg", "Ấm sắc thuốc lục giác", "ấm sắc thuốc", "Chiếc", 308000.0, 246400.0, false, false, "ấm sắc thuốc", "Công ty ABC", "Thùng"},
+                {"stt", "Ấm Sắc Thuốc Tròn", "Livingcook", "Chiếc", 275000.0, 220000.0, false, false, "Livingcook", "Đại lý phân phối", "Thùng"},
+                {"TT86", "Ấm sắc thuốc Trường Thọ", "Trường Thọ", "Chiếc", 203500.0, 162800.0, false, false, "Trường Thọ", "Đại lý phân phối", "Thùng"},
+                {"TTBA2086", "Ấm sắc thuốc Trường Thọ BA2086", "Trường Thọ", "Chiếc", 203500.0, 162800.0, false, false, "Trường Thọ", "Đại lý phân phối", "Thùng"},
+                {"02B", "Bếp ga 02B", "Bếp Ga", "Chiếc", 638000.02, 170000.0, false, false, "Bếp Ga", "Công ty ABC", "Thùng"},
+                {"02E", "Bếp ga 02E", "Bếp Ga", "Chiếc", 649000.0, 519200.0, false, false, "Bếp Ga", "Công ty ABC", "Thùng"},
+                {"05IC-A", "Bếp từ Sato 05IC", "Việt Nhật", "Chiếc", 1083500.0, 866800.0, true, false, "Việt Nhật", "Nhà cung cấp chính", "Thùng"},
+                {"1", "Nồi 01 ANYCOOK", "ANY COOK", "Chiếc", 489500.0, 391600.0, false, false, "ANY COOK", "Công ty ABC", "Thùng"},
+                {"1000001", "Bài NI LONG", "Bài", "Hộp", 45000.0, 0.0, false, false, "Bài", "Đại lý phân phối", "Lốc"},
+                {"1000081", "Lẩu cá", "Khaluck", "Chiếc", 682000.0, 545600.0, false, false, "Khaluck", "Công ty ABC", "Thùng"},
+                {"1011", "Bếp từ SANAKY 1011BT", "Sanaky", "Chiếc", 970200.0, 776160.0, false, false, "Sanaky", "Đại lý phân phối", "Thùng"},
+                {"1012", "Bếp từ SANAKY 1012", "Sanaky", "Chiếc", 970200.0, 776160.0, false, false, "Sanaky", "Đại lý phân phối", "Thùng"},
+                {"1014", "Bếp từ sanaky AT1014", "Sanaky", "Chiếc", 946000.0, 756800.0, false, false, "Sanaky", "Đại lý phân phối", "Thùng"},
+                {"1015", "Bếp từ sanaky AT1015", "Sanaky", "Chiếc", 946000.0, 756800.0, false, false, "Sanaky", "Đại lý phân phối", "Thùng"},
+                {"1016", "Bếp từ sanaky AT1016", "Sanaky", "Chiếc", 572000.0, 457600.0, false, false, "Sanaky", "Đại lý phân phối", "Thùng"},
+                {"108", "Siêu tốc KL 108", "Khaluck", "Chiếc", 280500.0, 224400.0, false, false, "Khaluck", "Công ty ABC", "Thùng"},
+                {"1080", "Sinh tố Hàn Quốc 1080", "Nissei + Dura", "Chiếc", 770000.0, 616000.0, false, false, "Nissei + Dura", "Công ty ABC", "Thùng"},
+                {"108cl", "Lọc feroli 108 cường lực", "Feroli", "Chiếc", 3520000.0, 2816000.0, false, false, "Feroli", "Công ty ABC", "Thùng"},
+                {"109CL", "Lọc Feroli 109 Kính cường lực", "Feroli", "Chiếc", 3630000.0, 2904000.0, false, false, "Feroli", "Công ty ABC", "Thùng"},
+                {"10A", "Quạt Sưởi longer 10A", "Nissei + Dura", "Chiếc", 39600.0, 31680.0, false, false, "Nissei + Dura", "Công ty ABC", "Thùng"},
+                {"10KVA-50", "Máy ổn áp STANDA 10KVA-50", "Standa", "Chiếc", 4565000.0, 3652000.0, false, false, "Standa", "Đại lý phân phối", "Thùng"},
+                {"10KVA-90", "Máy ổn áp STANDA 10KVA-90", "Standa", "Chiếc", 4235000.0, 3388000.0, false, false, "Standa", "Đại lý phân phối", "Thùng"},
+                {"10L", "Nồi shap 10L", "Chi", "Chiếc", 2530000.0, 2024000.0, false, false, "Chi", "Công ty ABC", "Thùng"},
+                {"11", "Dây 1*1.0 ht", "Hoatung", "m", 3630.0, 2904.0, false, false, "Hoatung", "Đại lý phân phối", "Cuộn"},
+                {"1100001", "Bàn chải mủ hình chân", "Bàn chải đánh răng", "Cái", 7000.0, 0.0, false, false, "Bàn chải đánh răng", "Công ty ABC", "Hộp"},
+                {"1100002", "Bàn chải mủ rẻ", "Bàn chải đánh răng", "Cái", 4000.0, 0.0, false, false, "Bàn chải đánh răng", "Công ty ABC", "Hộp"}
         };
 
         int idx = 1;
@@ -54,6 +74,9 @@ public class MatHangDAO extends BaseDAO {
             mh.setGiaVon((Double) row[5]);
             mh.setKhongInCheBien((Boolean) row[6]);
             mh.setBanNhanh((Boolean) row[7]);
+            if (row.length > 8) mh.setHangSanXuat((String) row[8]);
+            if (row.length > 9) mh.setDoiTacKyGui((String) row[9]);
+            if (row.length > 10) mh.setTenDonViTinhChan((String) row[10]);
             mh.setTimeCreated(new Timestamp(System.currentTimeMillis() - 86400000L * 300));
             mh.setUserCreatedName("Administrator");
             mh.setTimeModified(new Timestamp(System.currentTimeMillis() - 86400000L * 50));
@@ -143,6 +166,183 @@ public class MatHangDAO extends BaseDAO {
     public List<MatHang> searchWithConfigByGroupSet(String keyword, Set<String> ids, Set<String> names, SystemConfig config) {
         List<MatHang> baseList = getByNhomIds(ids, names);
         return filterListWithConfig(baseList, keyword, config);
+    }
+
+    public List<MatHang> getByCriteria(TieuChiPhanLoai tieuChi, String selectedName, String selectedId, Set<String> groupIds, Set<String> groupNames) {
+        if (tieuChi == null || tieuChi == TieuChiPhanLoai.NHOM_MAT_HANG) {
+            if (groupIds != null && !groupIds.isEmpty()) {
+                return getByNhomIds(groupIds, groupNames);
+            }
+            return getByNhom(selectedName, selectedId);
+        }
+
+        List<MatHang> all = getAll();
+        if (selectedName == null || "Tất cả".equalsIgnoreCase(selectedName.trim())) {
+            return all;
+        }
+
+        List<MatHang> filtered = new ArrayList<>();
+        boolean isUnassigned = "Chưa thiết lập".equalsIgnoreCase(selectedName.trim());
+
+        for (MatHang mh : all) {
+            switch (tieuChi) {
+                case DON_VI_TINH:
+                    if (isUnassigned) {
+                        boolean emptyId = mh.getDonViTinhId() == null || mh.getDonViTinhId().trim().isEmpty();
+                        boolean emptyName = mh.getTenDonViTinh() == null || mh.getTenDonViTinh().trim().isEmpty();
+                        if (emptyId && emptyName) filtered.add(mh);
+                    } else {
+                        boolean matchId = selectedId != null && selectedId.equalsIgnoreCase(mh.getDonViTinhId());
+                        boolean matchName = mh.getTenDonViTinh() != null && selectedName.equalsIgnoreCase(mh.getTenDonViTinh().trim());
+                        if (matchId || matchName) filtered.add(mh);
+                    }
+                    break;
+
+                case HANG_SAN_XUAT:
+                    if (isUnassigned) {
+                        if (mh.getHangSanXuat() == null || mh.getHangSanXuat().trim().isEmpty()) {
+                            filtered.add(mh);
+                        }
+                    } else {
+                        if (mh.getHangSanXuat() != null && selectedName.equalsIgnoreCase(mh.getHangSanXuat().trim())) {
+                            filtered.add(mh);
+                        }
+                    }
+                    break;
+
+                case DON_VI_TINH_CHAN:
+                    if (isUnassigned) {
+                        boolean emptyId = mh.getDonViTinhChanId() == null || mh.getDonViTinhChanId().trim().isEmpty();
+                        boolean emptyName = mh.getTenDonViTinhChan() == null || mh.getTenDonViTinhChan().trim().isEmpty();
+                        if (emptyId && emptyName) filtered.add(mh);
+                    } else {
+                        boolean matchId = selectedId != null && selectedId.equalsIgnoreCase(mh.getDonViTinhChanId());
+                        boolean matchName = mh.getTenDonViTinhChan() != null && selectedName.equalsIgnoreCase(mh.getTenDonViTinhChan().trim());
+                        if (matchId || matchName) filtered.add(mh);
+                    }
+                    break;
+
+                case DOI_TAC_KY_GUI:
+                    if (isUnassigned) {
+                        if (mh.getDoiTacKyGui() == null || mh.getDoiTacKyGui().trim().isEmpty()) {
+                            filtered.add(mh);
+                        }
+                    } else {
+                        if (mh.getDoiTacKyGui() != null && selectedName.equalsIgnoreCase(mh.getDoiTacKyGui().trim())) {
+                            filtered.add(mh);
+                        }
+                    }
+                    break;
+
+                default:
+                    filtered.add(mh);
+                    break;
+            }
+        }
+        return filtered;
+    }
+
+    public List<MatHang> searchWithConfigByCriteria(String keyword, TieuChiPhanLoai tieuChi, String selectedName, String selectedId, Set<String> groupIds, Set<String> groupNames, SystemConfig config) {
+        List<MatHang> baseList = getByCriteria(tieuChi, selectedName, selectedId, groupIds, groupNames);
+        return filterListWithConfig(baseList, keyword, config);
+    }
+
+    public List<String> getDistinctHangSanXuat() {
+        Set<String> set = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
+        String[] preset = {"ANY COOK", "Bát Tiên", "Benza", "Bếp Ga", "Besuto", "Chi", "Công ty", "Daelux", "Dawo", "Feroli", "Hoatung", "Khaluck", "Kiềm", "Livingcook", "Lorente", "Nhíp", "Nissei + Dura", "Panasonic", "Samsung", "Sanaky", "Sopoka", "Standa", "Sunhouse", "Trường Thọ", "Việt Nhật", "VinaKip"};
+        for (String p : preset) {
+            set.add(p);
+        }
+        for (MatHang mh : getAll()) {
+            if (mh.getHangSanXuat() != null && !mh.getHangSanXuat().trim().isEmpty()) {
+                set.add(mh.getHangSanXuat().trim());
+            }
+        }
+        return new ArrayList<>(set);
+    }
+
+    public List<String> getDistinctDoiTacKyGui() {
+        Set<String> set = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
+        String[] preset = {"Công ty ABC", "Đại lý phân phối", "Nhà cung cấp chính", "Công ty TNHH Song Long", "Nhà phân phối Miền Bắc", "Đối tác Tân Á", "Ký gửi Hải Hà"};
+        for (String p : preset) {
+            set.add(p);
+        }
+        for (MatHang mh : getAll()) {
+            if (mh.getDoiTacKyGui() != null && !mh.getDoiTacKyGui().trim().isEmpty()) {
+                set.add(mh.getDoiTacKyGui().trim());
+            }
+        }
+        return new ArrayList<>(set);
+    }
+
+    public List<String> getDistinctDonViTinhChan() {
+        Set<String> set = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
+        String[] preset = {"Bao", "Bịch", "Bộ", "Cây", "Chục", "Gói", "Hộp", "Két", "Lốc", "Thùng"};
+        for (String p : preset) {
+            set.add(p);
+        }
+        for (MatHang mh : getAll()) {
+            if (mh.getTenDonViTinhChan() != null && !mh.getTenDonViTinhChan().trim().isEmpty()) {
+                set.add(mh.getTenDonViTinhChan().trim());
+            }
+        }
+        return new ArrayList<>(set);
+    }
+
+    public void updateCriteriaValue(TieuChiPhanLoai tieuChi, String oldValue, String newValue) {
+        if (oldValue == null || newValue == null || oldValue.equalsIgnoreCase(newValue)) return;
+        for (MatHang mh : MEMORY_PRODUCTS) {
+            if (tieuChi == TieuChiPhanLoai.HANG_SAN_XUAT) {
+                if (oldValue.equalsIgnoreCase(mh.getHangSanXuat())) {
+                    mh.setHangSanXuat(newValue);
+                    update(mh);
+                }
+            } else if (tieuChi == TieuChiPhanLoai.DOI_TAC_KY_GUI) {
+                if (oldValue.equalsIgnoreCase(mh.getDoiTacKyGui())) {
+                    mh.setDoiTacKyGui(newValue);
+                    update(mh);
+                }
+            } else if (tieuChi == TieuChiPhanLoai.DON_VI_TINH_CHAN) {
+                if (oldValue.equalsIgnoreCase(mh.getTenDonViTinhChan())) {
+                    mh.setTenDonViTinhChan(newValue);
+                    update(mh);
+                }
+            } else if (tieuChi == TieuChiPhanLoai.DON_VI_TINH) {
+                if (oldValue.equalsIgnoreCase(mh.getTenDonViTinh())) {
+                    mh.setTenDonViTinh(newValue);
+                    update(mh);
+                }
+            }
+        }
+    }
+
+    public void deleteCriteriaValue(TieuChiPhanLoai tieuChi, String value) {
+        if (value == null) return;
+        for (MatHang mh : MEMORY_PRODUCTS) {
+            if (tieuChi == TieuChiPhanLoai.HANG_SAN_XUAT) {
+                if (value.equalsIgnoreCase(mh.getHangSanXuat())) {
+                    mh.setHangSanXuat("");
+                    update(mh);
+                }
+            } else if (tieuChi == TieuChiPhanLoai.DOI_TAC_KY_GUI) {
+                if (value.equalsIgnoreCase(mh.getDoiTacKyGui())) {
+                    mh.setDoiTacKyGui("");
+                    update(mh);
+                }
+            } else if (tieuChi == TieuChiPhanLoai.DON_VI_TINH_CHAN) {
+                if (value.equalsIgnoreCase(mh.getTenDonViTinhChan())) {
+                    mh.setTenDonViTinhChan("");
+                    mh.setDonViTinhChanId("");
+                    update(mh);
+                }
+            } else if (tieuChi == TieuChiPhanLoai.DON_VI_TINH) {
+                if (value.equalsIgnoreCase(mh.getTenDonViTinh())) {
+                    mh.setTenDonViTinh("");
+                    mh.setDonViTinhId("");
+                    update(mh);
+                }
+            }
+        }
     }
 
     private List<MatHang> filterListWithConfig(List<MatHang> list, String keyword, SystemConfig config) {
