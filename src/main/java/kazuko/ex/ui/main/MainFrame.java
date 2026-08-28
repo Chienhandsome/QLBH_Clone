@@ -21,6 +21,8 @@ import kazuko.ex.ui.dathang.KhachDatHangPanel;
 import kazuko.ex.ui.hoadon.HoaDonBanHangPanel;
 import kazuko.ex.ui.hoadon.QuanLyBanHangPanel;
 import kazuko.ex.ui.khohang.QuanLyXuatKhoPanel;
+import kazuko.ex.ui.quy.TaoPhieuChiDialog;
+import kazuko.ex.ui.quy.TaoPhieuThuDialog;
 import kazuko.ex.ui.system.CauHinhToanHeThongDialog;
 import kazuko.ex.ui.system.KhoiPhucCSDLDialog;
 import kazuko.ex.ui.system.SaoLuuCSDLDialog;
@@ -422,12 +424,12 @@ public class MainFrame extends JFrame {
         JMenuItem miTaoThu = new JMenuItem("Tạo phiếu thu");
         miTaoThu.setIcon(IconHelper.getIcon("arrow-000-medium.png", 16, 16));
         miTaoThu.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_T, InputEvent.CTRL_DOWN_MASK | InputEvent.SHIFT_DOWN_MASK));
-        miTaoThu.addActionListener(e -> openTab("Tạo phiếu thu", createPlaceholderPanel("Tạo phiếu thu")));
+        miTaoThu.addActionListener(e -> new TaoPhieuThuDialog(this).setVisible(true));
 
         JMenuItem miTaoChi = new JMenuItem("Tạo phiếu chi");
         miTaoChi.setIcon(IconHelper.getIcon("arrow-180-medium.png", 16, 16));
         miTaoChi.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C, InputEvent.CTRL_DOWN_MASK | InputEvent.SHIFT_DOWN_MASK));
-        miTaoChi.addActionListener(e -> openTab("Tạo phiếu chi", createPlaceholderPanel("Tạo phiếu chi")));
+        miTaoChi.addActionListener(e -> new TaoPhieuChiDialog(this).setVisible(true));
 
         JMenuItem miDSThu = new JMenuItem("Danh mục phiếu thu");
         miDSThu.setIcon(IconHelper.getIcon("btnCard.Icon.png", 16, 16));
