@@ -46,6 +46,32 @@ public class ChonCotHienThiDialog extends JDialog {
     private List<String> allPossibleCols = ALL_POSSIBLE_COLUMNS;
     private List<String> defaultVisibleCols = DEFAULT_VISIBLE_COLUMNS;
 
+    // --- Quản lý bán hàng: Master Invoice List ---
+    public static final List<String> ALL_POSSIBLE_INVOICE_COLUMNS = Arrays.asList(
+            "Số phiếu", "Ngày", "Khách hàng", "Tiền hàng", "Giảm giá",
+            "Đổi trả", "Tổng cộng", "Giờ thanh toán", "Thanh toán bởi",
+            "Ghi chú", "Mã khách", "Địa chỉ", "Điện thoại", "% giảm giá",
+            "Diễn giải", "Khách đưa", "Trả lại", "Giao hàng", "Thẻ tt",
+            "Trừ tích lũy", "Tiền mặt", "Chuyển khoản", "Số phiếu đặt hàng"
+    );
+
+    public static final List<String> DEFAULT_VISIBLE_INVOICE_COLUMNS = Arrays.asList(
+            "Số phiếu", "Ngày", "Khách hàng", "Tiền hàng", "Giảm giá",
+            "Đổi trả", "Tổng cộng", "Giờ thanh toán", "Thanh toán bởi",
+            "Ghi chú", "Mã khách", "Địa chỉ", "Điện thoại"
+    );
+
+    // --- Quản lý bán hàng: Detail Items (Lay Hang / Tra Hang) ---
+    public static final List<String> ALL_POSSIBLE_DETAIL_COLUMNS = Arrays.asList(
+            "Tên mặt hàng", "Mã hàng", "Đơn giá", "ĐVT", "CK%", "Tiền giảm",
+            "Ghi chú", "S.lượng", "Thành tiền", "Hạn sử dụng", "Bảo hành"
+    );
+
+    public static final List<String> DEFAULT_VISIBLE_DETAIL_COLUMNS = Arrays.asList(
+            "Tên mặt hàng", "Mã hàng", "Đơn giá", "ĐVT", "CK%", "Tiền giảm",
+            "Ghi chú", "S.lượng", "Thành tiền", "Hạn sử dụng", "Bảo hành"
+    );
+
     public ChonCotHienThiDialog(Window parent, List<String> currentVisibleColumns) {
         this(parent, currentVisibleColumns, ALL_POSSIBLE_COLUMNS, DEFAULT_VISIBLE_COLUMNS);
     }

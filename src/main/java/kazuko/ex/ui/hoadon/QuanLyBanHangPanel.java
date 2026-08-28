@@ -25,6 +25,7 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableColumn;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.*;
@@ -50,6 +51,8 @@ public class QuanLyBanHangPanel extends JPanel {
     private List<DonHang> allInvoicesList = new ArrayList<>();
     private List<DonHang> filteredInvoicesList = new ArrayList<>();
     private DonHang currentSelectedInvoice = null;
+    private List<String> visibleInvoiceColumns = new ArrayList<>(ChonCotHienThiDialog.DEFAULT_VISIBLE_INVOICE_COLUMNS);
+    private JPopupMenu popupInvoices;
 
     // Right Form Components
     private JButton btnDanhSachBillHuy;
@@ -71,6 +74,8 @@ public class QuanLyBanHangPanel extends JPanel {
     private DefaultTableModel traHangModel;
     private final List<DonHangChiTiet> currentLayHangList = new ArrayList<>();
     private final List<DonHangChiTiet> currentTraHangList = new ArrayList<>();
+    private List<String> visibleDetailColumns = new ArrayList<>(ChonCotHienThiDialog.DEFAULT_VISIBLE_DETAIL_COLUMNS);
+    private JPopupMenu popupDetail;
 
     // Bottom Summary with Vertical Tabs
     private CardLayout cardLayoutBottom;
@@ -200,48 +205,75 @@ public class QuanLyBanHangPanel extends JPanel {
         JPanel pnl = new JPanel(new BorderLayout());
         pnl.setBackground(Color.WHITE);
 
-        String[] headers = {
-                "STT", "Số phiếu", "Ngày", "Khách hàng", "Tiền hàng", "Giảm giá",
-                "Đổi trả", "Tổng cộng", "Giờ thanh toán", "Thanh toán bởi",
-                "Ghi chú", "Mã khách", "Địa chỉ", "Điện thoại"
-        };
-
-        invoicesModel = new DefaultTableModel(headers, 0) {
-            @Override public boolean isCellEditable(int row, int col) { return false; }
-        };
-        tableInvoices = new JTable(invoicesModel);
+        tableInvoices = new JTable();
         tableInvoices.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         tableInvoices.setRowHeight(22);
         tableInvoices.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         tableInvoices.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 12));
         tableInvoices.getTableHeader().setBackground(new Color(230, 240, 252));
 
-        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
-        centerRenderer.setHorizontalAlignment(SwingConstants.CENTER);
-        DefaultTableCellRenderer rightRenderer = new DefaultTableCellRenderer();
-        rightRenderer.setHorizontalAlignment(SwingConstants.RIGHT);
+        rebuildInvoicesTableColumns();
 
-        tableInvoices.getColumnModel().getColumn(0).setPreferredWidth(35);
-        tableInvoices.getColumnModel().getColumn(0).setCellRenderer(centerRenderer);
-        tableInvoices.getColumnModel().getColumn(1).setPreferredWidth(95);
-        tableInvoices.getColumnModel().getColumn(2).setPreferredWidth(85);
-        tableInvoices.getColumnModel().getColumn(2).setCellRenderer(centerRenderer);
-        tableInvoices.getColumnModel().getColumn(3).setPreferredWidth(120);
-        tableInvoices.getColumnModel().getColumn(4).setPreferredWidth(85);
-        tableInvoices.getColumnModel().getColumn(4).setCellRenderer(rightRenderer);
-        tableInvoices.getColumnModel().getColumn(5).setPreferredWidth(75);
-        tableInvoices.getColumnModel().getColumn(5).setCellRenderer(rightRenderer);
-        tableInvoices.getColumnModel().getColumn(6).setPreferredWidth(75);
-        tableInvoices.getColumnModel().getColumn(6).setCellRenderer(rightRenderer);
-        tableInvoices.getColumnModel().getColumn(7).setPreferredWidth(90);
-        tableInvoices.getColumnModel().getColumn(7).setCellRenderer(rightRenderer);
-        tableInvoices.getColumnModel().getColumn(8).setPreferredWidth(80);
-        tableInvoices.getColumnModel().getColumn(8).setCellRenderer(centerRenderer);
-        tableInvoices.getColumnModel().getColumn(9).setPreferredWidth(100);
-        tableInvoices.getColumnModel().getColumn(10).setPreferredWidth(100);
-        tableInvoices.getColumnModel().getColumn(11).setPreferredWidth(90);
-        tableInvoices.getColumnModel().getColumn(12).setPreferredWidth(120);
-        tableInvoices.getColumnModel().getColumn(13).setPreferredWidth(95);
+        // Popup context menu
+        popupInvoices = new JPopupMenu();
+        JMenuItem miChonCotInv = new JMenuItem("Chọn cột hiển thị...", IconHelper.getIcon("table.png", 16, 16));
+        miChonCotInv.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        miChonCotInv.addActionListener(e -> openChonCotInvoiceDialog());
+
+        JMenuItem miKhoiPhucCotInv = new JMenuItem("Khôi phục cột mặc định");
+        miKhoiPhucCotInv.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        miKhoiPhucCotInv.addActionListener(e -> {
+            visibleInvoiceColumns = new ArrayList<>(ChonCotHienThiDialog.DEFAULT_VISIBLE_INVOICE_COLUMNS);
+            rebuildInvoicesTableColumns();
+            populateInvoicesTable();
+        });
+
+        popupInvoices.add(miChonCotInv);
+        popupInvoices.add(miKhoiPhucCotInv);
+
+        tableInvoices.getTableHeader().addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() == 2) {
+                    openChonCotInvoiceDialog();
+                }
+            }
+            @Override
+            public void mousePressed(MouseEvent e) {
+                if (e.isPopupTrigger() || SwingUtilities.isRightMouseButton(e)) {
+                    popupInvoices.show(e.getComponent(), e.getX(), e.getY());
+                }
+            }
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                if (e.isPopupTrigger() || SwingUtilities.isRightMouseButton(e)) {
+                    popupInvoices.show(e.getComponent(), e.getX(), e.getY());
+                }
+            }
+        });
+
+        tableInvoices.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                if (e.isPopupTrigger() || SwingUtilities.isRightMouseButton(e)) {
+                    int r = tableInvoices.rowAtPoint(e.getPoint());
+                    if (r >= 0 && r < tableInvoices.getRowCount()) {
+                        tableInvoices.setRowSelectionInterval(r, r);
+                    }
+                    popupInvoices.show(e.getComponent(), e.getX(), e.getY());
+                }
+            }
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                if (e.isPopupTrigger() || SwingUtilities.isRightMouseButton(e)) {
+                    int r = tableInvoices.rowAtPoint(e.getPoint());
+                    if (r >= 0 && r < tableInvoices.getRowCount()) {
+                        tableInvoices.setRowSelectionInterval(r, r);
+                    }
+                    popupInvoices.show(e.getComponent(), e.getX(), e.getY());
+                }
+            }
+        });
 
         tableInvoices.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {
@@ -429,36 +461,90 @@ public class QuanLyBanHangPanel extends JPanel {
         tbLayHang.add(btnXoa);
         pnlLayHang.add(tbLayHang, BorderLayout.NORTH);
 
-        String[] headers = {"STT", "Tên mặt hàng", "Mã hàng", "Đơn giá", "ĐVT", "CK%", "Tiền giảm", "Thành tiền", "Ghi chú"};
-        layHangModel = new DefaultTableModel(headers, 0) {
-            @Override public boolean isCellEditable(int row, int col) { return false; }
-        };
-        tableLayHang = new JTable(layHangModel);
+
+
+        tableLayHang = new JTable();
         tableLayHang.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         tableLayHang.setRowHeight(22);
         tableLayHang.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 12));
         tableLayHang.getTableHeader().setBackground(new Color(230, 240, 252));
 
-        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
-        centerRenderer.setHorizontalAlignment(SwingConstants.CENTER);
-        DefaultTableCellRenderer rightRenderer = new DefaultTableCellRenderer();
-        rightRenderer.setHorizontalAlignment(SwingConstants.RIGHT);
+        tableTraHang = new JTable();
+        tableTraHang.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        tableTraHang.setRowHeight(22);
+        tableTraHang.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 12));
+        tableTraHang.getTableHeader().setBackground(new Color(230, 240, 252));
 
-        tableLayHang.getColumnModel().getColumn(0).setPreferredWidth(35);
-        tableLayHang.getColumnModel().getColumn(0).setCellRenderer(centerRenderer);
-        tableLayHang.getColumnModel().getColumn(1).setPreferredWidth(160);
-        tableLayHang.getColumnModel().getColumn(2).setPreferredWidth(80);
-        tableLayHang.getColumnModel().getColumn(3).setPreferredWidth(85);
-        tableLayHang.getColumnModel().getColumn(3).setCellRenderer(rightRenderer);
-        tableLayHang.getColumnModel().getColumn(4).setPreferredWidth(55);
-        tableLayHang.getColumnModel().getColumn(4).setCellRenderer(centerRenderer);
-        tableLayHang.getColumnModel().getColumn(5).setPreferredWidth(50);
-        tableLayHang.getColumnModel().getColumn(5).setCellRenderer(rightRenderer);
-        tableLayHang.getColumnModel().getColumn(6).setPreferredWidth(75);
-        tableLayHang.getColumnModel().getColumn(6).setCellRenderer(rightRenderer);
-        tableLayHang.getColumnModel().getColumn(7).setPreferredWidth(85);
-        tableLayHang.getColumnModel().getColumn(7).setCellRenderer(rightRenderer);
-        tableLayHang.getColumnModel().getColumn(8).setPreferredWidth(90);
+        rebuildDetailTableColumns();
+
+        // Popup context menu for detail tables
+        popupDetail = new JPopupMenu();
+        JMenuItem miChonCotDetail = new JMenuItem("Chọn cột hiển thị...", IconHelper.getIcon("table.png", 16, 16));
+        miChonCotDetail.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        miChonCotDetail.addActionListener(e -> openChonCotDetailDialog());
+
+        JMenuItem miKhoiPhucCotDetail = new JMenuItem("Khôi phục cột mặc định");
+        miKhoiPhucCotDetail.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        miKhoiPhucCotDetail.addActionListener(e -> {
+            visibleDetailColumns = new ArrayList<>(ChonCotHienThiDialog.DEFAULT_VISIBLE_DETAIL_COLUMNS);
+            rebuildDetailTableColumns();
+            refreshLayHangTable();
+            refreshTraHangTable();
+        });
+
+        popupDetail.add(miChonCotDetail);
+        popupDetail.add(miKhoiPhucCotDetail);
+
+        // Attach popup to both tables' headers and body
+        MouseAdapter detailHeaderPopup = new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() == 2) {
+                    openChonCotDetailDialog();
+                }
+            }
+            @Override
+            public void mousePressed(MouseEvent e) {
+                if (e.isPopupTrigger() || SwingUtilities.isRightMouseButton(e)) {
+                    popupDetail.show(e.getComponent(), e.getX(), e.getY());
+                }
+            }
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                if (e.isPopupTrigger() || SwingUtilities.isRightMouseButton(e)) {
+                    popupDetail.show(e.getComponent(), e.getX(), e.getY());
+                }
+            }
+        };
+        tableLayHang.getTableHeader().addMouseListener(detailHeaderPopup);
+        tableTraHang.getTableHeader().addMouseListener(detailHeaderPopup);
+
+        MouseAdapter detailBodyPopup = new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                if (e.isPopupTrigger() || SwingUtilities.isRightMouseButton(e)) {
+                    JTable src = (JTable) e.getSource();
+                    int r = src.rowAtPoint(e.getPoint());
+                    if (r >= 0 && r < src.getRowCount()) {
+                        src.setRowSelectionInterval(r, r);
+                    }
+                    popupDetail.show(e.getComponent(), e.getX(), e.getY());
+                }
+            }
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                if (e.isPopupTrigger() || SwingUtilities.isRightMouseButton(e)) {
+                    JTable src = (JTable) e.getSource();
+                    int r = src.rowAtPoint(e.getPoint());
+                    if (r >= 0 && r < src.getRowCount()) {
+                        src.setRowSelectionInterval(r, r);
+                    }
+                    popupDetail.show(e.getComponent(), e.getX(), e.getY());
+                }
+            }
+        };
+        tableLayHang.addMouseListener(detailBodyPopup);
+        tableTraHang.addMouseListener(detailBodyPopup);
 
         JScrollPane spLayHang = new JScrollPane(tableLayHang);
         pnlLayHang.add(spLayHang, BorderLayout.CENTER);
@@ -467,31 +553,6 @@ public class QuanLyBanHangPanel extends JPanel {
         // Tab 2: KHÁCH TRẢ HÀNG
         JPanel pnlTraHang = new JPanel(new BorderLayout());
         pnlTraHang.setBackground(Color.WHITE);
-
-        traHangModel = new DefaultTableModel(headers, 0) {
-            @Override public boolean isCellEditable(int row, int col) { return false; }
-        };
-        tableTraHang = new JTable(traHangModel);
-        tableTraHang.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        tableTraHang.setRowHeight(22);
-        tableTraHang.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 12));
-        tableTraHang.getTableHeader().setBackground(new Color(230, 240, 252));
-
-        tableTraHang.getColumnModel().getColumn(0).setPreferredWidth(35);
-        tableTraHang.getColumnModel().getColumn(0).setCellRenderer(centerRenderer);
-        tableTraHang.getColumnModel().getColumn(1).setPreferredWidth(160);
-        tableTraHang.getColumnModel().getColumn(2).setPreferredWidth(80);
-        tableTraHang.getColumnModel().getColumn(3).setPreferredWidth(85);
-        tableTraHang.getColumnModel().getColumn(3).setCellRenderer(rightRenderer);
-        tableTraHang.getColumnModel().getColumn(4).setPreferredWidth(55);
-        tableTraHang.getColumnModel().getColumn(4).setCellRenderer(centerRenderer);
-        tableTraHang.getColumnModel().getColumn(5).setPreferredWidth(50);
-        tableTraHang.getColumnModel().getColumn(5).setCellRenderer(rightRenderer);
-        tableTraHang.getColumnModel().getColumn(6).setPreferredWidth(75);
-        tableTraHang.getColumnModel().getColumn(6).setCellRenderer(rightRenderer);
-        tableTraHang.getColumnModel().getColumn(7).setPreferredWidth(85);
-        tableTraHang.getColumnModel().getColumn(7).setCellRenderer(rightRenderer);
-        tableTraHang.getColumnModel().getColumn(8).setPreferredWidth(90);
 
         JScrollPane spTraHang = new JScrollPane(tableTraHang);
         pnlTraHang.add(spTraHang, BorderLayout.CENTER);
@@ -911,25 +972,86 @@ public class QuanLyBanHangPanel extends JPanel {
         invoicesModel.setRowCount(0);
         int stt = 1;
         for (DonHang dh : filteredInvoicesList) {
-            String ngayStr = dh.getNgay() != null ? DateUtil.formatDate(dh.getNgay()) : "";
-            String gioStr = dh.getGioThanhToan() != null ? dh.getGioThanhToan() : "11:30";
-
-            invoicesModel.addRow(new Object[]{
-                    String.valueOf(stt++),
-                    dh.getName() != null ? dh.getName() : "",
-                    ngayStr,
-                    dh.getTenKhach() != null ? dh.getTenKhach() : "",
-                    CurrencyUtil.format(dh.getTienHang()),
-                    CurrencyUtil.format(dh.getTienGiamGia()),
-                    CurrencyUtil.format(dh.getTienDoiTra()),
-                    CurrencyUtil.format(dh.getTongCong()),
-                    gioStr,
-                    dh.getNguoiThanhToan() != null ? dh.getNguoiThanhToan() : "Administrator",
-                    dh.getGhiChu() != null ? dh.getGhiChu() : "",
-                    dh.getMaKhach() != null ? dh.getMaKhach() : "",
-                    dh.getDiaChiKhach() != null ? dh.getDiaChiKhach() : "",
-                    dh.getDienThoaiKhach() != null ? dh.getDienThoaiKhach() : ""
-            });
+            Object[] row = new Object[visibleInvoiceColumns.size() + 1];
+            row[0] = String.valueOf(stt++);
+            for (int i = 0; i < visibleInvoiceColumns.size(); i++) {
+                String col = visibleInvoiceColumns.get(i);
+                switch (col) {
+                    case "Số phiếu":
+                        row[i + 1] = dh.getName() != null ? dh.getName() : "";
+                        break;
+                    case "Ngày":
+                        row[i + 1] = dh.getNgay() != null ? DateUtil.formatDate(dh.getNgay()) : "";
+                        break;
+                    case "Khách hàng":
+                        row[i + 1] = dh.getTenKhach() != null ? dh.getTenKhach() : "";
+                        break;
+                    case "Tiền hàng":
+                        row[i + 1] = CurrencyUtil.format(dh.getTienHang());
+                        break;
+                    case "Giảm giá":
+                        row[i + 1] = CurrencyUtil.format(dh.getTienGiamGia());
+                        break;
+                    case "Đổi trả":
+                        row[i + 1] = CurrencyUtil.format(dh.getTienDoiTra());
+                        break;
+                    case "Tổng cộng":
+                        row[i + 1] = CurrencyUtil.format(dh.getTongCong());
+                        break;
+                    case "Giờ thanh toán":
+                        row[i + 1] = dh.getGioThanhToan() != null ? dh.getGioThanhToan() : "";
+                        break;
+                    case "Thanh toán bởi":
+                        row[i + 1] = dh.getNguoiThanhToan() != null ? dh.getNguoiThanhToan() : "Administrator";
+                        break;
+                    case "Ghi chú":
+                        row[i + 1] = dh.getGhiChu() != null ? dh.getGhiChu() : "";
+                        break;
+                    case "Mã khách":
+                        row[i + 1] = dh.getMaKhach() != null ? dh.getMaKhach() : "";
+                        break;
+                    case "Địa chỉ":
+                        row[i + 1] = dh.getDiaChiKhach() != null ? dh.getDiaChiKhach() : "";
+                        break;
+                    case "Điện thoại":
+                        row[i + 1] = dh.getDienThoaiKhach() != null ? dh.getDienThoaiKhach() : "";
+                        break;
+                    case "% giảm giá":
+                        row[i + 1] = dh.getTiLeGiamGia() > 0 ? String.format("%.0f", dh.getTiLeGiamGia()) : "0";
+                        break;
+                    case "Diễn giải":
+                        row[i + 1] = dh.getDienGiai() != null ? dh.getDienGiai() : "";
+                        break;
+                    case "Khách đưa":
+                        row[i + 1] = CurrencyUtil.format(dh.getTienMat() + dh.getTienChuyenKhoan() + dh.getTienTheATM());
+                        break;
+                    case "Trả lại":
+                        row[i + 1] = CurrencyUtil.format(dh.getConLai());
+                        break;
+                    case "Giao hàng":
+                        row[i + 1] = dh.getDiaChiGiaoHang() != null ? dh.getDiaChiGiaoHang() : "";
+                        break;
+                    case "Thẻ tt":
+                        row[i + 1] = CurrencyUtil.format(dh.getTienTheATM());
+                        break;
+                    case "Trừ tích lũy":
+                        row[i + 1] = CurrencyUtil.format(dh.getTienTruTichLuy());
+                        break;
+                    case "Tiền mặt":
+                        row[i + 1] = CurrencyUtil.format(dh.getTienMat());
+                        break;
+                    case "Chuyển khoản":
+                        row[i + 1] = CurrencyUtil.format(dh.getTienChuyenKhoan());
+                        break;
+                    case "Số phiếu đặt hàng":
+                        row[i + 1] = "";
+                        break;
+                    default:
+                        row[i + 1] = "";
+                        break;
+                }
+            }
+            invoicesModel.addRow(row);
         }
 
         if (tableInvoices.getRowCount() > 0) {
@@ -1028,17 +1150,7 @@ public class QuanLyBanHangPanel extends JPanel {
         layHangModel.setRowCount(0);
         int stt = 1;
         for (DonHangChiTiet ct : currentLayHangList) {
-            layHangModel.addRow(new Object[]{
-                    String.valueOf(stt++),
-                    ct.getTenHang() != null ? ct.getTenHang() : "",
-                    ct.getMaHang() != null ? ct.getMaHang() : "",
-                    CurrencyUtil.format(ct.getDonGia()),
-                    ct.getTenDonViTinh() != null ? ct.getTenDonViTinh() : "",
-                    ct.getTiLeGiamGia() > 0 ? String.format("%.0f", ct.getTiLeGiamGia()) : "0",
-                    CurrencyUtil.format(ct.getTienGiam()),
-                    CurrencyUtil.format(ct.getThanhTien()),
-                    ct.getGhiChu() != null ? ct.getGhiChu() : ""
-            });
+            layHangModel.addRow(buildDetailRow(ct, stt++));
         }
     }
 
@@ -1046,18 +1158,55 @@ public class QuanLyBanHangPanel extends JPanel {
         traHangModel.setRowCount(0);
         int stt = 1;
         for (DonHangChiTiet ct : currentTraHangList) {
-            traHangModel.addRow(new Object[]{
-                    String.valueOf(stt++),
-                    ct.getTenHang() != null ? ct.getTenHang() : "",
-                    ct.getMaHang() != null ? ct.getMaHang() : "",
-                    CurrencyUtil.format(ct.getDonGia()),
-                    ct.getTenDonViTinh() != null ? ct.getTenDonViTinh() : "",
-                    ct.getTiLeGiamGia() > 0 ? String.format("%.0f", ct.getTiLeGiamGia()) : "0",
-                    CurrencyUtil.format(ct.getTienGiam()),
-                    CurrencyUtil.format(ct.getThanhTien()),
-                    ct.getGhiChu() != null ? ct.getGhiChu() : ""
-            });
+            traHangModel.addRow(buildDetailRow(ct, stt++));
         }
+    }
+
+    private Object[] buildDetailRow(DonHangChiTiet ct, int stt) {
+        Object[] row = new Object[visibleDetailColumns.size() + 1];
+        row[0] = String.valueOf(stt);
+        for (int i = 0; i < visibleDetailColumns.size(); i++) {
+            String col = visibleDetailColumns.get(i);
+            switch (col) {
+                case "Tên mặt hàng":
+                    row[i + 1] = ct.getTenHang() != null ? ct.getTenHang() : "";
+                    break;
+                case "Mã hàng":
+                    row[i + 1] = ct.getMaHang() != null ? ct.getMaHang() : "";
+                    break;
+                case "Đơn giá":
+                    row[i + 1] = CurrencyUtil.format(ct.getDonGia());
+                    break;
+                case "ĐVT":
+                    row[i + 1] = ct.getTenDonViTinh() != null ? ct.getTenDonViTinh() : "";
+                    break;
+                case "CK%":
+                    row[i + 1] = ct.getTiLeGiamGia() > 0 ? String.format("%.0f", ct.getTiLeGiamGia()) : "0";
+                    break;
+                case "Tiền giảm":
+                    row[i + 1] = CurrencyUtil.format(ct.getTienGiam());
+                    break;
+                case "Ghi chú":
+                    row[i + 1] = ct.getGhiChu() != null ? ct.getGhiChu() : "";
+                    break;
+                case "S.lượng":
+                    row[i + 1] = String.format("%.0f", ct.getSoLuong());
+                    break;
+                case "Thành tiền":
+                    row[i + 1] = CurrencyUtil.format(ct.getThanhTien());
+                    break;
+                case "Hạn sử dụng":
+                    row[i + 1] = ct.getHanSuDung() != null ? ct.getHanSuDung() : "";
+                    break;
+                case "Bảo hành":
+                    row[i + 1] = ct.getBaoHanh() != null ? ct.getBaoHanh() : "";
+                    break;
+                default:
+                    row[i + 1] = "";
+                    break;
+            }
+        }
+        return row;
     }
 
     private void clearRightDetails() {
@@ -1076,6 +1225,192 @@ public class QuanLyBanHangPanel extends JPanel {
         txtTongCong.setText("0");
         txtTienThanhToan.setText("0");
         txtTienMat.setText("0");
+    }
+
+    private void rebuildInvoicesTableColumns() {
+        java.util.Vector<String> columnIdentifiers = new java.util.Vector<>();
+        columnIdentifiers.add("STT");
+        columnIdentifiers.addAll(visibleInvoiceColumns);
+
+        invoicesModel = new DefaultTableModel(columnIdentifiers, 0) {
+            @Override
+            public boolean isCellEditable(int row, int col) { return false; }
+        };
+        tableInvoices.setModel(invoicesModel);
+
+        DefaultTableCellRenderer rightRenderer = new DefaultTableCellRenderer();
+        rightRenderer.setHorizontalAlignment(SwingConstants.RIGHT);
+        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
+        centerRenderer.setHorizontalAlignment(SwingConstants.CENTER);
+
+        if (tableInvoices.getColumnModel().getColumnCount() > 0) {
+            tableInvoices.getColumnModel().getColumn(0).setPreferredWidth(35);
+            tableInvoices.getColumnModel().getColumn(0).setCellRenderer(centerRenderer);
+        }
+
+        for (int i = 0; i < visibleInvoiceColumns.size(); i++) {
+            String colName = visibleInvoiceColumns.get(i);
+            TableColumn tc = tableInvoices.getColumnModel().getColumn(i + 1);
+            switch (colName) {
+                case "Số phiếu":
+                    tc.setPreferredWidth(95);
+                    break;
+                case "Ngày":
+                    tc.setPreferredWidth(85);
+                    tc.setCellRenderer(centerRenderer);
+                    break;
+                case "Khách hàng":
+                    tc.setPreferredWidth(120);
+                    break;
+                case "Tiền hàng":
+                case "Giảm giá":
+                case "Đổi trả":
+                case "Tổng cộng":
+                case "Khách đưa":
+                case "Trả lại":
+                case "Thẻ tt":
+                case "Trừ tích lũy":
+                case "Tiền mặt":
+                case "Chuyển khoản":
+                    tc.setPreferredWidth(85);
+                    tc.setCellRenderer(rightRenderer);
+                    break;
+                case "Giờ thanh toán":
+                    tc.setPreferredWidth(80);
+                    tc.setCellRenderer(centerRenderer);
+                    break;
+                case "Thanh toán bởi":
+                    tc.setPreferredWidth(100);
+                    break;
+                case "Ghi chú":
+                case "Diễn giải":
+                case "Giao hàng":
+                    tc.setPreferredWidth(100);
+                    break;
+                case "Mã khách":
+                case "% giảm giá":
+                case "Số phiếu đặt hàng":
+                    tc.setPreferredWidth(90);
+                    break;
+                case "Địa chỉ":
+                    tc.setPreferredWidth(120);
+                    break;
+                case "Điện thoại":
+                    tc.setPreferredWidth(95);
+                    break;
+                default:
+                    tc.setPreferredWidth(80);
+                    break;
+            }
+        }
+    }
+
+    private void rebuildDetailTableColumns() {
+        java.util.Vector<String> columnIdentifiers = new java.util.Vector<>();
+        columnIdentifiers.add("STT");
+        columnIdentifiers.addAll(visibleDetailColumns);
+
+        layHangModel = new DefaultTableModel(columnIdentifiers, 0) {
+            @Override
+            public boolean isCellEditable(int row, int col) { return false; }
+        };
+        tableLayHang.setModel(layHangModel);
+
+        traHangModel = new DefaultTableModel(columnIdentifiers, 0) {
+            @Override
+            public boolean isCellEditable(int row, int col) { return false; }
+        };
+        tableTraHang.setModel(traHangModel);
+
+        DefaultTableCellRenderer rightRenderer = new DefaultTableCellRenderer();
+        rightRenderer.setHorizontalAlignment(SwingConstants.RIGHT);
+        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
+        centerRenderer.setHorizontalAlignment(SwingConstants.CENTER);
+
+        JTable[] tables = {tableLayHang, tableTraHang};
+        for (JTable tbl : tables) {
+            if (tbl.getColumnModel().getColumnCount() > 0) {
+                tbl.getColumnModel().getColumn(0).setPreferredWidth(35);
+                tbl.getColumnModel().getColumn(0).setCellRenderer(centerRenderer);
+            }
+            for (int i = 0; i < visibleDetailColumns.size(); i++) {
+                String colName = visibleDetailColumns.get(i);
+                TableColumn tc = tbl.getColumnModel().getColumn(i + 1);
+                switch (colName) {
+                    case "Tên mặt hàng":
+                        tc.setPreferredWidth(160);
+                        break;
+                    case "Mã hàng":
+                        tc.setPreferredWidth(80);
+                        break;
+                    case "Đơn giá":
+                    case "Tiền giảm":
+                    case "Thành tiền":
+                        tc.setPreferredWidth(85);
+                        tc.setCellRenderer(rightRenderer);
+                        break;
+                    case "ĐVT":
+                        tc.setPreferredWidth(55);
+                        tc.setCellRenderer(centerRenderer);
+                        break;
+                    case "CK%":
+                        tc.setPreferredWidth(50);
+                        tc.setCellRenderer(rightRenderer);
+                        break;
+                    case "S.lượng":
+                        tc.setPreferredWidth(55);
+                        tc.setCellRenderer(rightRenderer);
+                        break;
+                    case "Ghi chú":
+                        tc.setPreferredWidth(90);
+                        break;
+                    case "Hạn sử dụng":
+                        tc.setPreferredWidth(80);
+                        tc.setCellRenderer(centerRenderer);
+                        break;
+                    case "Bảo hành":
+                        tc.setPreferredWidth(65);
+                        tc.setCellRenderer(centerRenderer);
+                        break;
+                    default:
+                        tc.setPreferredWidth(70);
+                        break;
+                }
+            }
+        }
+    }
+
+    private void openChonCotInvoiceDialog() {
+        Window parentWin = SwingUtilities.getWindowAncestor(this);
+        ChonCotHienThiDialog dlg = new ChonCotHienThiDialog(
+                parentWin,
+                visibleInvoiceColumns,
+                ChonCotHienThiDialog.ALL_POSSIBLE_INVOICE_COLUMNS,
+                ChonCotHienThiDialog.DEFAULT_VISIBLE_INVOICE_COLUMNS
+        );
+        dlg.setVisible(true);
+        if (dlg.isConfirmed()) {
+            visibleInvoiceColumns = dlg.getResultVisibleColumns();
+            rebuildInvoicesTableColumns();
+            populateInvoicesTable();
+        }
+    }
+
+    private void openChonCotDetailDialog() {
+        Window parentWin = SwingUtilities.getWindowAncestor(this);
+        ChonCotHienThiDialog dlg = new ChonCotHienThiDialog(
+                parentWin,
+                visibleDetailColumns,
+                ChonCotHienThiDialog.ALL_POSSIBLE_DETAIL_COLUMNS,
+                ChonCotHienThiDialog.DEFAULT_VISIBLE_DETAIL_COLUMNS
+        );
+        dlg.setVisible(true);
+        if (dlg.isConfirmed()) {
+            visibleDetailColumns = dlg.getResultVisibleColumns();
+            rebuildDetailTableColumns();
+            refreshLayHangTable();
+            refreshTraHangTable();
+        }
     }
 
     private void onOpenDanhSachBillHuy() {
