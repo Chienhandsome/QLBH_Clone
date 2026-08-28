@@ -904,7 +904,7 @@ public class HoaDonBanHangPanel extends JPanel {
         }
     }
 
-    private void refreshLayHangTable() {
+    private void refreshLayHangTable(int selectRow) {
         layHangModel.setRowCount(0);
         int stt = 1;
         for (DonHangChiTiet ct : currentLayHangList) {
@@ -921,9 +921,17 @@ public class HoaDonBanHangPanel extends JPanel {
                     ct.getSoLuong() == (long) ct.getSoLuong() ? String.format("%d", (long) ct.getSoLuong()) : String.valueOf(ct.getSoLuong())
             });
         }
+        if (selectRow >= 0 && selectRow < tableLayHang.getRowCount()) {
+            tableLayHang.setRowSelectionInterval(selectRow, selectRow);
+        }
     }
 
-    private void refreshTraHangTable() {
+    private void refreshLayHangTable() {
+        int curSel = tableLayHang != null ? tableLayHang.getSelectedRow() : -1;
+        refreshLayHangTable(curSel);
+    }
+
+    private void refreshTraHangTable(int selectRow) {
         traHangModel.setRowCount(0);
         int stt = 1;
         for (DonHangChiTiet ct : currentTraHangList) {
@@ -939,6 +947,14 @@ public class HoaDonBanHangPanel extends JPanel {
                     ct.getGhiChu() != null ? ct.getGhiChu() : ""
             });
         }
+        if (selectRow >= 0 && selectRow < tableTraHang.getRowCount()) {
+            tableTraHang.setRowSelectionInterval(selectRow, selectRow);
+        }
+    }
+
+    private void refreshTraHangTable() {
+        int curSel = tableTraHang != null ? tableTraHang.getSelectedRow() : -1;
+        refreshTraHangTable(curSel);
     }
 
     private void recalculateFinancials() {
@@ -1031,14 +1047,16 @@ public class HoaDonBanHangPanel extends JPanel {
             int row = tableLayHang.getSelectedRow();
             if (row >= 0 && row < currentLayHangList.size()) {
                 currentLayHangList.remove(row);
-                refreshLayHangTable();
+                int nextRow = Math.min(row, currentLayHangList.size() - 1);
+                refreshLayHangTable(nextRow);
                 recalculateFinancials();
             }
         } else {
             int row = tableTraHang.getSelectedRow();
             if (row >= 0 && row < currentTraHangList.size()) {
                 currentTraHangList.remove(row);
-                refreshTraHangTable();
+                int nextRow = Math.min(row, currentTraHangList.size() - 1);
+                refreshTraHangTable(nextRow);
                 recalculateFinancials();
             }
         }
@@ -1048,13 +1066,41 @@ public class HoaDonBanHangPanel extends JPanel {
         int selTab = tabbedPaneDetails.getSelectedIndex();
         if (selTab == 0) {
             int row = tableLayHang.getSelectedRow();
+            if (row < 0 && tableLayHang.getRowCount() > 0) {
+                row = tableLayHang.getRowCount() - 1;
+            }
             if (row >= 0 && row < currentLayHangList.size()) {
                 DonHangChiTiet ct = currentLayHangList.get(row);
                 double newQty = ct.getSoLuong() + delta;
                 if (newQty > 0) {
                     ct.setSoLuong(newQty);
                     ct.tinhThanhTien();
-                    refreshLayHangTable();
+                    refreshLayHangTable(row);
+                    recalculateFinancials();
+                } else if (newQty == 0) {
+                    currentLayHangList.remove(row);
+                    int nextRow = Math.min(row, currentLayHangList.size() - 1);
+                    refreshLayHangTable(nextRow);
+                    recalculateFinancials();
+                }
+            }
+        } else {
+            int row = tableTraHang.getSelectedRow();
+            if (row < 0 && tableTraHang.getRowCount() > 0) {
+                row = tableTraHang.getRowCount() - 1;
+            }
+            if (row >= 0 && row < currentTraHangList.size()) {
+                DonHangChiTiet ct = currentTraHangList.get(row);
+                double newQty = ct.getSoLuong() + delta;
+                if (newQty > 0) {
+                    ct.setSoLuong(newQty);
+                    ct.tinhThanhTien();
+                    refreshTraHangTable(row);
+                    recalculateFinancials();
+                } else if (newQty == 0) {
+                    currentTraHangList.remove(row);
+                    int nextRow = Math.min(row, currentTraHangList.size() - 1);
+                    refreshTraHangTable(nextRow);
                     recalculateFinancials();
                 }
             }
@@ -1065,6 +1111,9 @@ public class HoaDonBanHangPanel extends JPanel {
         int selTab = tabbedPaneDetails.getSelectedIndex();
         if (selTab == 0) {
             int row = tableLayHang.getSelectedRow();
+            if (row < 0 && tableLayHang.getRowCount() > 0) {
+                row = tableLayHang.getRowCount() - 1;
+            }
             if (row >= 0 && row < currentLayHangList.size()) {
                 DonHangChiTiet ct = currentLayHangList.get(row);
                 MatHang m = matHangDAO.findById(ct.getMatHangId());
@@ -1080,7 +1129,31 @@ public class HoaDonBanHangPanel extends JPanel {
                     ct.setSoLuong(dlg.getResultSoLuong());
                     ct.setTiLeGiamGia(dlg.getResultChietKhau());
                     ct.tinhThanhTien();
-                    refreshLayHangTable();
+                    refreshLayHangTable(row);
+                    recalculateFinancials();
+                }
+            }
+        } else {
+            int row = tableTraHang.getSelectedRow();
+            if (row < 0 && tableTraHang.getRowCount() > 0) {
+                row = tableTraHang.getRowCount() - 1;
+            }
+            if (row >= 0 && row < currentTraHangList.size()) {
+                DonHangChiTiet ct = currentTraHangList.get(row);
+                MatHang m = matHangDAO.findById(ct.getMatHangId());
+                if (m == null) {
+                    m = new MatHang(ct.getMatHangId(), ct.getMaHang(), ct.getTenHang(), ct.getDonGia(), 0);
+                }
+
+                Window parentWin = SwingUtilities.getWindowAncestor(this);
+                NhapSoLuongDialog dlg = new NhapSoLuongDialog(parentWin, m, ct.getDonGia(), ct.getTenDonViTinh(), ct.getSoLuong(), ct.getTiLeGiamGia());
+                dlg.setVisible(true);
+
+                if (dlg.isConfirmed()) {
+                    ct.setSoLuong(dlg.getResultSoLuong());
+                    ct.setTiLeGiamGia(dlg.getResultChietKhau());
+                    ct.tinhThanhTien();
+                    refreshTraHangTable(row);
                     recalculateFinancials();
                 }
             }
