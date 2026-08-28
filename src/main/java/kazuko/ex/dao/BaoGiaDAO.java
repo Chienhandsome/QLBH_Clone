@@ -36,7 +36,7 @@ public class BaoGiaDAO extends BaseDAO {
         StringBuilder sql = new StringBuilder("SELECT ID, NAME, NGAY, DKHACHHANGID, TENKHACH, DIACHI, DIENTHOAI, EMAIL, " +
                 "NOTE, TIENHANG, TILEGIAMGIA, TIENGIAMGIA, TILETHUE, TIENTHUE, PHIVANCHUYEN, TONGCONG, LOAI, " +
                 "GIAMTHEOTIEN, STATUS, TIMECREATED, USERCREATEDID, TIMEMODIFIED, USERMODIFIEDID " +
-                "FROM TBAOGIA WHERE (STATUS >= 0 OR STATUS IS NULL) ");
+                "FROM TBAOGIA WHERE (STATUS >= 0 OR STATUS IS NULL) AND (LOAI = 0 OR LOAI IS NULL OR NAME LIKE 'BG%') ");
 
         if (tuNgay != null) {
             sql.append("AND NGAY >= ? ");

@@ -17,6 +17,7 @@ import kazuko.ex.ui.danhmuc.KhoHangDialog;
 import kazuko.ex.ui.danhmuc.LyDoThuChiDialog;
 import kazuko.ex.ui.danhmuc.NhanVienDialog;
 import kazuko.ex.ui.danhmuc.TaiKhoanNganHangDialog;
+import kazuko.ex.ui.dathang.KhachDatHangPanel;
 import kazuko.ex.ui.khohang.QuanLyXuatKhoPanel;
 import kazuko.ex.ui.system.CauHinhToanHeThongDialog;
 import kazuko.ex.ui.system.KhoiPhucCSDLDialog;
@@ -280,7 +281,7 @@ public class MainFrame extends JFrame {
 
         JMenuItem miDatHang = new JMenuItem("Khách đặt hàng");
         miDatHang.setIcon(IconHelper.getIcon("tsbLogedUser.Image.png", 16, 16));
-        miDatHang.addActionListener(e -> openTab("Khách đặt hàng", createPlaceholderPanel("Khách đặt hàng")));
+        miDatHang.addActionListener(e -> openTab("Khách đặt hàng", new KhachDatHangPanel()));
 
         mHoatDong.add(miBaoGia);
         mHoatDong.add(miDatHang);
@@ -707,6 +708,10 @@ public class MainFrame extends JFrame {
             case "BÁO GIÁ BÁN HÀNG":
             case "BÁO GIÁ KHÁCH HÀNG":
                 openTab("Báo giá bán hàng", new BaoGiaBanHangPanel());
+                break;
+            case "KHÁCH ĐẶT HÀNG":
+            case "ĐẶT HÀNG":
+                openTab("Khách đặt hàng", new KhachDatHangPanel());
                 break;
             case "DANH MỤC KHÁCH HÀNG":
                 openTab("Danh mục khách hàng", new DanhMucKhachHangPanel());
