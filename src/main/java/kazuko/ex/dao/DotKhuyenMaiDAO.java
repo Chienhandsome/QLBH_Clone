@@ -843,4 +843,36 @@ public class DotKhuyenMaiDAO extends BaseDAO {
             return false;
         }
     }
+
+    public double getActiveDiscountPercentForProduct(String matHangId, String matHangCode, String nhomHangId, java.util.Date atDate) {
+        if (atDate == null) atDate = new java.util.Date();
+        List<DotKhuyenMai> activePromotions = getAll();
+        if (activePromotions != null) {
+            for (DotKhuyenMai p : activePromotions) {
+                if (p.getStatus() < 0) continue;
+                if (p.getTuNgay() != null && atDate.before(p.getTuNgay())) continue;
+                if (p.getDenNgay() != null && atDate.after(new java.util.Date(p.getDenNgay().getTime() + 86399999L))) continue;
+
+                // 1. Kiểm tra giảm giá theo sản phẩm
+                Map<String, Double> prodDiscounts = getProductDiscounts(p.getId());
+                if (prodDiscounts != null && !prodDiscounts.isEmpty()) {
+                    if (matHangId != null && prodDiscounts.containsKey(matHangId)) {
+                        return prodDiscounts.get(matHangId);
+                    }
+                    if (matHangCode != null && prodDiscounts.containsKey(matHangCode)) {
+                        return prodDiscounts.get(matHangCode);
+                    }
+                }
+
+                // 2. Kiểm tra giảm giá theo nhóm mặt hàng
+                if (nhomHangId != null) {
+                    Map<String, Double> grpDiscounts = getGroupDiscounts(p.getId());
+                    if (grpDiscounts != null && !grpDiscounts.isEmpty() && grpDiscounts.containsKey(nhomHangId)) {
+                        return grpDiscounts.get(nhomHangId);
+                    }
+                }
+            }
+        }
+        return 0.0;
+    }
 }

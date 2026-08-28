@@ -1,27 +1,39 @@
 package kazuko.ex.model.banhang;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 public class DonHang {
     private String id;
-    private String name; // Số phiếu / Mã đơn hàng
+    private String name; // Số phiếu / Số HĐ (ví dụ: 26000001)
     private Date ngay;
     private String dienGiai;
-    private double tienHang;
-    private double tienGiamGia;
-    private double tiLeGiamGia;
-    private double tongCong;
-    private double tienThanhToan;
-    private double conLai;
+    private double tienHang = 0.0;
+    private double tienGiamGia = 0.0;
+    private double tiLeGiamGia = 0.0;
+    private double tienDoiTra = 0.0;
+    private double tongCong = 0.0;
+    private double tienThanhToan = 0.0;
+    private double conLai = 0.0;
     private String khoXuatId;
     private String khoNhapId;
     private String nhanVienXuatId;
+    private String tenNhanVien;
     private String khachHangId;
+    private String tenKhach;
+    private String diaChiGiaoHang;
     private String nhaCungCapId;
     private String cuaHangId;
     private String taiKhoanNganHangId;
-    private int loai; // 0: Bán hàng, 1: Nhập kho, 2: Xuất khác, 3: Chuyển kho...
-    private int status;
+    private String ghiChu;
+    private String loaiGia = "Giá bán";
+    private int loai = 0; // 0: Bán hàng, 1: Nhập kho, 2: Xuất khác, 3: Chuyển kho...
+    private int status = 1; // 1: Đã lưu, 0: Lưu tạm, -1: Xóa
+    private boolean isTam = false;
+
+    private List<DonHangChiTiet> chiTietLayHang = new ArrayList<>();
+    private List<DonHangChiTiet> chiTietTraHang = new ArrayList<>();
 
     public DonHang() {}
 
@@ -46,6 +58,9 @@ public class DonHang {
     public double getTiLeGiamGia() { return tiLeGiamGia; }
     public void setTiLeGiamGia(double tiLeGiamGia) { this.tiLeGiamGia = tiLeGiamGia; }
 
+    public double getTienDoiTra() { return tienDoiTra; }
+    public void setTienDoiTra(double tienDoiTra) { this.tienDoiTra = tienDoiTra; }
+
     public double getTongCong() { return tongCong; }
     public void setTongCong(double tongCong) { this.tongCong = tongCong; }
 
@@ -64,8 +79,17 @@ public class DonHang {
     public String getNhanVienXuatId() { return nhanVienXuatId; }
     public void setNhanVienXuatId(String nhanVienXuatId) { this.nhanVienXuatId = nhanVienXuatId; }
 
+    public String getTenNhanVien() { return tenNhanVien; }
+    public void setTenNhanVien(String tenNhanVien) { this.tenNhanVien = tenNhanVien; }
+
     public String getKhachHangId() { return khachHangId; }
     public void setKhachHangId(String khachHangId) { this.khachHangId = khachHangId; }
+
+    public String getTenKhach() { return tenKhach; }
+    public void setTenKhach(String tenKhach) { this.tenKhach = tenKhach; }
+
+    public String getDiaChiGiaoHang() { return diaChiGiaoHang; }
+    public void setDiaChiGiaoHang(String diaChiGiaoHang) { this.diaChiGiaoHang = diaChiGiaoHang; }
 
     public String getNhaCungCapId() { return nhaCungCapId; }
     public void setNhaCungCapId(String nhaCungCapId) { this.nhaCungCapId = nhaCungCapId; }
@@ -76,9 +100,24 @@ public class DonHang {
     public String getTaiKhoanNganHangId() { return taiKhoanNganHangId; }
     public void setTaiKhoanNganHangId(String taiKhoanNganHangId) { this.taiKhoanNganHangId = taiKhoanNganHangId; }
 
+    public String getGhiChu() { return ghiChu; }
+    public void setGhiChu(String ghiChu) { this.ghiChu = ghiChu; }
+
+    public String getLoaiGia() { return loaiGia; }
+    public void setLoaiGia(String loaiGia) { this.loaiGia = loaiGia; }
+
     public int getLoai() { return loai; }
     public void setLoai(int loai) { this.loai = loai; }
 
     public int getStatus() { return status; }
     public void setStatus(int status) { this.status = status; }
+
+    public boolean isTam() { return isTam; }
+    public void setTam(boolean tam) { isTam = tam; }
+
+    public List<DonHangChiTiet> getChiTietLayHang() { return chiTietLayHang; }
+    public void setChiTietLayHang(List<DonHangChiTiet> chiTietLayHang) { this.chiTietLayHang = chiTietLayHang; }
+
+    public List<DonHangChiTiet> getChiTietTraHang() { return chiTietTraHang; }
+    public void setChiTietTraHang(List<DonHangChiTiet> chiTietTraHang) { this.chiTietTraHang = chiTietTraHang; }
 }

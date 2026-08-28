@@ -18,6 +18,7 @@ import kazuko.ex.ui.danhmuc.LyDoThuChiDialog;
 import kazuko.ex.ui.danhmuc.NhanVienDialog;
 import kazuko.ex.ui.danhmuc.TaiKhoanNganHangDialog;
 import kazuko.ex.ui.dathang.KhachDatHangPanel;
+import kazuko.ex.ui.hoadon.HoaDonBanHangPanel;
 import kazuko.ex.ui.khohang.QuanLyXuatKhoPanel;
 import kazuko.ex.ui.system.CauHinhToanHeThongDialog;
 import kazuko.ex.ui.system.KhoiPhucCSDLDialog;
@@ -293,7 +294,7 @@ public class MainFrame extends JFrame {
         JMenuItem miHoaDon = new JMenuItem("Hóa đơn bán hàng");
         miHoaDon.setIcon(IconHelper.getIcon("btnNew.Image.png", 16, 16));
         miHoaDon.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_H, InputEvent.CTRL_DOWN_MASK));
-        miHoaDon.addActionListener(e -> openTab("Hóa đơn bán hàng", createPlaceholderPanel("Hóa đơn bán hàng")));
+        miHoaDon.addActionListener(e -> openTab("Hóa đơn bán hàng", new HoaDonBanHangPanel()));
 
         JMenuItem miQLBanHang = new JMenuItem("Quản lý bán hàng");
         miQLBanHang.setIcon(IconHelper.getIcon("btnOpen.Image.png", 16, 16));
@@ -589,7 +590,7 @@ public class MainFrame extends JFrame {
         JButton btnThoat = createToolButton("Thoát", "Cancelled.png");
         JButton btnMoNhanh = createToolButton("Mở nhanh", "tsbQuickOpen.Image.png");
 
-        btnHoaDon.addActionListener(e -> openTab("Hóa đơn bán hàng", createPlaceholderPanel("Hóa đơn bán hàng")));
+        btnHoaDon.addActionListener(e -> openTab("Hóa đơn bán hàng", new HoaDonBanHangPanel()));
         btnQLBanHang.addActionListener(e -> openTab("Quản lý bán hàng", createPlaceholderPanel("Quản lý bán hàng")));
         btnTKDoanhThu.addActionListener(e -> openTab("Thống kê doanh thu", createPlaceholderPanel("Thống kê doanh thu")));
         btnTKMatHang.addActionListener(e -> openTab("Danh mục mặt hàng", new DanhMucMatHangPanel()));
@@ -712,6 +713,11 @@ public class MainFrame extends JFrame {
             case "KHÁCH ĐẶT HÀNG":
             case "ĐẶT HÀNG":
                 openTab("Khách đặt hàng", new KhachDatHangPanel());
+                break;
+            case "HÓA ĐƠN BÁN HÀNG":
+            case "HÓA ĐƠN":
+            case "BÁN HÀNG":
+                openTab("Hóa đơn bán hàng", new HoaDonBanHangPanel());
                 break;
             case "DANH MỤC KHÁCH HÀNG":
                 openTab("Danh mục khách hàng", new DanhMucKhachHangPanel());

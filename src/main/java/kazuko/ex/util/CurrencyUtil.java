@@ -15,6 +15,15 @@ public class CurrencyUtil {
         return MONEY_FORMAT.format(amount);
     }
 
+    public static String format(double amount) {
+        return MONEY_FORMAT.format(amount);
+    }
+
+    public static String format(Double amount) {
+        if (amount == null) return "0";
+        return MONEY_FORMAT.format(amount);
+    }
+
     public static String formatQuantity(double quantity) {
         return QTY_FORMAT.format(quantity);
     }
