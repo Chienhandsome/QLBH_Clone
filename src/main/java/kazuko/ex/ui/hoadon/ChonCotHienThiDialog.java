@@ -23,10 +23,17 @@ public class ChonCotHienThiDialog extends JDialog {
     private boolean confirmed = false;
     private List<String> resultVisibleColumns = new ArrayList<>();
 
-    public static final List<String> DEFAULT_ALL_COLUMNS = Arrays.asList(
+    public static final List<String> ALL_POSSIBLE_COLUMNS = Arrays.asList(
             "Tên mặt hàng", "Mã hàng", "Đơn giá", "ĐVT", "CK%", "Tiền giảm",
             "Ghi chú", "Bảo hành", "S.lượng", "Thành tiền", "Kích thước", "Hạn sử dụng"
     );
+
+    public static final List<String> DEFAULT_VISIBLE_COLUMNS = Arrays.asList(
+            "Tên mặt hàng", "Mã hàng", "Đơn giá", "ĐVT", "CK%", "Tiền giảm",
+            "Ghi chú", "Bảo hành", "S.lượng"
+    );
+
+    public static final List<String> DEFAULT_ALL_COLUMNS = DEFAULT_VISIBLE_COLUMNS;
 
     public ChonCotHienThiDialog(Window parent, List<String> currentVisibleColumns) {
         super(parent, "Chọn cột hiển thị", ModalityType.APPLICATION_MODAL);
@@ -73,11 +80,11 @@ public class ChonCotHienThiDialog extends JDialog {
         modelHidden = new DefaultListModel<>();
         modelVisible = new DefaultListModel<>();
 
-        List<String> visibleList = (currentVisibleColumns != null && !currentVisibleColumns.isEmpty()) ? new ArrayList<>(currentVisibleColumns) : new ArrayList<>(DEFAULT_ALL_COLUMNS);
+        List<String> visibleList = (currentVisibleColumns != null && !currentVisibleColumns.isEmpty()) ? new ArrayList<>(currentVisibleColumns) : new ArrayList<>(DEFAULT_VISIBLE_COLUMNS);
         for (String col : visibleList) {
             modelVisible.addElement(col);
         }
-        for (String col : DEFAULT_ALL_COLUMNS) {
+        for (String col : ALL_POSSIBLE_COLUMNS) {
             if (!visibleList.contains(col)) {
                 modelHidden.addElement(col);
             }
@@ -207,8 +214,13 @@ public class ChonCotHienThiDialog extends JDialog {
     private void onRestore() {
         modelHidden.clear();
         modelVisible.clear();
-        for (String col : DEFAULT_ALL_COLUMNS) {
+        for (String col : DEFAULT_VISIBLE_COLUMNS) {
             modelVisible.addElement(col);
+        }
+        for (String col : ALL_POSSIBLE_COLUMNS) {
+            if (!DEFAULT_VISIBLE_COLUMNS.contains(col)) {
+                modelHidden.addElement(col);
+            }
         }
     }
 
