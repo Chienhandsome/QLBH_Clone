@@ -19,6 +19,7 @@ import kazuko.ex.ui.danhmuc.NhanVienDialog;
 import kazuko.ex.ui.danhmuc.TaiKhoanNganHangDialog;
 import kazuko.ex.ui.dathang.KhachDatHangPanel;
 import kazuko.ex.ui.hoadon.HoaDonBanHangPanel;
+import kazuko.ex.ui.hoadon.QuanLyBanHangPanel;
 import kazuko.ex.ui.khohang.QuanLyXuatKhoPanel;
 import kazuko.ex.ui.system.CauHinhToanHeThongDialog;
 import kazuko.ex.ui.system.KhoiPhucCSDLDialog;
@@ -299,7 +300,7 @@ public class MainFrame extends JFrame {
         JMenuItem miQLBanHang = new JMenuItem("Quản lý bán hàng");
         miQLBanHang.setIcon(IconHelper.getIcon("btnOpen.Image.png", 16, 16));
         miQLBanHang.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Q, InputEvent.CTRL_DOWN_MASK));
-        miQLBanHang.addActionListener(e -> openTab("Quản lý bán hàng", createPlaceholderPanel("Quản lý bán hàng")));
+        miQLBanHang.addActionListener(e -> openTab("Quản lý bán hàng", new QuanLyBanHangPanel()));
 
         mHoatDong.add(miHoaDon);
         mHoatDong.add(miQLBanHang);
@@ -591,7 +592,7 @@ public class MainFrame extends JFrame {
         JButton btnMoNhanh = createToolButton("Mở nhanh", "tsbQuickOpen.Image.png");
 
         btnHoaDon.addActionListener(e -> openTab("Hóa đơn bán hàng", new HoaDonBanHangPanel()));
-        btnQLBanHang.addActionListener(e -> openTab("Quản lý bán hàng", createPlaceholderPanel("Quản lý bán hàng")));
+        btnQLBanHang.addActionListener(e -> openTab("Quản lý bán hàng", new QuanLyBanHangPanel()));
         btnTKDoanhThu.addActionListener(e -> openTab("Thống kê doanh thu", createPlaceholderPanel("Thống kê doanh thu")));
         btnTKMatHang.addActionListener(e -> openTab("Danh mục mặt hàng", new DanhMucMatHangPanel()));
         btnChiTietHD.addActionListener(e -> openTab("Chi tiết hoạt động", createPlaceholderPanel("Chi tiết hoạt động")));

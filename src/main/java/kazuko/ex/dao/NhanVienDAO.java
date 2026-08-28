@@ -455,6 +455,10 @@ public class NhanVienDAO extends BaseDAO {
                 .collect(Collectors.toList());
     }
 
+    public List<NhanVien> getAll() {
+        return getAllActive();
+    }
+
     public List<NhanVien> getTrashItems() {
         List<NhanVien> dbList = tryLoadFromDb(-1);
         if (dbList != null) {

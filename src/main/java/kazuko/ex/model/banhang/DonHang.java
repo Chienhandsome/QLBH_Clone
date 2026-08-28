@@ -32,6 +32,26 @@ public class DonHang {
     private int status = 1; // 1: Đã lưu, 0: Lưu tạm, -1: Xóa
     private boolean isTam = false;
 
+    private double phiVanChuyen = 0.0;
+    private double tiLePhiVanChuyen = 0.0;
+    private double tienMat = 0.0;
+    private double tienChuyenKhoan = 0.0;
+    private double tienTheATM = 0.0;
+    private double tienVoucher = 0.0;
+    private String maVoucher;
+    private double tienTheTraTruoc = 0.0;
+    private String maTheTraTruoc;
+    private double tienTruTichLuy = 0.0;
+    private String gioThanhToan;
+    private String nguoiThanhToan;
+    private String maKhach;
+    private String diaChiKhach;
+    private String dienThoaiKhach;
+    private Date ngayHuy;
+    private String gioHuy;
+    private String thuNganHuy;
+    private String lyDoHuy;
+
     private List<DonHangChiTiet> chiTietLayHang = new ArrayList<>();
     private List<DonHangChiTiet> chiTietTraHang = new ArrayList<>();
 
@@ -120,4 +140,61 @@ public class DonHang {
 
     public List<DonHangChiTiet> getChiTietTraHang() { return chiTietTraHang; }
     public void setChiTietTraHang(List<DonHangChiTiet> chiTietTraHang) { this.chiTietTraHang = chiTietTraHang; }
+
+    public double getPhiVanChuyen() { return phiVanChuyen; }
+    public void setPhiVanChuyen(double phiVanChuyen) { this.phiVanChuyen = phiVanChuyen; }
+
+    public double getTiLePhiVanChuyen() { return tiLePhiVanChuyen; }
+    public void setTiLePhiVanChuyen(double tiLePhiVanChuyen) { this.tiLePhiVanChuyen = tiLePhiVanChuyen; }
+
+    public double getTienMat() { return tienMat; }
+    public void setTienMat(double tienMat) { this.tienMat = tienMat; }
+
+    public double getTienChuyenKhoan() { return tienChuyenKhoan; }
+    public void setTienChuyenKhoan(double tienChuyenKhoan) { this.tienChuyenKhoan = tienChuyenKhoan; }
+
+    public double getTienTheATM() { return tienTheATM; }
+    public void setTienTheATM(double tienTheATM) { this.tienTheATM = tienTheATM; }
+
+    public double getTienVoucher() { return tienVoucher; }
+    public void setTienVoucher(double tienVoucher) { this.tienVoucher = tienVoucher; }
+
+    public String getMaVoucher() { return maVoucher; }
+    public void setMaVoucher(String maVoucher) { this.maVoucher = maVoucher; }
+
+    public double getTienTheTraTruoc() { return tienTheTraTruoc; }
+    public void setTienTheTraTruoc(double tienTheTraTruoc) { this.tienTheTraTruoc = tienTheTraTruoc; }
+
+    public String getMaTheTraTruoc() { return maTheTraTruoc; }
+    public void setMaTheTraTruoc(String maTheTraTruoc) { this.maTheTraTruoc = maTheTraTruoc; }
+
+    public double getTienTruTichLuy() { return tienTruTichLuy; }
+    public void setTienTruTichLuy(double tienTruTichLuy) { this.tienTruTichLuy = tienTruTichLuy; }
+
+    public String getGioThanhToan() { return gioThanhToan; }
+    public void setGioThanhToan(String gioThanhToan) { this.gioThanhToan = gioThanhToan; }
+
+    public String getNguoiThanhToan() { return nguoiThanhToan; }
+    public void setNguoiThanhToan(String nguoiThanhToan) { this.nguoiThanhToan = nguoiThanhToan; }
+
+    public String getMaKhach() { return maKhach; }
+    public void setMaKhach(String maKhach) { this.maKhach = maKhach; }
+
+    public String getDiaChiKhach() { return diaChiKhach; }
+    public void setDiaChiKhach(String diaChiKhach) { this.diaChiKhach = diaChiKhach; }
+
+    public String getDienThoaiKhach() { return dienThoaiKhach; }
+    public void setDienThoaiKhach(String dienThoaiKhach) { this.dienThoaiKhach = dienThoaiKhach; }
+
+    public Date getNgayHuy() { return ngayHuy; }
+    public void setNgayHuy(Date ngayHuy) { this.ngayHuy = ngayHuy; }
+
+    public String getGioHuy() { return gioHuy; }
+    public void setGioHuy(String gioHuy) { this.gioHuy = gioHuy; }
+
+    public String getThuNganHuy() { return thuNganHuy; }
+    public void setThuNganHuy(String thuNganHuy) { this.thuNganHuy = thuNganHuy; }
+
+    public String getLyDoHuy() { return lyDoHuy; }
+    public void setLyDoHuy(String lyDoHuy) { this.lyDoHuy = lyDoHuy; }
 }

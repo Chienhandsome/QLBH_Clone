@@ -579,25 +579,16 @@ public class HoaDonBanHangPanel extends JPanel {
     }
 
     private JPanel createBottomActionButtons() {
-        JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 4));
+        JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
         panel.setOpaque(false);
 
-        btnTaoHoaDonMoi = new JButton("<html><center>Tạo hóa<br>đơn mới</center></html>", IconHelper.getIcon("btnNew.Image.png", 18, 18));
-        btnTaoHoaDonMoi.setFont(new Font("Segoe UI", Font.PLAIN, 11));
-        btnTaoHoaDonMoi.setPreferredSize(new Dimension(85, 52));
-        btnTaoHoaDonMoi.setBackground(Color.WHITE);
+        btnTaoHoaDonMoi = createStyledActionButton("Tạo hóa đơn<br>mới", "btnNew.Image.png", new Color(255, 255, 255), new Color(175, 195, 225), 130, 52);
         btnTaoHoaDonMoi.addActionListener(e -> resetForNewInvoice());
 
-        btnThanhToan = new JButton("<html><center>Thanh<br>toán (F12)</center></html>", IconHelper.getIcon("coins.png", 20, 20));
-        btnThanhToan.setFont(new Font("Segoe UI", Font.BOLD, 11));
-        btnThanhToan.setPreferredSize(new Dimension(95, 52));
-        btnThanhToan.setBackground(new Color(255, 250, 205));
+        btnThanhToan = createStyledActionButton("<b style='color:#901515;'>Thanh toán</b><br>(F12)", "coins.png", new Color(255, 250, 205), new Color(225, 200, 120), 135, 52);
         btnThanhToan.addActionListener(e -> onThanhToan());
 
-        btnThongKe = new JButton("<html><center>Thống kê<br>(F10)</center></html>", IconHelper.getIcon("Statistic16.png", 18, 18));
-        btnThongKe.setFont(new Font("Segoe UI", Font.PLAIN, 11));
-        btnThongKe.setPreferredSize(new Dimension(85, 52));
-        btnThongKe.setBackground(Color.WHITE);
+        btnThongKe = createStyledActionButton("Thống kê<br>(F10)", "Statistic16.png", new Color(255, 255, 255), new Color(175, 195, 225), 120, 52);
         btnThongKe.addActionListener(e -> onThongKe());
 
         panel.add(btnTaoHoaDonMoi);
@@ -605,6 +596,39 @@ public class HoaDonBanHangPanel extends JPanel {
         panel.add(btnThongKe);
 
         return panel;
+    }
+
+    private JButton createStyledActionButton(String htmlText, String iconName, Color bg, Color borderCol, int width, int height) {
+        JButton btn = new JButton("<html><center>" + htmlText + "</center></html>");
+        if (iconName != null) {
+            btn.setIcon(IconHelper.getIcon(iconName, 20, 20));
+        }
+        btn.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        btn.setPreferredSize(new Dimension(width, height));
+        btn.setBackground(bg);
+        btn.setFocusPainted(false);
+        btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        btn.setIconTextGap(6);
+        btn.setBorder(new CompoundBorder(
+                new LineBorder(borderCol, 1, true),
+                new EmptyBorder(3, 6, 3, 6)
+        ));
+
+        final Color normalBg = bg;
+        final Color hoverBg = (bg.equals(Color.WHITE)) ? new Color(235, 244, 255) : new Color(255, 244, 180);
+        btn.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                btn.setBackground(hoverBg);
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                btn.setBackground(normalBg);
+            }
+        });
+
+        return btn;
     }
 
     private JPanel createFinancialSummaryPanel() {
