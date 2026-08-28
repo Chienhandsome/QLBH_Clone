@@ -1363,56 +1363,42 @@ public class HoaDonBanHangPanel extends JPanel {
     }
 
     private void onOpenDatHang() {
-        List<KhachDatHang> listOrders = khachDatHangDAO.getDanhSachKhachDatHang(null, null, null, null, null);
-        if (listOrders.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Không có đơn đặt hàng nào trong hệ thống!", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
-            return;
-        }
+        Window parentWin = SwingUtilities.getWindowAncestor(this);
+        TimKiemKhachDatHangDialog dlg = new TimKiemKhachDatHangDialog(parentWin);
+        dlg.setVisible(true);
 
-        String[] options = new String[listOrders.size()];
-        for (int i = 0; i < listOrders.size(); i++) {
-            KhachDatHang o = listOrders.get(i);
-            options[i] = (o.getName() != null ? o.getName() : "") + " - " + (o.getTenKhach() != null ? o.getTenKhach() : "") + " (" + CurrencyUtil.format(o.getTongCong()) + ")";
-        }
-
-        String sel = (String) JOptionPane.showInputDialog(this, "Chọn phiếu đặt hàng để nạp vào hóa đơn:", "Mở đặt hàng", JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
-        if (sel != null) {
-            for (int i = 0; i < options.length; i++) {
-                if (options[i].equals(sel)) {
-                    KhachDatHang chosen = listOrders.get(i);
-                    if (chosen.getTenKhach() != null) {
-                        for (int k = 0; k < cbKhachHang.getItemCount(); k++) {
-                            KhachHang kh = cbKhachHang.getItemAt(k);
-                            if (kh != null && chosen.getTenKhach().equalsIgnoreCase(kh.getName())) {
-                                cbKhachHang.setSelectedIndex(k);
-                                break;
-                            }
-                        }
+        if (dlg.isConfirmed() && dlg.getSelectedOrder() != null) {
+            KhachDatHang chosen = dlg.getSelectedOrder();
+            if (chosen.getTenKhach() != null) {
+                for (int k = 0; k < cbKhachHang.getItemCount(); k++) {
+                    KhachHang kh = cbKhachHang.getItemAt(k);
+                    if (kh != null && (chosen.getTenKhach().equalsIgnoreCase(kh.getName()) || (chosen.getdKhachHangId() != null && chosen.getdKhachHangId().equals(kh.getId())))) {
+                        cbKhachHang.setSelectedIndex(k);
+                        break;
                     }
-                    txtDiaChiGiaoHang.setText(chosen.getDiaChi() != null ? chosen.getDiaChi() : "");
-
-                    List<KhachDatHangChiTiet> details = khachDatHangDAO.getChiTietByKhachDatHangId(chosen.getId(), chosen.getName());
-                    currentLayHangList.clear();
-                    for (KhachDatHangChiTiet ct : details) {
-                        DonHangChiTiet dhct = new DonHangChiTiet();
-                        dhct.setId(UUID.randomUUID().toString());
-                        dhct.setMatHangId(ct.getdMatHangId());
-                        dhct.setMaHang(ct.getMaHang());
-                        dhct.setTenHang(ct.getTenHang());
-                        dhct.setDonViTinhId(ct.getdDonViTinhId());
-                        dhct.setTenDonViTinh(ct.getTenDonViTinh());
-                        dhct.setDonGia(ct.getDonGia());
-                        dhct.setSoLuong(ct.getSoLuong());
-                        dhct.setTiLeGiamGia(ct.getTiLeGiamGia());
-                        dhct.setGhiChu(ct.getNote());
-                        dhct.tinhThanhTien();
-                        currentLayHangList.add(dhct);
-                    }
-                    refreshLayHangTable();
-                    recalculateFinancials();
-                    break;
                 }
             }
+            txtDiaChiGiaoHang.setText(chosen.getDiaChi() != null ? chosen.getDiaChi() : "");
+
+            List<KhachDatHangChiTiet> details = khachDatHangDAO.getChiTietByKhachDatHangId(chosen.getId(), chosen.getName());
+            currentLayHangList.clear();
+            for (KhachDatHangChiTiet ct : details) {
+                DonHangChiTiet dhct = new DonHangChiTiet();
+                dhct.setId(UUID.randomUUID().toString());
+                dhct.setMatHangId(ct.getdMatHangId());
+                dhct.setMaHang(ct.getMaHang());
+                dhct.setTenHang(ct.getTenHang());
+                dhct.setDonViTinhId(ct.getdDonViTinhId());
+                dhct.setTenDonViTinh(ct.getTenDonViTinh());
+                dhct.setDonGia(ct.getDonGia());
+                dhct.setSoLuong(ct.getSoLuong());
+                dhct.setTiLeGiamGia(ct.getTiLeGiamGia());
+                dhct.setGhiChu(ct.getNote());
+                dhct.tinhThanhTien();
+                currentLayHangList.add(dhct);
+            }
+            refreshLayHangTable();
+            recalculateFinancials();
         }
     }
 
@@ -1423,20 +1409,35 @@ public class HoaDonBanHangPanel extends JPanel {
         }
 
         buildCurrentHoaDonObject();
-        currentHoaDon.setTienThanhToan(currentHoaDon.getTongCong());
-        currentHoaDon.setStatus(1);
 
-        int confirm = JOptionPane.showConfirmDialog(this,
-                "Xác nhận thanh toán hóa đơn " + currentHoaDon.getName() + " với tổng số tiền: " + CurrencyUtil.format(currentHoaDon.getTongCong()) + " đ?",
-                "Thanh toán (F12)", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+        Window parentWin = SwingUtilities.getWindowAncestor(this);
+        XacNhanThanhToanDialog dlg = new XacNhanThanhToanDialog(parentWin, currentHoaDon);
+        dlg.setVisible(true);
 
-        if (confirm == JOptionPane.YES_OPTION) {
+        XacNhanThanhToanDialog.ResultAction action = dlg.getResultAction();
+
+        if (action == XacNhanThanhToanDialog.ResultAction.PRINT_TEMP) {
+            ChonMauInDialog printDlg = new ChonMauInDialog(parentWin, currentHoaDon);
+            printDlg.setVisible(true);
+            return;
+        }
+
+        if (action == XacNhanThanhToanDialog.ResultAction.CONFIRM_AND_PRINT || action == XacNhanThanhToanDialog.ResultAction.CONFIRM_NO_PRINT) {
+            double totalPaid = dlg.getTienKhachDua() + dlg.getTienATM();
+            currentHoaDon.setTienThanhToan(totalPaid);
+            currentHoaDon.setConLai(Math.max(0, currentHoaDon.getTongCong() - totalPaid));
+            currentHoaDon.setStatus(1);
+
             boolean ok = hoaDonDAO.insertHoaDon(currentHoaDon);
             if (ok) {
+                if (action == XacNhanThanhToanDialog.ResultAction.CONFIRM_AND_PRINT) {
+                    ChonMauInDialog printDlg = new ChonMauInDialog(parentWin, currentHoaDon);
+                    printDlg.setVisible(true);
+                }
                 JOptionPane.showMessageDialog(this, "Thanh toán thành công hóa đơn " + currentHoaDon.getName() + "!", "Thành công", JOptionPane.INFORMATION_MESSAGE);
                 resetForNewInvoice();
             } else {
-                JOptionPane.showMessageDialog(this, "Lỗi khi lưu hóa đơn!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Lỗi khi lưu hóa đơn vào cơ sở dữ liệu!", "Lỗi", JOptionPane.ERROR_MESSAGE);
             }
         }
     }
