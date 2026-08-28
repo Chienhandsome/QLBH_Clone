@@ -1106,22 +1106,14 @@ public class HoaDonBanHangPanel extends JPanel {
             return;
         }
 
-        String[] options = new String[tamList.size()];
-        for (int i = 0; i < tamList.size(); i++) {
-            DonHang d = tamList.get(i);
-            options[i] = (d.getName() != null ? d.getName() : "HĐ Tạm") + " - " + (d.getTenKhach() != null ? d.getTenKhach() : "Khách lẻ") + " (" + CurrencyUtil.format(d.getTongCong()) + ")";
-        }
+        Window parentWin = SwingUtilities.getWindowAncestor(this);
+        DanhSachHoaDonLuuTamDialog dlg = new DanhSachHoaDonLuuTamDialog(parentWin, tamList);
+        dlg.setVisible(true);
 
-        String sel = (String) JOptionPane.showInputDialog(this, "Chọn hóa đơn lưu tạm muốn mở lại:", "Mở lại hóa đơn tạm", JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
-        if (sel != null) {
-            for (int i = 0; i < options.length; i++) {
-                if (options[i].equals(sel)) {
-                    DonHang chosen = tamList.get(i);
-                    loadHoaDonIntoUI(chosen);
-                    hoaDonDAO.removeTam(chosen.getId());
-                    break;
-                }
-            }
+        if (dlg.isConfirmed() && dlg.getSelectedHoaDon() != null) {
+            DonHang chosen = dlg.getSelectedHoaDon();
+            loadHoaDonIntoUI(chosen);
+            hoaDonDAO.removeTam(chosen.getId());
         }
     }
 
