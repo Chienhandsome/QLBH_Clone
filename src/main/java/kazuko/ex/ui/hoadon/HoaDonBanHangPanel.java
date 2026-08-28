@@ -58,6 +58,8 @@ public class HoaDonBanHangPanel extends JPanel {
     private JTree treeNhomHang;
     private JTable tableCatalog;
     private DefaultTableModel catalogModel;
+    private List<String> visibleCatalogColumns = new ArrayList<>(ChonCotHienThiDialog.DEFAULT_VISIBLE_CATALOG_COLUMNS);
+    private JPopupMenu popupCatalog;
     private List<MatHang> allMatHangList = new ArrayList<>();
     private List<MatHang> filteredCatalogList = new ArrayList<>();
 
@@ -190,28 +192,52 @@ public class HoaDonBanHangPanel extends JPanel {
         splitLeft.setTopComponent(spTree);
 
         // Catalog Table
-        String[] headers = {"STT", "Mã hàng", "Tên hàng", "ĐVT", "ĐVT chẵn", "Giá bán", "Bảo hành"};
-        catalogModel = new DefaultTableModel(headers, 0) {
-            @Override public boolean isCellEditable(int row, int col) { return false; }
-        };
-        tableCatalog = new JTable(catalogModel);
+        tableCatalog = new JTable();
         tableCatalog.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         tableCatalog.setRowHeight(22);
         tableCatalog.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         tableCatalog.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 12));
         tableCatalog.getTableHeader().setBackground(new Color(235, 242, 252));
 
-        tableCatalog.getColumnModel().getColumn(0).setPreferredWidth(35);
-        tableCatalog.getColumnModel().getColumn(1).setPreferredWidth(65);
-        tableCatalog.getColumnModel().getColumn(2).setPreferredWidth(120);
-        tableCatalog.getColumnModel().getColumn(3).setPreferredWidth(45);
-        tableCatalog.getColumnModel().getColumn(4).setPreferredWidth(55);
-        tableCatalog.getColumnModel().getColumn(5).setPreferredWidth(65);
-        tableCatalog.getColumnModel().getColumn(6).setPreferredWidth(55);
+        rebuildCatalogTableColumns();
 
-        DefaultTableCellRenderer rightRenderer = new DefaultTableCellRenderer();
-        rightRenderer.setHorizontalAlignment(SwingConstants.RIGHT);
-        tableCatalog.getColumnModel().getColumn(5).setCellRenderer(rightRenderer);
+        // Popup context menu for catalog table columns
+        popupCatalog = new JPopupMenu();
+        JMenuItem miChonCotCatalog = new JMenuItem("Chọn cột hiển thị...", IconHelper.getIcon("table.png", 16, 16));
+        miChonCotCatalog.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        miChonCotCatalog.addActionListener(e -> openChonCotHienThiCatalogDialog());
+
+        JMenuItem miKhoiPhucCotCatalog = new JMenuItem("Khôi phục cột mặc định");
+        miKhoiPhucCotCatalog.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        miKhoiPhucCotCatalog.addActionListener(e -> {
+            visibleCatalogColumns = new ArrayList<>(ChonCotHienThiDialog.DEFAULT_VISIBLE_CATALOG_COLUMNS);
+            rebuildCatalogTableColumns();
+            refreshCatalogTable();
+        });
+
+        popupCatalog.add(miChonCotCatalog);
+        popupCatalog.add(miKhoiPhucCotCatalog);
+
+        tableCatalog.getTableHeader().addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() == 2) {
+                    openChonCotHienThiCatalogDialog();
+                }
+            }
+            @Override
+            public void mousePressed(MouseEvent e) {
+                if (e.isPopupTrigger() || SwingUtilities.isRightMouseButton(e)) {
+                    popupCatalog.show(e.getComponent(), e.getX(), e.getY());
+                }
+            }
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                if (e.isPopupTrigger() || SwingUtilities.isRightMouseButton(e)) {
+                    popupCatalog.show(e.getComponent(), e.getX(), e.getY());
+                }
+            }
+        });
 
         tableCatalog.addMouseListener(new MouseAdapter() {
             @Override
@@ -219,6 +245,28 @@ public class HoaDonBanHangPanel extends JPanel {
                 updateTonKhoDisplay();
                 if (e.getClickCount() == 2) {
                     onCatalogItemSelected();
+                }
+            }
+            @Override
+            public void mousePressed(MouseEvent e) {
+                if (e.isPopupTrigger() || SwingUtilities.isRightMouseButton(e)) {
+                    int r = tableCatalog.rowAtPoint(e.getPoint());
+                    if (r >= 0 && r < tableCatalog.getRowCount()) {
+                        tableCatalog.setRowSelectionInterval(r, r);
+                        updateTonKhoDisplay();
+                    }
+                    popupCatalog.show(e.getComponent(), e.getX(), e.getY());
+                }
+            }
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                if (e.isPopupTrigger() || SwingUtilities.isRightMouseButton(e)) {
+                    int r = tableCatalog.rowAtPoint(e.getPoint());
+                    if (r >= 0 && r < tableCatalog.getRowCount()) {
+                        tableCatalog.setRowSelectionInterval(r, r);
+                        updateTonKhoDisplay();
+                    }
+                    popupCatalog.show(e.getComponent(), e.getX(), e.getY());
                 }
             }
         });
@@ -822,20 +870,151 @@ public class HoaDonBanHangPanel extends JPanel {
         }
     }
 
+    private void rebuildCatalogTableColumns() {
+        Vector<String> columnIdentifiers = new Vector<>();
+        columnIdentifiers.add("STT");
+        columnIdentifiers.addAll(visibleCatalogColumns);
+
+        catalogModel = new DefaultTableModel(columnIdentifiers, 0) {
+            @Override
+            public boolean isCellEditable(int row, int col) {
+                return false;
+            }
+        };
+        tableCatalog.setModel(catalogModel);
+
+        DefaultTableCellRenderer rightRenderer = new DefaultTableCellRenderer();
+        rightRenderer.setHorizontalAlignment(SwingConstants.RIGHT);
+
+        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
+        centerRenderer.setHorizontalAlignment(SwingConstants.CENTER);
+
+        if (tableCatalog.getColumnModel().getColumnCount() > 0) {
+            tableCatalog.getColumnModel().getColumn(0).setPreferredWidth(35);
+            tableCatalog.getColumnModel().getColumn(0).setCellRenderer(centerRenderer);
+        }
+
+        for (int i = 0; i < visibleCatalogColumns.size(); i++) {
+            String colName = visibleCatalogColumns.get(i);
+            TableColumn tc = tableCatalog.getColumnModel().getColumn(i + 1);
+            switch (colName) {
+                case "Mã hàng":
+                    tc.setPreferredWidth(65);
+                    break;
+                case "Tên hàng":
+                case "Tên mặt hàng":
+                    tc.setPreferredWidth(130);
+                    break;
+                case "ĐVT":
+                    tc.setPreferredWidth(45);
+                    tc.setCellRenderer(centerRenderer);
+                    break;
+                case "ĐVT chẵn":
+                    tc.setPreferredWidth(55);
+                    tc.setCellRenderer(centerRenderer);
+                    break;
+                case "Giá bán":
+                case "Đơn giá 2":
+                case "giá blabla":
+                case "Giá bán chẵn":
+                case "Giá nhập":
+                case "Tồn kho":
+                    tc.setPreferredWidth(65);
+                    tc.setCellRenderer(rightRenderer);
+                    break;
+                case "Bảo hành":
+                case "Quy đổi":
+                    tc.setPreferredWidth(55);
+                    tc.setCellRenderer(centerRenderer);
+                    break;
+                case "Mã vạch":
+                    tc.setPreferredWidth(75);
+                    break;
+                case "Ghi chú":
+                    tc.setPreferredWidth(90);
+                    break;
+                default:
+                    tc.setPreferredWidth(65);
+                    break;
+            }
+        }
+    }
+
+    private void openChonCotHienThiCatalogDialog() {
+        Window parentWin = SwingUtilities.getWindowAncestor(this);
+        ChonCotHienThiDialog dlg = new ChonCotHienThiDialog(
+                parentWin,
+                visibleCatalogColumns,
+                ChonCotHienThiDialog.ALL_POSSIBLE_CATALOG_COLUMNS,
+                ChonCotHienThiDialog.DEFAULT_VISIBLE_CATALOG_COLUMNS
+        );
+        dlg.setVisible(true);
+
+        if (dlg.isConfirmed()) {
+            visibleCatalogColumns = dlg.getResultVisibleColumns();
+            rebuildCatalogTableColumns();
+            refreshCatalogTable();
+        }
+    }
+
     private void refreshCatalogTable() {
         catalogModel.setRowCount(0);
         int stt = 1;
         for (MatHang m : filteredCatalogList) {
-            double price = getPriceForMatHang(m);
-            catalogModel.addRow(new Object[]{
-                    String.format("%04d", stt++),
-                    m.getCode() != null ? m.getCode() : "",
-                    m.getName() != null ? m.getName() : "",
-                    m.getTenDonViTinh() != null ? m.getTenDonViTinh() : "",
-                    m.getTenDonViTinhChan() != null ? m.getTenDonViTinhChan() : "",
-                    CurrencyUtil.format(price),
-                    m.getBaoHanh() != null ? m.getBaoHanh() : ""
-            });
+            Object[] row = new Object[visibleCatalogColumns.size() + 1];
+            row[0] = String.format("%04d", stt++);
+            for (int i = 0; i < visibleCatalogColumns.size(); i++) {
+                String col = visibleCatalogColumns.get(i);
+                switch (col) {
+                    case "Mã hàng":
+                        row[i + 1] = m.getCode() != null ? m.getCode() : "";
+                        break;
+                    case "Tên hàng":
+                    case "Tên mặt hàng":
+                        row[i + 1] = m.getName() != null ? m.getName() : "";
+                        break;
+                    case "ĐVT":
+                        row[i + 1] = m.getTenDonViTinh() != null ? m.getTenDonViTinh() : "";
+                        break;
+                    case "ĐVT chẵn":
+                        row[i + 1] = m.getTenDonViTinhChan() != null ? m.getTenDonViTinhChan() : "";
+                        break;
+                    case "Giá bán":
+                        row[i + 1] = CurrencyUtil.format(getPriceForMatHang(m));
+                        break;
+                    case "Bảo hành":
+                        row[i + 1] = m.getBaoHanh() != null ? m.getBaoHanh() : "";
+                        break;
+                    case "Đơn giá 2":
+                        row[i + 1] = CurrencyUtil.format(m.getGiaBan2());
+                        break;
+                    case "giá blabla":
+                        row[i + 1] = CurrencyUtil.format(m.getGiaBan3());
+                        break;
+                    case "Quy đổi":
+                        row[i + 1] = m.getQuyDoi() > 0 ? String.format("%.0f", m.getQuyDoi()) : "";
+                        break;
+                    case "Giá bán chẵn":
+                        row[i + 1] = CurrencyUtil.format(m.getGiaBanChan());
+                        break;
+                    case "Mã vạch":
+                        row[i + 1] = m.getMaSanCo() != null ? m.getMaSanCo() : "";
+                        break;
+                    case "Tồn kho":
+                        row[i + 1] = "0";
+                        break;
+                    case "Giá nhập":
+                        row[i + 1] = CurrencyUtil.format(m.getGiaNhap());
+                        break;
+                    case "Ghi chú":
+                        row[i + 1] = m.getGhiChu() != null ? m.getGhiChu() : "";
+                        break;
+                    default:
+                        row[i + 1] = "";
+                        break;
+                }
+            }
+            catalogModel.addRow(row);
         }
     }
 

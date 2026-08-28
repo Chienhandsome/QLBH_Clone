@@ -35,8 +35,25 @@ public class ChonCotHienThiDialog extends JDialog {
 
     public static final List<String> DEFAULT_ALL_COLUMNS = DEFAULT_VISIBLE_COLUMNS;
 
+    public static final List<String> ALL_POSSIBLE_CATALOG_COLUMNS = Arrays.asList(
+            "Mã hàng", "Tên hàng", "ĐVT", "ĐVT chẵn", "Giá bán", "Bảo hành", "Đơn giá 2", "giá blabla", "Quy đổi", "Giá bán chẵn", "Mã vạch", "Tồn kho", "Giá nhập", "Ghi chú"
+    );
+
+    public static final List<String> DEFAULT_VISIBLE_CATALOG_COLUMNS = Arrays.asList(
+            "Mã hàng", "Tên hàng", "ĐVT", "ĐVT chẵn", "Giá bán", "Bảo hành", "Đơn giá 2", "giá blabla", "Quy đổi", "Giá bán chẵn"
+    );
+
+    private List<String> allPossibleCols = ALL_POSSIBLE_COLUMNS;
+    private List<String> defaultVisibleCols = DEFAULT_VISIBLE_COLUMNS;
+
     public ChonCotHienThiDialog(Window parent, List<String> currentVisibleColumns) {
+        this(parent, currentVisibleColumns, ALL_POSSIBLE_COLUMNS, DEFAULT_VISIBLE_COLUMNS);
+    }
+
+    public ChonCotHienThiDialog(Window parent, List<String> currentVisibleColumns, List<String> allPossibleCols, List<String> defaultVisibleCols) {
         super(parent, "Chọn cột hiển thị", ModalityType.APPLICATION_MODAL);
+        this.allPossibleCols = (allPossibleCols != null) ? allPossibleCols : ALL_POSSIBLE_COLUMNS;
+        this.defaultVisibleCols = (defaultVisibleCols != null) ? defaultVisibleCols : DEFAULT_VISIBLE_COLUMNS;
         initComponents(currentVisibleColumns);
     }
 
@@ -80,11 +97,11 @@ public class ChonCotHienThiDialog extends JDialog {
         modelHidden = new DefaultListModel<>();
         modelVisible = new DefaultListModel<>();
 
-        List<String> visibleList = (currentVisibleColumns != null && !currentVisibleColumns.isEmpty()) ? new ArrayList<>(currentVisibleColumns) : new ArrayList<>(DEFAULT_VISIBLE_COLUMNS);
+        List<String> visibleList = (currentVisibleColumns != null && !currentVisibleColumns.isEmpty()) ? new ArrayList<>(currentVisibleColumns) : new ArrayList<>(defaultVisibleCols);
         for (String col : visibleList) {
             modelVisible.addElement(col);
         }
-        for (String col : ALL_POSSIBLE_COLUMNS) {
+        for (String col : allPossibleCols) {
             if (!visibleList.contains(col)) {
                 modelHidden.addElement(col);
             }
@@ -214,11 +231,11 @@ public class ChonCotHienThiDialog extends JDialog {
     private void onRestore() {
         modelHidden.clear();
         modelVisible.clear();
-        for (String col : DEFAULT_VISIBLE_COLUMNS) {
+        for (String col : defaultVisibleCols) {
             modelVisible.addElement(col);
         }
-        for (String col : ALL_POSSIBLE_COLUMNS) {
-            if (!DEFAULT_VISIBLE_COLUMNS.contains(col)) {
+        for (String col : allPossibleCols) {
+            if (!defaultVisibleCols.contains(col)) {
                 modelHidden.addElement(col);
             }
         }

@@ -500,6 +500,8 @@ public class QuanLyBanHangPanel extends JPanel {
         return tabbedDetails;
     }
 
+    private String currentBottomTab = "TONG_CONG";
+
     private JPanel createBottomSummaryContainer() {
         JPanel pnl = new JPanel(new BorderLayout(0, 0));
         pnl.setOpaque(false);
@@ -507,11 +509,11 @@ public class QuanLyBanHangPanel extends JPanel {
 
         // Left Vertical Tabs: TỔNG CỘNG vs T.TOÁN
         JPanel pnlVerticalTabs = new JPanel(new GridLayout(2, 1, 0, 0));
-        pnlVerticalTabs.setPreferredSize(new Dimension(28, 140));
+        pnlVerticalTabs.setPreferredSize(new Dimension(34, 140));
         pnlVerticalTabs.setBackground(new Color(215, 230, 245));
 
-        btnTabTongCong = createVerticalTabButton("TỔNG CỘNG", true);
-        btnTabThanhToan = createVerticalTabButton("T.TOÁN", false);
+        btnTabTongCong = createVerticalTabButton("TỔNG CỘNG", "TONG_CONG");
+        btnTabThanhToan = createVerticalTabButton("T.TOÁN", "THANH_TOAN");
 
         btnTabTongCong.addActionListener(e -> switchBottomTab("TONG_CONG"));
         btnTabThanhToan.addActionListener(e -> switchBottomTab("THANH_TOAN"));
@@ -532,33 +534,67 @@ public class QuanLyBanHangPanel extends JPanel {
         return pnl;
     }
 
-    private JButton createVerticalTabButton(String text, boolean active) {
+    private JButton createVerticalTabButton(String text, String tabKey) {
         JButton btn = new JButton() {
+            private boolean hovered = false;
+            {
+                addMouseListener(new MouseAdapter() {
+                    @Override
+                    public void mouseEntered(MouseEvent e) {
+                        hovered = true;
+                        repaint();
+                    }
+
+                    @Override
+                    public void mouseExited(MouseEvent e) {
+                        hovered = false;
+                        repaint();
+                    }
+                });
+            }
+
             @Override
             protected void paintComponent(Graphics g) {
-                super.paintComponent(g);
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 
-                g2.setColor(active ? new Color(255, 250, 200) : new Color(225, 235, 248));
+                boolean isSelected = tabKey.equals(currentBottomTab);
+
+                // Background fill
+                if (isSelected) {
+                    g2.setColor(new Color(255, 252, 215)); // Light warm yellow for active tab
+                } else if (hovered) {
+                    g2.setColor(new Color(240, 246, 255));
+                } else {
+                    g2.setColor(new Color(220, 234, 250)); // Soft icy blue
+                }
                 g2.fillRect(0, 0, getWidth(), getHeight());
 
-                g2.setColor(new Color(175, 195, 225));
+                // Border
+                g2.setColor(new Color(175, 198, 228));
                 g2.drawRect(0, 0, getWidth() - 1, getHeight() - 1);
 
-                g2.setColor(new Color(20, 45, 90));
-                g2.setFont(new Font("Segoe UI", Font.BOLD, 10));
-
-                FontMetrics fm = g2.getFontMetrics();
-                int totalHeight = text.length() * 12;
-                int startY = (getHeight() - totalHeight) / 2 + fm.getAscent();
-
-                for (int i = 0; i < text.length(); i++) {
-                    String ch = String.valueOf(text.charAt(i));
-                    int chW = fm.stringWidth(ch);
-                    int chX = (getWidth() - chW) / 2;
-                    g2.drawString(ch, chX, startY + (i * 12));
+                // Active left accent indicator
+                if (isSelected) {
+                    g2.setColor(new Color(255, 140, 0));
+                    g2.fillRect(0, 0, 3, getHeight());
                 }
+
+                // Rotated text (-90 degrees) for smooth, natural Vietnamese rendering
+                g2.setFont(new Font("Segoe UI", Font.BOLD, 12));
+                FontMetrics fm = g2.getFontMetrics();
+                int textWidth = fm.stringWidth(text);
+                int textAscent = fm.getAscent();
+
+                g2.setColor(isSelected ? new Color(10, 45, 100) : new Color(60, 85, 120));
+
+                java.awt.geom.AffineTransform orig = g2.getTransform();
+                g2.translate(getWidth() / 2, getHeight() / 2);
+                g2.rotate(-Math.PI / 2);
+                g2.drawString(text, -textWidth / 2, (textAscent / 2) - 1);
+                g2.setTransform(orig);
+
                 g2.dispose();
             }
         };
@@ -569,6 +605,7 @@ public class QuanLyBanHangPanel extends JPanel {
     }
 
     private void switchBottomTab(String tabName) {
+        currentBottomTab = tabName;
         cardLayoutBottom.show(pnlCardBottom, tabName);
         btnTabTongCong.repaint();
         btnTabThanhToan.repaint();
