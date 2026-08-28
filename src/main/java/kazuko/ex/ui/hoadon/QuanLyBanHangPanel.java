@@ -10,6 +10,7 @@ import kazuko.ex.model.banhang.DonHangChiTiet;
 import kazuko.ex.model.danhmuc.CuaHang;
 import kazuko.ex.model.danhmuc.KhachHang;
 import kazuko.ex.model.danhmuc.KhoHang;
+import kazuko.ex.model.danhmuc.MatHang;
 import kazuko.ex.model.danhmuc.NhanVien;
 import kazuko.ex.ui.common.DatePickerField;
 import kazuko.ex.util.CurrencyUtil;
@@ -417,10 +418,12 @@ public class QuanLyBanHangPanel extends JPanel {
         JButton btnThem = new JButton("Thêm", IconHelper.getIcon("btnNew.Image.png", 14, 14));
         btnThem.setFont(new Font("Segoe UI", Font.PLAIN, 11));
         btnThem.setBackground(Color.WHITE);
+        btnThem.addActionListener(e -> onThemMatHang());
 
         JButton btnXoa = new JButton("Xóa", IconHelper.getIcon("Cancelled.png", 14, 14));
         btnXoa.setFont(new Font("Segoe UI", Font.PLAIN, 11));
         btnXoa.setBackground(Color.WHITE);
+        btnXoa.addActionListener(e -> onXoaMatHang());
 
         tbLayHang.add(btnThem);
         tbLayHang.add(btnXoa);
@@ -1098,6 +1101,108 @@ public class QuanLyBanHangPanel extends JPanel {
         } else {
             JOptionPane.showMessageDialog(this, "Lỗi khi cập nhật hóa đơn!", "Lỗi", JOptionPane.ERROR_MESSAGE);
         }
+    }
+
+    private void onThemMatHang() {
+        if (currentSelectedInvoice == null) {
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn một hóa đơn cần thêm mặt hàng!", "Thông báo", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        Window parentWin = SwingUtilities.getWindowAncestor(this);
+        TimKiemMatHangDialog dlg = new TimKiemMatHangDialog(parentWin);
+        dlg.setVisible(true);
+
+        if (dlg.isConfirmed() && dlg.getSelectedMatHang() != null) {
+            MatHang m = dlg.getSelectedMatHang();
+            double price = m.getGiaBan() > 0 ? m.getGiaBan() : (m.getGiaBan2() > 0 ? m.getGiaBan2() : 0.0);
+
+            NhapSoLuongDialog qtyDlg = new NhapSoLuongDialog(parentWin, m, price, m.getTenDonViTinh(), 1.0, 0.0);
+            qtyDlg.setVisible(true);
+
+            if (qtyDlg.isConfirmed()) {
+                DonHangChiTiet ct = new DonHangChiTiet();
+                ct.setId(UUID.randomUUID().toString());
+                ct.setDonHangId(currentSelectedInvoice.getId());
+                ct.setMatHangId(m.getId());
+                ct.setMaHang(m.getCode());
+                ct.setTenHang(m.getName());
+                ct.setDonViTinhId(m.getDonViTinhId());
+                ct.setTenDonViTinh(m.getTenDonViTinh());
+                ct.setDonGia(price);
+                ct.setSoLuong(qtyDlg.getResultSoLuong());
+                ct.setTiLeGiamGia(qtyDlg.getResultChietKhau());
+                ct.tinhThanhTien();
+
+                int activeTab = tabbedDetails.getSelectedIndex();
+                if (activeTab == 1) { // KHÁCH TRẢ HÀNG
+                    ct.setTraHang(true);
+                    currentTraHangList.add(ct);
+                    refreshTraHangTable();
+                } else { // KHÁCH LẤY HÀNG
+                    ct.setTraHang(false);
+                    currentLayHangList.add(ct);
+                    refreshLayHangTable();
+                }
+                recalculateFinancials();
+            }
+        }
+    }
+
+    private void onXoaMatHang() {
+        int activeTab = tabbedDetails.getSelectedIndex();
+        if (activeTab == 1) { // KHÁCH TRẢ HÀNG
+            int row = tableTraHang.getSelectedRow();
+            if (row >= 0 && row < currentTraHangList.size()) {
+                currentTraHangList.remove(row);
+                refreshTraHangTable();
+                recalculateFinancials();
+            } else {
+                JOptionPane.showMessageDialog(this, "Vui lòng chọn mặt hàng cần xóa trong bảng Khách trả hàng!", "Thông báo", JOptionPane.WARNING_MESSAGE);
+            }
+        } else { // KHÁCH LẤY HÀNG
+            int row = tableLayHang.getSelectedRow();
+            if (row >= 0 && row < currentLayHangList.size()) {
+                currentLayHangList.remove(row);
+                refreshLayHangTable();
+                recalculateFinancials();
+            } else {
+                JOptionPane.showMessageDialog(this, "Vui lòng chọn mặt hàng cần xóa trong bảng Khách lấy hàng!", "Thông báo", JOptionPane.WARNING_MESSAGE);
+            }
+        }
+    }
+
+    private void recalculateFinancials() {
+        if (currentSelectedInvoice == null) return;
+
+        double tienHang = 0.0;
+        double tienGiamGia = 0.0;
+        for (DonHangChiTiet ct : currentLayHangList) {
+            tienHang += ct.getSoLuong() * ct.getDonGia();
+            tienGiamGia += ct.getTienGiam();
+        }
+
+        double tienDoiTra = 0.0;
+        for (DonHangChiTiet ct : currentTraHangList) {
+            tienDoiTra += ct.getThanhTien();
+        }
+
+        double tongCong = Math.max(0, (tienHang - tienGiamGia) - tienDoiTra);
+
+        currentSelectedInvoice.setChiTietLayHang(new ArrayList<>(currentLayHangList));
+        currentSelectedInvoice.setChiTietTraHang(new ArrayList<>(currentTraHangList));
+        currentSelectedInvoice.setTienHang(tienHang);
+        currentSelectedInvoice.setTienGiamGia(tienGiamGia);
+        currentSelectedInvoice.setTienDoiTra(tienDoiTra);
+        currentSelectedInvoice.setTongCong(tongCong);
+        currentSelectedInvoice.setTienThanhToan(tongCong);
+
+        txtTienHang.setText(CurrencyUtil.format(tienHang));
+        txtTienGiamGia.setText(CurrencyUtil.format(tienGiamGia));
+        txtTienDoiTra.setText(CurrencyUtil.format(tienDoiTra));
+        txtTongCong.setText(CurrencyUtil.format(tongCong));
+        txtTienThanhToan.setText(CurrencyUtil.format(tongCong));
+        txtTienMat.setText(CurrencyUtil.format(tongCong));
     }
 
     private void onLuuVaInLaiBill() {
