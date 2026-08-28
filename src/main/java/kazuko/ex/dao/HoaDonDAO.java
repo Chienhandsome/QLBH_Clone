@@ -302,7 +302,7 @@ public class HoaDonDAO extends BaseDAO {
     public List<DonHang> getDanhSachHoaDon(Date tuNgay, Date denNgay, String cuaHangId, String keyword) {
         List<DonHang> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
-                "SELECT d.*, k.NAME AS TENKHACH, k.CODE AS MAKHACH, k.DIACHI AS DIACHIKHACH, k.DIENTHOAI AS DIENTHOAIKHACH, " +
+                "SELECT d.*, k.NAME AS TENKHACH, k.MAKHACH AS MAKHACH, k.DIACHI AS DIACHIKHACH, k.DIENTHOAI AS DIENTHOAIKHACH, " +
                 "nv.NAME AS TENNHANVIEN " +
                 "FROM TDONHANG d " +
                 "LEFT JOIN DKHACHHANG k ON d.DKHACHHANGID = k.ID " +
@@ -349,9 +349,12 @@ public class HoaDonDAO extends BaseDAO {
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     DonHang dh = mapResultSetToDonHang(rs);
-                    loadDetailsForDonHang(conn, dh);
                     list.add(dh);
                 }
+            }
+
+            for (DonHang dh : list) {
+                loadDetailsForDonHang(conn, dh);
             }
         } catch (Exception e) {
             System.err.println("Lỗi getDanhSachHoaDon: " + e.getMessage());
@@ -371,7 +374,7 @@ public class HoaDonDAO extends BaseDAO {
     public List<DonHang> getDanhSachBillHuy(Date tuNgay, Date denNgay, String keyword) {
         List<DonHang> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
-                "SELECT d.*, k.NAME AS TENKHACH, k.CODE AS MAKHACH, k.DIACHI AS DIACHIKHACH, k.DIENTHOAI AS DIENTHOAIKHACH, " +
+                "SELECT d.*, k.NAME AS TENKHACH, k.MAKHACH AS MAKHACH, k.DIACHI AS DIACHIKHACH, k.DIENTHOAI AS DIENTHOAIKHACH, " +
                 "nv.NAME AS TENNHANVIEN " +
                 "FROM TDONHANG d " +
                 "LEFT JOIN DKHACHHANG k ON d.DKHACHHANGID = k.ID " +
@@ -411,9 +414,12 @@ public class HoaDonDAO extends BaseDAO {
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     DonHang dh = mapResultSetToDonHang(rs);
-                    loadDetailsForDonHang(conn, dh);
                     list.add(dh);
                 }
+            }
+
+            for (DonHang dh : list) {
+                loadDetailsForDonHang(conn, dh);
             }
         } catch (Exception e) {
             System.err.println("Lỗi getDanhSachBillHuy: " + e.getMessage());
