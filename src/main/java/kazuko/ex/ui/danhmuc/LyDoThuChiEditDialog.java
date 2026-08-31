@@ -30,8 +30,8 @@ public class LyDoThuChiEditDialog extends JDialog {
     private JComboBox<String> cbLoai;
     private JTextArea txtGhiChu;
 
-    public LyDoThuChiEditDialog(Dialog parent, LyDoThuChi lyDoThuChi, List<LyDoThuChi> reasonList, Runnable onDataChanged) {
-        super(parent, lyDoThuChi != null && lyDoThuChi.getId() != null ? "LÝ DO THU CHI - SỬA" : "LÝ DO THU CHI - THÊM", true);
+    public LyDoThuChiEditDialog(Window parent, LyDoThuChi lyDoThuChi, List<LyDoThuChi> reasonList, Runnable onDataChanged) {
+        super(parent, lyDoThuChi != null && lyDoThuChi.getId() != null ? "LÝ DO THU CHI - SỬA" : "LÝ DO THU CHI - THÊM", ModalityType.APPLICATION_MODAL);
         this.currentLyDoThuChi = lyDoThuChi;
         this.reasonList = reasonList;
         this.currentIndex = (reasonList != null && lyDoThuChi != null) ? reasonList.indexOf(lyDoThuChi) : -1;
@@ -42,6 +42,14 @@ public class LyDoThuChiEditDialog extends JDialog {
         pack();
         setResizable(false);
         setLocationRelativeTo(parent);
+    }
+
+    public LyDoThuChiEditDialog(Dialog parent, LyDoThuChi lyDoThuChi, List<LyDoThuChi> reasonList, Runnable onDataChanged) {
+        this((Window) parent, lyDoThuChi, reasonList, onDataChanged);
+    }
+
+    public LyDoThuChiEditDialog(Frame parent, LyDoThuChi lyDoThuChi, List<LyDoThuChi> reasonList, Runnable onDataChanged) {
+        this((Window) parent, lyDoThuChi, reasonList, onDataChanged);
     }
 
     private void initComponents() {

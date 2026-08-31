@@ -14,6 +14,34 @@ public class PhieuChiDAO extends BaseDAO {
     private static final List<PhieuChi> MEMORY_PHIEU_CHI = new CopyOnWriteArrayList<>();
     private static boolean tableChecked = false;
 
+    static {
+        initSampleData();
+    }
+
+    private static void initSampleData() {
+        if (!MEMORY_PHIEU_CHI.isEmpty()) return;
+        try {
+            SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm");
+            PhieuChi pc1 = new PhieuChi();
+            pc1.setId("pc-001");
+            pc1.setSoPhieu("PC26/00001");
+            pc1.setNgay(sdf.parse("28/08/2026 15:30"));
+            pc1.setTimeCreated(sdf.parse("28/08/2026 15:30"));
+            pc1.setUserCreatedId("Administrator");
+            pc1.setTenDoiTuong("Công ty TNHH Tiếp Thị Số");
+            pc1.setDiaChi("Hà Nội");
+            pc1.setPhanLoaiId("tc-1");
+            pc1.setTenPhanLoai("Chi phí quản lý");
+            pc1.setLyDoChi("Chi tiền văn phòng phẩm và tiếp khách");
+            pc1.setChungTuGoc("HĐ 0012");
+            pc1.setSoTien(500000.0);
+            pc1.setGhiChu("Đã duyệt");
+            pc1.setLoaiDoiTuong("Nhà cung cấp");
+            pc1.setStatus(1);
+            MEMORY_PHIEU_CHI.add(pc1);
+        } catch (Exception ignored) {}
+    }
+
     private static String getEffectiveUserId() {
         if (AuthService.getCurrentUser() != null && AuthService.getCurrentUser().getId() != null && !AuthService.getCurrentUser().getId().trim().isEmpty()) {
             return AuthService.getCurrentUser().getId().trim();
@@ -264,6 +292,92 @@ public class PhieuChiDAO extends BaseDAO {
             if (id.equals(pc.getId())) return pc;
         }
         return null;
+    }
+
+    public boolean delete(String id) {
+        if (id == null) return false;
+        try (Connection conn = getConnection()) {
+            ensureTableExists();
+            String sql = "UPDATE TPHIEUCHI SET STATUS = -1 WHERE ID = ?";
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setString(1, id);
+                ps.executeUpdate();
+                if (!conn.getAutoCommit()) conn.commit();
+            }
+        } catch (Exception ignored) {}
+
+        for (PhieuChi pc : MEMORY_PHIEU_CHI) {
+            if (id.equals(pc.getId())) {
+                pc.setStatus(-1);
+                return true;
+            }
+        }
+        return true;
+    }
+
+    public boolean restore(String id) {
+        if (id == null) return false;
+        try (Connection conn = getConnection()) {
+            ensureTableExists();
+            String sql = "UPDATE TPHIEUCHI SET STATUS = 1 WHERE ID = ?";
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setString(1, id);
+                ps.executeUpdate();
+                if (!conn.getAutoCommit()) conn.commit();
+            }
+        } catch (Exception ignored) {}
+
+        for (PhieuChi pc : MEMORY_PHIEU_CHI) {
+            if (id.equals(pc.getId())) {
+                pc.setStatus(1);
+                return true;
+            }
+        }
+        return true;
+    }
+
+    public List<PhieuChi> getTrashItems() {
+        List<PhieuChi> list = new ArrayList<>();
+        try (Connection conn = getConnection()) {
+            ensureTableExists();
+            String sql = "SELECT * FROM TPHIEUCHI WHERE STATUS = -1 ORDER BY NGAY DESC";
+            try (PreparedStatement ps = conn.prepareStatement(sql);
+                 ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    PhieuChi pc = new PhieuChi();
+                    pc.setId(rs.getString("ID"));
+                    pc.setSoPhieu(rs.getString("SOPHIEU"));
+                    pc.setNgay(rs.getTimestamp("NGAY"));
+                    pc.setPhanLoaiId(rs.getString("DLYDOTHUCHIID"));
+                    pc.setTenPhanLoai(rs.getString("TENPHANLOAI"));
+                    pc.setLyDoChi(rs.getString("LYDOCHI"));
+                    pc.setChungTuGoc(rs.getString("CHUNGTUGOC"));
+                    pc.setLoaiDoiTuong(rs.getString("LOAIDOITUONG"));
+                    pc.setTenDoiTuong(rs.getString("TENDOITUONG"));
+                    pc.setDiaChi(rs.getString("DIACHI"));
+                    pc.setNhanVienId(rs.getString("DNHANVIENID"));
+                    pc.setKhachHangId(rs.getString("DKHACHHANGID"));
+                    pc.setNhaCungCapId(rs.getString("DNHACUNGCAPID"));
+                    pc.setSoTien(rs.getDouble("SOTIEN"));
+                    pc.setChuyenTuTaiKhoan(rs.getInt("CHUYENTUTAIKHOAN") == 1);
+                    pc.setTaiKhoanNganHangId(rs.getString("DTAIKHOANNGANHANGID"));
+                    pc.setCuaHangId(rs.getString("DCUAHANGID"));
+                    pc.setKhongThayDoiCongNo(rs.getInt("KHONGTHAYDOICONGNO") == 1);
+                    pc.setGhiChu(rs.getString("NOTE"));
+                    pc.setStatus(rs.getInt("STATUS"));
+                    pc.setTimeCreated(rs.getTimestamp("TIMECREATED"));
+                    pc.setUserCreatedId(rs.getString("USERCREATEDID"));
+                    list.add(pc);
+                }
+            }
+        } catch (Exception ignored) {}
+
+        for (PhieuChi m : MEMORY_PHIEU_CHI) {
+            if (m.getStatus() == -1 && list.stream().noneMatch(x -> x.getId().equals(m.getId()))) {
+                list.add(m);
+            }
+        }
+        return list;
     }
 
     public PhieuChi getPhieuChiByOffset(String currentId, int direction) {

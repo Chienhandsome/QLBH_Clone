@@ -21,6 +21,8 @@ import kazuko.ex.ui.dathang.KhachDatHangPanel;
 import kazuko.ex.ui.hoadon.HoaDonBanHangPanel;
 import kazuko.ex.ui.hoadon.QuanLyBanHangPanel;
 import kazuko.ex.ui.khohang.QuanLyXuatKhoPanel;
+import kazuko.ex.ui.quy.DanhMucPhieuChiPanel;
+import kazuko.ex.ui.quy.DanhMucPhieuThuPanel;
 import kazuko.ex.ui.quy.TaoPhieuChiDialog;
 import kazuko.ex.ui.quy.TaoPhieuThuDialog;
 import kazuko.ex.ui.system.CauHinhToanHeThongDialog;
@@ -433,11 +435,11 @@ public class MainFrame extends JFrame {
 
         JMenuItem miDSThu = new JMenuItem("Danh mục phiếu thu");
         miDSThu.setIcon(IconHelper.getIcon("btnCard.Icon.png", 16, 16));
-        miDSThu.addActionListener(e -> openTab("Danh mục phiếu thu", createPlaceholderPanel("Danh mục phiếu thu")));
+        miDSThu.addActionListener(e -> openTab("Danh mục phiếu thu", new DanhMucPhieuThuPanel()));
 
         JMenuItem miDSChi = new JMenuItem("Danh mục phiếu chi");
         miDSChi.setIcon(IconHelper.getIcon("tsbTimeStamp.Image.png", 16, 16));
-        miDSChi.addActionListener(e -> openTab("Danh mục phiếu chi", createPlaceholderPanel("Danh mục phiếu chi")));
+        miDSChi.addActionListener(e -> openTab("Danh mục phiếu chi", new DanhMucPhieuChiPanel()));
 
         mQuy.add(miTaoThu);
         mQuy.add(miTaoChi);
@@ -724,6 +726,14 @@ public class MainFrame extends JFrame {
                 break;
             case "DANH MỤC KHÁCH HÀNG":
                 openTab("Danh mục khách hàng", new DanhMucKhachHangPanel());
+                break;
+            case "DANH MỤC PHIẾU THU":
+            case "PHIẾU THU":
+                openTab("Danh mục phiếu thu", new DanhMucPhieuThuPanel());
+                break;
+            case "DANH MỤC PHIẾU CHI":
+            case "PHIẾU CHI":
+                openTab("Danh mục phiếu chi", new DanhMucPhieuChiPanel());
                 break;
             case "GỬI TIN NHẮN KHÁCH HÀNG":
                 openTab("Gửi tin nhắn tới khách hàng", createPlaceholderPanel("Gửi tin nhắn tới khách hàng"));

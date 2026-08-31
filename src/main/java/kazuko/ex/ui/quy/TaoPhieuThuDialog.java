@@ -42,6 +42,7 @@ public class TaoPhieuThuDialog extends JDialog {
     private final TaiKhoanNganHangDAO taiKhoanNganHangDAO = new TaiKhoanNganHangDAO();
 
     private PhieuThu currentPhieuThu;
+    private LyDoThuChi defaultReason;
     private final Runnable onDataSaved;
 
     // Form Controls
@@ -76,18 +77,24 @@ public class TaoPhieuThuDialog extends JDialog {
     private JButton btnSau;
     private JButton btnTaoMoi;
     private JButton btnSaoChep;
+    private JButton btnXoa;
 
     private static final Color BG_YELLOW = new Color(254, 253, 225);
     private static final Color BG_CYAN = new Color(230, 248, 255);
     private static final Color BG_FORM = new Color(215, 230, 248);
 
     public TaoPhieuThuDialog(Window parent) {
-        this(parent, null, null);
+        this(parent, null, null, null);
     }
 
     public TaoPhieuThuDialog(Window parent, PhieuThu phieuThu, Runnable onDataSaved) {
+        this(parent, phieuThu, null, onDataSaved);
+    }
+
+    public TaoPhieuThuDialog(Window parent, PhieuThu phieuThu, LyDoThuChi defaultReason, Runnable onDataSaved) {
         super(parent, phieuThu != null && phieuThu.getId() != null ? "PHIẾU THU - CẬP NHẬT" : "PHIẾU THU - THÊM MỚI", ModalityType.APPLICATION_MODAL);
         this.currentPhieuThu = phieuThu;
+        this.defaultReason = defaultReason;
         this.onDataSaved = onDataSaved;
 
         initComponents();
@@ -149,11 +156,16 @@ public class TaoPhieuThuDialog extends JDialog {
         btnSaoChep = createToolbarButton("Sao chép", IconHelper.getIcon("bookmark-import.png", 14, 14));
         btnSaoChep.addActionListener(e -> onSaoChep());
 
+        btnXoa = createToolbarButton("Xóa", IconHelper.getIcon("cross.png", 14, 14));
+        btnXoa.setForeground(new Color(180, 20, 20));
+        btnXoa.addActionListener(e -> onDeleteCurrentPhieuThu());
+
         pnlToolbar.add(btnPhimTat);
         pnlToolbar.add(btnTruoc);
         pnlToolbar.add(btnSau);
         pnlToolbar.add(btnTaoMoi);
         pnlToolbar.add(btnSaoChep);
+        pnlToolbar.add(btnXoa);
 
         pnlNorth.add(pnlToolbar, BorderLayout.SOUTH);
         add(pnlNorth, BorderLayout.NORTH);
@@ -476,10 +488,27 @@ public class TaoPhieuThuDialog extends JDialog {
                 .filter(LyDoThuChi::isLaLyDoThu)
                 .collect(Collectors.toList());
         cbPhanLoai.setItems(thuList);
+        if (defaultReason != null) {
+            for (LyDoThuChi r : thuList) {
+                if (defaultReason.getId() != null && defaultReason.getId().equals(r.getId())) {
+                    cbPhanLoai.setSelectedItem(r);
+                    if (txtLyDoThu != null) txtLyDoThu.setText(r.getName());
+                    return;
+                }
+            }
+        }
         if (!thuList.isEmpty() && cbPhanLoai.getSelectedItem() == null) {
-            cbPhanLoai.setSelectedItem(thuList.get(0));
-            if (txtLyDoThu != null && txtLyDoThu.getText().trim().isEmpty()) {
-                txtLyDoThu.setText(thuList.get(0).getName());
+            LyDoThuChi selected = null;
+            for (LyDoThuChi r : thuList) {
+                if ("Thanh toán công nợ".equalsIgnoreCase(r.getName())) {
+                    selected = r;
+                    break;
+                }
+            }
+            if (selected == null) selected = thuList.get(0);
+            cbPhanLoai.setSelectedItem(selected);
+            if (txtLyDoThu != null && (txtLyDoThu.getText() == null || txtLyDoThu.getText().trim().isEmpty())) {
+                txtLyDoThu.setText(selected.getName());
             }
         }
     }
@@ -562,9 +591,20 @@ public class TaoPhieuThuDialog extends JDialog {
         dpkNgay.setDate(new Date());
         txtSoPhieu.setText(phieuThuDAO.generateNextSoPhieu(dpkNgay.getDate()));
 
-        if (cbPhanLoai.getItems() != null && !cbPhanLoai.getItems().isEmpty()) {
-            cbPhanLoai.setSelectedItem(cbPhanLoai.getItems().get(0));
-            txtLyDoThu.setText(cbPhanLoai.getItems().get(0).getName());
+        if (defaultReason != null) {
+            cbPhanLoai.setSelectedItem(defaultReason);
+            txtLyDoThu.setText(defaultReason.getName());
+        } else if (cbPhanLoai.getItems() != null && !cbPhanLoai.getItems().isEmpty()) {
+            LyDoThuChi selected = null;
+            for (LyDoThuChi r : cbPhanLoai.getItems()) {
+                if ("Thanh toán công nợ".equalsIgnoreCase(r.getName())) {
+                    selected = r;
+                    break;
+                }
+            }
+            if (selected == null) selected = cbPhanLoai.getItems().get(0);
+            cbPhanLoai.setSelectedItem(selected);
+            txtLyDoThu.setText(selected.getName());
         } else {
             txtLyDoThu.setText("");
         }
@@ -583,6 +623,26 @@ public class TaoPhieuThuDialog extends JDialog {
         updateDoiTuongComponentsState();
         updateTaiKhoanNHState();
         setTitle("PHIẾU THU - THÊM MỚI");
+    }
+
+    private void onDeleteCurrentPhieuThu() {
+        if (currentPhieuThu == null || currentPhieuThu.getId() == null) {
+            JOptionPane.showMessageDialog(this, "Phiếu thu chưa được lưu nên không thể xóa!", "Thông báo", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        int confirm = JOptionPane.showConfirmDialog(
+                this,
+                "Bạn có chắc chắn muốn xóa phiếu thu [" + currentPhieuThu.getSoPhieu() + "] không?",
+                "Xác nhận xóa",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.QUESTION_MESSAGE
+        );
+        if (confirm == JOptionPane.YES_OPTION) {
+            phieuThuDAO.delete(currentPhieuThu.getId());
+            JOptionPane.showMessageDialog(this, "Đã xóa phiếu thu thành công!", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+            if (onDataSaved != null) onDataSaved.run();
+            dispose();
+        }
     }
 
     private void loadPhieuThuToForm(PhieuThu pt) {

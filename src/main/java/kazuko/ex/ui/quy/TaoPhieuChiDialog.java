@@ -42,6 +42,7 @@ public class TaoPhieuChiDialog extends JDialog {
     private final TaiKhoanNganHangDAO taiKhoanNganHangDAO = new TaiKhoanNganHangDAO();
 
     private PhieuChi currentPhieuChi;
+    private LyDoThuChi defaultReason;
     private final Runnable onDataSaved;
 
     // Form Controls
@@ -76,18 +77,24 @@ public class TaoPhieuChiDialog extends JDialog {
     private JButton btnSau;
     private JButton btnTaoMoi;
     private JButton btnSaoChep;
+    private JButton btnXoa;
 
     private static final Color BG_YELLOW = new Color(254, 253, 225);
     private static final Color BG_CYAN = new Color(230, 248, 255);
     private static final Color BG_FORM = new Color(215, 230, 248);
 
     public TaoPhieuChiDialog(Window parent) {
-        this(parent, null, null);
+        this(parent, null, null, null);
     }
 
     public TaoPhieuChiDialog(Window parent, PhieuChi phieuChi, Runnable onDataSaved) {
+        this(parent, phieuChi, null, onDataSaved);
+    }
+
+    public TaoPhieuChiDialog(Window parent, PhieuChi phieuChi, LyDoThuChi defaultReason, Runnable onDataSaved) {
         super(parent, phieuChi != null && phieuChi.getId() != null ? "PHIẾU CHI - CẬP NHẬT" : "PHIẾU CHI - THÊM MỚI", ModalityType.APPLICATION_MODAL);
         this.currentPhieuChi = phieuChi;
+        this.defaultReason = defaultReason;
         this.onDataSaved = onDataSaved;
 
         initComponents();
@@ -149,11 +156,15 @@ public class TaoPhieuChiDialog extends JDialog {
         btnSaoChep = createToolbarButton("Sao chép", IconHelper.getIcon("bookmark-import.png", 14, 14));
         btnSaoChep.addActionListener(e -> onSaoChep());
 
+        btnXoa = createToolbarButton("Xóa", IconHelper.getIcon("cross.png", 14, 14));
+        btnXoa.addActionListener(e -> onDeleteCurrentPhieuChi());
+
         pnlToolbar.add(btnPhimTat);
         pnlToolbar.add(btnTruoc);
         pnlToolbar.add(btnSau);
         pnlToolbar.add(btnTaoMoi);
         pnlToolbar.add(btnSaoChep);
+        pnlToolbar.add(btnXoa);
 
         pnlNorth.add(pnlToolbar, BorderLayout.SOUTH);
         add(pnlNorth, BorderLayout.NORTH);
@@ -476,10 +487,30 @@ public class TaoPhieuChiDialog extends JDialog {
                 .filter(LyDoThuChi::isLaLyDoChi)
                 .collect(Collectors.toList());
         cbPhanLoai.setItems(chiList);
-        if (!chiList.isEmpty() && cbPhanLoai.getSelectedItem() == null) {
-            cbPhanLoai.setSelectedItem(chiList.get(0));
-            if (txtLyDoChi != null && txtLyDoChi.getText().trim().isEmpty()) {
-                txtLyDoChi.setText(chiList.get(0).getName());
+
+        LyDoThuChi toSelect = null;
+        if (defaultReason != null && defaultReason.isLaLyDoChi()) {
+            for (LyDoThuChi r : chiList) {
+                if (defaultReason.getId().equals(r.getId())) {
+                    toSelect = r;
+                    break;
+                }
+            }
+        }
+        if (toSelect == null && !chiList.isEmpty()) {
+            for (LyDoThuChi r : chiList) {
+                if (r.isDefault() || "Thanh toán công nợ NCC".equalsIgnoreCase(r.getName()) || "Chi mua hàng".equalsIgnoreCase(r.getName()) || "Chi tiền hàng".equalsIgnoreCase(r.getName())) {
+                    toSelect = r;
+                    break;
+                }
+            }
+            if (toSelect == null) toSelect = chiList.get(0);
+        }
+
+        if (toSelect != null) {
+            cbPhanLoai.setSelectedItem(toSelect);
+            if (txtLyDoChi != null && (txtLyDoChi.getText() == null || txtLyDoChi.getText().trim().isEmpty())) {
+                txtLyDoChi.setText(toSelect.getName());
             }
         }
     }
@@ -779,6 +810,26 @@ public class TaoPhieuChiDialog extends JDialog {
             loadPhieuChiToForm(target);
         } else {
             JOptionPane.showMessageDialog(this, direction < 0 ? "Đã ở phiếu đầu tiên!" : "Đã ở phiếu cuối cùng!", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+        }
+    }
+
+    private void onDeleteCurrentPhieuChi() {
+        if (currentPhieuChi == null || currentPhieuChi.getId() == null) {
+            JOptionPane.showMessageDialog(this, "Phiếu chi chưa được lưu, không thể xóa!", "Thông báo", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        int confirm = JOptionPane.showConfirmDialog(
+                this,
+                "Bạn có chắc chắn muốn xóa phiếu chi [" + currentPhieuChi.getSoPhieu() + "] không?",
+                "Xác nhận xóa",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.QUESTION_MESSAGE
+        );
+        if (confirm == JOptionPane.YES_OPTION) {
+            phieuChiDAO.delete(currentPhieuChi.getId());
+            if (onDataSaved != null) onDataSaved.run();
+            JOptionPane.showMessageDialog(this, "Đã xóa phiếu chi thành công!", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+            dispose();
         }
     }
 

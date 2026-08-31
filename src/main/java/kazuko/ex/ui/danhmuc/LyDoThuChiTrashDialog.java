@@ -24,14 +24,22 @@ public class LyDoThuChiTrashDialog extends JDialog {
     private DefaultTreeModel treeModel;
     private DefaultMutableTreeNode rootNode;
 
-    public LyDoThuChiTrashDialog(Dialog parent, Runnable onDataChanged) {
-        super(parent, "Thùng rác", true);
+    public LyDoThuChiTrashDialog(Window parent, Runnable onDataChanged) {
+        super(parent, "Thùng rác", ModalityType.APPLICATION_MODAL);
         this.onDataChanged = onDataChanged;
 
         initComponents();
         loadTrashTree();
         setSize(460, 480);
         setLocationRelativeTo(parent);
+    }
+
+    public LyDoThuChiTrashDialog(Dialog parent, Runnable onDataChanged) {
+        this((Window) parent, onDataChanged);
+    }
+
+    public LyDoThuChiTrashDialog(Frame parent, Runnable onDataChanged) {
+        this((Window) parent, onDataChanged);
     }
 
     private void initComponents() {

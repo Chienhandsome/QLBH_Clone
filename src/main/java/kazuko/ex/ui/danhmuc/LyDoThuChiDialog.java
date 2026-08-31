@@ -33,14 +33,17 @@ public class LyDoThuChiDialog extends JDialog {
     private JComboBox<LyDoThuChi> cbDefaultReason;
     private boolean isUpdatingDefaultCb = false;
 
-    public LyDoThuChiDialog(Frame parent) {
-        super(parent, "Lý do thu chi", true);
+    public LyDoThuChiDialog(Window parent) {
+        super(parent, "Lý do thu chi", ModalityType.APPLICATION_MODAL);
         initDialog(parent);
     }
 
+    public LyDoThuChiDialog(Frame parent) {
+        this((Window) parent);
+    }
+
     public LyDoThuChiDialog(Dialog parent) {
-        super(parent, "Lý do thu chi", true);
-        initDialog(parent);
+        this((Window) parent);
     }
 
     private void initDialog(Window parent) {
