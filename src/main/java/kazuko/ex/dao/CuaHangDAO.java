@@ -280,11 +280,11 @@ public class CuaHangDAO extends BaseDAO {
         }
     }
 
-    private String getEffectiveUserId() {
+    private static String getEffectiveUserId() {
         if (AuthService.getCurrentUser() != null && AuthService.getCurrentUser().getId() != null && !AuthService.getCurrentUser().getId().trim().isEmpty()) {
             return AuthService.getCurrentUser().getId().trim();
         }
-        return "4f1466a0-0756-4ba9-afa8-053b96ca7569"; // Admin mặc định trong CSDL Firebird DEMO.FDB
+        return "4f1466a0-0756-4ba9-afa8-053b96ca7569";
     }
 
     private List<CuaHang> tryLoadFromDb(int statusFilter) {

@@ -3,12 +3,14 @@ package kazuko.ex.dao;
 import kazuko.ex.config.DatabaseConnection;
 import kazuko.ex.model.danhmuc.KhachHang;
 import kazuko.ex.model.danhmuc.NhomKhachHang;
+import kazuko.ex.model.nhansu.BangLuong;
 import org.junit.jupiter.api.Test;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.ArrayList;
 import java.util.List;
 
 public class DbInspectionTest {
@@ -277,23 +279,43 @@ public class DbInspectionTest {
     }
 
     @Test
-    public void testInspectLoyaltyTables() {
-        try (Connection conn = DatabaseConnection.getConnection()) {
-            DatabaseMetaData meta = conn.getMetaData();
-            System.out.println("\n--- Columns in TTANGGIAMDIEM ---");
-            try (ResultSet cols = meta.getColumns(null, null, "TTANGGIAMDIEM", "%")) {
-                while (cols.next()) {
-                    System.out.println("   - " + cols.getString("COLUMN_NAME") + " (" + cols.getString("TYPE_NAME") + ")");
-                }
-            }
-            System.out.println("\n--- Columns in TDONHANG ---");
-            try (ResultSet cols = meta.getColumns(null, null, "TDONHANG", "%")) {
-                while (cols.next()) {
-                    System.out.println("   - " + cols.getString("COLUMN_NAME") + " (" + cols.getString("TYPE_NAME") + ")");
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    public void testBangLuongPersistence() {
+        BangLuongDAO dao = new BangLuongDAO();
+        BangLuong bl = new BangLuong();
+        bl.setSoPhieu("Tháng 9/2026");
+        bl.setThang(9);
+        bl.setNam(2026);
+        bl.setGhiChu("Test persistence unit test");
+
+        boolean inserted = dao.insert(bl);
+        org.junit.jupiter.api.Assertions.assertTrue(inserted, "Insert BangLuong should succeed in DB");
+        org.junit.jupiter.api.Assertions.assertNotNull(bl.getId(), "BangLuong ID should be generated");
+
+        // Test save attendance
+        List<kazuko.ex.model.nhansu.ChamCongChiTiet> records = new ArrayList<>();
+        records.add(new kazuko.ex.model.nhansu.ChamCongChiTiet(bl.getId(), "223f6d45-ce2d-411f-8263-9b4ca8052ea9", "3e1345ce-06d4-4b1f-899a-786a7aae980b", 1, 1));
+        records.add(new kazuko.ex.model.nhansu.ChamCongChiTiet(bl.getId(), "223f6d45-ce2d-411f-8263-9b4ca8052ea9", "cf547f29-3bab-478e-8327-6899839b00ac", 2, 2));
+        records.add(new kazuko.ex.model.nhansu.ChamCongChiTiet(bl.getId(), "223f6d45-ce2d-411f-8263-9b4ca8052ea9", "cf547f29-3bab-478e-8327-6899839b00ac", 3, 3));
+
+        boolean saved = dao.saveAllAttendance(bl.getId(), 9, 2026, records);
+        org.junit.jupiter.api.Assertions.assertTrue(saved, "Save attendance to TBANGLUONGCHITIET should succeed");
+
+        // Verify with a new DAO instance
+        BangLuongDAO freshDAO = new BangLuongDAO();
+        BangLuong reloaded = freshDAO.findById(bl.getId());
+        org.junit.jupiter.api.Assertions.assertNotNull(reloaded, "Should find inserted BangLuong in DB");
+        org.junit.jupiter.api.Assertions.assertEquals("Tháng 9/2026", reloaded.getSoPhieu());
+
+        int st1 = freshDAO.getAttendanceStatus(bl.getId(), "223f6d45-ce2d-411f-8263-9b4ca8052ea9", "3e1345ce-06d4-4b1f-899a-786a7aae980b", 1);
+        int st2 = freshDAO.getAttendanceStatus(bl.getId(), "223f6d45-ce2d-411f-8263-9b4ca8052ea9", "cf547f29-3bab-478e-8327-6899839b00ac", 2);
+        int st3 = freshDAO.getAttendanceStatus(bl.getId(), "223f6d45-ce2d-411f-8263-9b4ca8052ea9", "cf547f29-3bab-478e-8327-6899839b00ac", 3);
+
+        org.junit.jupiter.api.Assertions.assertEquals(1, st1);
+        org.junit.jupiter.api.Assertions.assertEquals(2, st2);
+        org.junit.jupiter.api.Assertions.assertEquals(3, st3);
+
+        // Cleanup
+        dao.delete(bl.getId());
+        System.out.println("BangLuong Persistence Test Passed Successfully!");
     }
 }

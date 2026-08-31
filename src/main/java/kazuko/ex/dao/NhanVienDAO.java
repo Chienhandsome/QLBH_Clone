@@ -57,7 +57,7 @@ public class NhanVienDAO extends BaseDAO {
         MEMORY_EMPLOYEES.add(nvTrashFolder);
     }
 
-    private String getEffectiveUserId() {
+    private static String getEffectiveUserId() {
         if (AuthService.getCurrentUser() != null && AuthService.getCurrentUser().getId() != null && !AuthService.getCurrentUser().getId().trim().isEmpty()) {
             return AuthService.getCurrentUser().getId().trim();
         }

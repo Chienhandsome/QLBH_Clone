@@ -21,6 +21,7 @@ import kazuko.ex.ui.dathang.KhachDatHangPanel;
 import kazuko.ex.ui.hoadon.HoaDonBanHangPanel;
 import kazuko.ex.ui.hoadon.QuanLyBanHangPanel;
 import kazuko.ex.ui.khohang.QuanLyXuatKhoPanel;
+import kazuko.ex.ui.nhansu.ChamCongPanel;
 import kazuko.ex.ui.nhansu.TamUngLuongPanel;
 import kazuko.ex.ui.nhansu.ThuongPhatPanel;
 import kazuko.ex.ui.quy.DanhMucPhieuChiPanel;
@@ -497,7 +498,7 @@ public class MainFrame extends JFrame {
 
         JMenuItem miChamCong = new JMenuItem("Chấm công");
         miChamCong.setIcon(IconHelper.getIcon("document_valid.png", 16, 16));
-        miChamCong.addActionListener(e -> openTab("Chấm công", createPlaceholderPanel("Chấm công")));
+        miChamCong.addActionListener(e -> openTab("Chấm công", new ChamCongPanel()));
 
         JMenuItem miTinhLuong = new JMenuItem("Tính lương");
         miTinhLuong.setIcon(IconHelper.getIcon("Statistic16.png", 16, 16));
@@ -748,6 +749,9 @@ public class MainFrame extends JFrame {
                 break;
             case "THƯỞNG PHẠT":
                 openTab("Thưởng phạt", new ThuongPhatPanel());
+                break;
+            case "CHẤM CÔNG":
+                openTab("Chấm công", new ChamCongPanel());
                 break;
             case "GỬI TIN NHẮN KHÁCH HÀNG":
                 openTab("Gửi tin nhắn tới khách hàng", createPlaceholderPanel("Gửi tin nhắn tới khách hàng"));
