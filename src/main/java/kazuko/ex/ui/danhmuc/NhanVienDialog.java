@@ -43,6 +43,11 @@ public class NhanVienDialog extends JDialog {
         initDialog(parent);
     }
 
+    public NhanVienDialog(Window parent) {
+        super(parent, "Nhân viên", ModalityType.APPLICATION_MODAL);
+        initDialog(parent);
+    }
+
     private void initDialog(Window parent) {
         initComponents();
         loadTreeData();

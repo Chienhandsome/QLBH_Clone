@@ -54,6 +54,20 @@ public class NhanVienEditDialog extends JDialog {
         setLocationRelativeTo(parent);
     }
 
+    public NhanVienEditDialog(Window parent, NhanVien nhanVien, List<NhanVien> employeeList, Runnable onDataChanged) {
+        super(parent, nhanVien != null && nhanVien.getId() != null ? "NHÂN VIÊN - SỬA" : "NHÂN VIÊN - THÊM", ModalityType.APPLICATION_MODAL);
+        this.currentNhanVien = nhanVien;
+        this.employeeList = employeeList;
+        this.currentIndex = (employeeList != null && nhanVien != null) ? employeeList.indexOf(nhanVien) : -1;
+        this.onDataChanged = onDataChanged;
+
+        initComponents();
+        loadDataToForm();
+        pack();
+        setResizable(false);
+        setLocationRelativeTo(parent);
+    }
+
     private void initComponents() {
         setLayout(new BorderLayout());
         getContentPane().setBackground(new Color(235, 242, 250));

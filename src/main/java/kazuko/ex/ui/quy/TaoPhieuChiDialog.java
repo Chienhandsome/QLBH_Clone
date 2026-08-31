@@ -43,6 +43,7 @@ public class TaoPhieuChiDialog extends JDialog {
 
     private PhieuChi currentPhieuChi;
     private LyDoThuChi defaultReason;
+    private String fixedLoaiDoiTuong = null;
     private final Runnable onDataSaved;
 
     // Form Controls
@@ -84,17 +85,22 @@ public class TaoPhieuChiDialog extends JDialog {
     private static final Color BG_FORM = new Color(215, 230, 248);
 
     public TaoPhieuChiDialog(Window parent) {
-        this(parent, null, null, null);
+        this(parent, null, null, null, null);
     }
 
     public TaoPhieuChiDialog(Window parent, PhieuChi phieuChi, Runnable onDataSaved) {
-        this(parent, phieuChi, null, onDataSaved);
+        this(parent, phieuChi, null, null, onDataSaved);
     }
 
     public TaoPhieuChiDialog(Window parent, PhieuChi phieuChi, LyDoThuChi defaultReason, Runnable onDataSaved) {
+        this(parent, phieuChi, defaultReason, null, onDataSaved);
+    }
+
+    public TaoPhieuChiDialog(Window parent, PhieuChi phieuChi, LyDoThuChi defaultReason, String fixedLoaiDoiTuong, Runnable onDataSaved) {
         super(parent, phieuChi != null && phieuChi.getId() != null ? "PHIẾU CHI - CẬP NHẬT" : "PHIẾU CHI - THÊM MỚI", ModalityType.APPLICATION_MODAL);
         this.currentPhieuChi = phieuChi;
         this.defaultReason = defaultReason;
+        this.fixedLoaiDoiTuong = fixedLoaiDoiTuong;
         this.onDataSaved = onDataSaved;
 
         initComponents();
@@ -104,6 +110,12 @@ public class TaoPhieuChiDialog extends JDialog {
             loadPhieuChiToForm(currentPhieuChi);
         } else {
             resetForNew();
+        }
+
+        if (fixedLoaiDoiTuong != null && !fixedLoaiDoiTuong.trim().isEmpty()) {
+            cbLoaiDoiTuong.setSelectedItem(fixedLoaiDoiTuong);
+            cbLoaiDoiTuong.setEnabled(false);
+            updateDoiTuongComponentsState();
         }
 
         setupHotkeys();
@@ -601,7 +613,13 @@ public class TaoPhieuChiDialog extends JDialog {
         }
 
         txtChungTuGoc.setText("");
-        cbLoaiDoiTuong.setSelectedItem("Đối tượng khác");
+        if (fixedLoaiDoiTuong != null && !fixedLoaiDoiTuong.trim().isEmpty()) {
+            cbLoaiDoiTuong.setSelectedItem(fixedLoaiDoiTuong);
+            cbLoaiDoiTuong.setEnabled(false);
+        } else {
+            cbLoaiDoiTuong.setSelectedItem("Đối tượng khác");
+            cbLoaiDoiTuong.setEnabled(true);
+        }
         txtTenDoiTuong.setText("");
         txtDiaChi.setText("");
         txtSoTien.setText("0");
@@ -635,7 +653,13 @@ public class TaoPhieuChiDialog extends JDialog {
         txtLyDoChi.setText(pc.getLyDoChi() != null ? pc.getLyDoChi() : "");
         txtChungTuGoc.setText(pc.getChungTuGoc() != null ? pc.getChungTuGoc() : "");
 
-        cbLoaiDoiTuong.setSelectedItem(pc.getLoaiDoiTuong() != null ? pc.getLoaiDoiTuong() : "Đối tượng khác");
+        if (fixedLoaiDoiTuong != null && !fixedLoaiDoiTuong.trim().isEmpty()) {
+            cbLoaiDoiTuong.setSelectedItem(fixedLoaiDoiTuong);
+            cbLoaiDoiTuong.setEnabled(false);
+        } else {
+            cbLoaiDoiTuong.setSelectedItem(pc.getLoaiDoiTuong() != null ? pc.getLoaiDoiTuong() : "Đối tượng khác");
+            cbLoaiDoiTuong.setEnabled(true);
+        }
         txtTenDoiTuong.setText(pc.getTenDoiTuong() != null ? pc.getTenDoiTuong() : "");
         txtDiaChi.setText(pc.getDiaChi() != null ? pc.getDiaChi() : "");
 

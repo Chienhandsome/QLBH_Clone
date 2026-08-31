@@ -22,23 +22,46 @@ public class PhieuChiDAO extends BaseDAO {
         if (!MEMORY_PHIEU_CHI.isEmpty()) return;
         try {
             SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm");
+
             PhieuChi pc1 = new PhieuChi();
             pc1.setId("pc-001");
             pc1.setSoPhieu("PC26/00001");
-            pc1.setNgay(sdf.parse("28/08/2026 15:30"));
-            pc1.setTimeCreated(sdf.parse("28/08/2026 15:30"));
+            pc1.setNgay(sdf.parse("27/08/2026 10:00"));
+            pc1.setTimeCreated(sdf.parse("27/08/2026 10:00"));
             pc1.setUserCreatedId("Administrator");
-            pc1.setTenDoiTuong("Công ty TNHH Tiếp Thị Số");
+            pc1.setLoaiDoiTuong("Nhân viên");
+            pc1.setNhanVienId("nv-4");
+            pc1.setTenNhanVien("Phạm Huyền Trang");
+            pc1.setTenDoiTuong("Phạm Huyền Trang");
             pc1.setDiaChi("Hà Nội");
-            pc1.setPhanLoaiId("tc-1");
-            pc1.setTenPhanLoai("Chi phí quản lý");
-            pc1.setLyDoChi("Chi tiền văn phòng phẩm và tiếp khách");
-            pc1.setChungTuGoc("HĐ 0012");
-            pc1.setSoTien(500000.0);
-            pc1.setGhiChu("Đã duyệt");
-            pc1.setLoaiDoiTuong("Nhà cung cấp");
+            pc1.setPhanLoaiId("tc-2");
+            pc1.setTenPhanLoai("Tạm ứng lương");
+            pc1.setLyDoChi("hahaha");
+            pc1.setChungTuGoc("");
+            pc1.setSoTien(134.0);
+            pc1.setGhiChu("");
             pc1.setStatus(1);
             MEMORY_PHIEU_CHI.add(pc1);
+
+            PhieuChi pc2 = new PhieuChi();
+            pc2.setId("pc-002");
+            pc2.setSoPhieu("PC26/00002");
+            pc2.setNgay(sdf.parse("27/08/2026 14:00"));
+            pc2.setTimeCreated(sdf.parse("27/08/2026 14:00"));
+            pc2.setUserCreatedId("Administrator");
+            pc2.setLoaiDoiTuong("Nhân viên");
+            pc2.setNhanVienId("nv-4");
+            pc2.setTenNhanVien("Phạm Huyền Trang");
+            pc2.setTenDoiTuong("Phạm Huyền Trang");
+            pc2.setDiaChi("Hà Nội");
+            pc2.setPhanLoaiId("tc-2");
+            pc2.setTenPhanLoai("Tạm ứng lương");
+            pc2.setLyDoChi("lí do chi");
+            pc2.setChungTuGoc("");
+            pc2.setSoTien(10000.0);
+            pc2.setGhiChu("");
+            pc2.setStatus(1);
+            MEMORY_PHIEU_CHI.add(pc2);
         } catch (Exception ignored) {}
     }
 

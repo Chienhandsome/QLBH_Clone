@@ -21,8 +21,11 @@ import kazuko.ex.ui.dathang.KhachDatHangPanel;
 import kazuko.ex.ui.hoadon.HoaDonBanHangPanel;
 import kazuko.ex.ui.hoadon.QuanLyBanHangPanel;
 import kazuko.ex.ui.khohang.QuanLyXuatKhoPanel;
+import kazuko.ex.ui.nhansu.TamUngLuongPanel;
+import kazuko.ex.ui.nhansu.ThuongPhatPanel;
 import kazuko.ex.ui.quy.DanhMucPhieuChiPanel;
 import kazuko.ex.ui.quy.DanhMucPhieuThuPanel;
+import kazuko.ex.ui.quy.TonQuyPanel;
 import kazuko.ex.ui.quy.TaoPhieuChiDialog;
 import kazuko.ex.ui.quy.TaoPhieuThuDialog;
 import kazuko.ex.ui.system.CauHinhToanHeThongDialog;
@@ -450,7 +453,7 @@ public class MainFrame extends JFrame {
 
         JMenuItem miTonQuy = new JMenuItem("Tồn quỹ");
         miTonQuy.setIcon(IconHelper.getIcon("report--pencil.png", 16, 16));
-        miTonQuy.addActionListener(e -> openTab("Tồn quỹ", createPlaceholderPanel("Tồn quỹ")));
+        miTonQuy.addActionListener(e -> openTab("Tồn quỹ", new TonQuyPanel()));
 
         mQuy.add(miTonQuy);
 
@@ -486,11 +489,11 @@ public class MainFrame extends JFrame {
 
         JMenuItem miTamUng = new JMenuItem("Tạm ứng lương");
         miTamUng.setIcon(IconHelper.getIcon("receipt--pencil.png", 16, 16));
-        miTamUng.addActionListener(e -> openTab("Tạm ứng lương", createPlaceholderPanel("Tạm ứng lương")));
+        miTamUng.addActionListener(e -> openTab("Tạm ứng lương", new TamUngLuongPanel()));
 
         JMenuItem miThuongPhat = new JMenuItem("Thưởng phạt");
         miThuongPhat.setIcon(IconHelper.getIcon("asterisk-yellow.png", 16, 16));
-        miThuongPhat.addActionListener(e -> openTab("Thưởng phạt", createPlaceholderPanel("Thưởng phạt")));
+        miThuongPhat.addActionListener(e -> openTab("Thưởng phạt", new ThuongPhatPanel()));
 
         JMenuItem miChamCong = new JMenuItem("Chấm công");
         miChamCong.setIcon(IconHelper.getIcon("document_valid.png", 16, 16));
@@ -734,6 +737,17 @@ public class MainFrame extends JFrame {
             case "DANH MỤC PHIẾU CHI":
             case "PHIẾU CHI":
                 openTab("Danh mục phiếu chi", new DanhMucPhieuChiPanel());
+                break;
+            case "TỒN QUỸ":
+            case "SỔ QUỸ":
+                openTab("Tồn quỹ", new TonQuyPanel());
+                break;
+            case "TẠM ỨNG LƯƠNG":
+            case "TẠM ỨNG":
+                openTab("Tạm ứng lương", new TamUngLuongPanel());
+                break;
+            case "THƯỞNG PHẠT":
+                openTab("Thưởng phạt", new ThuongPhatPanel());
                 break;
             case "GỬI TIN NHẮN KHÁCH HÀNG":
                 openTab("Gửi tin nhắn tới khách hàng", createPlaceholderPanel("Gửi tin nhắn tới khách hàng"));
