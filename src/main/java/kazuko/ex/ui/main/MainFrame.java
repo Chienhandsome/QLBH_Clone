@@ -24,6 +24,7 @@ import kazuko.ex.ui.khohang.QuanLyXuatKhoPanel;
 import kazuko.ex.ui.nhansu.ChamCongPanel;
 import kazuko.ex.ui.nhansu.TamUngLuongPanel;
 import kazuko.ex.ui.nhansu.ThuongPhatPanel;
+import kazuko.ex.ui.nhansu.TinhLuongPanel;
 import kazuko.ex.ui.quy.DanhMucPhieuChiPanel;
 import kazuko.ex.ui.quy.DanhMucPhieuThuPanel;
 import kazuko.ex.ui.quy.TonQuyPanel;
@@ -502,7 +503,7 @@ public class MainFrame extends JFrame {
 
         JMenuItem miTinhLuong = new JMenuItem("Tính lương");
         miTinhLuong.setIcon(IconHelper.getIcon("Statistic16.png", 16, 16));
-        miTinhLuong.addActionListener(e -> openTab("Tính lương", createPlaceholderPanel("Tính lương")));
+        miTinhLuong.addActionListener(e -> openTab("Tính lương", new TinhLuongPanel()));
 
         mNhanSu.add(miTamUng);
         mNhanSu.add(miThuongPhat);

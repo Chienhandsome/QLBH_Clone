@@ -318,4 +318,43 @@ public class DbInspectionTest {
         dao.delete(bl.getId());
         System.out.println("BangLuong Persistence Test Passed Successfully!");
     }
+
+    @Test
+    public void testInspectBangLuongTongHop() {
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            System.out.println("\n--- Data in TBANGLUONGTONGHOP ---");
+            try (PreparedStatement ps = conn.prepareStatement("SELECT * FROM TBANGLUONGTONGHOP");
+                 ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    System.out.println("TongHop: ID=" + rs.getString("ID") +
+                            ", BLID=" + rs.getString("TBANGLUONGID") +
+                            ", NVID=" + rs.getString("DNHANVIENID") +
+                            ", CachTinh=" + rs.getInt("CACHTINHLUONG") +
+                            ", LuongCa=" + rs.getDouble("LUONGCA") +
+                            ", LuongThang=" + rs.getDouble("LUONGTHANG") +
+                            ", TongLuong=" + rs.getDouble("TONGLUONG") +
+                            ", Thuong=" + rs.getDouble("THUONG") +
+                            ", Phat=" + rs.getDouble("PHAT") +
+                            ", TamUng=" + rs.getDouble("TAMUNG") +
+                            ", ThucNhan=" + rs.getDouble("THUCNHAN"));
+                }
+            }
+
+            System.out.println("\n--- Data in DNHANVIEN (salary settings) ---");
+            try (PreparedStatement ps = conn.prepareStatement("SELECT ID, NAME, CACHTINHLUONG, LUONGCA, LUONGTHANG, NGHITHU7, NGHICHUNHAT FROM DNHANVIEN WHERE STATUS IS NULL OR STATUS >= 0");
+                 ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    System.out.println("NV: " + rs.getString("NAME") +
+                            " (ID=" + rs.getString("ID") + ")" +
+                            ", CachTinh=" + rs.getInt("CACHTINHLUONG") +
+                            ", LuongCa=" + rs.getDouble("LUONGCA") +
+                            ", LuongThang=" + rs.getDouble("LUONGTHANG") +
+                            ", NghiT7=" + rs.getInt("NGHITHU7") +
+                            ", NghiCN=" + rs.getInt("NGHICHUNHAT"));
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 }
