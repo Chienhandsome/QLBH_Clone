@@ -375,7 +375,7 @@ public class MainFrame extends JFrame {
         miNhapKho.setIcon(IconHelper.getIcon("navigation-000-frame.png", 16, 16));
         miNhapKho.addActionListener(e -> openTab("Nhập hàng vào kho", createPlaceholderPanel("Nhập hàng vào kho")));
 
-        JMenuItem miXuatKhac = new JMenuItem("Xuất khác");
+        JMenuItem miXuatKhac = new JMenuItem("Xuất kho");
         miXuatKhac.setIcon(IconHelper.getIcon("navigation-180-frame.png", 16, 16));
         miXuatKhac.addActionListener(e -> openTab("Quản lý xuất kho", new QuanLyXuatKhoPanel()));
 

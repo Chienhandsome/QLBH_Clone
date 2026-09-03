@@ -61,6 +61,23 @@ public class ChonCotHienThiDialog extends JDialog {
             "Ghi chú", "Mã khách", "Địa chỉ", "Điện thoại"
     );
 
+    // --- Quản lý xuất kho: Master Export List (Image 3) ---
+    public static final List<String> ALL_POSSIBLE_XUATKHO_COLUMNS = Arrays.asList(
+            "Ngày", "Kho xuất", "Nhân viên xuất", "Tổng cộng", "Số phiếu",
+            "Tiền giảm giá", "Tỉ lệ giảm giá", "Tiền hàng", "Cửa hàng", "Còn lại",
+            "Thanh toán", "Tài khoản ngân hàng", "Phí vận chuyển", "Mã voucher",
+            "Thẻ tt", "Thẻ trả trước", "Trừ tích lũy", "Điểm giảm", "Tiền mặt",
+            "Chuyển khoản", "Thẻ", "Bàn", "Ghi chú"
+    );
+
+    public static final List<String> DEFAULT_VISIBLE_XUATKHO_COLUMNS = Arrays.asList(
+            "Ngày", "Kho xuất", "Nhân viên xuất", "Tổng cộng", "Số phiếu",
+            "Tiền giảm giá", "Tỉ lệ giảm giá", "Tiền hàng", "Cửa hàng", "Còn lại",
+            "Thanh toán", "Tài khoản ngân hàng", "Phí vận chuyển", "Mã voucher",
+            "Thẻ tt", "Thẻ trả trước", "Trừ tích lũy", "Điểm giảm", "Tiền mặt",
+            "Chuyển khoản", "Thẻ", "Bàn"
+    );
+
     // --- Quản lý bán hàng: Detail Items (Lay Hang / Tra Hang) ---
     public static final List<String> ALL_POSSIBLE_DETAIL_COLUMNS = Arrays.asList(
             "Tên mặt hàng", "Mã hàng", "Đơn giá", "ĐVT", "CK%", "Tiền giảm",

@@ -52,10 +52,43 @@ public class DonHang {
     private String thuNganHuy;
     private String lyDoHuy;
 
+    private String tenKho;
+    private String tenCuaHang;
+    private Date timeCreated;
+    private String userCreatedId;
+    private String tenNguoiTao;
+    private Date timeModified;
+    private String userModifiedId;
+    private String tenNguoiSua;
+
     private List<DonHangChiTiet> chiTietLayHang = new ArrayList<>();
     private List<DonHangChiTiet> chiTietTraHang = new ArrayList<>();
 
     public DonHang() {}
+
+    public String getTenKho() { return tenKho; }
+    public void setTenKho(String tenKho) { this.tenKho = tenKho; }
+
+    public String getTenCuaHang() { return tenCuaHang; }
+    public void setTenCuaHang(String tenCuaHang) { this.tenCuaHang = tenCuaHang; }
+
+    public Date getTimeCreated() { return timeCreated; }
+    public void setTimeCreated(Date timeCreated) { this.timeCreated = timeCreated; }
+
+    public String getUserCreatedId() { return userCreatedId; }
+    public void setUserCreatedId(String userCreatedId) { this.userCreatedId = userCreatedId; }
+
+    public String getTenNguoiTao() { return tenNguoiTao; }
+    public void setTenNguoiTao(String tenNguoiTao) { this.tenNguoiTao = tenNguoiTao; }
+
+    public Date getTimeModified() { return timeModified; }
+    public void setTimeModified(Date timeModified) { this.timeModified = timeModified; }
+
+    public String getUserModifiedId() { return userModifiedId; }
+    public void setUserModifiedId(String userModifiedId) { this.userModifiedId = userModifiedId; }
+
+    public String getTenNguoiSua() { return tenNguoiSua; }
+    public void setTenNguoiSua(String tenNguoiSua) { this.tenNguoiSua = tenNguoiSua; }
 
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }

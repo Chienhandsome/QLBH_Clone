@@ -3,6 +3,8 @@ package kazuko.ex.ui.common;
 import javax.swing.*;
 import javax.swing.border.LineBorder;
 import javax.swing.border.MatteBorder;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -18,6 +20,7 @@ public class DatePickerField extends JPanel {
     private final SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
     private final JPopupMenu popupCalendar = new JPopupMenu();
     private final Calendar calendarView = Calendar.getInstance();
+    private boolean isUpdating = false;
 
     public DatePickerField() {
         setLayout(new BorderLayout(0, 0));
@@ -30,6 +33,17 @@ public class DatePickerField extends JPanel {
                 new LineBorder(new Color(175, 195, 220), 1),
                 BorderFactory.createEmptyBorder(1, 4, 1, 2)
         ));
+
+        txtDate.getDocument().addDocumentListener(new DocumentListener() {
+            private void notifyChange() {
+                if (!isUpdating) {
+                    firePropertyChange("date", null, getDate());
+                }
+            }
+            @Override public void insertUpdate(DocumentEvent e) { notifyChange(); }
+            @Override public void removeUpdate(DocumentEvent e) { notifyChange(); }
+            @Override public void changedUpdate(DocumentEvent e) { notifyChange(); }
+        });
 
         btnCalendar = new JButton();
         btnCalendar.setPreferredSize(new Dimension(24, 24));
@@ -104,12 +118,19 @@ public class DatePickerField extends JPanel {
     }
 
     public void setDate(Date date) {
-        if (date != null) {
-            txtDate.setText(sdf.format(date));
-            calendarView.setTime(date);
-        } else {
-            txtDate.setText("");
+        Date old = getDate();
+        isUpdating = true;
+        try {
+            if (date != null) {
+                txtDate.setText(sdf.format(date));
+                calendarView.setTime(date);
+            } else {
+                txtDate.setText("");
+            }
+        } finally {
+            isUpdating = false;
         }
+        firePropertyChange("date", old, date);
     }
 
     public void setDate(Timestamp timestamp) {
@@ -365,7 +386,7 @@ public class DatePickerField extends JPanel {
         });
 
         btnClear.addActionListener(e -> {
-            txtDate.setText("");
+            setDate(null);
             popupCalendar.setVisible(false);
         });
 

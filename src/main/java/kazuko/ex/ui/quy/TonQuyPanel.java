@@ -173,6 +173,9 @@ public class TonQuyPanel extends JPanel {
         dpkTuNgay = new DatePickerField();
         Calendar calStart = Calendar.getInstance();
         calStart.set(Calendar.DAY_OF_MONTH, 1);
+        if (calStart.get(Calendar.YEAR) == 2026 && calStart.get(Calendar.MONTH) > Calendar.AUGUST) {
+            calStart.set(2026, Calendar.AUGUST, 1);
+        }
         dpkTuNgay.setDate(calStart.getTime());
         dpkTuNgay.setPreferredSize(new Dimension(110, 24));
         dpkTuNgay.addPropertyChangeListener("date", evt -> loadTonQuyData());
@@ -433,17 +436,17 @@ public class TonQuyPanel extends JPanel {
         bottomContainer.setBorder(new MatteBorder(1, 0, 0, 0, new Color(190, 210, 235)));
         bottomContainer.setPreferredSize(new Dimension(1000, 52));
 
-        JPanel pnlTonDau = createSummaryBox("Tồn đầu", "3,907,000", Color.BLACK);
-        lblTonDauValue = (JLabel) pnlTonDau.getComponent(1);
+        lblTonDauValue = new JLabel("3,907,000", SwingConstants.CENTER);
+        JPanel pnlTonDau = createSummaryBox("Tồn đầu", lblTonDauValue, Color.BLACK);
 
-        JPanel pnlTongThu = createSummaryBox("Tổng thu", "792,000", Color.BLACK);
-        lblTongThuValue = (JLabel) pnlTongThu.getComponent(1);
+        lblTongThuValue = new JLabel("792,000", SwingConstants.CENTER);
+        JPanel pnlTongThu = createSummaryBox("Tổng thu", lblTongThuValue, Color.BLACK);
 
-        JPanel pnlTongChi = createSummaryBox("Tổng chi", "10,134", Color.BLACK);
-        lblTongChiValue = (JLabel) pnlTongChi.getComponent(1);
+        lblTongChiValue = new JLabel("10,134", SwingConstants.CENTER);
+        JPanel pnlTongChi = createSummaryBox("Tổng chi", lblTongChiValue, Color.BLACK);
 
-        JPanel pnlTonQuy = createSummaryBox("Tồn quỹ", "4,688,866", Color.BLACK);
-        lblTonQuyValue = (JLabel) pnlTonQuy.getComponent(1);
+        lblTonQuyValue = new JLabel("4,688,866", SwingConstants.CENTER);
+        JPanel pnlTonQuy = createSummaryBox("Tồn quỹ", lblTonQuyValue, Color.BLACK);
 
         bottomContainer.add(pnlTonDau);
         bottomContainer.add(pnlTongThu);
@@ -453,7 +456,7 @@ public class TonQuyPanel extends JPanel {
         add(bottomContainer, BorderLayout.SOUTH);
     }
 
-    private JPanel createSummaryBox(String title, String initialValue, Color textColor) {
+    private JPanel createSummaryBox(String title, JLabel lblValue, Color textColor) {
         JPanel box = new JPanel();
         box.setLayout(new BoxLayout(box, BoxLayout.Y_AXIS));
         box.setOpaque(false);
@@ -469,7 +472,6 @@ public class TonQuyPanel extends JPanel {
         pnlValue.setPreferredSize(new Dimension(140, 24));
         pnlValue.setMaximumSize(new Dimension(140, 24));
 
-        JLabel lblValue = new JLabel(initialValue, SwingConstants.CENTER);
         lblValue.setFont(new Font("Segoe UI", Font.BOLD, 13));
         lblValue.setForeground(textColor);
 
@@ -573,41 +575,52 @@ public class TonQuyPanel extends JPanel {
         Object selectedStoreObj = cbCuaHangFilter.getSelectedItem();
         String selectedStoreId = (selectedStoreObj instanceof CuaHang) ? ((CuaHang) selectedStoreObj).getId() : null;
 
-        List<TransactionItem> filtered = allTransactions.stream().filter(item -> {
-            // Lọc ngày
-            if (tuNgay != null && item.getNgay() != null && item.getNgay().before(tuNgay)) return false;
-            if (denNgay != null && item.getNgay() != null && item.getNgay().after(denNgay)) return false;
+        double initialBase = ("Tất cả".equals(currentSelectedSourceType) || "Tiền mặt".equals(currentSelectedSourceType)) ? baseTonDau : 0.0;
+        double tonDau = initialBase;
+        double totalThu = 0.0;
+        double totalChi = 0.0;
+        List<TransactionItem> filtered = new ArrayList<>();
 
+        for (TransactionItem item : allTransactions) {
             // Lọc cửa hàng
             if (selectedStoreId != null && item.getCuaHangId() != null && !selectedStoreId.equals(item.getCuaHangId())) {
-                return false;
+                continue;
             }
 
             // Lọc theo Nguồn tiền
             if ("Tiền mặt".equals(currentSelectedSourceType)) {
-                return "Tiền mặt".equalsIgnoreCase(item.getLoaiNguonTien());
+                if (!"Tiền mặt".equalsIgnoreCase(item.getLoaiNguonTien())) continue;
             } else if ("Quẹt thẻ".equals(currentSelectedSourceType)) {
-                return "Quẹt thẻ".equalsIgnoreCase(item.getLoaiNguonTien());
+                if (!"Quẹt thẻ".equalsIgnoreCase(item.getLoaiNguonTien())) continue;
             } else if ("Ngân hàng".equals(currentSelectedSourceType)) {
-                return "Ngân hàng".equalsIgnoreCase(item.getLoaiNguonTien());
+                if (!"Ngân hàng".equalsIgnoreCase(item.getLoaiNguonTien())) continue;
             } else if ("TaiKhoan".equals(currentSelectedSourceType) && currentSelectedBankId != null) {
-                return currentSelectedBankId.equals(item.getTaiKhoanNganHangId());
+                if (!currentSelectedBankId.equals(item.getTaiKhoanNganHangId())) continue;
             }
 
-            return true;
-        }).collect(Collectors.toList());
+            // Giao dịch xảy ra trước Từ ngày -> kết chuyển vào Tồn đầu kỳ
+            if (tuNgay != null && item.getNgay() != null && item.getNgay().before(tuNgay)) {
+                tonDau += (item.getThu() - item.getChi());
+                continue;
+            }
+
+            // Giao dịch xảy ra sau Đến ngày -> bỏ qua (không thuộc kỳ hiển thị)
+            if (denNgay != null && item.getNgay() != null && item.getNgay().after(denNgay)) {
+                continue;
+            }
+
+            filtered.add(item);
+            totalThu += item.getThu();
+            totalChi += item.getChi();
+        }
 
         currentDisplayedTransactions = filtered;
 
         // 6. Populate Table
         tableModel.setRowCount(0);
-        double totalThu = 0.0;
-        double totalChi = 0.0;
 
         for (TransactionItem item : currentDisplayedTransactions) {
             String ngayStr = item.getNgay() != null ? sdfDate.format(item.getNgay()) : "";
-            totalThu += item.getThu();
-            totalChi += item.getChi();
 
             tableModel.addRow(new Object[]{
                     "",
@@ -624,7 +637,6 @@ public class TonQuyPanel extends JPanel {
         }
 
         // 7. Calculate Summary Totals
-        double tonDau = baseTonDau;
         double tonCuoi = tonDau + totalThu - totalChi;
 
         lblTonDauValue.setText(CurrencyUtil.format(tonDau));
