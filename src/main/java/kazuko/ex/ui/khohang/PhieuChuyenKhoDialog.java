@@ -40,6 +40,8 @@ public class PhieuChuyenKhoDialog extends JDialog {
     private final KhoHangDAO khoHangDAO = new KhoHangDAO();
     private final NhanVienDAO nhanVienDAO = new NhanVienDAO();
     private final MatHangDAO matHangDAO = new MatHangDAO();
+    private final kazuko.ex.dao.SystemConfigDAO systemConfigDAO = new kazuko.ex.dao.SystemConfigDAO();
+    private kazuko.ex.model.system.SystemConfig systemConfig;
 
     private DonHang currentDonHang;
     private final Runnable onDataSaved;
@@ -91,6 +93,7 @@ public class PhieuChuyenKhoDialog extends JDialog {
         super(parent, donHang == null ? "PHIẾU CHUYỂN KHO - THÊM MỚI" : "PHIẾU CHUYỂN KHO - SỬA", ModalityType.APPLICATION_MODAL);
         this.currentDonHang = donHang;
         this.onDataSaved = onDataSaved;
+        this.systemConfig = systemConfigDAO.getConfig();
 
         initComponents();
         loadDropdownData();
@@ -424,8 +427,9 @@ public class PhieuChuyenKhoDialog extends JDialog {
         pnlLeft.setBackground(Color.WHITE);
         pnlLeft.setBorder(new LineBorder(new Color(190, 210, 235), 1));
 
-        // Columns matching Image 2: STT, Mã hàng, Tên hàng, ĐVT, Giá bán, Bảo hành
-        String[] catCols = {"STT", "Mã hàng", "Tên hàng", "ĐVT", "Giá bán", "Bảo hành"};
+        String priceColHeader = (systemConfig != null && systemConfig.getGiaSuDungKhiChuyenXuatKho() != null)
+                ? systemConfig.getGiaSuDungKhiChuyenXuatKho() : "Giá vốn";
+        String[] catCols = {"STT", "Mã hàng", "Tên hàng", "ĐVT", priceColHeader, "Bảo hành"};
         catalogModel = new DefaultTableModel(catCols, 0) {
             @Override public boolean isCellEditable(int r, int c) { return false; }
         };
@@ -657,6 +661,19 @@ public class PhieuChuyenKhoDialog extends JDialog {
         }
     }
 
+    private double getGiaChuyenXuatKho(MatHang m) {
+        if (m == null) return 0.0;
+        String priceType = (systemConfig != null && systemConfig.getGiaSuDungKhiChuyenXuatKho() != null)
+                ? systemConfig.getGiaSuDungKhiChuyenXuatKho().trim() : "Giá vốn";
+        if ("Giá bán".equalsIgnoreCase(priceType)) {
+            return m.getGiaBan() > 0 ? m.getGiaBan() : (m.getGiaVon() > 0 ? m.getGiaVon() : m.getGiaNhap());
+        } else if ("Giá nhập".equalsIgnoreCase(priceType)) {
+            return m.getGiaNhap() > 0 ? m.getGiaNhap() : (m.getGiaVon() > 0 ? m.getGiaVon() : m.getGiaBan());
+        } else { // "Giá vốn" (mặc định)
+            return m.getGiaVon() > 0 ? m.getGiaVon() : (m.getGiaNhap() > 0 ? m.getGiaNhap() : m.getGiaBan());
+        }
+    }
+
     private void populateCatalogTable() {
         catalogModel.setRowCount(0);
         for (int i = 0; i < filteredCatalogItems.size(); i++) {
@@ -666,7 +683,7 @@ public class PhieuChuyenKhoDialog extends JDialog {
                     m.getCode() != null ? m.getCode() : "",
                     m.getName() != null ? m.getName() : "",
                     m.getTenDonViTinh() != null ? m.getTenDonViTinh() : "",
-                    CurrencyUtil.format(m.getGiaBan()),
+                    CurrencyUtil.format(getGiaChuyenXuatKho(m)),
                     m.getBaoHanh() != null ? m.getBaoHanh() : ""
             });
         }
@@ -686,13 +703,17 @@ public class PhieuChuyenKhoDialog extends JDialog {
         MatHang m = filteredCatalogItems.get(row);
         double qty = ((Number) spnSoLuong.getValue()).doubleValue();
 
+        // Kiểm tra cấu hình cho phép nhập một mặt hàng nhiều lần trong phiếu
+        boolean allowDuplicate = (systemConfig != null && systemConfig.isChoPhepNhapMotMatHangNhieuLan());
         boolean found = false;
-        for (DonHangChiTiet existing : lineItems) {
-            if (existing.getMatHangId() != null && existing.getMatHangId().equals(m.getId())) {
-                existing.setSoLuong(existing.getSoLuong() + qty);
-                existing.tinhThanhTien();
-                found = true;
-                break;
+        if (!allowDuplicate) {
+            for (DonHangChiTiet existing : lineItems) {
+                if (existing.getMatHangId() != null && existing.getMatHangId().equals(m.getId())) {
+                    existing.setSoLuong(existing.getSoLuong() + qty);
+                    existing.tinhThanhTien();
+                    found = true;
+                    break;
+                }
             }
         }
 
@@ -704,7 +725,7 @@ public class PhieuChuyenKhoDialog extends JDialog {
             ct.setDonViTinhId(m.getDonViTinhId());
             ct.setTenDonViTinh(m.getTenDonViTinh());
             ct.setSoLuong(qty);
-            ct.setDonGia(m.getGiaNhap() > 0 ? m.getGiaNhap() : 0.0);
+            ct.setDonGia(getGiaChuyenXuatKho(m));
             ct.setTiLeGiamGia(0.0);
             ct.setBaoHanh(m.getBaoHanh());
             ct.tinhThanhTien();

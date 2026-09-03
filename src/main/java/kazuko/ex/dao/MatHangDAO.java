@@ -435,6 +435,10 @@ public class MatHangDAO extends BaseDAO {
         return null;
     }
 
+    public MatHang getById(String id) {
+        return findById(id);
+    }
+
     public boolean insert(MatHang mh) {
         if (mh == null) return false;
         if (mh.getId() == null || mh.getId().trim().isEmpty()) {
@@ -943,6 +947,40 @@ public class MatHangDAO extends BaseDAO {
             ps.setString(1, id);
             return ps.executeUpdate() > 0;
         } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public double getTonKhoHienTai(String matHangId) {
+        if (matHangId == null || matHangId.trim().isEmpty()) return 0.0;
+        String sql = "SELECT COALESCE(SUM(SLNHAP), 0) - COALESCE(SUM(SLXUAT), 0) AS TONKHO " +
+                "FROM TDONHANGCHITIET c " +
+                "JOIN TDONHANG d ON c.TDONHANGID = d.ID " +
+                "WHERE c.DMATHANGID = ? AND (d.STATUS IS NULL OR d.STATUS >= 0)";
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, matHangId.trim());
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getDouble("TONKHO");
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Lỗi getTonKhoHienTai: " + e.getMessage());
+        }
+        return 0.0;
+    }
+
+    public boolean updateGiaVon(String matHangId, double giaVonMoi) {
+        if (matHangId == null || matHangId.trim().isEmpty()) return false;
+        String sql = "UPDATE DMATHANG SET GIAVON = ? WHERE ID = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setDouble(1, giaVonMoi);
+            ps.setString(2, matHangId.trim());
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("Lỗi updateGiaVon: " + e.getMessage());
             return false;
         }
     }

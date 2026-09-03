@@ -38,6 +38,9 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import kazuko.ex.dao.SystemConfigDAO;
+import kazuko.ex.model.system.SystemConfig;
+
 public class PhieuNhapKhoDialog extends JDialog {
 
     private final DonHangDAO donHangDAO = new DonHangDAO();
@@ -46,6 +49,8 @@ public class PhieuNhapKhoDialog extends JDialog {
     private final KhachHangDAO khachHangDAO = new KhachHangDAO();
     private final NhaCungCapDAO nhaCungCapDAO = new NhaCungCapDAO();
     private final MatHangDAO matHangDAO = new MatHangDAO();
+    private final SystemConfigDAO systemConfigDAO = new SystemConfigDAO();
+    private SystemConfig systemConfig;
 
     private DonHang currentDonHang = null;
     private final Runnable onDataSaved;
@@ -98,7 +103,7 @@ public class PhieuNhapKhoDialog extends JDialog {
         super(parent, donHang == null ? "PHIẾU NHẬP KHO - THÊM MỚI" : "PHIẾU NHẬP KHO - CHỈNH SỬA", ModalityType.APPLICATION_MODAL);
         this.currentDonHang = donHang;
         this.onDataSaved = onDataSaved;
-
+        this.systemConfig = systemConfigDAO.getConfig();
         initComponents();
         loadDropdownData();
         loadCatalogData();
@@ -761,14 +766,17 @@ public class PhieuNhapKhoDialog extends JDialog {
         double qty = ((Number) spnSoLuong.getValue()).doubleValue();
         double price = parseDouble(txtDonGiaQuick.getText(), m.getGiaNhap());
 
-        // Kiểm tra xem mặt hàng đã có trong chi tiết chưa, nếu có thì tăng số lượng
+        // Kiểm tra cấu hình cho phép nhập một mặt hàng nhiều lần trong phiếu
+        boolean allowDuplicate = (systemConfig != null && systemConfig.isChoPhepNhapMotMatHangNhieuLan());
         boolean found = false;
-        for (DonHangChiTiet existing : lineItems) {
-            if (existing.getMatHangId() != null && existing.getMatHangId().equals(m.getId())) {
-                existing.setSoLuong(existing.getSoLuong() + qty);
-                existing.tinhThanhTien();
-                found = true;
-                break;
+        if (!allowDuplicate) {
+            for (DonHangChiTiet existing : lineItems) {
+                if (existing.getMatHangId() != null && existing.getMatHangId().equals(m.getId())) {
+                    existing.setSoLuong(existing.getSoLuong() + qty);
+                    existing.tinhThanhTien();
+                    found = true;
+                    break;
+                }
             }
         }
 
@@ -1092,13 +1100,32 @@ public class PhieuNhapKhoDialog extends JDialog {
         dh.setKhoNhapId(selKho.getId());
         dh.setTenKhoNhap(selKho.getName());
 
+        // Validation: Bắt buộc chọn nhân viên trong nhập kho (theo Cấu hình toàn hệ thống)
         NhanVien selNv = (NhanVien) cbNhanVienNhap.getSelectedItem();
-        if (selNv != null) {
+        if (systemConfig != null && systemConfig.isBatBuocChonNhanVienNhapKho()) {
+            if (selNv == null || selNv.getId() == null || selNv.getId().trim().isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Bắt buộc chọn nhân viên trong nhập kho (theo Cấu hình toàn hệ thống)!", "Cảnh báo", JOptionPane.WARNING_MESSAGE);
+                cbNhanVienNhap.requestFocus();
+                return false;
+            }
+        }
+        if (selNv != null && selNv.getId() != null && !selNv.getId().trim().isEmpty()) {
             dh.setNhanVienNhapId(selNv.getId());
             dh.setTenNhanVienNhap(selNv.getName());
+        } else {
+            dh.setNhanVienNhapId(null);
+            dh.setTenNhanVienNhap(null);
         }
 
+        // Validation: Bắt buộc chọn nhà cung cấp trong nhập kho (theo Cấu hình toàn hệ thống)
         KhachHang selNcc = (KhachHang) cbNhaCungCap.getSelectedItem();
+        if (systemConfig != null && systemConfig.isBatBuocChonNhaCungCapNhapKho()) {
+            if (selNcc == null || selNcc.getId() == null || selNcc.getId().trim().isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Bắt buộc chọn nhà cung cấp trong nhập kho (theo Cấu hình toàn hệ thống)!", "Cảnh báo", JOptionPane.WARNING_MESSAGE);
+                cbNhaCungCap.requestFocus();
+                return false;
+            }
+        }
         if (selNcc != null && selNcc.getId() != null && !selNcc.getId().isEmpty()) {
             dh.setNhaCungCapId(selNcc.getId());
             dh.setKhachHangId(selNcc.getId());
@@ -1145,6 +1172,11 @@ public class PhieuNhapKhoDialog extends JDialog {
         }
 
         if (success) {
+            // Tự động tính giá vốn theo Cấu hình toàn hệ thống
+            if (systemConfig != null && systemConfig.isTuDongTinhGiaVon()) {
+                capNhatGiaVonSauNhapKho(dh.getChiTietLayHang());
+            }
+
             JOptionPane.showMessageDialog(this, "Lưu phiếu nhập kho thành công!", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
             if (onDataSaved != null) onDataSaved.run();
 
@@ -1160,6 +1192,30 @@ public class PhieuNhapKhoDialog extends JDialog {
         } else {
             JOptionPane.showMessageDialog(this, "Không thể lưu phiếu nhập kho. Vui lòng kiểm tra lại!", "Lỗi", JOptionPane.ERROR_MESSAGE);
             return false;
+        }
+    }
+
+    private void capNhatGiaVonSauNhapKho(List<DonHangChiTiet> details) {
+        if (details == null || details.isEmpty()) return;
+        for (DonHangChiTiet ct : details) {
+            if (ct.getMatHangId() == null || ct.getSoLuong() <= 0) continue;
+            MatHang mh = matHangDAO.getById(ct.getMatHangId());
+            if (mh == null) continue;
+
+            double qNhap = ct.getSoLuong();
+            double pNhap = ct.getDonGia() > 0 ? ct.getDonGia() : (ct.getThanhTien() / qNhap);
+            double qTonHienTai = matHangDAO.getTonKhoHienTai(mh.getId());
+            double qTonTruoc = qTonHienTai - qNhap;
+            double pCu = mh.getGiaVon();
+
+            double pMoi;
+            if (qTonTruoc > 0 && pCu > 0) {
+                pMoi = (qTonTruoc * pCu + qNhap * pNhap) / (qTonTruoc + qNhap);
+            } else {
+                pMoi = pNhap;
+            }
+            pMoi = Math.round(pMoi * 100.0) / 100.0;
+            matHangDAO.updateGiaVon(mh.getId(), pMoi);
         }
     }
 

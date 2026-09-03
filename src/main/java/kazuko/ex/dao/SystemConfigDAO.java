@@ -10,6 +10,10 @@ public class SystemConfigDAO {
     private static final String CONFIG_FILE = "system_config.properties";
     private static SystemConfig cachedConfig = null;
 
+    public SystemConfig getConfig() {
+        return loadConfig();
+    }
+
     public synchronized SystemConfig loadConfig() {
         if (cachedConfig != null) {
             return cachedConfig;

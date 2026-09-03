@@ -42,6 +42,8 @@ public class PhieuXuatKhoDialog extends JDialog {
     private final NhanVienDAO nhanVienDAO = new NhanVienDAO();
     private final KhachHangDAO khachHangDAO = new KhachHangDAO();
     private final MatHangDAO matHangDAO = new MatHangDAO();
+    private final kazuko.ex.dao.SystemConfigDAO systemConfigDAO = new kazuko.ex.dao.SystemConfigDAO();
+    private kazuko.ex.model.system.SystemConfig systemConfig;
 
     private DonHang currentDonHang;
     private final Runnable onDataSaved;
@@ -90,6 +92,7 @@ public class PhieuXuatKhoDialog extends JDialog {
         super(parent, donHang == null ? "PHIẾU XUẤT KHO - THÊM MỚI" : "PHIẾU XUẤT KHO - CHỈNH SỬA", ModalityType.APPLICATION_MODAL);
         this.currentDonHang = donHang;
         this.onDataSaved = onDataSaved;
+        this.systemConfig = systemConfigDAO.getConfig();
 
         initComponents();
         setupKeyBindings();
@@ -691,6 +694,19 @@ public class PhieuXuatKhoDialog extends JDialog {
         }
     }
 
+    private double getGiaXuatKho(MatHang m) {
+        if (m == null) return 0.0;
+        String priceType = (systemConfig != null && systemConfig.getGiaSuDungKhiChuyenXuatKho() != null)
+                ? systemConfig.getGiaSuDungKhiChuyenXuatKho().trim() : "Giá vốn";
+        if ("Giá vốn".equalsIgnoreCase(priceType)) {
+            return m.getGiaVon() > 0 ? m.getGiaVon() : (m.getGiaNhap() > 0 ? m.getGiaNhap() : m.getGiaBan());
+        } else if ("Giá nhập".equalsIgnoreCase(priceType)) {
+            return m.getGiaNhap() > 0 ? m.getGiaNhap() : (m.getGiaVon() > 0 ? m.getGiaVon() : m.getGiaBan());
+        } else { // "Giá bán"
+            return m.getGiaBan() > 0 ? m.getGiaBan() : (m.getGiaVon() > 0 ? m.getGiaVon() : m.getGiaNhap());
+        }
+    }
+
     private void addSelectedCatalogItem() {
         int sel = tableCatalog.getSelectedRow();
         if (sel < 0 || sel >= filteredCatalogItems.size()) return;
@@ -711,7 +727,8 @@ public class PhieuXuatKhoDialog extends JDialog {
             }
         }
 
-        if (existing != null) {
+        boolean allowDuplicate = (systemConfig != null && systemConfig.isChoPhepNhapMotMatHangNhieuLan());
+        if (existing != null && !allowDuplicate) {
             existing.setSoLuong(existing.getSoLuong() + qty);
             existing.tinhThanhTien();
         } else {
@@ -722,7 +739,7 @@ public class PhieuXuatKhoDialog extends JDialog {
             ct.setDonViTinhId(m.getDonViTinhId());
             ct.setTenDonViTinh(m.getTenDonViTinh());
             ct.setSoLuong(qty);
-            ct.setDonGia(m.getGiaBan());
+            ct.setDonGia(getGiaXuatKho(m));
             ct.setTiLeGiamGia(0.0);
             ct.tinhThanhTien();
             ct.setBaoHanh(m.getBaoHanh() != null ? m.getBaoHanh() : "");
