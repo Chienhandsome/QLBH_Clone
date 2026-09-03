@@ -50,42 +50,42 @@ public class PhieuThuDAO extends BaseDAO {
         return "4f1466a0-0756-4ba9-afa8-053b96ca7569";
     }
 
-    private synchronized void ensureTableExists() {
+    private synchronized void ensureTableExists(Connection conn) {
         if (tableChecked) return;
         tableChecked = true;
-        try (Connection conn = getConnection()) {
+        try {
             DatabaseMetaData md = conn.getMetaData();
-            ResultSet rs = md.getTables(null, null, "TPHIEUTHU", new String[]{"TABLE"});
-            boolean exists = rs.next();
-            rs.close();
-            if (!exists) {
-                String ddl = "CREATE TABLE TPHIEUTHU (" +
-                        "ID VARCHAR(50) NOT NULL PRIMARY KEY, " +
-                        "SOPHIEU VARCHAR(50), " +
-                        "NGAY TIMESTAMP, " +
-                        "DLYDOTHUCHIID VARCHAR(50), " +
-                        "TENPHANLOAI VARCHAR(255), " +
-                        "LYDOTHU VARCHAR(500), " +
-                        "CHUNGTUGOC VARCHAR(255), " +
-                        "LOAIDOITUONG VARCHAR(50), " +
-                        "TENDOITUONG VARCHAR(255), " +
-                        "DIACHI VARCHAR(500), " +
-                        "DNHANVIENID VARCHAR(50), " +
-                        "DKHACHHANGID VARCHAR(50), " +
-                        "DNHACUNGCAPID VARCHAR(50), " +
-                        "SOTIEN DOUBLE PRECISION, " +
-                        "CHUYENVAOTAIKHOAN SMALLINT DEFAULT 0, " +
-                        "DTAIKHOANNGANHANGID VARCHAR(50), " +
-                        "DCUAHANGID VARCHAR(50), " +
-                        "KHONGTHAYDOICONGNO SMALLINT DEFAULT 0, " +
-                        "NOTE VARCHAR(500), " +
-                        "STATUS SMALLINT DEFAULT 1, " +
-                        "TIMECREATED TIMESTAMP, " +
-                        "USERCREATEDID VARCHAR(50)" +
-                        ")";
-                try (Statement st = conn.createStatement()) {
-                    st.executeUpdate(ddl);
-                    if (!conn.getAutoCommit()) conn.commit();
+            try (ResultSet rs = md.getTables(null, null, "TPHIEUTHU", new String[]{"TABLE"})) {
+                boolean exists = rs.next();
+                if (!exists) {
+                    String ddl = "CREATE TABLE TPHIEUTHU (" +
+                            "ID VARCHAR(50) NOT NULL PRIMARY KEY, " +
+                            "SOPHIEU VARCHAR(50), " +
+                            "NGAY TIMESTAMP, " +
+                            "DLYDOTHUCHIID VARCHAR(50), " +
+                            "TENPHANLOAI VARCHAR(255), " +
+                            "LYDOTHU VARCHAR(500), " +
+                            "CHUNGTUGOC VARCHAR(255), " +
+                            "LOAIDOITUONG VARCHAR(50), " +
+                            "TENDOITUONG VARCHAR(255), " +
+                            "DIACHI VARCHAR(500), " +
+                            "DNHANVIENID VARCHAR(50), " +
+                            "DKHACHHANGID VARCHAR(50), " +
+                            "DNHACUNGCAPID VARCHAR(50), " +
+                            "SOTIEN DOUBLE PRECISION, " +
+                            "CHUYENVAOTAIKHOAN SMALLINT DEFAULT 0, " +
+                            "DTAIKHOANNGANHANGID VARCHAR(50), " +
+                            "DCUAHANGID VARCHAR(50), " +
+                            "KHONGTHAYDOICONGNO SMALLINT DEFAULT 0, " +
+                            "NOTE VARCHAR(500), " +
+                            "STATUS SMALLINT DEFAULT 1, " +
+                            "TIMECREATED TIMESTAMP, " +
+                            "USERCREATEDID VARCHAR(50)" +
+                            ")";
+                    try (Statement st = conn.createStatement()) {
+                        st.executeUpdate(ddl);
+                        if (!conn.getAutoCommit()) conn.commit();
+                    }
                 }
             }
         } catch (Exception e) {
@@ -102,7 +102,7 @@ public class PhieuThuDAO extends BaseDAO {
 
         // Check DB
         try (Connection conn = getConnection()) {
-            ensureTableExists();
+            ensureTableExists(conn);
             String sql = "SELECT SOPHIEU FROM TPHIEUTHU WHERE SOPHIEU LIKE ? ORDER BY SOPHIEU DESC";
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
                 ps.setString(1, prefix + "%");
@@ -152,7 +152,7 @@ public class PhieuThuDAO extends BaseDAO {
         // Try DB
         boolean dbOk = false;
         try (Connection conn = getConnection()) {
-            ensureTableExists();
+            ensureTableExists(conn);
             String sql = "INSERT INTO TPHIEUTHU (" +
                     "ID, SOPHIEU, NGAY, DLYDOTHUCHIID, TENPHANLOAI, LYDOTHU, CHUNGTUGOC, " +
                     "LOAIDOITUONG, TENDOITUONG, DIACHI, DNHANVIENID, DKHACHHANGID, DNHACUNGCAPID, " +
@@ -201,7 +201,7 @@ public class PhieuThuDAO extends BaseDAO {
         if (pt == null || pt.getId() == null) return false;
 
         try (Connection conn = getConnection()) {
-            ensureTableExists();
+            ensureTableExists(conn);
             String sql = "UPDATE TPHIEUTHU SET " +
                     "SOPHIEU=?, NGAY=?, DLYDOTHUCHIID=?, TENPHANLOAI=?, LYDOTHU=?, CHUNGTUGOC=?, " +
                     "LOAIDOITUONG=?, TENDOITUONG=?, DIACHI=?, DNHANVIENID=?, DKHACHHANGID=?, DNHACUNGCAPID=?, " +
@@ -247,7 +247,7 @@ public class PhieuThuDAO extends BaseDAO {
     public boolean delete(String id) {
         if (id == null) return false;
         try (Connection conn = getConnection()) {
-            ensureTableExists();
+            ensureTableExists(conn);
             String sql = "UPDATE TPHIEUTHU SET STATUS = -1 WHERE ID = ?";
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
                 ps.setString(1, id);
@@ -268,7 +268,7 @@ public class PhieuThuDAO extends BaseDAO {
     public boolean restore(String id) {
         if (id == null) return false;
         try (Connection conn = getConnection()) {
-            ensureTableExists();
+            ensureTableExists(conn);
             String sql = "UPDATE TPHIEUTHU SET STATUS = 1 WHERE ID = ?";
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
                 ps.setString(1, id);
@@ -289,7 +289,7 @@ public class PhieuThuDAO extends BaseDAO {
     public List<PhieuThu> getTrashItems() {
         List<PhieuThu> list = new ArrayList<>();
         try (Connection conn = getConnection()) {
-            ensureTableExists();
+            ensureTableExists(conn);
             String sql = "SELECT * FROM TPHIEUTHU WHERE STATUS = -1 ORDER BY NGAY DESC";
             try (PreparedStatement ps = conn.prepareStatement(sql);
                  ResultSet rs = ps.executeQuery()) {
@@ -333,7 +333,7 @@ public class PhieuThuDAO extends BaseDAO {
     public List<PhieuThu> getAll() {
         List<PhieuThu> list = new ArrayList<>();
         try (Connection conn = getConnection()) {
-            ensureTableExists();
+            ensureTableExists(conn);
             String sql = "SELECT * FROM TPHIEUTHU WHERE STATUS >= 0 ORDER BY NGAY DESC, SOPHIEU DESC";
             try (PreparedStatement ps = conn.prepareStatement(sql);
                  ResultSet rs = ps.executeQuery()) {

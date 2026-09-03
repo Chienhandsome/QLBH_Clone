@@ -12,14 +12,18 @@ import kazuko.ex.ui.danhmuc.CuaHangDialog;
 import kazuko.ex.ui.danhmuc.DanhMucDotKhuyenMaiPanel;
 import kazuko.ex.ui.danhmuc.DanhMucKhachHangPanel;
 import kazuko.ex.ui.danhmuc.DanhMucMatHangPanel;
+import kazuko.ex.ui.danhmuc.DanhMucNhaCungCapPanel;
 import kazuko.ex.ui.danhmuc.KhachHangThanThietPanel;
 import kazuko.ex.ui.danhmuc.KhoHangDialog;
 import kazuko.ex.ui.danhmuc.LyDoThuChiDialog;
 import kazuko.ex.ui.danhmuc.NhanVienDialog;
 import kazuko.ex.ui.danhmuc.TaiKhoanNganHangDialog;
+import kazuko.ex.ui.dathang.DatHangNhaCungCapPanel;
 import kazuko.ex.ui.dathang.KhachDatHangPanel;
 import kazuko.ex.ui.hoadon.HoaDonBanHangPanel;
 import kazuko.ex.ui.hoadon.QuanLyBanHangPanel;
+import kazuko.ex.ui.khohang.QuanLyChuyenKhoPanel;
+import kazuko.ex.ui.khohang.QuanLyNhapKhoPanel;
 import kazuko.ex.ui.khohang.QuanLyXuatKhoPanel;
 import kazuko.ex.ui.nhansu.ChamCongPanel;
 import kazuko.ex.ui.nhansu.TamUngLuongPanel;
@@ -360,7 +364,7 @@ public class MainFrame extends JFrame {
 
         JMenuItem miNCC = new JMenuItem("Danh mục nhà cung cấp");
         miNCC.setIcon(IconHelper.getIcon("users.png", 16, 16));
-        miNCC.addActionListener(e -> openTab("Danh mục nhà cung cấp", createPlaceholderPanel("Danh mục nhà cung cấp")));
+        miNCC.addActionListener(e -> openTab("Danh mục nhà cung cấp", new DanhMucNhaCungCapPanel()));
 
         mKhoHang.add(miKhoHang);
         mKhoHang.add(miNCC);
@@ -369,11 +373,11 @@ public class MainFrame extends JFrame {
 
         JMenuItem miDatHangNCC = new JMenuItem("Đặt hàng nhà cung cấp");
         miDatHangNCC.setIcon(IconHelper.getIcon("report--pencil.png", 16, 16));
-        miDatHangNCC.addActionListener(e -> openTab("Đặt hàng nhà cung cấp", createPlaceholderPanel("Đặt hàng nhà cung cấp")));
+        miDatHangNCC.addActionListener(e -> openTab("Đặt hàng nhà cung cấp", new DatHangNhaCungCapPanel()));
 
         JMenuItem miNhapKho = new JMenuItem("Nhập hàng vào kho");
         miNhapKho.setIcon(IconHelper.getIcon("navigation-000-frame.png", 16, 16));
-        miNhapKho.addActionListener(e -> openTab("Nhập hàng vào kho", createPlaceholderPanel("Nhập hàng vào kho")));
+        miNhapKho.addActionListener(e -> openTab("Quản lý nhập kho", new QuanLyNhapKhoPanel()));
 
         JMenuItem miXuatKhac = new JMenuItem("Xuất kho");
         miXuatKhac.setIcon(IconHelper.getIcon("navigation-180-frame.png", 16, 16));
@@ -381,7 +385,7 @@ public class MainFrame extends JFrame {
 
         JMenuItem miChuyenKho = new JMenuItem("Chuyển kho");
         miChuyenKho.setIcon(IconHelper.getIcon("document_valid.png", 16, 16));
-        miChuyenKho.addActionListener(e -> openTab("Chuyển kho", createPlaceholderPanel("Chuyển kho")));
+        miChuyenKho.addActionListener(e -> openTab("Quản lý chuyển kho", new QuanLyChuyenKhoPanel()));
 
         JMenuItem miKiemKe = new JMenuItem("Kiểm kê kho");
         miKiemKe.setIcon(IconHelper.getIcon("edit-column.png", 16, 16));
@@ -712,6 +716,11 @@ public class MainFrame extends JFrame {
             case "CƠ SỞ DỮ LIỆU - CẤU HÌNH":
                 new DatabaseConfigDialog(this).setVisible(true);
                 break;
+            case "QUẢN LÝ NHẬP KHO":
+            case "NHẬP KHO":
+            case "NHẬP HÀNG VÀO KHO":
+                openTab("Quản lý nhập kho", new QuanLyNhapKhoPanel());
+                break;
             case "QUẢN LÝ XUẤT KHO":
             case "XUẤT KHO":
                 openTab("Quản lý xuất kho", new QuanLyXuatKhoPanel());
@@ -719,6 +728,14 @@ public class MainFrame extends JFrame {
             case "BÁO GIÁ BÁN HÀNG":
             case "BÁO GIÁ KHÁCH HÀNG":
                 openTab("Báo giá bán hàng", new BaoGiaBanHangPanel());
+                break;
+            case "ĐẶT HÀNG NHÀ CUNG CẤP":
+            case "ĐẶT HÀNG NCC":
+                openTab("Đặt hàng nhà cung cấp", new DatHangNhaCungCapPanel());
+                break;
+            case "CHUYỂN KHO":
+            case "QUẢN LÝ CHUYỂN KHO":
+                openTab("Quản lý chuyển kho", new QuanLyChuyenKhoPanel());
                 break;
             case "KHÁCH ĐẶT HÀNG":
             case "ĐẶT HÀNG":
@@ -731,6 +748,10 @@ public class MainFrame extends JFrame {
                 break;
             case "DANH MỤC KHÁCH HÀNG":
                 openTab("Danh mục khách hàng", new DanhMucKhachHangPanel());
+                break;
+            case "DANH MỤC NHÀ CUNG CẤP":
+            case "NHÀ CUNG CẤP":
+                openTab("Danh mục nhà cung cấp", new DanhMucNhaCungCapPanel());
                 break;
             case "DANH MỤC PHIẾU THU":
             case "PHIẾU THU":

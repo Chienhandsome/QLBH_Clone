@@ -32,6 +32,17 @@ public class KhachHang {
 
     public KhachHang() {}
 
+    public KhachHang(String id, String name) {
+        this.id = id;
+        this.name = name;
+    }
+
+    public KhachHang(String id, String name, String maKhach) {
+        this.id = id;
+        this.name = name;
+        this.maKhach = maKhach;
+    }
+
     public KhachHang(String id, String maKhach, String name, String diaChi, String dienThoai, String tenNhomKhachHang) {
         this.id = id;
         this.maKhach = maKhach;
@@ -141,7 +152,7 @@ public class KhachHang {
 
     @Override
     public String toString() {
-        return name + (dienThoai != null && !dienThoai.isEmpty() ? " (" + dienThoai + ")" : "");
+        return (name != null ? name : "") + (dienThoai != null && !dienThoai.isEmpty() ? " (" + dienThoai + ")" : "");
     }
 }
 

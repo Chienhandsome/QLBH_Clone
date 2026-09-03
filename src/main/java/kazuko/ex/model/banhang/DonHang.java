@@ -17,13 +17,19 @@ public class DonHang {
     private double tienThanhToan = 0.0;
     private double conLai = 0.0;
     private String khoXuatId;
+    private String tenKhoXuat;
     private String khoNhapId;
+    private String tenKhoNhap;
     private String nhanVienXuatId;
+    private String tenNhanVienXuat;
     private String tenNhanVien;
+    private String nhanVienNhapId;
+    private String tenNhanVienNhap;
     private String khachHangId;
     private String tenKhach;
     private String diaChiGiaoHang;
     private String nhaCungCapId;
+    private String tenNhaCungCap;
     private String cuaHangId;
     private String taiKhoanNganHangId;
     private String ghiChu;
@@ -32,6 +38,8 @@ public class DonHang {
     private int status = 1; // 1: Đã lưu, 0: Lưu tạm, -1: Xóa
     private boolean isTam = false;
 
+    private double tiLeThue = 0.0;
+    private double tienThue = 0.0;
     private double phiVanChuyen = 0.0;
     private double tiLePhiVanChuyen = 0.0;
     private double tienMat = 0.0;
@@ -126,14 +134,29 @@ public class DonHang {
     public String getKhoXuatId() { return khoXuatId; }
     public void setKhoXuatId(String khoXuatId) { this.khoXuatId = khoXuatId; }
 
+    public String getTenKhoXuat() { return tenKhoXuat; }
+    public void setTenKhoXuat(String tenKhoXuat) { this.tenKhoXuat = tenKhoXuat; }
+
     public String getKhoNhapId() { return khoNhapId; }
     public void setKhoNhapId(String khoNhapId) { this.khoNhapId = khoNhapId; }
+
+    public String getTenKhoNhap() { return tenKhoNhap; }
+    public void setTenKhoNhap(String tenKhoNhap) { this.tenKhoNhap = tenKhoNhap; }
 
     public String getNhanVienXuatId() { return nhanVienXuatId; }
     public void setNhanVienXuatId(String nhanVienXuatId) { this.nhanVienXuatId = nhanVienXuatId; }
 
+    public String getTenNhanVienXuat() { return tenNhanVienXuat; }
+    public void setTenNhanVienXuat(String tenNhanVienXuat) { this.tenNhanVienXuat = tenNhanVienXuat; }
+
     public String getTenNhanVien() { return tenNhanVien; }
     public void setTenNhanVien(String tenNhanVien) { this.tenNhanVien = tenNhanVien; }
+
+    public String getNhanVienNhapId() { return nhanVienNhapId; }
+    public void setNhanVienNhapId(String nhanVienNhapId) { this.nhanVienNhapId = nhanVienNhapId; }
+
+    public String getTenNhanVienNhap() { return tenNhanVienNhap; }
+    public void setTenNhanVienNhap(String tenNhanVienNhap) { this.tenNhanVienNhap = tenNhanVienNhap; }
 
     public String getKhachHangId() { return khachHangId; }
     public void setKhachHangId(String khachHangId) { this.khachHangId = khachHangId; }
@@ -146,6 +169,15 @@ public class DonHang {
 
     public String getNhaCungCapId() { return nhaCungCapId; }
     public void setNhaCungCapId(String nhaCungCapId) { this.nhaCungCapId = nhaCungCapId; }
+
+    public String getTenNhaCungCap() { return tenNhaCungCap; }
+    public void setTenNhaCungCap(String tenNhaCungCap) { this.tenNhaCungCap = tenNhaCungCap; }
+
+    public double getTiLeThue() { return tiLeThue; }
+    public void setTiLeThue(double tiLeThue) { this.tiLeThue = tiLeThue; }
+
+    public double getTienThue() { return tienThue; }
+    public void setTienThue(double tienThue) { this.tienThue = tienThue; }
 
     public String getCuaHangId() { return cuaHangId; }
     public void setCuaHangId(String cuaHangId) { this.cuaHangId = cuaHangId; }

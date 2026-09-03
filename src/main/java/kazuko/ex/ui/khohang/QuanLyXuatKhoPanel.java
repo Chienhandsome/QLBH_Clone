@@ -616,13 +616,8 @@ public class QuanLyXuatKhoPanel extends JPanel {
         Date tuNgay = dpkTuNgay.getDate();
         Date denNgay = dpkDenNgay.getDate();
 
-        KhoHang selKho = (KhoHang) cbKhoXuatFilter.getSelectedItem();
-        String khoId = (selKho != null && selKho.getId() != null && !selKho.getId().isEmpty()) ? selKho.getId() : null;
-
-        NhanVien selNv = (NhanVien) cbNhanVienFilter.getSelectedItem();
-        String nvId = (selNv != null && selNv.getId() != null && !selNv.getId().isEmpty()) ? selNv.getId() : null;
-
-        allVouchers = donHangDAO.getPhieuXuatKho(tuNgay, denNgay, khoId, nvId, null);
+        // Không hạn chế cứng kho ở query DB để giữ allVouchers đầy đủ
+        allVouchers = donHangDAO.getPhieuXuatKho(tuNgay, denNgay, null, null, null);
         applyFilter();
     }
 
@@ -630,17 +625,27 @@ public class QuanLyXuatKhoPanel extends JPanel {
         String kw = txtLoc.getText().trim().toLowerCase();
         KhoHang selKho = (KhoHang) cbKhoXuatFilter.getSelectedItem();
         String filterKhoId = (selKho != null && selKho.getId() != null) ? selKho.getId().trim() : "";
+        String filterKhoName = (selKho != null && selKho.getName() != null) ? selKho.getName().trim().toLowerCase() : "";
 
         NhanVien selNv = (NhanVien) cbNhanVienFilter.getSelectedItem();
         String filterNvId = (selNv != null && selNv.getId() != null) ? selNv.getId().trim() : "";
+        String filterNvName = (selNv != null && selNv.getName() != null) ? selNv.getName().trim().toLowerCase() : "";
 
         filteredVouchers.clear();
         for (DonHang dh : allVouchers) {
-            if (!filterKhoId.isEmpty() && !filterKhoId.equals(dh.getKhoXuatId())) {
-                continue;
+            if (!filterKhoId.isEmpty()) {
+                boolean matchId = filterKhoId.equals(dh.getKhoXuatId());
+                boolean matchName = dh.getTenKho() != null && dh.getTenKho().trim().equalsIgnoreCase(filterKhoName);
+                if (!matchId && !matchName) {
+                    continue;
+                }
             }
-            if (!filterNvId.isEmpty() && !filterNvId.equals(dh.getNhanVienXuatId())) {
-                continue;
+            if (!filterNvId.isEmpty()) {
+                boolean matchNvId = filterNvId.equals(dh.getNhanVienXuatId());
+                boolean matchNvName = dh.getTenNhanVien() != null && dh.getTenNhanVien().trim().equalsIgnoreCase(filterNvName);
+                if (!matchNvId && !matchNvName) {
+                    continue;
+                }
             }
             if (!kw.isEmpty()) {
                 String name = dh.getName() != null ? dh.getName().toLowerCase() : "";

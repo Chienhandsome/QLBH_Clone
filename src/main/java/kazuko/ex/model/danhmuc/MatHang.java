@@ -33,6 +33,7 @@ public class MatHang {
     private String baoHanh;
     private String kichThuoc;
     private double hoaHong = 0.0;
+    private double tonKho = 0.0;
     private double tonToiThieu = 0.0;
     private double tonToiDa = 0.0;
     private int phuongThucTruKho = 0; // 0: kiem vat tu, 1: dinh luong combo, 2: ban kem, 3: dich vu, 4: vat tu nguyen lieu
@@ -144,6 +145,9 @@ public class MatHang {
 
     public double getHoaHong() { return hoaHong; }
     public void setHoaHong(double hoaHong) { this.hoaHong = hoaHong; }
+
+    public double getTonKho() { return tonKho; }
+    public void setTonKho(double tonKho) { this.tonKho = tonKho; }
 
     public double getTonToiThieu() { return tonToiThieu; }
     public void setTonToiThieu(double tonToiThieu) { this.tonToiThieu = tonToiThieu; }

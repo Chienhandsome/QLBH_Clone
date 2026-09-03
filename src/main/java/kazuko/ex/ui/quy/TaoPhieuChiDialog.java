@@ -3,12 +3,14 @@ package kazuko.ex.ui.quy;
 import kazuko.ex.dao.CuaHangDAO;
 import kazuko.ex.dao.KhachHangDAO;
 import kazuko.ex.dao.LyDoThuChiDAO;
+import kazuko.ex.dao.NhaCungCapDAO;
 import kazuko.ex.dao.NhanVienDAO;
 import kazuko.ex.dao.PhieuChiDAO;
 import kazuko.ex.dao.TaiKhoanNganHangDAO;
 import kazuko.ex.model.danhmuc.CuaHang;
 import kazuko.ex.model.danhmuc.KhachHang;
 import kazuko.ex.model.danhmuc.LyDoThuChi;
+import kazuko.ex.model.danhmuc.NhaCungCap;
 import kazuko.ex.model.danhmuc.NhanVien;
 import kazuko.ex.model.danhmuc.TaiKhoanNganHang;
 import kazuko.ex.model.quy.PhieuChi;
@@ -484,6 +486,14 @@ public class TaoPhieuChiDialog extends JDialog {
             if (nv.getStatus() >= 0) cbNhanVien.addItem(nv);
         }
 
+        // Nhà cung cấp
+        cbNhaCungCap.removeAllItems();
+        cbNhaCungCap.addItem("-- Chọn nhà cung cấp --");
+        List<NhaCungCap> nccList = new NhaCungCapDAO().getAll();
+        for (NhaCungCap ncc : nccList) {
+            if (ncc.getStatus() >= 0) cbNhaCungCap.addItem(ncc.getName());
+        }
+
         // Phân loại
         loadPhanLoaiData();
 
@@ -640,7 +650,11 @@ public class TaoPhieuChiDialog extends JDialog {
         setTitle(pc.getId() != null ? "PHIẾU CHI - CẬP NHẬT" : "PHIẾU CHI - THÊM MỚI");
 
         dpkNgay.setDate(pc.getNgay() != null ? pc.getNgay() : new Date());
-        txtSoPhieu.setText(pc.getSoPhieu() != null ? pc.getSoPhieu() : "");
+        String sp = pc.getSoPhieu();
+        if (sp == null || sp.trim().isEmpty()) {
+            sp = phieuChiDAO.generateNextSoPhieu(dpkNgay.getDate());
+        }
+        txtSoPhieu.setText(sp);
 
         if (pc.getPhanLoaiId() != null) {
             for (LyDoThuChi r : cbPhanLoai.getItems()) {
@@ -678,6 +692,16 @@ public class TaoPhieuChiDialog extends JDialog {
                 KhachHang kh = cbKhachHang.getItemAt(i);
                 if (kh != null && pc.getKhachHangId().equals(kh.getId())) {
                     cbKhachHang.setSelectedIndex(i);
+                    break;
+                }
+            }
+        }
+
+        if (pc.getTenNhaCungCap() != null || pc.getTenDoiTuong() != null) {
+            String targetNcc = pc.getTenNhaCungCap() != null ? pc.getTenNhaCungCap() : pc.getTenDoiTuong();
+            for (int i = 0; i < cbNhaCungCap.getItemCount(); i++) {
+                if (targetNcc.equalsIgnoreCase(cbNhaCungCap.getItemAt(i))) {
+                    cbNhaCungCap.setSelectedIndex(i);
                     break;
                 }
             }

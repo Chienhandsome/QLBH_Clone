@@ -78,6 +78,18 @@ public class ChonCotHienThiDialog extends JDialog {
             "Chuyển khoản", "Thẻ", "Bàn"
     );
 
+    // --- Quản lý nhập kho: Master Import List (Images 1 & 3) ---
+    public static final List<String> ALL_POSSIBLE_NHAPKHO_COLUMNS = Arrays.asList(
+            "Số phiếu", "Ngày", "Nhà cung cấp", "Kho nhập", "Nhân viên nhập",
+            "Tiền hàng", "Tiền giảm giá", "Tỉ lệ giảm giá", "Tài khoản ngân hàng", "Tổng cộng", "Còn lại",
+            "Tiền thuế", "Tỉ lệ thuế", "Phí vận chuyển", "Tiền thanh toán", "Cửa hàng", "Ghi chú"
+    );
+
+    public static final List<String> DEFAULT_VISIBLE_NHAPKHO_COLUMNS = Arrays.asList(
+            "Số phiếu", "Ngày", "Nhà cung cấp", "Kho nhập", "Nhân viên nhập",
+            "Tiền hàng", "Tiền giảm giá", "Tỉ lệ giảm giá", "Tài khoản ngân hàng", "Tổng cộng", "Còn lại"
+    );
+
     // --- Quản lý bán hàng: Detail Items (Lay Hang / Tra Hang) ---
     public static final List<String> ALL_POSSIBLE_DETAIL_COLUMNS = Arrays.asList(
             "Tên mặt hàng", "Mã hàng", "Đơn giá", "ĐVT", "CK%", "Tiền giảm",
