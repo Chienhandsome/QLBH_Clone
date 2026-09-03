@@ -26,6 +26,7 @@ import kazuko.ex.ui.khohang.QuanLyChuyenKhoPanel;
 import kazuko.ex.ui.khohang.QuanLyKiemKePanel;
 import kazuko.ex.ui.khohang.QuanLyNhapKhoPanel;
 import kazuko.ex.ui.khohang.QuanLyXuatKhoPanel;
+import kazuko.ex.ui.khohang.TinhLaiGiaVonDialog;
 import kazuko.ex.ui.nhansu.ChamCongPanel;
 import kazuko.ex.ui.nhansu.TamUngLuongPanel;
 import kazuko.ex.ui.nhansu.ThuongPhatPanel;
@@ -394,7 +395,7 @@ public class MainFrame extends JFrame {
 
         JMenuItem miTinhGiaVon = new JMenuItem("Tính lại giá vốn");
         miTinhGiaVon.setIcon(IconHelper.getIcon("Refresh.png", 16, 16));
-        miTinhGiaVon.addActionListener(e -> openTab("Tính lại giá vốn", createPlaceholderPanel("Tính lại giá vốn")));
+        miTinhGiaVon.addActionListener(e -> new TinhLaiGiaVonDialog(this).setVisible(true));
 
         mKhoHang.add(miDatHangNCC);
         mKhoHang.add(miNhapKho);
@@ -742,6 +743,10 @@ public class MainFrame extends JFrame {
             case "KIỂM KÊ KHO":
             case "QUẢN LÝ KIỂM KÊ":
                 openTab("Quản lý kiểm kê", new QuanLyKiemKePanel());
+                break;
+            case "TÍNH LẠI GIÁ VỐN":
+            case "TÍNH GIÁ VỐN":
+                new TinhLaiGiaVonDialog(this).setVisible(true);
                 break;
             case "KHÁCH ĐẶT HÀNG":
             case "ĐẶT HÀNG":

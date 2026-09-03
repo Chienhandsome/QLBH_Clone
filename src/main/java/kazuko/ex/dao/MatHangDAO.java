@@ -984,5 +984,79 @@ public class MatHangDAO extends BaseDAO {
             return false;
         }
     }
+
+    public int tinhLaiGiaVon(int phuongPhap, java.util.Date tuNgay, java.util.Date denNgay) {
+        int updatedCount = 0;
+        if (phuongPhap == 1 || phuongPhap == 2) {
+            StringBuilder sql = new StringBuilder(
+                    "SELECT c.DMATHANGID, SUM(c.SLNHAP) AS TONG_SL, SUM(c.SLNHAP * c.DONGIA) AS TONG_TIEN " +
+                    "FROM TDONHANGCHITIET c " +
+                    "JOIN TDONHANG d ON c.TDONHANGID = d.ID " +
+                    "WHERE d.LOAI = 1 AND c.SLNHAP > 0 AND (d.STATUS IS NULL OR d.STATUS >= 0) "
+            );
+            if (phuongPhap == 2) {
+                if (tuNgay != null) sql.append("AND d.NGAY >= ? ");
+                if (denNgay != null) sql.append("AND d.NGAY <= ? ");
+            }
+            sql.append("GROUP BY c.DMATHANGID");
+
+            try (Connection conn = getConnection();
+                 PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+                int pIdx = 1;
+                if (phuongPhap == 2) {
+                    if (tuNgay != null) ps.setTimestamp(pIdx++, new Timestamp(tuNgay.getTime()));
+                    if (denNgay != null) {
+                        long endOfDay = denNgay.getTime() + 86399999L;
+                        ps.setTimestamp(pIdx++, new Timestamp(endOfDay));
+                    }
+                }
+                java.util.Map<String, Double> mapGiaVon = new java.util.HashMap<>();
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        String mhId = rs.getString("DMATHANGID");
+                        double tongSl = rs.getDouble("TONG_SL");
+                        double tongTien = rs.getDouble("TONG_TIEN");
+                        if (mhId != null && tongSl > 0) {
+                            double giaVonMoi = Math.round((tongTien / tongSl) * 100.0) / 100.0;
+                            mapGiaVon.put(mhId, giaVonMoi);
+                        }
+                    }
+                }
+                for (java.util.Map.Entry<String, Double> entry : mapGiaVon.entrySet()) {
+                    if (updateGiaVon(entry.getKey(), entry.getValue())) {
+                        updatedCount++;
+                    }
+                }
+            } catch (SQLException e) {
+                System.err.println("Lỗi tinhLaiGiaVon (Bình quân): " + e.getMessage());
+            }
+        } else if (phuongPhap == 3) {
+            String sql = "SELECT c.DMATHANGID, c.DONGIA " +
+                    "FROM TDONHANGCHITIET c " +
+                    "JOIN TDONHANG d ON c.TDONHANGID = d.ID " +
+                    "WHERE d.LOAI = 1 AND c.SLNHAP > 0 AND (d.STATUS IS NULL OR d.STATUS >= 0) " +
+                    "ORDER BY d.NGAY DESC, d.TIMECREATED DESC";
+
+            java.util.Map<String, Double> mapGiaNhap = new java.util.LinkedHashMap<>();
+            try (Connection conn = getConnection();
+                 PreparedStatement ps = conn.prepareStatement(sql);
+                 ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    String mhId = rs.getString("DMATHANGID");
+                    if (mhId != null && !mapGiaNhap.containsKey(mhId)) {
+                        mapGiaNhap.put(mhId, rs.getDouble("DONGIA"));
+                    }
+                }
+            } catch (SQLException e) {
+                System.err.println("Lỗi tinhLaiGiaVon (Giá gần nhất): " + e.getMessage());
+            }
+            for (java.util.Map.Entry<String, Double> entry : mapGiaNhap.entrySet()) {
+                if (updateGiaVon(entry.getKey(), entry.getValue())) {
+                    updatedCount++;
+                }
+            }
+        }
+        return updatedCount;
+    }
 }
 

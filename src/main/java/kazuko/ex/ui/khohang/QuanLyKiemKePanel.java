@@ -412,7 +412,7 @@ public class QuanLyKiemKePanel extends JPanel {
         JPanel pnl = new JPanel(new BorderLayout());
         pnl.setBackground(Color.WHITE);
 
-        tabbedDetail = new JTabbedPane(JTabbedPane.BOTTOM);
+        tabbedDetail = new JTabbedPane(JTabbedPane.TOP);
         tabbedDetail.setFont(new Font("Segoe UI", Font.PLAIN, 12));
 
         // Tab 1: Thông tin (Audit)
