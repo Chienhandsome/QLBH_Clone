@@ -8,7 +8,9 @@ import java.sql.*;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 public class DonHangDAO extends BaseDAO {
@@ -1814,5 +1816,250 @@ public class DonHangDAO extends BaseDAO {
             return getPhieuKiemKeById(ids.get(targetIdx));
         }
         return null;
+    }
+
+    public List<kazuko.ex.model.khohang.TonKhoItem> getTonKhoDanhSach(String khoId) {
+        List<kazuko.ex.model.khohang.TonKhoItem> list = new ArrayList<>();
+        Map<String, Double> stockMap = new HashMap<>();
+
+        // 1. Tính tồn kho nhanh bằng 1 câu aggregate
+        String stockSql;
+        if (khoId != null && !khoId.trim().isEmpty()) {
+            stockSql = "SELECT c.DMATHANGID, " +
+                    "SUM(CASE WHEN d.DKHONHAPID = ? THEN c.SLNHAP ELSE 0 END) AS NHAP, " +
+                    "SUM(CASE WHEN d.DKHOXUATID = ? THEN c.SLXUAT ELSE 0 END) AS XUAT " +
+                    "FROM TDONHANGCHITIET c " +
+                    "JOIN TDONHANG d ON c.TDONHANGID = d.ID " +
+                    "WHERE (d.STATUS IS NULL OR d.STATUS >= 0) AND (d.DKHONHAPID = ? OR d.DKHOXUATID = ?) " +
+                    "GROUP BY c.DMATHANGID";
+        } else {
+            stockSql = "SELECT c.DMATHANGID, " +
+                    "SUM(c.SLNHAP) AS NHAP, " +
+                    "SUM(c.SLXUAT) AS XUAT " +
+                    "FROM TDONHANGCHITIET c " +
+                    "JOIN TDONHANG d ON c.TDONHANGID = d.ID " +
+                    "WHERE (d.STATUS IS NULL OR d.STATUS >= 0) " +
+                    "GROUP BY c.DMATHANGID";
+        }
+
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(stockSql)) {
+            if (khoId != null && !khoId.trim().isEmpty()) {
+                ps.setString(1, khoId.trim());
+                ps.setString(2, khoId.trim());
+                ps.setString(3, khoId.trim());
+                ps.setString(4, khoId.trim());
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    String mhId = rs.getString("DMATHANGID");
+                    double nhap = rs.getDouble("NHAP");
+                    double xuat = rs.getDouble("XUAT");
+                    if (mhId != null) {
+                        stockMap.put(mhId.trim(), nhap - xuat);
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Lỗi tính stockMap: " + e.getMessage());
+        }
+
+        // 2. Lấy toàn bộ danh mục mặt hàng kèm thông tin chi tiết
+        String itemSql = "SELECT m.ID, m.CODE AS MA, m.NAME AS TENHANG, m.DNHOMMATHANGID, nh.NAME AS TENNHOM, " +
+                "m.GIABAN, m.GIAVON, m.QUYDOI, m.BAOHANH, m.TONTOITHIEU, " +
+                "dv1.NAME AS TENDVT1, dv2.NAME AS TENDVT2, hsx.NAME AS TENHANGSX " +
+                "FROM DMATHANG m " +
+                "LEFT JOIN DNHOMMATHANG nh ON m.DNHOMMATHANGID = nh.ID " +
+                "LEFT JOIN DDONVITINH dv1 ON m.DDONVITINHID = dv1.ID " +
+                "LEFT JOIN DDONVITINH dv2 ON m.DDONVITINHCHANID = dv2.ID " +
+                "LEFT JOIN DHANGSANXUAT hsx ON m.DHANGSANXUATID = hsx.ID " +
+                "WHERE (m.STATUS IS NULL OR m.STATUS >= 0) " +
+                "ORDER BY m.CODE ASC";
+
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(itemSql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                kazuko.ex.model.khohang.TonKhoItem item = new kazuko.ex.model.khohang.TonKhoItem();
+                String mhId = rs.getString("ID");
+                item.setMatHangId(mhId);
+                item.setMaHang(rs.getString("MA"));
+                item.setTenHang(rs.getString("TENHANG"));
+                item.setNhomHangId(rs.getString("DNHOMMATHANGID"));
+                item.setNhomHangName(rs.getString("TENNHOM"));
+                item.setDonViTinh(rs.getString("TENDVT1"));
+                item.setDonViTinh2(rs.getString("TENDVT2"));
+                item.setGiaBan(rs.getDouble("GIABAN"));
+                item.setGiaVon(rs.getDouble("GIAVON"));
+                item.setBaoHanh(rs.getString("BAOHANH"));
+                item.setHangSx(rs.getString("TENHANGSX"));
+                item.setTonToiThieu(rs.getDouble("TONTOITHIEU"));
+                double quyDoi = rs.getDouble("QUYDOI");
+                item.setQuyDoi(quyDoi > 0 ? quyDoi : 1.0);
+
+                double ton = stockMap.getOrDefault(mhId != null ? mhId.trim() : "", 0.0);
+                item.setTon(ton);
+
+                list.add(item);
+            }
+        } catch (SQLException e) {
+            System.err.println("Lỗi getTonKhoDanhSach: " + e.getMessage());
+        }
+
+        return list;
+    }
+
+    public List<kazuko.ex.model.khohang.TheKhoEntry> getTheKho(String matHangId, String khoId, java.util.Date tuNgay, java.util.Date denNgay) {
+        List<kazuko.ex.model.khohang.TheKhoEntry> list = new ArrayList<>();
+        if (matHangId == null || matHangId.trim().isEmpty()) return list;
+
+        StringBuilder sql = new StringBuilder(
+                "SELECT d.ID, d.NAME AS SOPHIEU, d.NGAY, d.LOAI, d.DIENGIAI, " +
+                "kh.NAME AS TENKHACH, ncc.NAME AS TENNHACUNGCAP, " +
+                "d.DKHOXUATID, d.DKHONHAPID, kx.NAME AS TENKHOXUAT, kn.NAME AS TENKHONHAP, " +
+                "c.DONGIA, c.THANHTIEN, c.TILEGIAMGIA, c.SLNHAP, c.SLXUAT, " +
+                "dv.NAME AS TENDVT " +
+                "FROM TDONHANGCHITIET c " +
+                "JOIN TDONHANG d ON c.TDONHANGID = d.ID " +
+                "LEFT JOIN DKHACHHANG kh ON d.DKHACHHANGID = kh.ID " +
+                "LEFT JOIN DNHACUNGCAP ncc ON d.DNHACUNGCAPID = ncc.ID " +
+                "LEFT JOIN DDONVITINH dv ON c.DDONVITINHID = dv.ID " +
+                "LEFT JOIN DKHOHANG kx ON d.DKHOXUATID = kx.ID " +
+                "LEFT JOIN DKHOHANG kn ON d.DKHONHAPID = kn.ID " +
+                "WHERE c.DMATHANGID = ? AND (d.STATUS IS NULL OR d.STATUS >= 0) "
+        );
+
+        if (khoId != null && !khoId.trim().isEmpty()) {
+            sql.append("AND (d.DKHOXUATID = ? OR d.DKHONHAPID = ?) ");
+        }
+        if (tuNgay != null) {
+            sql.append("AND d.NGAY >= ? ");
+        }
+        if (denNgay != null) {
+            sql.append("AND d.NGAY <= ? ");
+        }
+        sql.append("ORDER BY d.NGAY ASC, d.TIMECREATED ASC");
+
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            int pIdx = 1;
+            ps.setString(pIdx++, matHangId.trim());
+            if (khoId != null && !khoId.trim().isEmpty()) {
+                ps.setString(pIdx++, khoId.trim());
+                ps.setString(pIdx++, khoId.trim());
+            }
+            if (tuNgay != null) {
+                ps.setTimestamp(pIdx++, new Timestamp(tuNgay.getTime()));
+            }
+            if (denNgay != null) {
+                long endOfDay = denNgay.getTime() + 86399999L;
+                ps.setTimestamp(pIdx++, new Timestamp(endOfDay));
+            }
+
+            double runningBalance = 0.0;
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    kazuko.ex.model.khohang.TheKhoEntry entry = new kazuko.ex.model.khohang.TheKhoEntry();
+                    entry.setSoPhieu(rs.getString("SOPHIEU"));
+                    entry.setNgay(rs.getTimestamp("NGAY"));
+                    entry.setDonGia(rs.getDouble("DONGIA"));
+                    entry.setThanhTien(rs.getDouble("THANHTIEN"));
+                    entry.setTiLeGiamGia(rs.getDouble("TILEGIAMGIA"));
+                    entry.setTenDonViTinh(rs.getString("TENDVT"));
+
+                    int loai = rs.getInt("LOAI");
+                    double slNhap = rs.getDouble("SLNHAP");
+                    double slXuat = rs.getDouble("SLXUAT");
+                    String kxId = rs.getString("DKHOXUATID");
+                    String knId = rs.getString("DKHONHAPID");
+                    String tenKx = rs.getString("TENKHOXUAT");
+                    String tenKn = rs.getString("TENKHONHAP");
+
+                    String doiTuong = "";
+                    if (loai == 3) { // Chuyển kho
+                        if (khoId != null && !khoId.trim().isEmpty()) {
+                            if (khoId.trim().equalsIgnoreCase(kxId != null ? kxId.trim() : "")) {
+                                slNhap = 0;
+                                doiTuong = "Chuyển tới: " + (tenKn != null ? tenKn : "");
+                            } else {
+                                slXuat = 0;
+                                doiTuong = "Chuyển từ: " + (tenKx != null ? tenKx : "");
+                            }
+                        } else {
+                            doiTuong = (tenKx != null ? tenKx : "") + " -> " + (tenKn != null ? tenKn : "");
+                        }
+                    } else if (loai == 1) { // Nhập kho
+                        doiTuong = rs.getString("TENNHACUNGCAP");
+                    } else if (loai == 4) { // Kiểm kê
+                        doiTuong = "Kiểm kê kho";
+                    } else { // Bán lẻ, xuất kho
+                        doiTuong = rs.getString("TENKHACH");
+                    }
+
+                    entry.setSlNhap(slNhap);
+                    entry.setSlXuat(slXuat);
+                    entry.setDoiTuong(doiTuong != null ? doiTuong : "");
+
+                    String dienGiai = rs.getString("DIENGIAI");
+                    if (dienGiai == null || dienGiai.trim().isEmpty()) {
+                        if (loai == 0) dienGiai = "Bán hàng";
+                        else if (loai == 1) dienGiai = "Nhập kho";
+                        else if (loai == 2) dienGiai = "Xuất kho";
+                        else if (loai == 3) dienGiai = "Chuyển kho";
+                        else if (loai == 4) dienGiai = "Kiểm kê";
+                    }
+                    entry.setDienGiai(dienGiai);
+
+                    runningBalance += (slNhap - slXuat);
+                    entry.setTonLuyKe(runningBalance);
+
+                    list.add(entry);
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Lỗi getTheKho: " + e.getMessage());
+        }
+
+        return list;
+    }
+
+    public List<Object[]> getTonTheoHanDung(String matHangId, String khoId) {
+        List<Object[]> list = new ArrayList<>();
+        if (matHangId == null || matHangId.trim().isEmpty()) return list;
+
+        StringBuilder sql = new StringBuilder(
+                "SELECT c.HANSUDUNG, SUM(c.SLNHAP - c.SLXUAT) AS TON " +
+                "FROM TDONHANGCHITIET c " +
+                "JOIN TDONHANG d ON c.TDONHANGID = d.ID " +
+                "WHERE c.DMATHANGID = ? AND c.HANSUDUNG IS NOT NULL AND TRIM(c.HANSUDUNG) <> '' " +
+                "AND (d.STATUS IS NULL OR d.STATUS >= 0) "
+        );
+
+        if (khoId != null && !khoId.trim().isEmpty()) {
+            sql.append("AND (d.DKHONHAPID = ? OR d.DKHOXUATID = ?) ");
+        }
+        sql.append("GROUP BY c.HANSUDUNG HAVING SUM(c.SLNHAP - c.SLXUAT) <> 0 ORDER BY c.HANSUDUNG ASC");
+
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            int pIdx = 1;
+            ps.setString(pIdx++, matHangId.trim());
+            if (khoId != null && !khoId.trim().isEmpty()) {
+                ps.setString(pIdx++, khoId.trim());
+                ps.setString(pIdx++, khoId.trim());
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(new Object[]{
+                            rs.getString("HANSUDUNG"),
+                            rs.getDouble("TON")
+                    });
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Lỗi getTonTheoHanDung: " + e.getMessage());
+        }
+
+        return list;
     }
 }

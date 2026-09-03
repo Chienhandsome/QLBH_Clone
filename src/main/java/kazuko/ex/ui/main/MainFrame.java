@@ -25,6 +25,7 @@ import kazuko.ex.ui.hoadon.QuanLyBanHangPanel;
 import kazuko.ex.ui.khohang.QuanLyChuyenKhoPanel;
 import kazuko.ex.ui.khohang.QuanLyKiemKePanel;
 import kazuko.ex.ui.khohang.QuanLyNhapKhoPanel;
+import kazuko.ex.ui.khohang.QuanLyTonKhoPanel;
 import kazuko.ex.ui.khohang.QuanLyXuatKhoPanel;
 import kazuko.ex.ui.khohang.TinhLaiGiaVonDialog;
 import kazuko.ex.ui.nhansu.ChamCongPanel;
@@ -409,7 +410,7 @@ public class MainFrame extends JFrame {
         JMenuItem miTonKho = new JMenuItem("Tồn kho");
         miTonKho.setIcon(IconHelper.getIcon("Folder.png", 16, 16));
         miTonKho.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_T, InputEvent.CTRL_DOWN_MASK | InputEvent.SHIFT_DOWN_MASK));
-        miTonKho.addActionListener(e -> openTab("Tồn kho", createPlaceholderPanel("Tồn kho")));
+        miTonKho.addActionListener(e -> openTab("Tồn kho", new QuanLyTonKhoPanel()));
 
         JMenuItem miTonNhieuKho = new JMenuItem("Tồn nhiều kho");
         miTonNhieuKho.setIcon(IconHelper.getIcon("tsbTimeStamp.Image.png", 16, 16));
@@ -612,7 +613,7 @@ public class MainFrame extends JFrame {
         btnTKMatHang.addActionListener(e -> openTab("Danh mục mặt hàng", new DanhMucMatHangPanel()));
         btnChiTietHD.addActionListener(e -> openTab("Chi tiết hoạt động", createPlaceholderPanel("Chi tiết hoạt động")));
         btnTongHopKQKD.addActionListener(e -> openTab("Tổng hợp KQKD", createPlaceholderPanel("Tổng hợp kết quả kinh doanh")));
-        btnTonKho.addActionListener(e -> openTab("Tồn kho", createPlaceholderPanel("Tồn kho")));
+        btnTonKho.addActionListener(e -> openTab("Tồn kho", new QuanLyTonKhoPanel()));
         btnGhiChu.addActionListener(e -> openTab("Ghi chú", createPlaceholderPanel("Ghi chú")));
         btnBaoCao.addActionListener(e -> openTab("Báo cáo", createPlaceholderPanel("Báo cáo")));
         btnThoat.addActionListener(e -> onExit());
@@ -747,6 +748,10 @@ public class MainFrame extends JFrame {
             case "TÍNH LẠI GIÁ VỐN":
             case "TÍNH GIÁ VỐN":
                 new TinhLaiGiaVonDialog(this).setVisible(true);
+                break;
+            case "TỒN KHO":
+            case "QUẢN LÝ TỒN KHO":
+                openTab("Tồn kho", new QuanLyTonKhoPanel());
                 break;
             case "KHÁCH ĐẶT HÀNG":
             case "ĐẶT HÀNG":

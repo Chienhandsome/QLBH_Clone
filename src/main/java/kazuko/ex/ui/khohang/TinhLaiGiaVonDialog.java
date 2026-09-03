@@ -34,8 +34,9 @@ public class TinhLaiGiaVonDialog extends JDialog {
         initComponents();
         setupEvents();
         setupKeyBindings();
-        setSize(520, 310);
-        setResizable(false);
+        setSize(650, 325);
+        setMinimumSize(new Dimension(630, 310));
+        setResizable(true);
         setLocationRelativeTo(parent);
     }
 
@@ -101,7 +102,7 @@ public class TinhLaiGiaVonDialog extends JDialog {
         pnlCenter.add(rbBinhQuanCuoiKy, gbc);
 
         // Panel chứa radio giai đoạn và các picker ngày (căn lề trái hoàn toàn)
-        JPanel pnlGiaiDoan = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        JPanel pnlGiaiDoan = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 0));
         pnlGiaiDoan.setOpaque(false);
 
         rbBinhQuanGiaiDoan = new JRadioButton("Bình quân lấy theo giai đoạn");
@@ -109,7 +110,7 @@ public class TinhLaiGiaVonDialog extends JDialog {
         rbBinhQuanGiaiDoan.setOpaque(false);
         rbBinhQuanGiaiDoan.setMargin(new Insets(0, 0, 0, 0));
 
-        lblTuNgay = new JLabel("  Từ: ");
+        lblTuNgay = new JLabel(" Từ:");
         lblTuNgay.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         lblTuNgay.setEnabled(false);
 
@@ -118,16 +119,16 @@ public class TinhLaiGiaVonDialog extends JDialog {
         calTu.add(Calendar.DAY_OF_MONTH, -30);
         dpkTuNgay.setDate(calTu.getTime());
         dpkTuNgay.setEnabled(false);
-        dpkTuNgay.setPreferredSize(new Dimension(110, 23));
+        dpkTuNgay.setPreferredSize(new Dimension(105, 23));
 
-        lblDenNgay = new JLabel("   Đến: ");
+        lblDenNgay = new JLabel(" Đến:");
         lblDenNgay.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         lblDenNgay.setEnabled(false);
 
         dpkDenNgay = new DatePickerField();
         dpkDenNgay.setDate(new Date());
         dpkDenNgay.setEnabled(false);
-        dpkDenNgay.setPreferredSize(new Dimension(110, 23));
+        dpkDenNgay.setPreferredSize(new Dimension(105, 23));
 
         pnlGiaiDoan.add(rbBinhQuanGiaiDoan);
         pnlGiaiDoan.add(lblTuNgay);
