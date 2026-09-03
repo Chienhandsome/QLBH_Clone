@@ -357,4 +357,52 @@ public class DbInspectionTest {
             e.printStackTrace();
         }
     }
+
+    @Test
+    public void testInspectKiemKe() {
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            System.out.println("=== CHECKING TABLES WITH KIEMKE OR DONHANG ===");
+            DatabaseMetaData meta = conn.getMetaData();
+            try (ResultSet rs = meta.getTables(null, null, "%", new String[]{"TABLE"})) {
+                while (rs.next()) {
+                    String tbl = rs.getString("TABLE_NAME");
+                    if (tbl.toUpperCase().contains("KIEM") || tbl.toUpperCase().contains("DONHANG") || tbl.toUpperCase().contains("KHO")) {
+                        System.out.println("Found table: " + tbl);
+                    }
+                }
+            }
+
+            System.out.println("\n=== CHECKING COLUMNS IN TDONHANG ===");
+            try (ResultSet rs = meta.getColumns(null, null, "TDONHANG", "%")) {
+                while (rs.next()) {
+                    System.out.println("TDONHANG col: " + rs.getString("COLUMN_NAME") + " (" + rs.getString("TYPE_NAME") + ")");
+                }
+            }
+
+            System.out.println("\n=== CHECKING COLUMNS IN TDONHANGCHITIET ===");
+            try (ResultSet rs = meta.getColumns(null, null, "TDONHANGCHITIET", "%")) {
+                while (rs.next()) {
+                    System.out.println("TDONHANGCHITIET col: " + rs.getString("COLUMN_NAME") + " (" + rs.getString("TYPE_NAME") + ")");
+                }
+            }
+
+            System.out.println("\n=== CHECKING EXISTING ORDERS WITH LOAI ===");
+            try (PreparedStatement ps = conn.prepareStatement("SELECT DISTINCT LOAI, COUNT(*) FROM TDONHANG GROUP BY LOAI");
+                 ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    System.out.println("LOAI=" + rs.getInt(1) + ", COUNT=" + rs.getInt(2));
+                }
+            }
+
+            System.out.println("\n=== CHECKING ANY ORDER WITH NAME LIKE 'PKK%' ===");
+            try (PreparedStatement ps = conn.prepareStatement("SELECT * FROM TDONHANG WHERE NAME LIKE 'PKK%'");
+                 ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    System.out.println("Found PKK: ID=" + rs.getString("ID") + ", NAME=" + rs.getString("NAME") + ", LOAI=" + rs.getInt("LOAI") + ", DIENGIAI=" + rs.getString("DIENGIAI") + ", KHOXUAT=" + rs.getString("DKHOXUATID") + ", KHONHAP=" + rs.getString("DKHONHAPID"));
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 }

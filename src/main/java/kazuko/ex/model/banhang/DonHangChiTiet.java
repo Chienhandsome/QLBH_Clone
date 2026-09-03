@@ -21,6 +21,8 @@ public class DonHangChiTiet {
     private String kichThuoc;
     private String hanSuDung;
     private boolean isTraHang = false;
+    private double slHeThong = 0.0;
+    private double slThucTe = 0.0;
 
     public DonHangChiTiet() {}
 
@@ -56,7 +58,7 @@ public class DonHangChiTiet {
         this.soLuong = soLuong;
         if (isTraHang) {
             this.slNhap = soLuong;
-        } else {
+        } else if (slHeThong == 0.0 && slThucTe == 0.0 && slNhap == 0.0) {
             this.slXuat = soLuong;
         }
         tinhThanhTien();
@@ -118,6 +120,33 @@ public class DonHangChiTiet {
         } else {
             this.slXuat = this.soLuong;
             this.slNhap = 0;
+        }
+    }
+
+    public double getSlHeThong() { return slHeThong; }
+    public void setSlHeThong(double slHeThong) {
+        this.slHeThong = slHeThong;
+        tinhChenhLechKiemKe();
+    }
+
+    public double getSlThucTe() { return slThucTe; }
+    public void setSlThucTe(double slThucTe) {
+        this.slThucTe = slThucTe;
+        this.soLuong = slThucTe;
+        tinhChenhLechKiemKe();
+    }
+
+    public void tinhChenhLechKiemKe() {
+        double delta = slThucTe - slHeThong;
+        if (delta > 0) {
+            this.slNhap = delta;
+            this.slXuat = 0.0;
+        } else if (delta < 0) {
+            this.slXuat = -delta;
+            this.slNhap = 0.0;
+        } else {
+            this.slNhap = 0.0;
+            this.slXuat = 0.0;
         }
     }
 }

@@ -1371,4 +1371,448 @@ public class DonHangDAO extends BaseDAO {
 
         return dh;
     }
+
+    public String generateNextSoPhieuKiemKe(Date ngay) {
+        if (ngay == null) ngay = new Date();
+        SimpleDateFormat sdf = new SimpleDateFormat("yy");
+        String prefix = "PKK" + sdf.format(ngay) + "/";
+
+        String sql = "SELECT NAME FROM TDONHANG WHERE NAME LIKE ? AND LOAI = 4 ORDER BY NAME DESC";
+        int maxIndex = 0;
+
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, prefix + "%");
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    String name = rs.getString("NAME");
+                    if (name != null && name.startsWith(prefix)) {
+                        try {
+                            String numPart = name.substring(prefix.length()).trim();
+                            int val = Integer.parseInt(numPart);
+                            if (val > maxIndex) maxIndex = val;
+                        } catch (Exception ignored) {}
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Lỗi generateNextSoPhieuKiemKe: " + e.getMessage());
+        }
+
+        return String.format("%s%05d", prefix, maxIndex + 1);
+    }
+
+    public double getTonKhoTheoKho(String khoId, String matHangId) {
+        if (matHangId == null || matHangId.trim().isEmpty()) return 0.0;
+        if (khoId == null || khoId.trim().isEmpty()) {
+            return new MatHangDAO().getTonKhoHienTai(matHangId);
+        }
+        String sql = "SELECT COALESCE(SUM( " +
+                "    CASE WHEN d.DKHONHAPID = ? THEN c.SLNHAP ELSE 0 END " +
+                "    - " +
+                "    CASE WHEN d.DKHOXUATID = ? THEN c.SLXUAT ELSE 0 END " +
+                "), 0) AS TONKHO " +
+                "FROM TDONHANGCHITIET c " +
+                "JOIN TDONHANG d ON c.TDONHANGID = d.ID " +
+                "WHERE c.DMATHANGID = ? AND (d.STATUS IS NULL OR d.STATUS >= 0)";
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, khoId.trim());
+            ps.setString(2, khoId.trim());
+            ps.setString(3, matHangId.trim());
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getDouble("TONKHO");
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Lỗi getTonKhoTheoKho: " + e.getMessage());
+        }
+        return 0.0;
+    }
+
+    public boolean insertPhieuKiemKe(DonHang dh) {
+        if (dh == null) return false;
+        if (dh.getId() == null || dh.getId().trim().isEmpty()) {
+            dh.setId(UUID.randomUUID().toString());
+        }
+        if (dh.getName() == null || dh.getName().trim().isEmpty()) {
+            dh.setName(generateNextSoPhieuKiemKe(dh.getNgay()));
+        }
+        dh.setLoai(4); // 4: Kiểm kê kho
+
+        String sqlMaster = "INSERT INTO TDONHANG (ID, NAME, NGAY, DIENGIAI, NOTE, LOAI, STATUS, " +
+                "DKHOXUATID, DKHONHAPID, DNHANVIENXUATID, DNHANVIENNHAPID, DCUAHANGID, " +
+                "TIMECREATED, USERCREATEDID) " +
+                "VALUES (?, ?, ?, ?, ?, 4, 1, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?)";
+
+        String sqlDetail = "INSERT INTO TDONHANGCHITIET (ID, TDONHANGID, DMATHANGID, DDONVITINHID, DONGIA, " +
+                "SLNHAP, SLXUAT, SLTHUCTE, SLHETHONG, DKHOHANGID, NOTE, BAOHANH, KICHTHUOC, HANSUDUNG, " +
+                "STATUS, TIMECREATED, USERCREATEDID) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, CURRENT_TIMESTAMP, ?)";
+
+        Connection conn = null;
+        try {
+            conn = getConnection();
+            conn.setAutoCommit(false);
+
+            try (PreparedStatement psMaster = conn.prepareStatement(sqlMaster)) {
+                psMaster.setString(1, dh.getId());
+                psMaster.setString(2, dh.getName());
+                psMaster.setTimestamp(3, dh.getNgay() != null ? new Timestamp(dh.getNgay().getTime()) : new Timestamp(System.currentTimeMillis()));
+                psMaster.setString(4, dh.getDienGiai() != null ? dh.getDienGiai() : "Kiểm kê");
+                psMaster.setString(5, dh.getGhiChu());
+                psMaster.setString(6, dh.getKhoXuatId());
+                psMaster.setString(7, dh.getKhoXuatId());
+                psMaster.setString(8, dh.getNhanVienXuatId());
+                psMaster.setString(9, dh.getNhanVienXuatId());
+                psMaster.setString(10, dh.getCuaHangId());
+                psMaster.setString(11, getEffectiveUserId());
+                psMaster.executeUpdate();
+            }
+
+            if (dh.getChiTietLayHang() != null && !dh.getChiTietLayHang().isEmpty()) {
+                try (PreparedStatement psDetail = conn.prepareStatement(sqlDetail)) {
+                    for (DonHangChiTiet ct : dh.getChiTietLayHang()) {
+                        if (ct.getId() == null || ct.getId().trim().isEmpty()) {
+                            ct.setId(UUID.randomUUID().toString());
+                        }
+                        psDetail.setString(1, ct.getId());
+                        psDetail.setString(2, dh.getId());
+                        psDetail.setString(3, ct.getMatHangId());
+                        psDetail.setString(4, ct.getDonViTinhId());
+                        psDetail.setDouble(5, ct.getDonGia());
+                        psDetail.setDouble(6, ct.getSlNhap()); // Điều chỉnh nhập
+                        psDetail.setDouble(7, ct.getSlXuat()); // Điều chỉnh xuất
+                        psDetail.setDouble(8, ct.getSlThucTe()); // Số lượng thực tế
+                        psDetail.setDouble(9, ct.getSlHeThong()); // Số lượng hệ thống
+                        psDetail.setString(10, dh.getKhoXuatId());
+                        psDetail.setString(11, ct.getGhiChu());
+                        psDetail.setString(12, ct.getBaoHanh());
+                        psDetail.setString(13, ct.getKichThuoc());
+                        psDetail.setString(14, ct.getHanSuDung());
+                        psDetail.setString(15, getEffectiveUserId());
+                        psDetail.addBatch();
+                    }
+                    psDetail.executeBatch();
+                }
+            }
+
+            conn.commit();
+            return true;
+        } catch (SQLException e) {
+            System.err.println("Lỗi insertPhieuKiemKe: " + e.getMessage());
+            if (conn != null) {
+                try { conn.rollback(); } catch (SQLException ignored) {}
+            }
+            return false;
+        } finally {
+            if (conn != null) {
+                try { conn.setAutoCommit(true); conn.close(); } catch (SQLException ignored) {}
+            }
+        }
+    }
+
+    public boolean updatePhieuKiemKe(DonHang dh) {
+        if (dh == null || dh.getId() == null) return false;
+
+        String sqlMaster = "UPDATE TDONHANG SET NAME = ?, NGAY = ?, DIENGIAI = ?, NOTE = ?, " +
+                "DKHOXUATID = ?, DKHONHAPID = ?, DNHANVIENXUATID = ?, DNHANVIENNHAPID = ?, " +
+                "TIMEMODIFIED = CURRENT_TIMESTAMP, USERMODIFIEDID = ? WHERE ID = ?";
+
+        String sqlDeleteOld = "DELETE FROM TDONHANGCHITIET WHERE TDONHANGID = ?";
+
+        String sqlDetail = "INSERT INTO TDONHANGCHITIET (ID, TDONHANGID, DMATHANGID, DDONVITINHID, DONGIA, " +
+                "SLNHAP, SLXUAT, SLTHUCTE, SLHETHONG, DKHOHANGID, NOTE, BAOHANH, KICHTHUOC, HANSUDUNG, " +
+                "STATUS, TIMECREATED, USERCREATEDID) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, CURRENT_TIMESTAMP, ?)";
+
+        Connection conn = null;
+        try {
+            conn = getConnection();
+            conn.setAutoCommit(false);
+
+            try (PreparedStatement ps = conn.prepareStatement(sqlMaster)) {
+                ps.setString(1, dh.getName());
+                ps.setTimestamp(2, dh.getNgay() != null ? new Timestamp(dh.getNgay().getTime()) : new Timestamp(System.currentTimeMillis()));
+                ps.setString(3, dh.getDienGiai());
+                ps.setString(4, dh.getGhiChu());
+                ps.setString(5, dh.getKhoXuatId());
+                ps.setString(6, dh.getKhoXuatId());
+                ps.setString(7, dh.getNhanVienXuatId());
+                ps.setString(8, dh.getNhanVienXuatId());
+                ps.setString(9, getEffectiveUserId());
+                ps.setString(10, dh.getId());
+                ps.executeUpdate();
+            }
+
+            try (PreparedStatement psDel = conn.prepareStatement(sqlDeleteOld)) {
+                psDel.setString(1, dh.getId());
+                psDel.executeUpdate();
+            }
+
+            if (dh.getChiTietLayHang() != null && !dh.getChiTietLayHang().isEmpty()) {
+                try (PreparedStatement psDetail = conn.prepareStatement(sqlDetail)) {
+                    for (DonHangChiTiet ct : dh.getChiTietLayHang()) {
+                        String detailId = UUID.randomUUID().toString();
+                        ct.setId(detailId);
+                        psDetail.setString(1, detailId);
+                        psDetail.setString(2, dh.getId());
+                        psDetail.setString(3, ct.getMatHangId());
+                        psDetail.setString(4, ct.getDonViTinhId());
+                        psDetail.setDouble(5, ct.getDonGia());
+                        psDetail.setDouble(6, ct.getSlNhap());
+                        psDetail.setDouble(7, ct.getSlXuat());
+                        psDetail.setDouble(8, ct.getSlThucTe());
+                        psDetail.setDouble(9, ct.getSlHeThong());
+                        psDetail.setString(10, dh.getKhoXuatId());
+                        psDetail.setString(11, ct.getGhiChu());
+                        psDetail.setString(12, ct.getBaoHanh());
+                        psDetail.setString(13, ct.getKichThuoc());
+                        psDetail.setString(14, ct.getHanSuDung());
+                        psDetail.setString(15, getEffectiveUserId());
+                        psDetail.addBatch();
+                    }
+                    psDetail.executeBatch();
+                }
+            }
+
+            conn.commit();
+            return true;
+        } catch (SQLException e) {
+            System.err.println("Lỗi updatePhieuKiemKe: " + e.getMessage());
+            if (conn != null) {
+                try { conn.rollback(); } catch (SQLException ignored) {}
+            }
+            return false;
+        } finally {
+            if (conn != null) {
+                try { conn.setAutoCommit(true); conn.close(); } catch (SQLException ignored) {}
+            }
+        }
+    }
+
+    public boolean deletePhieuKiemKe(String id) {
+        return deletePhieuXuatKho(id);
+    }
+
+    public List<DonHang> getAllPhieuKiemKe(Date tuNgay, Date denNgay, String khoId, String nhanVienId, String keyword) {
+        List<DonHang> list = new ArrayList<>();
+        StringBuilder sql = new StringBuilder(
+                "SELECT d.*, " +
+                "k.NAME AS TENKHO, " +
+                "nv.NAME AS TENNHANVIEN, " +
+                "ch.NAME AS TENCUAHANG, " +
+                "u.NAME AS TENNGUOITAO, " +
+                "um.NAME AS TENNGUOISUA " +
+                "FROM TDONHANG d " +
+                "LEFT JOIN DKHOHANG k ON COALESCE(d.DKHONHAPID, d.DKHOXUATID) = k.ID " +
+                "LEFT JOIN DNHANVIEN nv ON COALESCE(d.DNHANVIENNHAPID, d.DNHANVIENXUATID) = nv.ID " +
+                "LEFT JOIN DCUAHANG ch ON d.DCUAHANGID = ch.ID " +
+                "LEFT JOIN SUSER u ON d.USERCREATEDID = u.ID " +
+                "LEFT JOIN SUSER um ON d.USERMODIFIEDID = um.ID " +
+                "WHERE d.LOAI = 4 AND (d.STATUS IS NULL OR d.STATUS >= 0) "
+        );
+
+        if (tuNgay != null) {
+            sql.append("AND d.NGAY >= ? ");
+        }
+        if (denNgay != null) {
+            sql.append("AND d.NGAY <= ? ");
+        }
+        if (khoId != null && !khoId.trim().isEmpty()) {
+            sql.append("AND (d.DKHONHAPID = ? OR d.DKHOXUATID = ?) ");
+        }
+        if (nhanVienId != null && !nhanVienId.trim().isEmpty()) {
+            sql.append("AND (d.DNHANVIENNHAPID = ? OR d.DNHANVIENXUATID = ?) ");
+        }
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            sql.append("AND (LOWER(d.NAME) LIKE ? OR LOWER(d.DIENGIAI) LIKE ? OR LOWER(k.NAME) LIKE ? OR LOWER(d.NOTE) LIKE ?) ");
+        }
+
+        sql.append("ORDER BY d.NGAY DESC, d.TIMECREATED DESC, d.NAME DESC");
+
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            int idx = 1;
+            if (tuNgay != null) {
+                ps.setTimestamp(idx++, new Timestamp(tuNgay.getTime()));
+            }
+            if (denNgay != null) {
+                long endOfDay = denNgay.getTime() + 86399999L;
+                ps.setTimestamp(idx++, new Timestamp(endOfDay));
+            }
+            if (khoId != null && !khoId.trim().isEmpty()) {
+                ps.setString(idx++, khoId.trim());
+                ps.setString(idx++, khoId.trim());
+            }
+            if (nhanVienId != null && !nhanVienId.trim().isEmpty()) {
+                ps.setString(idx++, nhanVienId.trim());
+                ps.setString(idx++, nhanVienId.trim());
+            }
+            if (keyword != null && !keyword.trim().isEmpty()) {
+                String kw = "%" + keyword.trim().toLowerCase() + "%";
+                ps.setString(idx++, kw);
+                ps.setString(idx++, kw);
+                ps.setString(idx++, kw);
+                ps.setString(idx++, kw);
+            }
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    DonHang dh = new DonHang();
+                    dh.setId(rs.getString("ID"));
+                    dh.setName(rs.getString("NAME"));
+                    dh.setNgay(rs.getTimestamp("NGAY"));
+                    dh.setDienGiai(rs.getString("DIENGIAI"));
+                    dh.setGhiChu(rs.getString("NOTE"));
+                    dh.setLoai(rs.getInt("LOAI"));
+                    dh.setStatus(rs.getInt("STATUS"));
+                    dh.setKhoXuatId(rs.getString("DKHOXUATID"));
+                    dh.setKhoNhapId(rs.getString("DKHONHAPID"));
+                    dh.setNhanVienXuatId(rs.getString("DNHANVIENXUATID"));
+                    dh.setNhanVienNhapId(rs.getString("DNHANVIENNHAPID"));
+                    dh.setCuaHangId(rs.getString("DCUAHANGID"));
+                    dh.setTenKhoXuat(rs.getString("TENKHO"));
+                    dh.setTenKhoNhap(rs.getString("TENKHO"));
+                    dh.setTenNhanVien(rs.getString("TENNHANVIEN"));
+                    dh.setTenCuaHang(rs.getString("TENCUAHANG"));
+                    dh.setTenNguoiTao(rs.getString("TENNGUOITAO"));
+                    dh.setTenNguoiSua(rs.getString("TENNGUOISUA"));
+                    dh.setTimeCreated(rs.getTimestamp("TIMECREATED"));
+                    dh.setTimeModified(rs.getTimestamp("TIMEMODIFIED"));
+                    list.add(dh);
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Lỗi getAllPhieuKiemKe: " + e.getMessage());
+        }
+        return list;
+    }
+
+    public DonHang getPhieuKiemKeById(String id) {
+        if (id == null || id.trim().isEmpty()) return null;
+        String sql = "SELECT d.*, " +
+                "k.NAME AS TENKHO, " +
+                "nv.NAME AS TENNHANVIEN, " +
+                "ch.NAME AS TENCUAHANG, " +
+                "u.NAME AS TENNGUOITAO, " +
+                "um.NAME AS TENNGUOISUA " +
+                "FROM TDONHANG d " +
+                "LEFT JOIN DKHOHANG k ON COALESCE(d.DKHONHAPID, d.DKHOXUATID) = k.ID " +
+                "LEFT JOIN DNHANVIEN nv ON COALESCE(d.DNHANVIENNHAPID, d.DNHANVIENXUATID) = nv.ID " +
+                "LEFT JOIN DCUAHANG ch ON d.DCUAHANGID = ch.ID " +
+                "LEFT JOIN SUSER u ON d.USERCREATEDID = u.ID " +
+                "LEFT JOIN SUSER um ON d.USERMODIFIEDID = um.ID " +
+                "WHERE d.ID = ? AND d.LOAI = 4";
+
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, id.trim());
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    DonHang dh = new DonHang();
+                    dh.setId(rs.getString("ID"));
+                    dh.setName(rs.getString("NAME"));
+                    dh.setNgay(rs.getTimestamp("NGAY"));
+                    dh.setDienGiai(rs.getString("DIENGIAI"));
+                    dh.setGhiChu(rs.getString("NOTE"));
+                    dh.setLoai(rs.getInt("LOAI"));
+                    dh.setStatus(rs.getInt("STATUS"));
+                    dh.setKhoXuatId(rs.getString("DKHOXUATID"));
+                    dh.setKhoNhapId(rs.getString("DKHONHAPID"));
+                    dh.setNhanVienXuatId(rs.getString("DNHANVIENXUATID"));
+                    dh.setNhanVienNhapId(rs.getString("DNHANVIENNHAPID"));
+                    dh.setCuaHangId(rs.getString("DCUAHANGID"));
+                    dh.setTenKhoXuat(rs.getString("TENKHO"));
+                    dh.setTenKhoNhap(rs.getString("TENKHO"));
+                    dh.setTenNhanVien(rs.getString("TENNHANVIEN"));
+                    dh.setTenCuaHang(rs.getString("TENCUAHANG"));
+                    dh.setTenNguoiTao(rs.getString("TENNGUOITAO"));
+                    dh.setTenNguoiSua(rs.getString("TENNGUOISUA"));
+                    dh.setTimeCreated(rs.getTimestamp("TIMECREATED"));
+                    dh.setTimeModified(rs.getTimestamp("TIMEMODIFIED"));
+                    dh.setChiTietLayHang(getChiTietPhieuKiemKe(conn, dh.getId()));
+                    return dh;
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Lỗi getPhieuKiemKeById: " + e.getMessage());
+        }
+        return null;
+    }
+
+    public List<DonHangChiTiet> getChiTietPhieuKiemKe(String donHangId) {
+        try (Connection conn = getConnection()) {
+            return getChiTietPhieuKiemKe(conn, donHangId);
+        } catch (SQLException e) {
+            System.err.println("Lỗi getChiTietPhieuKiemKe: " + e.getMessage());
+            return new ArrayList<>();
+        }
+    }
+
+    private List<DonHangChiTiet> getChiTietPhieuKiemKe(Connection conn, String donHangId) {
+        List<DonHangChiTiet> list = new ArrayList<>();
+        String sql = "SELECT c.*, m.CODE AS MAHANG, m.NAME AS TENHANG, " +
+                "dv.NAME AS TENDONVITINH, COALESCE(c.BAOHANH, m.BAOHANH) AS BAOHANH_FINAL " +
+                "FROM TDONHANGCHITIET c " +
+                "LEFT JOIN DMATHANG m ON c.DMATHANGID = m.ID " +
+                "LEFT JOIN DDONVITINH dv ON COALESCE(c.DDONVITINHID, m.DDONVITINHID) = dv.ID " +
+                "WHERE c.TDONHANGID = ? AND (c.STATUS IS NULL OR c.STATUS >= 0) " +
+                "ORDER BY c.TIMECREATED ASC, c.ID ASC";
+
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, donHangId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    DonHangChiTiet ct = new DonHangChiTiet();
+                    ct.setId(rs.getString("ID"));
+                    ct.setDonHangId(donHangId);
+                    ct.setMatHangId(rs.getString("DMATHANGID"));
+                    ct.setMaHang(rs.getString("MAHANG"));
+                    ct.setTenHang(rs.getString("TENHANG"));
+                    ct.setDonViTinhId(rs.getString("DDONVITINHID"));
+                    ct.setTenDonViTinh(rs.getString("TENDONVITINH"));
+                    ct.setDonGia(rs.getDouble("DONGIA"));
+                    ct.setSlHeThong(rs.getDouble("SLHETHONG"));
+                    ct.setSlThucTe(rs.getDouble("SLTHUCTE"));
+                    ct.setSoLuong(rs.getDouble("SLTHUCTE"));
+                    ct.setSlNhap(rs.getDouble("SLNHAP"));
+                    ct.setSlXuat(rs.getDouble("SLXUAT"));
+                    ct.setGhiChu(rs.getString("NOTE"));
+                    ct.setBaoHanh(rs.getString("BAOHANH_FINAL"));
+                    ct.setKichThuoc(rs.getString("KICHTHUOC"));
+                    ct.setHanSuDung(rs.getString("HANSUDUNG"));
+                    list.add(ct);
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Lỗi getChiTietPhieuKiemKe: " + e.getMessage());
+        }
+        return list;
+    }
+
+    public DonHang getPhieuKiemKeOffset(String currentId, int offset) {
+        String sql = "SELECT ID FROM TDONHANG WHERE LOAI = 4 AND (STATUS IS NULL OR STATUS >= 0) ORDER BY NGAY DESC, TIMECREATED DESC";
+        List<String> ids = new ArrayList<>();
+        try (Connection conn = getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            while (rs.next()) {
+                ids.add(rs.getString("ID"));
+            }
+        } catch (SQLException e) {
+            System.err.println("Lỗi getPhieuKiemKeOffset: " + e.getMessage());
+        }
+
+        if (ids.isEmpty()) return null;
+
+        int curIdx = ids.indexOf(currentId);
+        int targetIdx = curIdx < 0 ? 0 : curIdx + offset;
+
+        if (targetIdx >= 0 && targetIdx < ids.size()) {
+            return getPhieuKiemKeById(ids.get(targetIdx));
+        }
+        return null;
+    }
 }

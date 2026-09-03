@@ -23,6 +23,7 @@ import kazuko.ex.ui.dathang.KhachDatHangPanel;
 import kazuko.ex.ui.hoadon.HoaDonBanHangPanel;
 import kazuko.ex.ui.hoadon.QuanLyBanHangPanel;
 import kazuko.ex.ui.khohang.QuanLyChuyenKhoPanel;
+import kazuko.ex.ui.khohang.QuanLyKiemKePanel;
 import kazuko.ex.ui.khohang.QuanLyNhapKhoPanel;
 import kazuko.ex.ui.khohang.QuanLyXuatKhoPanel;
 import kazuko.ex.ui.nhansu.ChamCongPanel;
@@ -389,7 +390,7 @@ public class MainFrame extends JFrame {
 
         JMenuItem miKiemKe = new JMenuItem("Kiểm kê kho");
         miKiemKe.setIcon(IconHelper.getIcon("edit-column.png", 16, 16));
-        miKiemKe.addActionListener(e -> openTab("Kiểm kê kho", createPlaceholderPanel("Kiểm kê kho")));
+        miKiemKe.addActionListener(e -> openTab("Quản lý kiểm kê", new QuanLyKiemKePanel()));
 
         JMenuItem miTinhGiaVon = new JMenuItem("Tính lại giá vốn");
         miTinhGiaVon.setIcon(IconHelper.getIcon("Refresh.png", 16, 16));
@@ -736,6 +737,11 @@ public class MainFrame extends JFrame {
             case "CHUYỂN KHO":
             case "QUẢN LÝ CHUYỂN KHO":
                 openTab("Quản lý chuyển kho", new QuanLyChuyenKhoPanel());
+                break;
+            case "KIỂM KÊ":
+            case "KIỂM KÊ KHO":
+            case "QUẢN LÝ KIỂM KÊ":
+                openTab("Quản lý kiểm kê", new QuanLyKiemKePanel());
                 break;
             case "KHÁCH ĐẶT HÀNG":
             case "ĐẶT HÀNG":
