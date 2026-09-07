@@ -14,10 +14,6 @@ public class InspectUserPermissionDbTest {
         DatabaseConfig config = DatabaseConnection.getConfig();
         try (Connection c = DriverManager.getConnection(config.getJdbcUrl(), config.getUsername(), config.getPassword())) {
             DatabaseMetaData meta = c.getMetaData();
-
-            List<String> tables = Arrays.asList(
-                    "SFUNCTION", "SGROUPROLE"
-            );
             System.out.println("=== SFUNCTION DISTINCT NOTE / GROUPNAME ===");
             try (Statement s = c.createStatement();
                  ResultSet rs = s.executeQuery("SELECT DISTINCT GROUPNAME, NOTE FROM SFUNCTION")) {
@@ -42,13 +38,8 @@ public class InspectUserPermissionDbTest {
                 }
             }
 
-            System.out.println("=== ALL SFUNCTION ROWS ===");
-            try (Statement s = c.createStatement();
-                 ResultSet rs = s.executeQuery("SELECT ID, NAME, GROUPNAME, NOTE, SORTORDER FROM SFUNCTION ORDER BY GROUPNAME, SORTORDER")) {
-                while (rs.next()) {
-                    System.out.println("ID=" + rs.getString(1) + " | NAME=" + rs.getString(2) + " | GROUP=" + rs.getString(3) + " | NOTE=" + rs.getString(4) + " | ORDER=" + rs.getInt(5));
-                }
-            }
+
+
 
         }
     }

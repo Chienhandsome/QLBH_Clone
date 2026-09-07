@@ -6,7 +6,11 @@ import kazuko.ex.service.PermissionService;
 import kazuko.ex.ui.auth.DatabaseConfigDialog;
 import kazuko.ex.ui.auth.DoiMatKhauDialog;
 import kazuko.ex.ui.auth.LoginForm;
+import kazuko.ex.ui.baocao.BaoCaoPhieuThuTheoNgayPanel;
 import kazuko.ex.ui.baogia.BaoGiaBanHangPanel;
+
+
+
 import kazuko.ex.ui.common.StatusPanel;
 import kazuko.ex.ui.danhmuc.CaLamViecDialog;
 import kazuko.ex.ui.danhmuc.CuaHangDialog;
@@ -1014,7 +1018,13 @@ public class MainFrame extends JFrame {
     private void handleReportMenuClick(String title) {
         if (title == null) return;
         switch (title.trim().toUpperCase()) {
+            case "DANH SÁCH PHIẾU THU THEO NGÀY":
+            case "BÁO CÁO PHIẾU THU THEO NGÀY":
+            case "DANH SÁCH PHIẾU THU THE...":
+                openTab("DANH SÁCH PHIẾU THU THE...", new BaoCaoPhieuThuTheoNgayPanel());
+                break;
             case "BÁO CÁO TỒN QUỸ":
+
             case "TỒN QUỸ":
             case "SỔ QUỸ":
                 openTab("Tồn quỹ", new TonQuyPanel());
@@ -1067,11 +1077,11 @@ public class MainFrame extends JFrame {
             case "DANH MỤC NHÀ CUNG CẤP":
                 openTab("Danh mục nhà cung cấp", new DanhMucNhaCungCapPanel());
                 break;
-            case "DANH SÁCH PHIẾU THU THEO NGÀY":
             case "DANH SÁCH PHIẾU THU THEO LÝ DO THU CHI":
             case "DANH MỤC PHIẾU THU":
                 openTab("Danh mục phiếu thu", new DanhMucPhieuThuPanel());
                 break;
+
             case "DANH SÁCH PHIẾU CHI THEO NGÀY":
             case "DANH SÁCH PHIẾU CHI THEO LÝ DO THU CHI":
             case "DANH MỤC PHIẾU CHI":

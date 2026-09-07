@@ -39,9 +39,26 @@ public class PhieuThuDAO extends BaseDAO {
             pt1.setGhiChu("note");
             pt1.setLoaiDoiTuong("Đối tượng khác");
             pt1.setStatus(1);
-            MEMORY_PHIEU_THU.add(pt1);
+            PhieuThu pt2 = new PhieuThu();
+            pt2.setId("pt-002");
+            pt2.setSoPhieu("PT26/00002");
+            pt2.setNgay(sdf.parse("07/09/2026 09:15"));
+            pt2.setTimeCreated(sdf.parse("07/09/2026 09:15"));
+            pt2.setUserCreatedId("Administrator");
+            pt2.setTenDoiTuong("Ánh");
+            pt2.setDiaChi("Lâm Hà gần TH hường nhung");
+            pt2.setPhanLoaiId("tc-11");
+            pt2.setTenPhanLoai("Thu công nợ");
+            pt2.setLyDoThu("Thu công nợ");
+            pt2.setChungTuGoc("");
+            pt2.setSoTien(500000.0);
+            pt2.setGhiChu("thu");
+            pt2.setLoaiDoiTuong("Khách hàng");
+            pt2.setStatus(1);
+            MEMORY_PHIEU_THU.add(pt2);
         } catch (Exception ignored) {}
     }
+
 
     private static String getEffectiveUserId() {
         if (AuthService.getCurrentUser() != null && AuthService.getCurrentUser().getId() != null && !AuthService.getCurrentUser().getId().trim().isEmpty()) {
@@ -451,4 +468,111 @@ public class PhieuThuDAO extends BaseDAO {
         }
         return list;
     }
+
+    public List<PhieuThu> getReportPhieuThuTheoNgay(Date fromDate, Date toDate, String lyDoThuChiId, String cuaHangId) {
+        List<PhieuThu> list = new ArrayList<>();
+
+        Calendar calFrom = Calendar.getInstance();
+        if (fromDate != null) {
+            calFrom.setTime(fromDate);
+            calFrom.set(Calendar.HOUR_OF_DAY, 0);
+            calFrom.set(Calendar.MINUTE, 0);
+            calFrom.set(Calendar.SECOND, 0);
+            calFrom.set(Calendar.MILLISECOND, 0);
+        } else {
+            calFrom.set(2000, Calendar.JANUARY, 1, 0, 0, 0);
+        }
+
+        Calendar calTo = Calendar.getInstance();
+        if (toDate != null) {
+            calTo.setTime(toDate);
+            calTo.set(Calendar.HOUR_OF_DAY, 23);
+            calTo.set(Calendar.MINUTE, 59);
+            calTo.set(Calendar.SECOND, 59);
+            calTo.set(Calendar.MILLISECOND, 999);
+        } else {
+            calTo.set(2099, Calendar.DECEMBER, 31, 23, 59, 59);
+        }
+
+        Timestamp tsFrom = new Timestamp(calFrom.getTimeInMillis());
+        Timestamp tsTo = new Timestamp(calTo.getTimeInMillis());
+
+        try (Connection conn = getConnection()) {
+            ensureTableExists(conn);
+            StringBuilder sql = new StringBuilder("SELECT * FROM TPHIEUTHU WHERE STATUS >= 0 AND NGAY >= ? AND NGAY <= ?");
+            List<Object> params = new ArrayList<>();
+            params.add(tsFrom);
+            params.add(tsTo);
+
+            if (lyDoThuChiId != null && !lyDoThuChiId.trim().isEmpty() && !lyDoThuChiId.equalsIgnoreCase("ALL")) {
+                sql.append(" AND (DLYDOTHUCHIID = ? OR TENPHANLOAI = ? OR LYDOTHU = ?)");
+                params.add(lyDoThuChiId.trim());
+                params.add(lyDoThuChiId.trim());
+                params.add(lyDoThuChiId.trim());
+            }
+
+            if (cuaHangId != null && !cuaHangId.trim().isEmpty() && !cuaHangId.equalsIgnoreCase("ALL")) {
+                sql.append(" AND DCUAHANGID = ?");
+                params.add(cuaHangId.trim());
+            }
+
+            sql.append(" ORDER BY NGAY ASC, SOPHIEU ASC");
+
+            try (PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+                for (int i = 0; i < params.size(); i++) {
+                    ps.setObject(i + 1, params.get(i));
+                }
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        PhieuThu pt = new PhieuThu();
+                        pt.setId(rs.getString("ID"));
+                        pt.setSoPhieu(rs.getString("SOPHIEU"));
+                        pt.setNgay(rs.getTimestamp("NGAY"));
+                        pt.setPhanLoaiId(rs.getString("DLYDOTHUCHIID"));
+                        pt.setTenPhanLoai(rs.getString("TENPHANLOAI"));
+                        pt.setLyDoThu(rs.getString("LYDOTHU"));
+                        pt.setChungTuGoc(rs.getString("CHUNGTUGOC"));
+                        pt.setLoaiDoiTuong(rs.getString("LOAIDOITUONG"));
+                        pt.setTenDoiTuong(rs.getString("TENDOITUONG"));
+                        pt.setDiaChi(rs.getString("DIACHI"));
+                        pt.setNhanVienId(rs.getString("DNHANVIENID"));
+                        pt.setKhachHangId(rs.getString("DKHACHHANGID"));
+                        pt.setNhaCungCapId(rs.getString("DNHACUNGCAPID"));
+                        pt.setSoTien(rs.getDouble("SOTIEN"));
+                        pt.setChuyenVaoTaiKhoan(rs.getInt("CHUYENVAOTAIKHOAN") == 1);
+                        pt.setTaiKhoanNganHangId(rs.getString("DTAIKHOANNGANHANGID"));
+                        pt.setCuaHangId(rs.getString("DCUAHANGID"));
+                        pt.setKhongThayDoiCongNo(rs.getInt("KHONGTHAYDOICONGNO") == 1);
+                        pt.setGhiChu(rs.getString("NOTE"));
+                        pt.setStatus(rs.getInt("STATUS"));
+                        pt.setTimeCreated(rs.getTimestamp("TIMECREATED"));
+                        pt.setUserCreatedId(rs.getString("USERCREATEDID"));
+                        list.add(pt);
+                    }
+                }
+            }
+        } catch (Exception ignored) {}
+
+        // Memory merge
+        for (PhieuThu m : MEMORY_PHIEU_THU) {
+            if (m.getStatus() >= 0 && list.stream().noneMatch(x -> Objects.equals(x.getId(), m.getId()))) {
+                Date d = m.getNgay();
+                if (d != null && d.after(calFrom.getTime()) && d.before(calTo.getTime())) {
+                    boolean matchLyDo = (lyDoThuChiId == null || lyDoThuChiId.trim().isEmpty() || lyDoThuChiId.equalsIgnoreCase("ALL")
+                            || Objects.equals(lyDoThuChiId, m.getPhanLoaiId()) || Objects.equals(lyDoThuChiId, m.getTenPhanLoai()) || Objects.equals(lyDoThuChiId, m.getLyDoThu()));
+                    boolean matchCuaHang = (cuaHangId == null || cuaHangId.trim().isEmpty() || cuaHangId.equalsIgnoreCase("ALL")
+                            || Objects.equals(cuaHangId, m.getCuaHangId()));
+                    if (matchLyDo && matchCuaHang) {
+                        list.add(m);
+                    }
+                }
+            }
+        }
+
+        list.sort(Comparator.comparing((PhieuThu p) -> p.getNgay() != null ? p.getNgay() : new Date())
+                .thenComparing(p -> p.getSoPhieu() != null ? p.getSoPhieu() : ""));
+
+        return list;
+    }
 }
+
