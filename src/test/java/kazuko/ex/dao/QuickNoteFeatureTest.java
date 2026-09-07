@@ -57,4 +57,14 @@ public class QuickNoteFeatureTest {
 
         System.out.println(">> QuickNote CRUD Test passed successfully!");
     }
+
+    @Test
+    public void testDialogCreation() {
+        if (!java.awt.GraphicsEnvironment.isHeadless()) {
+            kazuko.ex.ui.system.GhiChuNhanhDialog dialog = new kazuko.ex.ui.system.GhiChuNhanhDialog(null);
+            assertNotNull(dialog);
+            dialog.dispose();
+            System.out.println(">> GhiChuNhanhDialog instantiation test passed!");
+        }
+    }
 }

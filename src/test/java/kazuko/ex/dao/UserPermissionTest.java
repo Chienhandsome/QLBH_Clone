@@ -245,7 +245,19 @@ public class UserPermissionTest {
             assertFalse(PermissionService.getInstance().isReportAllowed(testReport.getName()),
                     "Locked report name must NOT be allowed");
 
-            // 6. Verify alias matching (e.g. 'nguoidungvaphanquyen', 'nhaphangvaokho')
+            // 6. Verify isActionAllowed unified check
+            assertFalse(PermissionService.getInstance().isActionAllowed("Hóa đơn bán hàng"),
+                    "Locked function via isActionAllowed must NOT be allowed");
+            assertFalse(PermissionService.getInstance().isActionAllowed("HÓA ĐƠN BÁN HÀNG"),
+                    "Locked function UPPERCASE via isActionAllowed must NOT be allowed");
+            assertFalse(PermissionService.getInstance().isActionAllowed(testReport.getName()),
+                    "Locked report via isActionAllowed must NOT be allowed");
+            assertTrue(PermissionService.getInstance().isActionAllowed("Tồn kho"),
+                    "Permitted function via isActionAllowed must be allowed");
+            assertTrue(PermissionService.getInstance().isActionAllowed("TỒN KHO"),
+                    "Permitted function UPPERCASE via isActionAllowed must be allowed");
+
+            // 7. Verify alias matching (e.g. 'nguoidungvaphanquyen', 'nhaphangvaokho')
             assertNotNull(PermissionService.normalize("Người Dùng Và Phân Quyền"));
             assertEquals("nguoidungvaphanquyen", PermissionService.normalize("Người Dùng Và Phân Quyền"));
 

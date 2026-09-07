@@ -1,7 +1,9 @@
 package kazuko.ex.ui.system;
 
 import kazuko.ex.dao.QuickNoteDAO;
+import kazuko.ex.dao.UserDAO;
 import kazuko.ex.model.system.SQuickNote;
+import kazuko.ex.model.system.SUser;
 import kazuko.ex.service.AuthService;
 import kazuko.ex.util.IconHelper;
 
@@ -25,9 +27,11 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 public class GhiChuNhanhDialog extends JDialog {
     private final QuickNoteDAO noteDAO = new QuickNoteDAO();
+    private final UserDAO userDAO = new UserDAO();
     private final List<SQuickNote> noteList = new ArrayList<>();
     private int currentIndex = 0;
 
@@ -55,6 +59,10 @@ public class GhiChuNhanhDialog extends JDialog {
 
     private JButton btnTime;
     private JButton btnSeparator;
+
+    // Status bar at bottom
+    private JLabel lblCreatedTime;
+    private JLabel lblCreatedBy;
 
     private Timer autoSaveTimer;
     private boolean isUpdatingUi = false;
@@ -103,6 +111,10 @@ public class GhiChuNhanhDialog extends JDialog {
 
         add(centerPanel, BorderLayout.CENTER);
 
+        // Bottom Status Bar
+        JPanel statusBar = createStatusBar();
+        add(statusBar, BorderLayout.SOUTH);
+
         // Auto-save debounce timer (600ms)
         autoSaveTimer = new Timer(600, e -> saveCurrentNote());
         autoSaveTimer.setRepeats(false);
@@ -114,6 +126,28 @@ public class GhiChuNhanhDialog extends JDialog {
                 saveCurrentNote();
             }
         });
+    }
+
+    private JPanel createStatusBar() {
+        JPanel bar = new JPanel(new BorderLayout());
+        bar.setBackground(new Color(245, 245, 245));
+        bar.setBorder(new CompoundBorder(
+                new MatteBorder(1, 0, 0, 0, new Color(210, 210, 210)),
+                new EmptyBorder(4, 12, 4, 12)
+        ));
+
+        lblCreatedTime = new JLabel("Khởi tạo: ");
+        lblCreatedTime.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblCreatedTime.setForeground(new Color(60, 60, 60));
+
+        lblCreatedBy = new JLabel("Khởi tạo bởi: Administrator");
+        lblCreatedBy.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblCreatedBy.setForeground(new Color(60, 60, 60));
+
+        bar.add(lblCreatedTime, BorderLayout.WEST);
+        bar.add(lblCreatedBy, BorderLayout.EAST);
+
+        return bar;
     }
 
     private JPanel createHeaderPanel() {
@@ -146,14 +180,14 @@ public class GhiChuNhanhDialog extends JDialog {
         ));
 
         // 1. Delete current note button
-        btnDelete = createIconButton("Cancelled.png", "Xóa ghi chú hiện tại");
+        btnDelete = createIconButton("Cancelled.png", "Xóa", "Xóa ghi chú hiện tại");
         btnDelete.addActionListener(e -> deleteCurrentNote());
         toolbar.add(btnDelete);
 
         toolbar.add(Box.createHorizontalStrut(4));
 
         // 2. Navigation controls: [←] 1/2 [→] [+]
-        btnPrev = createIconButton("arrow-180-medium.png", "Trang trước");
+        btnPrev = createIconButton("arrow-180-medium.png", "<", "Trang trước");
         btnPrev.addActionListener(e -> goToPrevNote());
         toolbar.add(btnPrev);
 
@@ -163,11 +197,11 @@ public class GhiChuNhanhDialog extends JDialog {
         lblPage.setForeground(new Color(30, 50, 80));
         toolbar.add(lblPage);
 
-        btnNext = createIconButton("arrow-000-medium.png", "Trang sau");
+        btnNext = createIconButton("arrow-000-medium.png", ">", "Trang sau");
         btnNext.addActionListener(e -> goToNextNote());
         toolbar.add(btnNext);
 
-        JButton btnAdd = createIconButton("btnNew.Image.png", "Thêm trang ghi chú mới");
+        JButton btnAdd = createIconButton("btnNew.Image.png", "+", "Thêm trang ghi chú mới");
         btnAdd.addActionListener(e -> createNewNote());
         toolbar.add(btnAdd);
 
@@ -200,19 +234,19 @@ public class GhiChuNhanhDialog extends JDialog {
         toolbar.addSeparator(new Dimension(8, 20));
 
         // 5. Style Toggles: B, I, U, S
-        btnBold = createStyleToggle("B", Font.BOLD, "In đậm (Ctrl+B)");
+        btnBold = createStyleToggle("tsbBold.Image.png", "B", Font.BOLD, "In đậm (Ctrl+B)");
         btnBold.addActionListener(new StyledEditorKit.BoldAction());
         toolbar.add(btnBold);
 
-        btnItalic = createStyleToggle("I", Font.ITALIC, "In nghiêng (Ctrl+I)");
+        btnItalic = createStyleToggle("tsbItalic.Image.png", "I", Font.ITALIC, "In nghiêng (Ctrl+I)");
         btnItalic.addActionListener(new StyledEditorKit.ItalicAction());
         toolbar.add(btnItalic);
 
-        btnUnderline = createStyleToggle("U", Font.PLAIN, "Gạch chân (Ctrl+U)");
+        btnUnderline = createStyleToggle("tsbUnderline.Image.png", "U", Font.PLAIN, "Gạch chân (Ctrl+U)");
         btnUnderline.addActionListener(new StyledEditorKit.UnderlineAction());
         toolbar.add(btnUnderline);
 
-        btnStrike = createStyleToggle("S̶", Font.PLAIN, "Gạch ngang chữ");
+        btnStrike = createStyleToggle("tsbStrickOut.Image.png", "S", Font.PLAIN, "Gạch ngang chữ");
         btnStrike.addActionListener(e -> applyStrikethrough());
         toolbar.add(btnStrike);
 
@@ -220,66 +254,56 @@ public class GhiChuNhanhDialog extends JDialog {
 
         // 6. Alignment buttons
         ButtonGroup alignGroup = new ButtonGroup();
-        btnAlignLeft = createAlignToggle("align_left", "Căn trái");
+        btnAlignLeft = createAlignToggle("tsbLeftAlign.Image.png", "L", "AlignLeft", StyleConstants.ALIGN_LEFT, "Căn trái");
         btnAlignLeft.setSelected(true);
-        btnAlignLeft.addActionListener(new StyledEditorKit.AlignmentAction("AlignLeft", StyleConstants.ALIGN_LEFT));
         alignGroup.add(btnAlignLeft);
         toolbar.add(btnAlignLeft);
 
-        btnAlignCenter = createAlignToggle("align_center", "Căn giữa");
-        btnAlignCenter.addActionListener(new StyledEditorKit.AlignmentAction("AlignCenter", StyleConstants.ALIGN_CENTER));
+        btnAlignCenter = createAlignToggle("tsbCenterAlign.Image.png", "C", "AlignCenter", StyleConstants.ALIGN_CENTER, "Căn giữa");
         alignGroup.add(btnAlignCenter);
         toolbar.add(btnAlignCenter);
 
-        btnAlignRight = createAlignToggle("align_right", "Căn phải");
-        btnAlignRight.addActionListener(new StyledEditorKit.AlignmentAction("AlignRight", StyleConstants.ALIGN_RIGHT));
+        btnAlignRight = createAlignToggle("tsbRightAlign.Image.png", "R", "AlignRight", StyleConstants.ALIGN_RIGHT, "Căn phải");
         alignGroup.add(btnAlignRight);
         toolbar.add(btnAlignRight);
 
         toolbar.addSeparator(new Dimension(8, 20));
 
         // 7. Bullet / Indent buttons
-        btnBullet = createIconButton("bullet", "Danh sách dấu chấm");
-        btnBullet.setText("•");
-        btnBullet.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        btnBullet = createIconButton("tsbBullet.Image.png", "•", "Danh sách dấu chấm");
         btnBullet.addActionListener(e -> insertBulletPoint());
         toolbar.add(btnBullet);
 
-        btnDecreaseIndent = createIconButton("indent_decrease", "Giảm thụt lề");
-        btnDecreaseIndent.setText("⇤");
-        btnDecreaseIndent.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        btnDecreaseIndent = createIconButton("tsbDecIndent.Image.png", "«", "Giảm thụt lề");
         btnDecreaseIndent.addActionListener(e -> changeIndent(-15));
         toolbar.add(btnDecreaseIndent);
 
-        btnIncreaseIndent = createIconButton("indent_increase", "Tăng thụt lề");
-        btnIncreaseIndent.setText("⇥");
-        btnIncreaseIndent.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        btnIncreaseIndent = createIconButton("tsbIncIndent.Image.png", "»", "Tăng thụt lề");
         btnIncreaseIndent.addActionListener(e -> changeIndent(15));
         toolbar.add(btnIncreaseIndent);
 
         toolbar.addSeparator(new Dimension(8, 20));
 
         // 8. Timestamp & Divider
-        btnTime = createIconButton("clock", "Chèn ngày giờ hiện tại");
-        btnTime.setText("🕒");
-        btnTime.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        btnTime = createIconButton("tsbTimeStamp.Image.png", "🕒", "Chèn ngày giờ hiện tại");
         btnTime.addActionListener(e -> insertTimestamp());
         toolbar.add(btnTime);
 
-        btnSeparator = createIconButton("divider", "Chèn đường kẻ ngang");
-        btnSeparator.setText("—");
-        btnSeparator.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        btnSeparator = createIconButton("tsbLine.Image.png", "—", "Chèn đường kẻ ngang");
         btnSeparator.addActionListener(e -> insertDivider());
         toolbar.add(btnSeparator);
 
         return toolbar;
     }
 
-    private JButton createIconButton(String iconName, String tooltip) {
+    private JButton createIconButton(String iconName, String fallbackText, String tooltip) {
         JButton btn = new JButton();
         ImageIcon icon = IconHelper.getIcon(iconName, 16, 16);
         if (icon != null) {
             btn.setIcon(icon);
+        } else if (fallbackText != null) {
+            btn.setText(fallbackText);
+            btn.setFont(new Font("Segoe UI", Font.BOLD, 12));
         }
         btn.setPreferredSize(new Dimension(24, 22));
         btn.setMargin(new Insets(1, 2, 1, 2));
@@ -290,9 +314,15 @@ public class GhiChuNhanhDialog extends JDialog {
         return btn;
     }
 
-    private JToggleButton createStyleToggle(String text, int style, String tooltip) {
-        JToggleButton btn = new JToggleButton(text);
-        btn.setFont(new Font("Segoe UI", style, 12));
+    private JToggleButton createStyleToggle(String iconName, String fallbackText, int style, String tooltip) {
+        JToggleButton btn = new JToggleButton();
+        ImageIcon icon = IconHelper.getIcon(iconName, 16, 16);
+        if (icon != null) {
+            btn.setIcon(icon);
+        } else if (fallbackText != null) {
+            btn.setText(fallbackText);
+            btn.setFont(new Font("Segoe UI", style, 12));
+        }
         btn.setPreferredSize(new Dimension(24, 22));
         btn.setMargin(new Insets(1, 2, 1, 2));
         btn.setFocusPainted(false);
@@ -302,11 +332,16 @@ public class GhiChuNhanhDialog extends JDialog {
         return btn;
     }
 
-    private JToggleButton createAlignToggle(String type, String tooltip) {
+    private JToggleButton createAlignToggle(String iconName, String fallbackText, String actionName, int alignment, String tooltip) {
         JToggleButton btn = new JToggleButton();
-        String symbol = type.equals("align_left") ? "≡" : (type.equals("align_center") ? "≢" : "≣");
-        btn.setText(symbol);
-        btn.setFont(new Font("Segoe UI", Font.BOLD, 11));
+        ImageIcon icon = IconHelper.getIcon(iconName, 16, 16);
+        if (icon != null) {
+            btn.setIcon(icon);
+        } else if (fallbackText != null) {
+            btn.setText(fallbackText);
+            btn.setFont(new Font("Segoe UI", Font.BOLD, 11));
+        }
+        btn.addActionListener(new StyledEditorKit.AlignmentAction(actionName, alignment));
         btn.setPreferredSize(new Dimension(24, 22));
         btn.setMargin(new Insets(1, 2, 1, 2));
         btn.setFocusPainted(false);
@@ -444,9 +479,39 @@ public class GhiChuNhanhDialog extends JDialog {
             }
 
             textPane.setCaretPosition(textPane.getDocument().getLength());
+
+            // Update status bar
+            if (lblCreatedTime != null) {
+                Date createdDate = note.getTimeCreated() != null ? new Date(note.getTimeCreated().getTime()) : new Date();
+                String formattedTime = new SimpleDateFormat("dd/MM/yyyy hh:mm a", Locale.ENGLISH).format(createdDate);
+                lblCreatedTime.setText("Khởi tạo: " + formattedTime);
+            }
+            if (lblCreatedBy != null) {
+                String creatorName = getUserDisplayName(note.getUserCreatedId());
+                lblCreatedBy.setText("Khởi tạo bởi: " + creatorName);
+            }
         } finally {
             isUpdatingUi = false;
         }
+    }
+
+    private String getUserDisplayName(String userId) {
+        if (userId == null || userId.trim().isEmpty() || "1".equals(userId)) {
+            return "Administrator";
+        }
+        try {
+            SUser user = userDAO.findById(userId);
+            if (user != null) {
+                if (user.getName() != null && !user.getName().trim().isEmpty()) {
+                    return user.getName();
+                }
+                if (user.getUsername() != null && !user.getUsername().trim().isEmpty()) {
+                    return user.getUsername();
+                }
+            }
+        } catch (Exception ignored) {
+        }
+        return "Administrator";
     }
 
     private void triggerAutoSave() {
@@ -468,7 +533,8 @@ public class GhiChuNhanhDialog extends JDialog {
             byte[] rtfBytes = baos.toByteArray();
 
             note.setNoteData(rtfBytes);
-            note.setContent(textPane.getText());
+            String txt = textPane.getText();
+            note.setContent(txt != null ? txt : "");
             if (AuthService.getCurrentUser() != null) {
                 note.setUserModifiedId(AuthService.getCurrentUser().getId());
             }
@@ -494,7 +560,8 @@ public class GhiChuNhanhDialog extends JDialog {
             displayCurrentNote();
         } else {
             // If already at last page, check if current page has content, then auto-create new page
-            if (!textPane.getText().trim().isEmpty()) {
+            String txt = textPane.getText();
+            if (txt != null && !txt.trim().isEmpty()) {
                 createNewNote();
             }
         }
@@ -505,6 +572,7 @@ public class GhiChuNhanhDialog extends JDialog {
 
         SQuickNote newNote = new SQuickNote();
         newNote.setSortOrder(noteList.size() + 1);
+        newNote.setTimeCreated(new java.sql.Timestamp(System.currentTimeMillis()));
         if (AuthService.getCurrentUser() != null) {
             newNote.setUserCreatedId(AuthService.getCurrentUser().getId());
         }
@@ -536,6 +604,7 @@ public class GhiChuNhanhDialog extends JDialog {
         if (noteList.isEmpty()) {
             SQuickNote blankNote = new SQuickNote();
             blankNote.setSortOrder(1);
+            blankNote.setTimeCreated(new java.sql.Timestamp(System.currentTimeMillis()));
             if (AuthService.getCurrentUser() != null) {
                 blankNote.setUserCreatedId(AuthService.getCurrentUser().getId());
             }

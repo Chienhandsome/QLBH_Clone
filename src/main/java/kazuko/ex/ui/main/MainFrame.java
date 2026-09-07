@@ -788,7 +788,7 @@ public class MainFrame extends JFrame {
     }
 
     public void openTab(String title, JPanel panel) {
-        if (!PermissionService.getInstance().isFunctionAllowed(title)) {
+        if (!PermissionService.getInstance().isActionAllowed(title)) {
             JOptionPane.showMessageDialog(this,
                     "Bạn không có quyền truy cập chức năng: " + title,
                     "Thông báo", JOptionPane.WARNING_MESSAGE);
@@ -842,7 +842,7 @@ public class MainFrame extends JFrame {
 
     private void handleQuickAction(String action) {
         if (action == null) return;
-        if (!PermissionService.getInstance().isFunctionAllowed(action) && !PermissionService.getInstance().isReportAllowed(action)) {
+        if (!PermissionService.getInstance().isActionAllowed(action)) {
             JOptionPane.showMessageDialog(this,
                     "Bạn không có quyền truy cập chức năng: " + action,
                     "Thông báo", JOptionPane.WARNING_MESSAGE);

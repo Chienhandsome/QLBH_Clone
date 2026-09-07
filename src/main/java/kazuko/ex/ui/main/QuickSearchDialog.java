@@ -242,7 +242,7 @@ public class QuickSearchDialog extends JDialog {
         // Center Panel: Danh sách chức năng
         listModel = new DefaultListModel<>();
         for (String f : ALL_FUNCTIONS) {
-            if (PermissionService.getInstance().isFunctionAllowed(f) && PermissionService.getInstance().isReportAllowed(f)) {
+            if (PermissionService.getInstance().isActionAllowed(f)) {
                 listModel.addElement(f);
             }
         }
@@ -353,7 +353,7 @@ public class QuickSearchDialog extends JDialog {
         String query = removeAccent(txtSearch.getText().trim().toLowerCase(Locale.ROOT));
         listModel.clear();
         for (String func : ALL_FUNCTIONS) {
-            if (!PermissionService.getInstance().isFunctionAllowed(func) || !PermissionService.getInstance().isReportAllowed(func)) {
+            if (!PermissionService.getInstance().isActionAllowed(func)) {
                 continue;
             }
             String normFunc = removeAccent(func.toLowerCase(Locale.ROOT));
@@ -369,6 +369,12 @@ public class QuickSearchDialog extends JDialog {
     private void executeSelection() {
         String selected = listFunctions.getSelectedValue();
         if (selected != null && !selected.isEmpty()) {
+            if (!PermissionService.getInstance().isActionAllowed(selected)) {
+                JOptionPane.showMessageDialog(this,
+                        "Bạn không có quyền truy cập chức năng: " + selected,
+                        "Thông báo", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
             dispose();
             if (onActionSelected != null) {
                 onActionSelected.accept(selected);

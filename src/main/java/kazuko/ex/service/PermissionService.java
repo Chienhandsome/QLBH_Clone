@@ -96,7 +96,10 @@ public class PermissionService {
         FUNCTION_ALIASES.put("danhmucphieuthu", "danhmucphieuthuchi");
         FUNCTION_ALIASES.put("danhmucphieuchi", "danhmucphieuthuchi");
         FUNCTION_ALIASES.put("nhaphangvaokho", "nhapkho");
+        FUNCTION_ALIASES.put("quanlynhapkho", "nhapkho");
         FUNCTION_ALIASES.put("dathangnhacungcap", "quanlydathangnhacungcap");
+        FUNCTION_ALIASES.put("dathangncc", "quanlydathangnhacungcap");
+        FUNCTION_ALIASES.put("quanlydathangncc", "quanlydathangnhacungcap");
         FUNCTION_ALIASES.put("thuongphat", "quanlythuongphat");
         FUNCTION_ALIASES.put("congngokhachhangbandau", "dulieubandau");
         FUNCTION_ALIASES.put("congngonhacungcapbandau", "dulieubandau");
@@ -110,7 +113,108 @@ public class PermissionService {
         FUNCTION_ALIASES.put("khoiphuccsdl", "phuchoicosodulieu");
         FUNCTION_ALIASES.put("phuchoicsdl", "phuchoicosodulieu");
         FUNCTION_ALIASES.put("baogiabanhang", "baogia");
+        FUNCTION_ALIASES.put("baogiakhachhang", "baogia");
         FUNCTION_ALIASES.put("khachdathang", "dathang");
+        FUNCTION_ALIASES.put("guitinnhankhachhang", "guitinnhantoikhachhang");
+        FUNCTION_ALIASES.put("quanlyxuatkho", "xuatkho");
+        FUNCTION_ALIASES.put("quanlychuyenkho", "chuyenkho");
+        FUNCTION_ALIASES.put("quanlykiemke", "kiemkekho");
+        FUNCTION_ALIASES.put("quanlytonkho", "tonkho");
+        FUNCTION_ALIASES.put("tonnhieukho", "tonkho");
+        FUNCTION_ALIASES.put("quanlytonnhieukho", "tonkho");
+        FUNCTION_ALIASES.put("danhmuclydothuchi", "danhmucthudochi");
+        FUNCTION_ALIASES.put("lydothuchi", "danhmucthudochi");
+        FUNCTION_ALIASES.put("taikhoannganhang", "danhmuctaikhoannganhang");
+        FUNCTION_ALIASES.put("nhanvien", "danhmucnhanvien");
+        FUNCTION_ALIASES.put("calamviec", "danhmuccalamviec");
+        FUNCTION_ALIASES.put("cuahang", "danhmuccuahang");
+        FUNCTION_ALIASES.put("khohang", "danhmuckhohang");
+        FUNCTION_ALIASES.put("khachhang", "danhmuckhachhang");
+        FUNCTION_ALIASES.put("nhacungcap", "danhmucnhacungcap");
+        FUNCTION_ALIASES.put("mathang", "danhmucmathang");
+        FUNCTION_ALIASES.put("dotkhuyenmai", "danhmucdotkhuyenmai");
+        FUNCTION_ALIASES.put("cauhinhhethong", "cauhintoanhethong");
+        FUNCTION_ALIASES.put("cauhinhtoanhethong", "cauhintoanhethong");
+    }
+
+    public boolean isActionAllowed(String actionNameOrId) {
+        if (currentUser == null || currentUser.isAdminUser()) {
+            return true;
+        }
+        if (actionNameOrId == null || actionNameOrId.trim().isEmpty()) {
+            return true;
+        }
+
+        String norm = normalize(actionNameOrId);
+        if (norm.isEmpty()) return true;
+
+        // Utilities always allowed
+        if ("dangxuat".equals(norm) || "thoat".equals(norm) || "doimatkhau".equals(norm)
+                || "thongtinphanmem".equals(norm) || "dangkibanquyen".equals(norm)
+                || "ghichu".equals(norm) || "ghichunhanh".equals(norm)) {
+            return true;
+        }
+
+        // 1. Check ID directly
+        if (functionRolesById.containsKey(actionNameOrId)) {
+            int mode = functionRolesById.get(actionNameOrId);
+            return mode > 0 && (mode & SGroupRole.MASK_VIEW) != 0;
+        }
+        if (reportRolesById.containsKey(actionNameOrId)) {
+            return reportRolesById.get(actionNameOrId) != SReportRole.MODE_LOCKED;
+        }
+
+        // 2. Exact normalized match
+        if (functionRolesByNormalizedName.containsKey(norm)) {
+            int mode = functionRolesByNormalizedName.get(norm);
+            return mode > 0 && (mode & SGroupRole.MASK_VIEW) != 0;
+        }
+        if (reportRolesByNormalizedName.containsKey(norm)) {
+            return reportRolesByNormalizedName.get(norm) != SReportRole.MODE_LOCKED;
+        }
+
+        // 3. Alias mapping
+        String alias = FUNCTION_ALIASES.get(norm);
+        if (alias != null && functionRolesByNormalizedName.containsKey(alias)) {
+            int mode = functionRolesByNormalizedName.get(alias);
+            return mode > 0 && (mode & SGroupRole.MASK_VIEW) != 0;
+        }
+
+        // 4. Best partial match for Function
+        String bestFuncKey = null;
+        for (String funcKey : functionRolesByNormalizedName.keySet()) {
+            if (norm.equals(funcKey) || norm.contains(funcKey) || funcKey.contains(norm)) {
+                if (bestFuncKey == null || funcKey.length() > bestFuncKey.length()) {
+                    bestFuncKey = funcKey;
+                }
+            }
+        }
+
+        // 5. Best partial match for Report
+        String bestReportKey = null;
+        for (String repKey : reportRolesByNormalizedName.keySet()) {
+            if (norm.equals(repKey) || norm.contains(repKey) || repKey.contains(norm)) {
+                if (bestReportKey == null || repKey.length() > bestReportKey.length()) {
+                    bestReportKey = repKey;
+                }
+            }
+        }
+
+        if (bestReportKey != null && bestFuncKey != null) {
+            if (Math.abs(bestReportKey.length() - norm.length()) <= Math.abs(bestFuncKey.length() - norm.length())) {
+                return reportRolesByNormalizedName.get(bestReportKey) != SReportRole.MODE_LOCKED;
+            } else {
+                int mode = functionRolesByNormalizedName.get(bestFuncKey);
+                return mode > 0 && (mode & SGroupRole.MASK_VIEW) != 0;
+            }
+        } else if (bestReportKey != null) {
+            return reportRolesByNormalizedName.get(bestReportKey) != SReportRole.MODE_LOCKED;
+        } else if (bestFuncKey != null) {
+            int mode = functionRolesByNormalizedName.get(bestFuncKey);
+            return mode > 0 && (mode & SGroupRole.MASK_VIEW) != 0;
+        }
+
+        return true;
     }
 
     public boolean isFunctionAllowed(String functionNameOrId) {
@@ -141,17 +245,20 @@ public class PermissionService {
             return mode > 0 && (mode & SGroupRole.MASK_VIEW) != 0;
         }
 
-        // Check partial match if full match not found (e.g. "Nhập hàng vào kho" matches "Nhập kho")
-        for (Map.Entry<String, Integer> entry : functionRolesByNormalizedName.entrySet()) {
-            String key = entry.getKey();
-            if (norm.contains(key) || key.contains(norm)) {
-                int mode = entry.getValue();
-                return mode > 0 && (mode & SGroupRole.MASK_VIEW) != 0;
+        // Check best partial match
+        String bestFuncKey = null;
+        for (String key : functionRolesByNormalizedName.keySet()) {
+            if (norm.equals(key) || norm.contains(key) || key.contains(norm)) {
+                if (bestFuncKey == null || key.length() > bestFuncKey.length()) {
+                    bestFuncKey = key;
+                }
             }
         }
+        if (bestFuncKey != null) {
+            int mode = functionRolesByNormalizedName.get(bestFuncKey);
+            return mode > 0 && (mode & SGroupRole.MASK_VIEW) != 0;
+        }
 
-        // If function is not mapped in database, default to true or false?
-        // In RBAC, if it's a known function in database and locked -> false. If unknown utility -> true.
         return true;
     }
 
@@ -172,11 +279,16 @@ public class PermissionService {
             return reportRolesByNormalizedName.get(norm) != SReportRole.MODE_LOCKED;
         }
 
-        for (Map.Entry<String, Integer> entry : reportRolesByNormalizedName.entrySet()) {
-            String key = entry.getKey();
-            if (norm.contains(key) || key.contains(norm)) {
-                return entry.getValue() != SReportRole.MODE_LOCKED;
+        String bestReportKey = null;
+        for (String key : reportRolesByNormalizedName.keySet()) {
+            if (norm.equals(key) || norm.contains(key) || key.contains(norm)) {
+                if (bestReportKey == null || key.length() > bestReportKey.length()) {
+                    bestReportKey = key;
+                }
             }
+        }
+        if (bestReportKey != null) {
+            return reportRolesByNormalizedName.get(bestReportKey) != SReportRole.MODE_LOCKED;
         }
 
         return true;
