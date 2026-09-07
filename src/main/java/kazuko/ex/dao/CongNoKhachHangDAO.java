@@ -8,6 +8,7 @@ import java.sql.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.Date;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class CongNoKhachHangDAO extends BaseDAO {
 
@@ -324,6 +325,124 @@ public class CongNoKhachHangDAO extends BaseDAO {
             return true;
         } catch (SQLException e) {
             System.err.println("Lỗi insertPhieuThu: " + e.getMessage());
+            if (conn != null) {
+                try { conn.rollback(); } catch (SQLException ignored) {}
+            }
+            return false;
+        } finally {
+            if (conn != null) {
+                try { conn.setAutoCommit(true); conn.close(); } catch (SQLException ignored) {}
+            }
+        }
+    }
+
+    private static final Map<String, Double> MEMORY_INITIAL_DEBTS = new ConcurrentHashMap<>();
+
+    /**
+     * Lấy danh sách công nợ ban đầu của toàn bộ khách hàng
+     * @return Map với key là KhachHangId và value là số tiền nợ ban đầu
+     */
+    public Map<String, Double> getCongNoBanDauMap() {
+        Map<String, Double> map = new HashMap<>(MEMORY_INITIAL_DEBTS);
+        String sql = "SELECT d.DKHACHHANGID, d.TONGCONG " +
+                "FROM TDONHANG d " +
+                "WHERE (d.STATUS IS NULL OR d.STATUS >= 0) AND d.DKHACHHANGID IS NOT NULL " +
+                "AND d.LOAI = 0 AND (d.DIENGIAI = 'Công nợ ban đầu' OR d.NAME LIKE 'CNBD_%')";
+
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                String khId = rs.getString("DKHACHHANGID");
+                if (khId != null) {
+                    double amount = rs.getDouble("TONGCONG");
+                    map.put(khId.trim(), amount);
+                    MEMORY_INITIAL_DEBTS.put(khId.trim(), amount);
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Lỗi getCongNoBanDauMap từ DB: " + e.getMessage());
+        }
+        return map;
+    }
+
+    /**
+     * Lưu công nợ ban đầu cho danh sách khách hàng
+     * @param ngayChot Ngày chốt công nợ
+     * @param mapCongNo Map chứa {khachHangId: soTien}
+     * @return true nếu lưu thành công
+     */
+    public boolean saveCongNoBanDau(Date ngayChot, Map<String, Double> mapCongNo) {
+        if (mapCongNo == null) return false;
+        Date dateVal = (ngayChot != null) ? ngayChot : new Date();
+        Timestamp tsNgay = new Timestamp(dateVal.getTime());
+        String userId = getEffectiveUserId();
+
+        // Cập nhật bộ nhớ tạm
+        MEMORY_INITIAL_DEBTS.putAll(mapCongNo);
+
+        // Lấy danh sách khách hàng để lấy Mã khách
+        KhachHangDAO khDAO = new KhachHangDAO();
+        Map<String, String> khachMaMap = new HashMap<>();
+        for (kazuko.ex.model.danhmuc.KhachHang kh : khDAO.getAll()) {
+            if (kh.getId() != null) {
+                khachMaMap.put(kh.getId().trim(), kh.getMaKhach() != null ? kh.getMaKhach().trim() : kh.getId().trim());
+            }
+        }
+
+        Connection conn = null;
+        try {
+            conn = getConnection();
+            conn.setAutoCommit(false);
+
+            String sqlCheck = "SELECT ID FROM TDONHANG WHERE DKHACHHANGID = ? AND LOAI = 0 AND (DIENGIAI = 'Công nợ ban đầu' OR NAME LIKE 'CNBD_%')";
+            String sqlUpdate = "UPDATE TDONHANG SET TONGCONG = ?, NGAY = ?, TIMEMODIFIED = CURRENT_TIMESTAMP, USERMODIFIEDID = ?, STATUS = ? WHERE ID = ?";
+            String sqlInsert = "INSERT INTO TDONHANG (" +
+                    "ID, NAME, DKHACHHANGID, NGAY, LOAI, TONGCONG, TIENTHANHTOAN, DIENGIAI, STATUS, TIMECREATED, USERCREATEDID) " +
+                    "VALUES (?, ?, ?, ?, 0, ?, 0, 'Công nợ ban đầu', 1, CURRENT_TIMESTAMP, ?)";
+
+            for (Map.Entry<String, Double> entry : mapCongNo.entrySet()) {
+                String khId = entry.getKey();
+                double soTien = (entry.getValue() != null) ? entry.getValue() : 0.0;
+                String maKhach = khachMaMap.getOrDefault(khId, "KH");
+                String soPhieu = "CNBD_" + maKhach;
+
+                String existingOrderId = null;
+                try (PreparedStatement psCheck = conn.prepareStatement(sqlCheck)) {
+                    psCheck.setString(1, khId);
+                    try (ResultSet rsCheck = psCheck.executeQuery()) {
+                        if (rsCheck.next()) {
+                            existingOrderId = rsCheck.getString("ID");
+                        }
+                    }
+                }
+
+                if (existingOrderId != null) {
+                    try (PreparedStatement psUpdate = conn.prepareStatement(sqlUpdate)) {
+                        psUpdate.setDouble(1, soTien);
+                        psUpdate.setTimestamp(2, tsNgay);
+                        psUpdate.setString(3, userId);
+                        psUpdate.setInt(4, (soTien > 0) ? 1 : 0);
+                        psUpdate.setString(5, existingOrderId);
+                        psUpdate.executeUpdate();
+                    }
+                } else if (soTien > 0) {
+                    try (PreparedStatement psInsert = conn.prepareStatement(sqlInsert)) {
+                        psInsert.setString(1, UUID.randomUUID().toString());
+                        psInsert.setString(2, soPhieu);
+                        psInsert.setString(3, khId);
+                        psInsert.setTimestamp(4, tsNgay);
+                        psInsert.setDouble(5, soTien);
+                        psInsert.setString(6, userId);
+                        psInsert.executeUpdate();
+                    }
+                }
+            }
+
+            conn.commit();
+            return true;
+        } catch (SQLException e) {
+            System.err.println("Lỗi saveCongNoBanDau: " + e.getMessage());
             if (conn != null) {
                 try { conn.rollback(); } catch (SQLException ignored) {}
             }

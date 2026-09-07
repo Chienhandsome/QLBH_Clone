@@ -10,6 +10,7 @@ import kazuko.ex.ui.common.StatusPanel;
 import kazuko.ex.ui.danhmuc.CaLamViecDialog;
 import kazuko.ex.ui.danhmuc.CuaHangDialog;
 import kazuko.ex.ui.danhmuc.DanhMucDotKhuyenMaiPanel;
+import kazuko.ex.ui.congno.CongNoKhachHangBanDauDialog;
 import kazuko.ex.ui.congno.QuanLyCongNoKhachHangPanel;
 import kazuko.ex.ui.congno.QuanLyCongNoNhaCungCapPanel;
 import kazuko.ex.ui.danhmuc.DanhMucKhachHangPanel;
@@ -533,7 +534,7 @@ public class MainFrame extends JFrame {
         JMenuItem miCongNoKHBD = new JMenuItem("Công nợ khách hàng ban đầu");
         JMenuItem miCongNoNCCBD = new JMenuItem("Công nợ nhà cung cấp ban đầu");
         JMenuItem miTonKhoBD = new JMenuItem("Tồn kho ban đầu");
-        miCongNoKHBD.addActionListener(e -> openTab("Công nợ khách hàng ban đầu", createPlaceholderPanel("Công nợ khách hàng ban đầu")));
+        miCongNoKHBD.addActionListener(e -> new CongNoKhachHangBanDauDialog(this).setVisible(true));
         miCongNoNCCBD.addActionListener(e -> openTab("Công nợ nhà cung cấp ban đầu", createPlaceholderPanel("Công nợ nhà cung cấp ban đầu")));
         miTonKhoBD.addActionListener(e -> openTab("Tồn kho ban đầu", createPlaceholderPanel("Tồn kho ban đầu")));
         mDuLieuBanDau.add(miCongNoKHBD);
@@ -634,39 +635,87 @@ public class MainFrame extends JFrame {
 
         // 8.5 BÁO CÁO KHO HÀNG
         JMenu mBaoCaoKhoHang = new JMenu("BÁO CÁO KHO HÀNG");
-        mBaoCaoKhoHang.add(createReportMenuItem("BÁO CÁO NHẬP XUẤT TỒN THEO KHO", "Folder.png"));
-        mBaoCaoKhoHang.add(createReportMenuItem("BÁO CÁO TỔNG HỢP NHẬP KHO", "navigation-000-frame.png"));
-        mBaoCaoKhoHang.add(createReportMenuItem("BÁO CÁO TỔNG HỢP XUẤT KHO", "navigation-180-frame.png"));
-        mBaoCaoKhoHang.add(createReportMenuItem("BÁO CÁO TỔNG HỢP CHUYỂN KHO", "document_valid.png"));
-        mBaoCaoKhoHang.add(createReportMenuItem("BÁO CÁO TỔNG HỢP KIỂM KÊ KHO", "edit-column.png"));
-        mBaoCaoKhoHang.add(createReportMenuItem("BÁO CÁO TỒN KHO THEO MẶT HÀNG", "Folder2.png"));
-        mBaoCaoKhoHang.add(createReportMenuItem("BÁO CÁO TỒN KHO DƯỚI ĐỊNH MỨC", "warning.png"));
-        mBaoCaoKhoHang.add(createReportMenuItem("BÁO CÁO THẺ KHO CHI TIẾT", "Report.png"));
+        mBaoCaoKhoHang.add(createReportMenuItem("BÁO CÁO TỒN KHO THEO KÍCH THƯỚC", "asterisk-yellow.png"));
+
+        // 8.5.1 BÁO CÁO KIỂM KÊ
+        JMenu mBaoCaoKiemKe = new JMenu("BÁO CÁO KIỂM KÊ");
+        mBaoCaoKiemKe.add(createReportMenuItem("DANH SÁCH PHIẾU KIỂM KÊ THEO NGÀY", "Report.png"));
+        mBaoCaoKiemKe.add(createReportMenuItem("TỔNG HỢP MẶT HÀNG PHIẾU KIỂM KÊ THEO NGÀY", "Report.png"));
+        mBaoCaoKiemKe.add(createReportMenuItem("TỔNG HỢP MẶT HÀNG PHIẾU KIỂM KÊ THEO NHÂN VIÊN", "Report.png"));
+        mBaoCaoKiemKe.add(createReportMenuItem("DANH SÁCH PHIẾU KIỂM KÊ THEO NHÂN VIÊN", "Report.png"));
+        mBaoCaoKhoHang.add(mBaoCaoKiemKe);
+
+        // 8.5.2 BÁO CÁO XUẤT KHÁC
+        JMenu mBaoCaoXuatKhac = new JMenu("BÁO CÁO XUẤT KHÁC");
+        mBaoCaoXuatKhac.add(createReportMenuItem("TỔNG HỢP MẶT HÀNG XUẤT THEO NGÀY", "Report.png"));
+        mBaoCaoXuatKhac.add(createReportMenuItem("TỔNG HỢP MẶT HÀNG XUẤT THEO NHÂN VIÊN XUẤT", "Report.png"));
+        mBaoCaoXuatKhac.add(createReportMenuItem("DANH SÁCH PHIẾU XUẤT KHO THEO NHÂN VIÊN XUẤT", "Report.png"));
+        mBaoCaoXuatKhac.add(createReportMenuItem("TỔNG HỢP XUẤT KHÁC THEO NGÀY", "Report.png"));
+        mBaoCaoXuatKhac.add(createReportMenuItem("TỔNG HỢP XUẤT KHÁC THEO NHÂN VIÊN XUẤT", "Report.png"));
+        mBaoCaoXuatKhac.add(createReportMenuItem("DANH SÁCH PHIẾU XUẤT KHO THEO NGÀY", "Report.png"));
+        mBaoCaoKhoHang.add(mBaoCaoXuatKhac);
+
+        // 8.5.3 BÁO CÁO NHẬP HÀNG
+        JMenu mBaoCaoNhapHang = new JMenu("BÁO CÁO NHẬP HÀNG");
+        mBaoCaoNhapHang.add(createReportMenuItem("DANH SÁCH PHIẾU NHẬP KHO THEO NGÀY", "Report.png"));
+        mBaoCaoNhapHang.add(createReportMenuItem("DANH SÁCH PHIẾU NHẬP KHO THEO NHÀ CUNG CẤP", "Report.png"));
+        mBaoCaoNhapHang.add(createReportMenuItem("DANH SÁCH PHIẾU NHẬP KHO THEO NHÂN VIÊN NHẬP", "Report.png"));
+        mBaoCaoNhapHang.add(createReportMenuItem("TỔNG HỢP MẶT HÀNG PHIẾU NHẬP THEO NHÀ CUNG CẤP", "Report.png"));
+        mBaoCaoNhapHang.add(createReportMenuItem("TỔNG HỢP MẶT HÀNG PHIẾU NHẬP THEO NHÂN VIÊN NHẬP", "Report.png"));
+        mBaoCaoNhapHang.add(createReportMenuItem("TỔNG HỢP NHẬP THEO NGÀY", "Report.png"));
+        mBaoCaoNhapHang.add(createReportMenuItem("TỔNG HỢP NHẬP THEO NHÀ CUNG CẤP", "Report.png"));
+        mBaoCaoNhapHang.add(createReportMenuItem("TỔNG HỢP NHẬP THEO NHÂN VIÊN NHẬP", "Report.png"));
+        mBaoCaoNhapHang.add(createReportMenuItem("TỔNG HỢP MẶT HÀNG NHẬP KHO THEO NGÀY", "Report.png"));
+        mBaoCaoKhoHang.add(mBaoCaoNhapHang);
+
+        // 8.5.4 BÁO CÁO CHUYỂN KHO
+        JMenu mBaoCaoChuyenKho = new JMenu("BÁO CÁO CHUYỂN KHO");
+        mBaoCaoChuyenKho.add(createReportMenuItem("TỔNG HỢP MẶT HÀNG CHUYỂN KHO THEO NHÂN VIÊN NHẬN", "Report.png"));
+        mBaoCaoChuyenKho.add(createReportMenuItem("TỔNG HỢP MẶT HÀNG CHUYỂN KHO THEO NHÂN VIÊN CHUYỂN", "Report.png"));
+        mBaoCaoChuyenKho.add(createReportMenuItem("TỔNG HỢP MẶT HÀNG CHUYỂN KHO THEO NGÀY", "Report.png"));
+        mBaoCaoChuyenKho.add(createReportMenuItem("DANH SÁCH PHIẾU CHUYỂN KHO THEO NHÂN VIÊN XUẤT", "Report.png"));
+        mBaoCaoChuyenKho.add(createReportMenuItem("DANH SÁCH PHIẾU CHUYỂN KHO THEO NHÂN VIÊN NHẬP", "Report.png"));
+        mBaoCaoChuyenKho.add(createReportMenuItem("DANH SÁCH PHIẾU CHUYỂN KHO THEO NGÀY", "Report.png"));
+        mBaoCaoKhoHang.add(mBaoCaoChuyenKho);
+
+        // 8.5.5 BÁO CÁO THEO HSD
+        JMenu mBaoCaoTheoHSD = new JMenu("BÁO CÁO THEO HSD");
+        mBaoCaoTheoHSD.add(createReportMenuItem("BÁO CÁO THEO HẠN DÙNG", "document_valid.png"));
+        mBaoCaoTheoHSD.add(createReportMenuItem("BÁO CÁO HÀNG ĐÃ HẾT HẠN", "document_valid.png"));
+        mBaoCaoTheoHSD.add(createReportMenuItem("BÁO CÁO HÀNG TỒN KHO CÓ HẠN DÙNG", "document_valid.png"));
+        mBaoCaoKhoHang.add(mBaoCaoTheoHSD);
+
+        mBaoCaoKhoHang.add(createReportMenuItem("BÁO CÁO HÀNG TỒN KHO", "question-white.png"));
+        mBaoCaoKhoHang.add(createReportMenuItem("BÁO CÁO TỔNG HỢP XUẤT NHẬP TỒN", "tick.png"));
+        mBaoCaoKhoHang.add(createReportMenuItem("THẺ KHO", "report--pencil.png"));
 
         // 8.6 BÁO CÁO CÔNG NỢ
         JMenu mBaoCaoCongNo = new JMenu("BÁO CÁO CÔNG NỢ");
-        mBaoCaoCongNo.add(createReportMenuItem("TỔNG HỢP CÔNG NỢ KHÁCH HÀNG", "congno.png"));
-        mBaoCaoCongNo.add(createReportMenuItem("CHI TIẾT CÔNG NỢ KHÁCH HÀNG", "Report.png"));
-        mBaoCaoCongNo.add(createReportMenuItem("TỔNG HỢP CÔNG NỢ NHÀ CUNG CẤP", "tsbGenTotal.Image.png"));
-        mBaoCaoCongNo.add(createReportMenuItem("CHI TIẾT CÔNG NỢ NHÀ CUNG CẤP", "Report.png"));
-        mBaoCaoCongNo.add(createReportMenuItem("BÁO CÁO CÔNG NỢ ĐẾN HẠN", "report--pencil.png"));
+        mBaoCaoCongNo.add(createReportMenuItem("ĐỐI CHIẾU CÔNG NỢ NHÀ CUNG CẤP", "information-white.png"));
+        mBaoCaoCongNo.add(createReportMenuItem("BÁO CÁO CÔNG NỢ NHÀ CUNG CẤP", "Report.png"));
+        mBaoCaoCongNo.add(createReportMenuItem("ĐỐI CHIẾU CÔNG NỢ KHÁCH HÀNG", "Find.png"));
+        mBaoCaoCongNo.add(createReportMenuItem("TỔNG HỢP CÔNG NỢ KHÁCH HÀNG", "warning.png"));
+        mBaoCaoCongNo.add(createReportMenuItem("TỔNG HỢP CÔNG NỢ NHÀ CUNG CẤP", "navigation-000-frame.png"));
+        mBaoCaoCongNo.add(createReportMenuItem("BÁO CÁO CÔNG NỢ KHÁCH HÀNG", "Report.png"));
 
         // 8.7 BÁO CÁO QUẢN TRỊ
         JMenu mBaoCaoQuanTri = new JMenu("BÁO CÁO QUẢN TRỊ");
-        mBaoCaoQuanTri.add(createReportMenuItem("TỔNG HỢP KẾT QUẢ KINH DOANH (KQKD)", "Tree.png"));
-        mBaoCaoQuanTri.add(createReportMenuItem("BÁO CÁO LỢI NHUẬN BÁN HÀNG THEO MẶT HÀNG", "Report.png"));
-        mBaoCaoQuanTri.add(createReportMenuItem("BÁO CÁO LỢI NHUẬN BÁN HÀNG THEO KHÁCH HÀNG", "Report.png"));
-        mBaoCaoQuanTri.add(createReportMenuItem("BÁO CÁO LỢI NHUẬN THEO NHÂN VIÊN KINH DOANH", "Report.png"));
+        mBaoCaoQuanTri.add(createReportMenuItem("TỔNG HỢP LÃI GỘP THEO MẶT HÀNG (GIÁ VỐN)", "1282529873_objects.png"));
+        mBaoCaoQuanTri.add(createReportMenuItem("TỔNG HỢP LÃI GỘP THEO MẶT HÀNG (GIÁ NHẬP)", "Folder2.png"));
+        mBaoCaoQuanTri.add(createReportMenuItem("CHI TIẾT LÃI THEO HÓA ĐƠN (GIÁ NHẬP)", "mail-send.png"));
+        mBaoCaoQuanTri.add(createReportMenuItem("CHI TIẾT LÃI THEO HÓA ĐƠN (GIÁ VỐN)", "tsbTimeStamp.Image.png"));
+        mBaoCaoQuanTri.add(createReportMenuItem("BÁO CÁO KẾT QUẢ KINH DOANH", "Tree.png"));
+        mBaoCaoQuanTri.add(createReportMenuItem("CHI TIẾT HOẠT ĐỘNG TRONG NGÀY", "report--pencil.png"));
         mBaoCaoQuanTri.add(createReportMenuItem("BÁO CÁO 20 MẶT HÀNG BÁN CHẠY NHẤT", "Statistic16.png"));
-        mBaoCaoQuanTri.add(createReportMenuItem("BẢNG TỔNG HỢP THỊ PHẦN", "Report.png"));
+        mBaoCaoQuanTri.add(createReportMenuItem("BẢNG TỔNG HỢP THỊ PHẦN", "tick.png"));
+        mBaoCaoQuanTri.add(createReportMenuItem("PHÂN TÍCH TÌNH HÌNH BÁN HÀNG", "page_white_code.png"));
 
         // 8.8 BÁO CÁO BIỂU ĐỒ
         JMenu mBaoCaoBieuDo = new JMenu("BÁO CÁO BIỂU ĐỒ");
-        mBaoCaoBieuDo.add(createReportMenuItem("BIỂU ĐỒ DOANH THU THEO THÁNG", "Statistic16.png"));
-        mBaoCaoBieuDo.add(createReportMenuItem("BIỂU ĐỒ DOANH THU THEO NHÂN VIÊN", "Statistic16.png"));
-        mBaoCaoBieuDo.add(createReportMenuItem("BIỂU ĐỒ TĂNG TRƯỞNG DOANH THU", "Statistic16.png"));
-        mBaoCaoBieuDo.add(createReportMenuItem("BIỂU ĐỒ MẶT HÀNG BÁN CHẠY", "Statistic16.png"));
-        mBaoCaoBieuDo.add(createReportMenuItem("BIỂU ĐỒ CƠ CẤU NHÓM HÀNG", "Statistic16.png"));
+        mBaoCaoBieuDo.add(createReportMenuItem("BIỂU ĐỒ DOANH SỐ THEO NHÓM", "Report.png"));
+        mBaoCaoBieuDo.add(createReportMenuItem("BIỂU ĐỒ DOANH THU NGÀY TRONG THÁNG", "Statistic16.png"));
+        mBaoCaoBieuDo.add(createReportMenuItem("BIỂU ĐỒ DOANH THU THÁNG TRONG NĂM", "Report.png"));
+        mBaoCaoBieuDo.add(createReportMenuItem("BIỂU ĐỒ THEO NHÂN VIÊN KINH DOANH", "ptImage.Image.png"));
 
         mBaoCao.add(mBaoCaoQuy);
         mBaoCao.add(mBaoCaoDanhMuc);
@@ -913,6 +962,9 @@ public class MainFrame extends JFrame {
             case "CẤU HÌNH HỆ THỐNG":
                 new CauHinhToanHeThongDialog(this).setVisible(true);
                 break;
+            case "CÔNG NỢ KHÁCH HÀNG BAN ĐẦU":
+                new CongNoKhachHangBanDauDialog(this).setVisible(true);
+                break;
             case "ĐỔI MẬT KHẨU":
                 new DoiMatKhauDialog(this, currentUser).setVisible(true);
                 break;
@@ -955,16 +1007,23 @@ public class MainFrame extends JFrame {
             case "DANH MỤC ĐỢT KHUYẾN MÃI":
                 openTab("Danh mục đợt khuyến mại", new DanhMucDotKhuyenMaiPanel());
                 break;
+            case "ĐỐI CHIẾU CÔNG NỢ KHÁCH HÀNG":
+            case "BÁO CÁO CÔNG NỢ KHÁCH HÀNG":
             case "TỔNG HỢP CÔNG NỢ KHÁCH HÀNG":
             case "CÔNG NỢ KHÁCH HÀNG":
             case "CÔNG NỢ KHÁCH":
                 openTab("Công nợ khách hàng", new QuanLyCongNoKhachHangPanel());
                 break;
+            case "ĐỐI CHIẾU CÔNG NỢ NHÀ CUNG CẤP":
+            case "BÁO CÁO CÔNG NỢ NHÀ CUNG CẤP":
             case "TỔNG HỢP CÔNG NỢ NHÀ CUNG CẤP":
             case "CÔNG NỢ NHÀ CUNG CẤP":
             case "CÔNG NỢ NCC":
                 openTab("Công nợ nhà cung cấp", new QuanLyCongNoNhaCungCapPanel());
                 break;
+            case "BÁO CÁO HÀNG TỒN KHO":
+            case "BÁO CÁO TỒN KHO THEO KÍCH THƯỚC":
+            case "BÁO CÁO TỔNG HỢP XUẤT NHẬP TỒN":
             case "BÁO CÁO NHẬP XUẤT TỒN THEO KHO":
             case "BÁO CÁO TỒN KHO THEO MẶT HÀNG":
             case "TỒN KHO":
@@ -1006,18 +1065,43 @@ public class MainFrame extends JFrame {
             case "KHÁCH ĐẶT HÀNG":
                 openTab("Khách đặt hàng", new KhachDatHangPanel());
                 break;
+            case "DANH SÁCH PHIẾU NHẬP KHO THEO NGÀY":
+            case "DANH SÁCH PHIẾU NHẬP KHO THEO NHÀ CUNG CẤP":
+            case "DANH SÁCH PHIẾU NHẬP KHO THEO NHÂN VIÊN NHẬP":
+            case "TỔNG HỢP MẶT HÀNG PHIẾU NHẬP THEO NHÀ CUNG CẤP":
+            case "TỔNG HỢP MẶT HÀNG PHIẾU NHẬP THEO NHÂN VIÊN NHẬP":
+            case "TỔNG HỢP NHẬP THEO NGÀY":
+            case "TỔNG HỢP NHẬP THEO NHÀ CUNG CẤP":
+            case "TỔNG HỢP NHẬP THEO NHÂN VIÊN NHẬP":
+            case "TỔNG HỢP MẶT HÀNG NHẬP KHO THEO NGÀY":
             case "BÁO CÁO TỔNG HỢP NHẬP KHO":
             case "QUẢN LÝ NHẬP KHO":
                 openTab("Quản lý nhập kho", new QuanLyNhapKhoPanel());
                 break;
+            case "DANH SÁCH PHIẾU XUẤT KHO THEO NGÀY":
+            case "DANH SÁCH PHIẾU XUẤT KHO THEO NHÂN VIÊN XUẤT":
+            case "TỔNG HỢP MẶT HÀNG XUẤT THEO NGÀY":
+            case "TỔNG HỢP MẶT HÀNG XUẤT THEO NHÂN VIÊN XUẤT":
+            case "TỔNG HỢP XUẤT KHÁC THEO NGÀY":
+            case "TỔNG HỢP XUẤT KHÁC THEO NHÂN VIÊN XUẤT":
             case "BÁO CÁO TỔNG HỢP XUẤT KHO":
             case "QUẢN LÝ XUẤT KHO":
                 openTab("Quản lý xuất kho", new QuanLyXuatKhoPanel());
                 break;
+            case "DANH SÁCH PHIẾU CHUYỂN KHO THEO NGÀY":
+            case "DANH SÁCH PHIẾU CHUYỂN KHO THEO NHÂN VIÊN XUẤT":
+            case "DANH SÁCH PHIẾU CHUYỂN KHO THEO NHÂN VIÊN NHẬP":
+            case "TỔNG HỢP MẶT HÀNG CHUYỂN KHO THEO NHÂN VIÊN NHẬN":
+            case "TỔNG HỢP MẶT HÀNG CHUYỂN KHO THEO NHÂN VIÊN CHUYỂN":
+            case "TỔNG HỢP MẶT HÀNG CHUYỂN KHO THEO NGÀY":
             case "BÁO CÁO TỔNG HỢP CHUYỂN KHO":
             case "QUẢN LÝ CHUYỂN KHO":
                 openTab("Quản lý chuyển kho", new QuanLyChuyenKhoPanel());
                 break;
+            case "DANH SÁCH PHIẾU KIỂM KÊ THEO NGÀY":
+            case "DANH SÁCH PHIẾU KIỂM KÊ THEO NHÂN VIÊN":
+            case "TỔNG HỢP MẶT HÀNG PHIẾU KIỂM KÊ THEO NGÀY":
+            case "TỔNG HỢP MẶT HÀNG PHIẾU KIỂM KÊ THEO NHÂN VIÊN":
             case "BÁO CÁO TỔNG HỢP KIỂM KÊ KHO":
             case "QUẢN LÝ KIỂM KÊ":
                 openTab("Quản lý kiểm kê", new QuanLyKiemKePanel());
