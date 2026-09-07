@@ -42,6 +42,43 @@ public class QuickNoteDAO extends BaseDAO {
         return list;
     }
 
+    public List<SQuickNote> getNotesByUserId(String userId) {
+        if (userId == null || userId.trim().isEmpty()) {
+            return getAllNotes();
+        }
+        List<SQuickNote> list = new ArrayList<>();
+        String sql = "SELECT ID, STATUS, USERCREATEDID, TIMECREATED, USERMODIFIEDID, TIMEMODIFIED, SORTORDER, NOTEDATA " +
+                     "FROM SQUICKNOTE WHERE (STATUS IS NULL OR STATUS >= 0) AND USERCREATEDID = ? ORDER BY SORTORDER, TIMECREATED";
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, userId.trim());
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    SQuickNote note = new SQuickNote();
+                    note.setId(rs.getString("ID"));
+                    note.setStatus(rs.getObject("STATUS") != null ? rs.getInt("STATUS") : 30);
+                    note.setUserCreatedId(rs.getString("USERCREATEDID"));
+                    note.setTimeCreated(rs.getTimestamp("TIMECREATED"));
+                    note.setUserModifiedId(rs.getString("USERMODIFIEDID"));
+                    note.setTimeModified(rs.getTimestamp("TIMEMODIFIED"));
+                    note.setSortOrder(rs.getObject("SORTORDER") != null ? rs.getInt("SORTORDER") : 0);
+
+                    byte[] data = rs.getBytes("NOTEDATA");
+                    note.setNoteData(data);
+                    if (data != null && data.length > 0) {
+                        note.setContent(new String(data, java.nio.charset.StandardCharsets.UTF_8));
+                    } else {
+                        note.setContent("");
+                    }
+                    list.add(note);
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Lỗi lấy danh sách ghi chú theo user: " + e.getMessage());
+        }
+        return list;
+    }
+
     public boolean insertNote(SQuickNote note) {
         if (note.getId() == null || note.getId().trim().isEmpty()) {
             note.setId(UUID.randomUUID().toString());

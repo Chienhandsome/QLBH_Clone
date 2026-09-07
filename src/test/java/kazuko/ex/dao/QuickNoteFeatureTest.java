@@ -67,4 +67,42 @@ public class QuickNoteFeatureTest {
             System.out.println(">> GhiChuNhanhDialog instantiation test passed!");
         }
     }
+
+    @Test
+    public void testUserSpecificNotes() {
+        QuickNoteDAO dao = new QuickNoteDAO();
+        String userA = "user_A_" + UUID.randomUUID().toString().substring(0, 8);
+        String userB = "user_B_" + UUID.randomUUID().toString().substring(0, 8);
+
+        // Note for user A
+        SQuickNote noteA = new SQuickNote();
+        String noteAId = UUID.randomUUID().toString();
+        noteA.setId(noteAId);
+        noteA.setUserCreatedId(userA);
+        noteA.setContent("Ghi chú bí mật của User A");
+        assertTrue(dao.insertNote(noteA));
+
+        // Note for user B
+        SQuickNote noteB = new SQuickNote();
+        String noteBId = UUID.randomUUID().toString();
+        noteB.setId(noteBId);
+        noteB.setUserCreatedId(userB);
+        noteB.setContent("Ghi chú riêng của User B");
+        assertTrue(dao.insertNote(noteB));
+
+        // Verify User A only sees their note
+        List<SQuickNote> listA = dao.getNotesByUserId(userA);
+        assertEquals(1, listA.size());
+        assertEquals("Ghi chú bí mật của User A", listA.get(0).getContent());
+
+        // Verify User B only sees their note
+        List<SQuickNote> listB = dao.getNotesByUserId(userB);
+        assertEquals(1, listB.size());
+        assertEquals("Ghi chú riêng của User B", listB.get(0).getContent());
+
+        // Clean up
+        dao.deleteNote(noteAId);
+        dao.deleteNote(noteBId);
+        System.out.println(">> User-specific note isolation test passed successfully!");
+    }
 }

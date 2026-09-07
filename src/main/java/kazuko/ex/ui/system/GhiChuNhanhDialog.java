@@ -431,18 +431,25 @@ public class GhiChuNhanhDialog extends JDialog {
 
     // ==================== LOAD & SAVE NOTES ====================
 
+    private String getCurrentUserId() {
+        if (AuthService.getCurrentUser() != null && AuthService.getCurrentUser().getId() != null) {
+            return AuthService.getCurrentUser().getId();
+        }
+        return "1";
+    }
+
     private void loadNotes() {
         isUpdatingUi = true;
         try {
             noteList.clear();
-            noteList.addAll(noteDAO.getAllNotes());
+            String userId = getCurrentUserId();
+            noteList.addAll(noteDAO.getNotesByUserId(userId));
 
             if (noteList.isEmpty()) {
                 SQuickNote firstNote = new SQuickNote();
                 firstNote.setSortOrder(1);
-                if (AuthService.getCurrentUser() != null) {
-                    firstNote.setUserCreatedId(AuthService.getCurrentUser().getId());
-                }
+                firstNote.setUserCreatedId(userId);
+                firstNote.setTimeCreated(new java.sql.Timestamp(System.currentTimeMillis()));
                 noteDAO.insertNote(firstNote);
                 noteList.add(firstNote);
             }
@@ -570,12 +577,11 @@ public class GhiChuNhanhDialog extends JDialog {
     private void createNewNote() {
         saveCurrentNote();
 
+        String userId = getCurrentUserId();
         SQuickNote newNote = new SQuickNote();
         newNote.setSortOrder(noteList.size() + 1);
         newNote.setTimeCreated(new java.sql.Timestamp(System.currentTimeMillis()));
-        if (AuthService.getCurrentUser() != null) {
-            newNote.setUserCreatedId(AuthService.getCurrentUser().getId());
-        }
+        newNote.setUserCreatedId(userId);
         noteDAO.insertNote(newNote);
         noteList.add(newNote);
 
@@ -602,12 +608,11 @@ public class GhiChuNhanhDialog extends JDialog {
         noteList.remove(currentIndex);
 
         if (noteList.isEmpty()) {
+            String userId = getCurrentUserId();
             SQuickNote blankNote = new SQuickNote();
             blankNote.setSortOrder(1);
             blankNote.setTimeCreated(new java.sql.Timestamp(System.currentTimeMillis()));
-            if (AuthService.getCurrentUser() != null) {
-                blankNote.setUserCreatedId(AuthService.getCurrentUser().getId());
-            }
+            blankNote.setUserCreatedId(userId);
             noteDAO.insertNote(blankNote);
             noteList.add(blankNote);
             currentIndex = 0;
