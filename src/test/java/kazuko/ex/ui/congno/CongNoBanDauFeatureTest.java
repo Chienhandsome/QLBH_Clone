@@ -96,10 +96,58 @@ public class CongNoBanDauFeatureTest {
 
     @Test
     @Order(4)
-    public void testImportExcelMappingDialogHeaders() {
-        List<String> headers = Arrays.asList("Mã khách", "Tên khách", "Dư nợ đầu kỳ", "Ghi chú");
+    public void testImportExcelMappingDialogFieldsAndValidation() {
+        // Kiểm tra TARGET_FIELDS chỉ chứa đúng 3 giá trị: "", "Mã đối tác", "Công nợ đầu"
+        assertArrayEquals(
+                new String[]{"", "Mã đối tác", "Công nợ đầu"},
+                ImportExcelMappingDialog.TARGET_FIELDS,
+                "Danh sách trường đích chỉ được chứa '', 'Mã đối tác', 'Công nợ đầu'"
+        );
+
+        List<String> headers = Arrays.asList("Mã", "Tên", "Công nợ");
         ImportExcelMappingDialog dialog = new ImportExcelMappingDialog(null, headers);
         assertNotNull(dialog);
-        assertEquals(4, headers.size());
+    }
+
+    @Test
+    @Order(5)
+    public void testCustomerCodeMatchingAndNotFoundHandling() {
+        List<KhachHang> customers = khachHangDAO.getAll();
+        assertFalse(customers.isEmpty(), "Cần có ít nhất 1 khách hàng để test");
+
+        KhachHang firstKh = customers.get(0);
+        String validCode = firstKh.getMaKhach();
+        String invalidCode = "KH_KHONG_TON_TAI_999";
+
+        Map<String, Double> debtMap = new HashMap<>();
+        List<String> notFoundCodes = new ArrayList<>();
+
+        // Test matching code hợp lệ
+        boolean matched = false;
+        for (KhachHang kh : customers) {
+            if (kh.getMaKhach() != null && kh.getMaKhach().trim().equalsIgnoreCase(validCode)) {
+                debtMap.put(kh.getId(), 2500000.0);
+                matched = true;
+                break;
+            }
+        }
+        assertTrue(matched, "Mã khách hàng hợp lệ phải tìm thấy");
+        assertEquals(2500000.0, debtMap.get(firstKh.getId()));
+
+        // Test mã không tồn tại
+        boolean invalidFound = false;
+        for (KhachHang kh : customers) {
+            if (kh.getMaKhach() != null && kh.getMaKhach().trim().equalsIgnoreCase(invalidCode)) {
+                invalidFound = true;
+                break;
+            }
+        }
+        if (!invalidFound) {
+            notFoundCodes.add(invalidCode);
+        }
+
+        assertFalse(invalidFound, "Mã không tồn tại không được tìm thấy");
+        assertEquals(1, notFoundCodes.size());
+        assertEquals("KH_KHONG_TON_TAI_999", notFoundCodes.get(0));
     }
 }

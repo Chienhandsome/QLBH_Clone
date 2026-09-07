@@ -19,17 +19,11 @@ import java.util.Map;
 public class ImportExcelMappingDialog extends JDialog {
     public static final String FIELD_MA_DOI_TAC = "Mã đối tác";
     public static final String FIELD_CONG_NO_DAU = "Công nợ đầu";
-    public static final String FIELD_TEN_KHACH = "Tên khách";
-    public static final String FIELD_DIA_CHI = "Địa chỉ";
-    public static final String FIELD_DIEN_THOAI = "Điện thoại";
 
     public static final String[] TARGET_FIELDS = {
             "",
             FIELD_MA_DOI_TAC,
-            FIELD_CONG_NO_DAU,
-            FIELD_TEN_KHACH,
-            FIELD_DIA_CHI,
-            FIELD_DIEN_THOAI
+            FIELD_CONG_NO_DAU
     };
 
     private final List<String> excelHeaders;
@@ -138,12 +132,41 @@ public class ImportExcelMappingDialog extends JDialog {
         }
 
         resultMap.clear();
+        Map<String, Integer> fieldCount = new HashMap<>();
+
         for (int i = 0; i < tableModel.getRowCount(); i++) {
             String excelCol = (String) tableModel.getValueAt(i, 0);
-            String targetField = (String) tableModel.getValueAt(i, 1);
-            if (excelCol != null && targetField != null && !targetField.trim().isEmpty()) {
-                resultMap.put(excelCol.trim(), targetField.trim());
+            Object val = tableModel.getValueAt(i, 1);
+            String targetField = (val != null) ? val.toString().trim() : "";
+            if (!targetField.isEmpty()) {
+                fieldCount.put(targetField, fieldCount.getOrDefault(targetField, 0) + 1);
+                if (excelCol != null) {
+                    resultMap.put(excelCol.trim(), targetField);
+                }
             }
+        }
+
+        // Kiểm tra chọn trùng lặp field từ 2 lần trở lên
+        for (Map.Entry<String, Integer> entry : fieldCount.entrySet()) {
+            if (entry.getValue() > 1) {
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Trường '" + entry.getKey() + "' đã được chọn " + entry.getValue() + " lần!\nMỗi trường chỉ được ánh xạ tối đa một lần.",
+                        "Lỗi ánh xạ",
+                        JOptionPane.ERROR_MESSAGE
+                );
+                return;
+            }
+        }
+
+        if (resultMap.isEmpty()) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Vui lòng chọn ít nhất một trường dữ liệu ('Mã đối tác' hoặc 'Công nợ đầu')!",
+                    "Cảnh báo",
+                    JOptionPane.WARNING_MESSAGE
+            );
+            return;
         }
 
         confirmed = true;

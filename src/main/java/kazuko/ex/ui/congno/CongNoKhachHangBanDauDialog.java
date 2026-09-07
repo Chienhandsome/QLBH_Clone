@@ -534,42 +534,74 @@ public class CongNoKhachHangBanDauDialog extends JDialog {
                 }
             }
 
-            if (colIdxMa == -1 && colIdxCongNo == -1) {
-                JOptionPane.showMessageDialog(this, "Vui lòng ánh xạ ít nhất cột 'Mã đối tác' hoặc 'Công nợ đầu'!", "Thông báo", JOptionPane.WARNING_MESSAGE);
+            if (colIdxMa == -1) {
+                JOptionPane.showMessageDialog(this, "Vui lòng ánh xạ cột 'Mã đối tác' để đối chiếu khách hàng!", "Thông báo", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
+            if (colIdxCongNo == -1) {
+                JOptionPane.showMessageDialog(this, "Vui lòng ánh xạ cột 'Công nợ đầu'!", "Thông báo", JOptionPane.WARNING_MESSAGE);
                 return;
             }
 
             int countMatched = 0;
+            List<String> notFoundCodes = new ArrayList<>();
             int lastRow = sheet.getLastRowNum();
             for (int r = 1; r <= lastRow; r++) {
                 Row row = sheet.getRow(r);
                 if (row == null) continue;
 
-                String maDoiTac = (colIdxMa >= 0) ? getCellValueAsString(row.getCell(colIdxMa)).trim() : "";
-                double soTien = 0.0;
-                if (colIdxCongNo >= 0) {
-                    soTien = getCellValueAsDouble(row.getCell(colIdxCongNo));
+                String maDoiTac = getCellValueAsString(row.getCell(colIdxMa)).trim();
+                double soTien = getCellValueAsDouble(row.getCell(colIdxCongNo));
+
+                if (maDoiTac.isEmpty()) {
+                    continue;
                 }
 
-                if (!maDoiTac.isEmpty()) {
-                    for (KhachHang kh : allCustomers) {
-                        if (kh.getMaKhach() != null && kh.getMaKhach().trim().equalsIgnoreCase(maDoiTac)) {
-                            debtMap.put(kh.getId(), soTien);
-                            countMatched++;
-                            break;
-                        }
+                boolean found = false;
+                for (KhachHang kh : allCustomers) {
+                    if (kh.getMaKhach() != null && kh.getMaKhach().trim().equalsIgnoreCase(maDoiTac)) {
+                        debtMap.put(kh.getId(), soTien);
+                        countMatched++;
+                        found = true;
+                        break;
+                    }
+                }
+
+                if (!found) {
+                    if (!notFoundCodes.contains(maDoiTac)) {
+                        notFoundCodes.add(maDoiTac);
                     }
                 }
             }
 
             filterRows();
 
-            JOptionPane.showMessageDialog(
-                    this,
-                    "Đã nạp công nợ thành công cho " + countMatched + " khách hàng từ file Excel!\nVui lòng kiểm tra lại và nhấn 'Ghi dữ liệu' để lưu.",
-                    "Thông báo",
-                    JOptionPane.INFORMATION_MESSAGE
-            );
+            if (!notFoundCodes.isEmpty()) {
+                String notFoundMsg;
+                if (notFoundCodes.size() == 1) {
+                    notFoundMsg = "Không tìm thấy khách hàng có mã " + notFoundCodes.get(0);
+                } else {
+                    notFoundMsg = "Không tìm thấy các khách hàng có mã sau trong hệ thống:\n" + String.join(", ", notFoundCodes);
+                }
+                JOptionPane.showMessageDialog(this, notFoundMsg, "Thông báo", JOptionPane.WARNING_MESSAGE);
+            }
+
+            if (countMatched > 0) {
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Đã nạp công nợ thành công cho " + countMatched + " khách hàng từ file Excel!\nVui lòng kiểm tra lại và nhấn 'Ghi dữ liệu' để lưu.",
+                        "Thông báo",
+                        JOptionPane.INFORMATION_MESSAGE
+                );
+            } else if (notFoundCodes.isEmpty()) {
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Không tìm thấy dòng dữ liệu công nợ hợp lệ nào trong file Excel!",
+                        "Thông báo",
+                        JOptionPane.INFORMATION_MESSAGE
+                );
+            }
 
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(

@@ -11,6 +11,7 @@ import kazuko.ex.ui.danhmuc.CaLamViecDialog;
 import kazuko.ex.ui.danhmuc.CuaHangDialog;
 import kazuko.ex.ui.danhmuc.DanhMucDotKhuyenMaiPanel;
 import kazuko.ex.ui.congno.CongNoKhachHangBanDauDialog;
+import kazuko.ex.ui.congno.CongNoNhaCungCapBanDauDialog;
 import kazuko.ex.ui.congno.QuanLyCongNoKhachHangPanel;
 import kazuko.ex.ui.congno.QuanLyCongNoNhaCungCapPanel;
 import kazuko.ex.ui.danhmuc.DanhMucKhachHangPanel;
@@ -535,7 +536,7 @@ public class MainFrame extends JFrame {
         JMenuItem miCongNoNCCBD = new JMenuItem("Công nợ nhà cung cấp ban đầu");
         JMenuItem miTonKhoBD = new JMenuItem("Tồn kho ban đầu");
         miCongNoKHBD.addActionListener(e -> new CongNoKhachHangBanDauDialog(this).setVisible(true));
-        miCongNoNCCBD.addActionListener(e -> openTab("Công nợ nhà cung cấp ban đầu", createPlaceholderPanel("Công nợ nhà cung cấp ban đầu")));
+        miCongNoNCCBD.addActionListener(e -> new CongNoNhaCungCapBanDauDialog(this).setVisible(true));
         miTonKhoBD.addActionListener(e -> openTab("Tồn kho ban đầu", createPlaceholderPanel("Tồn kho ban đầu")));
         mDuLieuBanDau.add(miCongNoKHBD);
         mDuLieuBanDau.add(miCongNoNCCBD);
@@ -964,6 +965,9 @@ public class MainFrame extends JFrame {
                 break;
             case "CÔNG NỢ KHÁCH HÀNG BAN ĐẦU":
                 new CongNoKhachHangBanDauDialog(this).setVisible(true);
+                break;
+            case "CÔNG NỢ NHÀ CUNG CẤP BAN ĐẦU":
+                new CongNoNhaCungCapBanDauDialog(this).setVisible(true);
                 break;
             case "ĐỔI MẬT KHẨU":
                 new DoiMatKhauDialog(this, currentUser).setVisible(true);
