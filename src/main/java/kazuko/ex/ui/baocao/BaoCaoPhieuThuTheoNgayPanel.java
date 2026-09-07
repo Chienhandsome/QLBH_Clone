@@ -59,14 +59,13 @@ public class BaoCaoPhieuThuTheoNgayPanel extends JPanel {
         pnlViewerContainer = new JPanel(new BorderLayout());
         pnlViewerContainer.setBackground(new Color(215, 228, 242));
 
-        lblLoading = new JLabel("Đang tạo và tải báo cáo, vui lòng chờ...", SwingConstants.CENTER);
-        lblLoading.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        lblLoading.setForeground(new Color(60, 90, 140));
-        pnlViewerContainer.add(lblLoading, BorderLayout.CENTER);
+        currentViewer = new JRViewer(null);
+        pnlViewerContainer.add(currentViewer, BorderLayout.CENTER);
 
         add(pnlViewerContainer, BorderLayout.CENTER);
 
         // F5 hotkey to refresh
+
         getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_F5, 0), "refreshReport");
         getActionMap().put("refreshReport", new AbstractAction() {
             @Override
@@ -191,12 +190,8 @@ public class BaoCaoPhieuThuTheoNgayPanel extends JPanel {
         ComboItem itemCH = (ComboItem) cbCuaHang.getSelectedItem();
         String chId = itemCH != null ? itemCH.id : "ALL";
 
-        btnTaiDuLieu.setEnabled(false);
-        pnlViewerContainer.removeAll();
-        lblLoading.setText("Đang tải dữ liệu báo cáo...");
-        pnlViewerContainer.add(lblLoading, BorderLayout.CENTER);
-        pnlViewerContainer.revalidate();
-        pnlViewerContainer.repaint();
+        setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+
 
         SwingWorker<JasperPrint, Void> worker = new SwingWorker<>() {
             @Override
@@ -206,28 +201,31 @@ public class BaoCaoPhieuThuTheoNgayPanel extends JPanel {
 
             @Override
             protected void done() {
-                btnTaiDuLieu.setEnabled(true);
+                setCursor(Cursor.getDefaultCursor());
                 try {
                     JasperPrint print = get();
                     pnlViewerContainer.removeAll();
-
                     currentViewer = new JRViewer(print);
-                    currentViewer.setZoomRatio(1.0f); // 100% zoom
+                    currentViewer.setZoomRatio(1.0f);
                     pnlViewerContainer.add(currentViewer, BorderLayout.CENTER);
+                    pnlViewerContainer.revalidate();
+                    pnlViewerContainer.repaint();
                 } catch (Exception e) {
+
                     pnlViewerContainer.removeAll();
                     JLabel lblError = new JLabel("Lỗi tạo báo cáo: " + e.getMessage(), SwingConstants.CENTER);
                     lblError.setForeground(Color.RED);
                     pnlViewerContainer.add(lblError, BorderLayout.CENTER);
+                    pnlViewerContainer.revalidate();
+                    pnlViewerContainer.repaint();
                     e.printStackTrace();
                 }
-                pnlViewerContainer.revalidate();
-                pnlViewerContainer.repaint();
             }
         };
 
         worker.execute();
     }
+
 
     private static class ComboItem {
         final String id;

@@ -40,4 +40,25 @@ public class BaoCaoPhieuThuReportTest {
         System.out.println("Báo cáo Phiếu thu tạo thành công! Số trang: " + print.getPages().size()
                 + ", Tên báo cáo: " + print.getName() + ", Số dòng dữ liệu: " + list.size());
     }
+
+    @Test
+    public void testCompileAndGeneratePhieuThuTheoLyDoReport() throws Exception {
+        PhieuThuReportService service = new PhieuThuReportService();
+
+        // 1. Kiểm tra compile report theo lý do
+        JasperReport report = service.getCompiledReportByReason();
+        Assertions.assertNotNull(report, "JasperReport By Reason không được null sau khi compile");
+
+        // 2. Kiểm tra sinh JasperPrint theo lý do
+        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+        Date fromDate = sdf.parse("01/08/2026");
+        Date toDate = sdf.parse("30/09/2026");
+
+        JasperPrint print = service.generateReportByReasonPrint(fromDate, toDate, "ALL", "ALL");
+        Assertions.assertNotNull(print, "JasperPrint By Reason không được null");
+        Assertions.assertTrue(print.getPages().size() >= 1, "Số trang báo cáo theo lý do phải >= 1");
+
+        System.out.println("Báo cáo Phiếu thu theo lý do tạo thành công! Số trang: " + print.getPages().size()
+                + ", Tên báo cáo: " + print.getName());
+    }
 }

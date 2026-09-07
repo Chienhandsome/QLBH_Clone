@@ -36,9 +36,9 @@ public class PhieuChiDAO extends BaseDAO {
             pc1.setDiaChi("Hà Nội");
             pc1.setPhanLoaiId("tc-2");
             pc1.setTenPhanLoai("Tạm ứng lương");
-            pc1.setLyDoChi("hahaha");
+            pc1.setLyDoChi("Tạm ứng lương đợt 1");
             pc1.setChungTuGoc("");
-            pc1.setSoTien(134.0);
+            pc1.setSoTien(5000000.0);
             pc1.setGhiChu("");
             pc1.setStatus(1);
             MEMORY_PHIEU_CHI.add(pc1);
@@ -56,12 +56,66 @@ public class PhieuChiDAO extends BaseDAO {
             pc2.setDiaChi("Hà Nội");
             pc2.setPhanLoaiId("tc-2");
             pc2.setTenPhanLoai("Tạm ứng lương");
-            pc2.setLyDoChi("lí do chi");
+            pc2.setLyDoChi("Tạm ứng công tác phí");
             pc2.setChungTuGoc("");
-            pc2.setSoTien(10000.0);
+            pc2.setSoTien(3000000.0);
             pc2.setGhiChu("");
             pc2.setStatus(1);
             MEMORY_PHIEU_CHI.add(pc2);
+
+            PhieuChi pc3 = new PhieuChi();
+            pc3.setId("pc-003");
+            pc3.setSoPhieu("PC26/00003");
+            pc3.setNgay(sdf.parse("02/09/2026 09:15"));
+            pc3.setTimeCreated(sdf.parse("02/09/2026 09:15"));
+            pc3.setUserCreatedId("Administrator");
+            pc3.setLoaiDoiTuong("Khác");
+            pc3.setTenDoiTuong("Công ty Điện Lực TP.HCM");
+            pc3.setDiaChi("356 Hai Bà Trưng, Q.1, TP.HCM");
+            pc3.setPhanLoaiId("tc-3");
+            pc3.setTenPhanLoai("Chi phí điện nước");
+            pc3.setLyDoChi("Thanh toán tiền điện tháng 8/2026");
+            pc3.setChungTuGoc("HĐ 0048291");
+            pc3.setSoTien(1850000.0);
+            pc3.setGhiChu("Đã thanh toán qua ngân hàng");
+            pc3.setStatus(1);
+            MEMORY_PHIEU_CHI.add(pc3);
+
+            PhieuChi pc4 = new PhieuChi();
+            pc4.setId("pc-004");
+            pc4.setSoPhieu("PC26/00004");
+            pc4.setNgay(sdf.parse("05/09/2026 11:30"));
+            pc4.setTimeCreated(sdf.parse("05/09/2026 11:30"));
+            pc4.setUserCreatedId("Administrator");
+            pc4.setLoaiDoiTuong("Nhà cung cấp");
+            pc4.setTenDoiTuong("Công Ty TNHH Đá Quý Sài Gòn");
+            pc4.setDiaChi("120 Lê Lợi, Q.1, TP.HCM");
+            pc4.setPhanLoaiId("tc-1");
+            pc4.setTenPhanLoai("Trả nợ nhà cung cấp");
+            pc4.setLyDoChi("Thanh toán tiền hàng đợt 1");
+            pc4.setChungTuGoc("UNC-2026-0901");
+            pc4.setSoTien(25000000.0);
+            pc4.setGhiChu("");
+            pc4.setStatus(1);
+            MEMORY_PHIEU_CHI.add(pc4);
+
+            PhieuChi pc5 = new PhieuChi();
+            pc5.setId("pc-005");
+            pc5.setSoPhieu("PC26/00005");
+            pc5.setNgay(sdf.parse("07/09/2026 15:45"));
+            pc5.setTimeCreated(sdf.parse("07/09/2026 15:45"));
+            pc5.setUserCreatedId("Administrator");
+            pc5.setLoaiDoiTuong("Khách hàng");
+            pc5.setTenDoiTuong("Nguyễn Văn Hùng");
+            pc5.setDiaChi("123 Nguyễn Huệ, Q.1, TP.HCM");
+            pc5.setPhanLoaiId("tc-4");
+            pc5.setTenPhanLoai("Chi trả lại tiền khách");
+            pc5.setLyDoChi("Hoàn tiền hàng đổi trả");
+            pc5.setChungTuGoc("PBH-20260907");
+            pc5.setSoTien(4500000.0);
+            pc5.setGhiChu("");
+            pc5.setStatus(1);
+            MEMORY_PHIEU_CHI.add(pc5);
         } catch (Exception ignored) {}
     }
 
@@ -469,6 +523,112 @@ public class PhieuChiDAO extends BaseDAO {
                 list.add(m);
             }
         }
+        return list;
+    }
+
+    public List<PhieuChi> getReportPhieuChiTheoNgay(Date fromDate, Date toDate, String lyDoThuChiId, String cuaHangId) {
+        List<PhieuChi> list = new ArrayList<>();
+
+        Calendar calFrom = Calendar.getInstance();
+        if (fromDate != null) {
+            calFrom.setTime(fromDate);
+            calFrom.set(Calendar.HOUR_OF_DAY, 0);
+            calFrom.set(Calendar.MINUTE, 0);
+            calFrom.set(Calendar.SECOND, 0);
+            calFrom.set(Calendar.MILLISECOND, 0);
+        } else {
+            calFrom.set(2000, Calendar.JANUARY, 1, 0, 0, 0);
+        }
+
+        Calendar calTo = Calendar.getInstance();
+        if (toDate != null) {
+            calTo.setTime(toDate);
+            calTo.set(Calendar.HOUR_OF_DAY, 23);
+            calTo.set(Calendar.MINUTE, 59);
+            calTo.set(Calendar.SECOND, 59);
+            calTo.set(Calendar.MILLISECOND, 999);
+        } else {
+            calTo.set(2099, Calendar.DECEMBER, 31, 23, 59, 59);
+        }
+
+        Timestamp tsFrom = new Timestamp(calFrom.getTimeInMillis());
+        Timestamp tsTo = new Timestamp(calTo.getTimeInMillis());
+
+        try (Connection conn = getConnection()) {
+            ensureTableExists(conn);
+            StringBuilder sql = new StringBuilder("SELECT * FROM TPHIEUCHI WHERE STATUS >= 0 AND NGAY >= ? AND NGAY <= ?");
+            List<Object> params = new ArrayList<>();
+            params.add(tsFrom);
+            params.add(tsTo);
+
+            if (lyDoThuChiId != null && !lyDoThuChiId.trim().isEmpty() && !lyDoThuChiId.equalsIgnoreCase("ALL")) {
+                sql.append(" AND (DLYDOTHUCHIID = ? OR TENPHANLOAI = ? OR LYDOCHI = ?)");
+                params.add(lyDoThuChiId.trim());
+                params.add(lyDoThuChiId.trim());
+                params.add(lyDoThuChiId.trim());
+            }
+
+            if (cuaHangId != null && !cuaHangId.trim().isEmpty() && !cuaHangId.equalsIgnoreCase("ALL")) {
+                sql.append(" AND DCUAHANGID = ?");
+                params.add(cuaHangId.trim());
+            }
+
+            sql.append(" ORDER BY NGAY ASC, SOPHIEU ASC");
+
+            try (PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+                for (int i = 0; i < params.size(); i++) {
+                    ps.setObject(i + 1, params.get(i));
+                }
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        PhieuChi pc = new PhieuChi();
+                        pc.setId(rs.getString("ID"));
+                        pc.setSoPhieu(rs.getString("SOPHIEU"));
+                        pc.setNgay(rs.getTimestamp("NGAY"));
+                        pc.setPhanLoaiId(rs.getString("DLYDOTHUCHIID"));
+                        pc.setTenPhanLoai(rs.getString("TENPHANLOAI"));
+                        pc.setLyDoChi(rs.getString("LYDOCHI"));
+                        pc.setChungTuGoc(rs.getString("CHUNGTUGOC"));
+                        pc.setLoaiDoiTuong(rs.getString("LOAIDOITUONG"));
+                        pc.setTenDoiTuong(rs.getString("TENDOITUONG"));
+                        pc.setDiaChi(rs.getString("DIACHI"));
+                        pc.setNhanVienId(rs.getString("DNHANVIENID"));
+                        pc.setKhachHangId(rs.getString("DKHACHHANGID"));
+                        pc.setNhaCungCapId(rs.getString("DNHACUNGCAPID"));
+                        pc.setSoTien(rs.getDouble("SOTIEN"));
+                        pc.setChuyenTuTaiKhoan(rs.getInt("CHUYENTUTAIKHOAN") == 1);
+                        pc.setTaiKhoanNganHangId(rs.getString("DTAIKHOANNGANHANGID"));
+                        pc.setCuaHangId(rs.getString("DCUAHANGID"));
+                        pc.setKhongThayDoiCongNo(rs.getInt("KHONGTHAYDOICONGNO") == 1);
+                        pc.setGhiChu(rs.getString("NOTE"));
+                        pc.setStatus(rs.getInt("STATUS"));
+                        pc.setTimeCreated(rs.getTimestamp("TIMECREATED"));
+                        pc.setUserCreatedId(rs.getString("USERCREATEDID"));
+                        list.add(pc);
+                    }
+                }
+            }
+        } catch (Exception ignored) {}
+
+        // Memory merge
+        for (PhieuChi m : MEMORY_PHIEU_CHI) {
+            if (m.getStatus() >= 0 && list.stream().noneMatch(x -> Objects.equals(x.getId(), m.getId()))) {
+                Date d = m.getNgay();
+                if (d != null && d.after(calFrom.getTime()) && d.before(calTo.getTime())) {
+                    boolean matchLyDo = (lyDoThuChiId == null || lyDoThuChiId.trim().isEmpty() || lyDoThuChiId.equalsIgnoreCase("ALL")
+                            || Objects.equals(lyDoThuChiId, m.getPhanLoaiId()) || Objects.equals(lyDoThuChiId, m.getTenPhanLoai()) || Objects.equals(lyDoThuChiId, m.getLyDoChi()));
+                    boolean matchCuaHang = (cuaHangId == null || cuaHangId.trim().isEmpty() || cuaHangId.equalsIgnoreCase("ALL")
+                            || Objects.equals(cuaHangId, m.getCuaHangId()));
+                    if (matchLyDo && matchCuaHang) {
+                        list.add(m);
+                    }
+                }
+            }
+        }
+
+        list.sort(Comparator.comparing((PhieuChi p) -> p.getNgay() != null ? p.getNgay() : new Date())
+                .thenComparing(p -> p.getSoPhieu() != null ? p.getSoPhieu() : ""));
+
         return list;
     }
 }

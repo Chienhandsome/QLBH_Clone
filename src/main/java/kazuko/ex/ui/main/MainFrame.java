@@ -7,6 +7,19 @@ import kazuko.ex.ui.auth.DatabaseConfigDialog;
 import kazuko.ex.ui.auth.DoiMatKhauDialog;
 import kazuko.ex.ui.auth.LoginForm;
 import kazuko.ex.ui.baocao.BaoCaoPhieuThuTheoNgayPanel;
+import kazuko.ex.ui.baocao.BaoCaoPhieuThuTheoLyDoPanel;
+import kazuko.ex.ui.baocao.BaoCaoPhieuChiTheoNgayPanel;
+import kazuko.ex.ui.baocao.BaoCaoPhieuChiTheoLyDoPanel;
+import kazuko.ex.ui.baocao.TongHopThuChiTheoNgayPanel;
+import kazuko.ex.ui.baocao.TongHopThuChiTheoLyDoPanel;
+import kazuko.ex.ui.baocao.BaoCaoTonQuyPanel;
+import kazuko.ex.ui.baocao.BaoCaoKhachHangTheoNhomPanel;
+import kazuko.ex.ui.baocao.BaoCaoKhachHangTheoNhanVienPanel;
+import kazuko.ex.ui.baocao.BaoCaoNhaCungCapTheoNhomPanel;
+import kazuko.ex.ui.baocao.BaoCaoDotKhuyenMaiPanel;
+import kazuko.ex.ui.baocao.BaoCaoMatHangTheoNhomPanel;
+import kazuko.ex.ui.baocao.BaoCaoMatHangTheoHangSanXuatPanel;
+import kazuko.ex.ui.baocao.BaoCaoKhachHangSinhNhatPanel;
 import kazuko.ex.ui.baogia.BaoGiaBanHangPanel;
 
 
@@ -1023,18 +1036,32 @@ public class MainFrame extends JFrame {
             case "DANH SÁCH PHIẾU THU THE...":
                 openTab("DANH SÁCH PHIẾU THU THE...", new BaoCaoPhieuThuTheoNgayPanel());
                 break;
+            case "TỔNG HỢP THU CHI THEO NGÀY":
+                openTab("TỔNG HỢP THU CHI THEO NGÀY", new TongHopThuChiTheoNgayPanel());
+                break;
+            case "TỔNG HỢP THU CHI THEO LÝ DO":
+            case "TỔNG HỢP THU CHI THEO LÝ DO...":
+                openTab("TỔNG HỢP THU CHI THEO LÝ DO", new TongHopThuChiTheoLyDoPanel());
+                break;
             case "BÁO CÁO TỒN QUỸ":
-
             case "TỒN QUỸ":
             case "SỔ QUỸ":
-                openTab("Tồn quỹ", new TonQuyPanel());
+                openTab("BÁO CÁO TỒN QUỸ", new BaoCaoTonQuyPanel());
                 break;
             case "KHÁCH HÀNG THÂN THIẾT":
                 openTab("Khách hàng thân thiết", new KhachHangThanThietPanel());
                 break;
             case "DANH SÁCH ĐỢT KHUYẾN MẠI":
+            case "BÁO CÁO ĐỢT KHUYẾN MẠI":
+                openTab("DANH SÁCH ĐỢT KHUYẾN MẠI", new BaoCaoDotKhuyenMaiPanel());
+                break;
             case "DANH MỤC ĐỢT KHUYẾN MÃI":
+            case "ĐỢT KHUYẾN MÃI":
                 openTab("Danh mục đợt khuyến mại", new DanhMucDotKhuyenMaiPanel());
+                break;
+            case "KHÁCH HÀNG ĐẾN NGÀY SINH NHẬT":
+            case "SINH NHẬT KHÁCH HÀNG":
+                openTab("KHÁCH HÀNG ĐẾN NGÀY SINH NHẬT", new BaoCaoKhachHangSinhNhatPanel());
                 break;
             case "ĐỐI CHIẾU CÔNG NỢ KHÁCH HÀNG":
             case "BÁO CÁO CÔNG NỢ KHÁCH HÀNG":
@@ -1064,26 +1091,46 @@ public class MainFrame extends JFrame {
                 openTab("Tồn nhiều kho", new QuanLyTonNhieuKhoPanel());
                 break;
             case "DANH SÁCH MẶT HÀNG THEO NHÓM":
+                openTab("DANH SÁCH MẶT HÀNG THEO NHÓM", new BaoCaoMatHangTheoNhomPanel());
+                break;
             case "DANH SÁCH MẶT HÀNG THEO HÃNG SẢN XUẤT":
+                openTab("DANH SÁCH MẶT HÀNG THEO HÃNG SẢN XUẤT", new BaoCaoMatHangTheoHangSanXuatPanel());
+                break;
             case "DANH MỤC MẶT HÀNG":
                 openTab("Danh mục mặt hàng", new DanhMucMatHangPanel());
                 break;
             case "DANH SÁCH KHÁCH HÀNG THEO NHÓM":
+                openTab("DANH SÁCH KHÁCH HÀNG THEO NHÓM", new BaoCaoKhachHangTheoNhomPanel());
+                break;
             case "DANH SÁCH KHÁCH HÀNG THEO NHÂN VIÊN":
+                openTab("DANH SÁCH KHÁCH HÀNG THEO NHÂN VIÊN", new BaoCaoKhachHangTheoNhanVienPanel());
+                break;
             case "DANH MỤC KHÁCH HÀNG":
                 openTab("Danh mục khách hàng", new DanhMucKhachHangPanel());
                 break;
             case "DANH SÁCH NHÀ CUNG CẤP THEO NHÓM":
+                openTab("DANH SÁCH NHÀ CUNG CẤP THEO NHÓM", new BaoCaoNhaCungCapTheoNhomPanel());
+                break;
             case "DANH MỤC NHÀ CUNG CẤP":
                 openTab("Danh mục nhà cung cấp", new DanhMucNhaCungCapPanel());
                 break;
             case "DANH SÁCH PHIẾU THU THEO LÝ DO THU CHI":
+            case "BÁO CÁO PHIẾU THU THEO LÝ DO THU CHI":
+                openTab("DANH SÁCH PHIẾU THU THE...", new BaoCaoPhieuThuTheoLyDoPanel());
+                break;
             case "DANH MỤC PHIẾU THU":
                 openTab("Danh mục phiếu thu", new DanhMucPhieuThuPanel());
                 break;
 
             case "DANH SÁCH PHIẾU CHI THEO NGÀY":
+            case "BÁO CÁO PHIẾU CHI THEO NGÀY":
+            case "DANH SÁCH PHIẾU CHI THE...":
+                openTab("DANH SÁCH PHIẾU CHI THE...", new BaoCaoPhieuChiTheoNgayPanel());
+                break;
             case "DANH SÁCH PHIẾU CHI THEO LÝ DO THU CHI":
+            case "BÁO CÁO PHIẾU CHI THEO LÝ DO THU CHI":
+                openTab("DANH SÁCH PHIẾU CHI THE...", new BaoCaoPhieuChiTheoLyDoPanel());
+                break;
             case "DANH MỤC PHIẾU CHI":
                 openTab("Danh mục phiếu chi", new DanhMucPhieuChiPanel());
                 break;
