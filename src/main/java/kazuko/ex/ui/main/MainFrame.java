@@ -26,6 +26,7 @@ import kazuko.ex.ui.dathang.DatHangNhaCungCapPanel;
 import kazuko.ex.ui.dathang.KhachDatHangPanel;
 import kazuko.ex.ui.hoadon.HoaDonBanHangPanel;
 import kazuko.ex.ui.hoadon.QuanLyBanHangPanel;
+import kazuko.ex.ui.khohang.ChonKhoBanDauDialog;
 import kazuko.ex.ui.khohang.QuanLyChuyenKhoPanel;
 import kazuko.ex.ui.khohang.QuanLyKiemKePanel;
 import kazuko.ex.ui.khohang.QuanLyNhapKhoPanel;
@@ -33,6 +34,7 @@ import kazuko.ex.ui.khohang.QuanLyTonKhoPanel;
 import kazuko.ex.ui.khohang.QuanLyTonNhieuKhoPanel;
 import kazuko.ex.ui.khohang.QuanLyXuatKhoPanel;
 import kazuko.ex.ui.khohang.TinhLaiGiaVonDialog;
+import kazuko.ex.ui.khohang.TonKhoBanDauDialog;
 import kazuko.ex.ui.nhansu.ChamCongPanel;
 import kazuko.ex.ui.nhansu.TamUngLuongPanel;
 import kazuko.ex.ui.nhansu.ThuongPhatPanel;
@@ -537,7 +539,13 @@ public class MainFrame extends JFrame {
         JMenuItem miTonKhoBD = new JMenuItem("Tồn kho ban đầu");
         miCongNoKHBD.addActionListener(e -> new CongNoKhachHangBanDauDialog(this).setVisible(true));
         miCongNoNCCBD.addActionListener(e -> new CongNoNhaCungCapBanDauDialog(this).setVisible(true));
-        miTonKhoBD.addActionListener(e -> openTab("Tồn kho ban đầu", createPlaceholderPanel("Tồn kho ban đầu")));
+        miTonKhoBD.addActionListener(e -> {
+            ChonKhoBanDauDialog selectDlg = new ChonKhoBanDauDialog(this);
+            selectDlg.setVisible(true);
+            if (selectDlg.isConfirmed() && selectDlg.getSelectedKho() != null) {
+                new TonKhoBanDauDialog(this, selectDlg.getSelectedKho()).setVisible(true);
+            }
+        });
         mDuLieuBanDau.add(miCongNoKHBD);
         mDuLieuBanDau.add(miCongNoNCCBD);
         mDuLieuBanDau.add(miTonKhoBD);
@@ -968,6 +976,13 @@ public class MainFrame extends JFrame {
                 break;
             case "CÔNG NỢ NHÀ CUNG CẤP BAN ĐẦU":
                 new CongNoNhaCungCapBanDauDialog(this).setVisible(true);
+                break;
+            case "TỒN KHO BAN ĐẦU":
+                ChonKhoBanDauDialog selectDlg = new ChonKhoBanDauDialog(this);
+                selectDlg.setVisible(true);
+                if (selectDlg.isConfirmed() && selectDlg.getSelectedKho() != null) {
+                    new TonKhoBanDauDialog(this, selectDlg.getSelectedKho()).setVisible(true);
+                }
                 break;
             case "ĐỔI MẬT KHẨU":
                 new DoiMatKhauDialog(this, currentUser).setVisible(true);

@@ -14,6 +14,7 @@ import kazuko.ex.util.CurrencyUtil;
 import kazuko.ex.util.DateUtil;
 import kazuko.ex.util.ExcelExporter;
 import kazuko.ex.util.IconHelper;
+import kazuko.ex.util.MatHangExcelUtil;
 
 import javax.swing.*;
 import javax.swing.border.CompoundBorder;
@@ -2231,7 +2232,8 @@ public class DanhMucMatHangPanel extends JPanel {
     }
 
     private void onExportExcel() {
-        ExcelExporter.exportTable(tableMatHang, "DanhMuc_MatHang", "Mặt hàng", this);
+        List<MatHang> listToExport = (currentList != null && !currentList.isEmpty()) ? currentList : matHangDAO.getAll();
+        MatHangExcelUtil.exportMatHangList(this, listToExport, "DanhMuc_MatHang.xlsx");
     }
 
     private void onOpenTrash() {

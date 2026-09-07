@@ -20,21 +20,41 @@ public class ImportExcelMappingDialog extends JDialog {
     public static final String FIELD_MA_DOI_TAC = "Mã đối tác";
     public static final String FIELD_CONG_NO_DAU = "Công nợ đầu";
 
-    public static final String[] TARGET_FIELDS = {
+    // Trường dùng cho Tồn kho ban đầu
+    public static final String FIELD_MA_HANG_HOA = "Mã hàng hóa";
+    public static final String FIELD_TON = "Tồn";
+    public static final String FIELD_GIA_VON = "Giá vốn";
+
+    public static final String[] DEFAULT_TARGET_FIELDS = {
             "",
             FIELD_MA_DOI_TAC,
             FIELD_CONG_NO_DAU
     };
 
+    public static final String[] TON_KHO_TARGET_FIELDS = {
+            "",
+            FIELD_MA_HANG_HOA,
+            FIELD_TON,
+            FIELD_GIA_VON
+    };
+
+    public static final String[] TARGET_FIELDS = DEFAULT_TARGET_FIELDS;
+
     private final List<String> excelHeaders;
+    private final String[] targetFields;
     private JTable mappingTable;
     private DefaultTableModel tableModel;
     private boolean confirmed = false;
     private final Map<String, String> resultMap = new HashMap<>();
 
     public ImportExcelMappingDialog(Window parent, List<String> excelHeaders) {
+        this(parent, excelHeaders, DEFAULT_TARGET_FIELDS);
+    }
+
+    public ImportExcelMappingDialog(Window parent, List<String> excelHeaders, String[] targetFields) {
         super(parent, "Thêm từ excel", ModalityType.APPLICATION_MODAL);
         this.excelHeaders = excelHeaders;
+        this.targetFields = (targetFields != null) ? targetFields : DEFAULT_TARGET_FIELDS;
         initComponents();
         setSize(460, 480);
         setLocationRelativeTo(parent);
@@ -73,7 +93,7 @@ public class ImportExcelMappingDialog extends JDialog {
         mappingTable.getTableHeader().setPreferredSize(new Dimension(0, 28));
 
         // Editor cho cột Dữ liệu: JComboBox
-        JComboBox<String> cmbFields = new JComboBox<>(TARGET_FIELDS);
+        JComboBox<String> cmbFields = new JComboBox<>(targetFields);
         cmbFields.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         mappingTable.getColumnModel().getColumn(1).setCellEditor(new DefaultCellEditor(cmbFields));
 

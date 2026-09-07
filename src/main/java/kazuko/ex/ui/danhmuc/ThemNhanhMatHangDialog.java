@@ -3,31 +3,37 @@ package kazuko.ex.ui.danhmuc;
 import kazuko.ex.dao.DonViTinhDAO;
 import kazuko.ex.dao.MatHangDAO;
 import kazuko.ex.dao.NhomMatHangDAO;
+import kazuko.ex.dao.SystemConfigDAO;
 import kazuko.ex.model.danhmuc.DonViTinh;
 import kazuko.ex.model.danhmuc.MatHang;
 import kazuko.ex.model.danhmuc.NhomMatHang;
+import kazuko.ex.model.system.SystemConfig;
 import kazuko.ex.util.IconHelper;
 
 import javax.swing.*;
-import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 import javax.swing.border.MatteBorder;
-import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
 import java.awt.*;
 import java.awt.datatransfer.DataFlavor;
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class ThemNhanhMatHangDialog extends JDialog {
     private final MatHangDAO matHangDAO = new MatHangDAO();
     private final NhomMatHangDAO nhomMatHangDAO = new NhomMatHangDAO();
     private final DonViTinhDAO donViTinhDAO = new DonViTinhDAO();
+    private final SystemConfig systemConfig;
 
     private final Runnable onSuccessCallback;
+
+    private String labelGia2 = "Đơn giá 2";
+    private String labelGia3 = "Giá bán 3";
+    private String labelGia4 = "Giá bán 4";
+    private String[] gridColumns;
 
     private JTable tableGrid;
     private DefaultTableModel tableModel;
@@ -82,6 +88,9 @@ public class ThemNhanhMatHangDialog extends JDialog {
     private JCheckBox chkGia3;
     private JTextField txtChungGia3;
 
+    private JCheckBox chkGia4;
+    private JTextField txtChungGia4;
+
     private JCheckBox chkGiaVon;
     private JTextField txtChungGiaVon;
 
@@ -109,26 +118,64 @@ public class ThemNhanhMatHangDialog extends JDialog {
     private JCheckBox chkDoiTac;
     private JComboBox<String> cbChungDoiTac;
 
-    private static final String[] GRID_COLUMNS = {
-            "Mã hàng", "Tên mặt hàng", "Nhóm mặt hàng", "Đơn vị tính",
-            "Giá bán", "Giá nhập", "Mặc định giảm giá", "Mặc định giảm tiền",
-            "Ghi chú", "Không in chế biến", "Bảo hành",
-            "Đơn vị tính chẵn", "Quy đổi", "Giá bán chẵn",
-            "Đơn giá 2", "Giá bán 3", "Giá vốn",
-            "Hãng sản xuất", "Có hạn sử dụng", "Size",
-            "Tồn tối thiểu", "Tồn tối đa", "Ảnh", "Hoa hồng", "Đối tác ký gửi"
-    };
-
     public ThemNhanhMatHangDialog(Window owner, Runnable onSuccess) {
         super(owner, "Thêm nhanh", ModalityType.APPLICATION_MODAL);
         this.onSuccessCallback = onSuccess;
+        this.systemConfig = new SystemConfigDAO().loadConfig();
 
+        initGridColumns();
         initUI();
         loadComboData();
         addNewRows(1);
 
         setSize(1180, 680);
         setLocationRelativeTo(owner);
+    }
+
+    private void initGridColumns() {
+        if (systemConfig != null) {
+            if (systemConfig.getDienGiaiGia2() != null && !systemConfig.getDienGiaiGia2().trim().isEmpty()) {
+                labelGia2 = systemConfig.getDienGiaiGia2().trim();
+            }
+            if (systemConfig.getDienGiaiGia3() != null && !systemConfig.getDienGiaiGia3().trim().isEmpty()) {
+                labelGia3 = systemConfig.getDienGiaiGia3().trim();
+            }
+            if (systemConfig.getDienGiaiGia4() != null && !systemConfig.getDienGiaiGia4().trim().isEmpty()) {
+                labelGia4 = systemConfig.getDienGiaiGia4().trim();
+            }
+        }
+
+        List<String> list = new ArrayList<>();
+        list.add("Mã hàng");
+        list.add("Tên mặt hàng");
+        list.add("Nhóm mặt hàng");
+        list.add("Đơn vị tính");
+        list.add("Giá bán");
+        list.add("Giá nhập");
+        list.add("Mặc định giảm giá");
+        list.add("Mặc định giảm tiền");
+        list.add("Ghi chú");
+        list.add("Không in chế biến");
+        list.add("Bảo hành");
+        list.add("Đơn vị tính chẵn");
+        list.add("Quy đổi");
+        list.add("Giá bán chẵn");
+        list.add(labelGia2);
+        list.add(labelGia3);
+        if (systemConfig != null && systemConfig.isSuDungGia4()) {
+            list.add(labelGia4);
+        }
+        list.add("Giá vốn");
+        list.add("Hãng sản xuất");
+        list.add("Có hạn sử dụng");
+        list.add("Size");
+        list.add("Tồn tối thiểu");
+        list.add("Tồn tối đa");
+        list.add("Ảnh");
+        list.add("Hoa hồng");
+        list.add("Đối tác ký gửi");
+
+        gridColumns = list.toArray(new String[0]);
     }
 
     private void initUI() {
@@ -187,7 +234,7 @@ public class ThemNhanhMatHangDialog extends JDialog {
         leftMainPanel.add(toolBar, BorderLayout.NORTH);
 
         // 2.2 Table Grid
-        tableModel = new DefaultTableModel(GRID_COLUMNS, 0) {
+        tableModel = new DefaultTableModel(gridColumns, 0) {
             @Override
             public Class<?> getColumnClass(int columnIndex) {
                 String cName = getColumnName(columnIndex);
@@ -216,7 +263,7 @@ public class ThemNhanhMatHangDialog extends JDialog {
             if ("Tên mặt hàng".equals(name)) tableGrid.getColumnModel().getColumn(i).setPreferredWidth(180);
             else if ("Nhóm mặt hàng".equals(name) || "Ghi chú".equals(name)) tableGrid.getColumnModel().getColumn(i).setPreferredWidth(130);
             else if ("Mã hàng".equals(name) || "Đơn vị tính".equals(name)) tableGrid.getColumnModel().getColumn(i).setPreferredWidth(90);
-            else if (name.contains("Giá") || name.contains("tiền")) tableGrid.getColumnModel().getColumn(i).setPreferredWidth(95);
+            else if (name.contains("Giá") || name.contains("tiền") || name.contains("giá") || name.contains("haha")) tableGrid.getColumnModel().getColumn(i).setPreferredWidth(95);
             else tableGrid.getColumnModel().getColumn(i).setPreferredWidth(100);
         }
 
@@ -351,59 +398,66 @@ public class ThemNhanhMatHangDialog extends JDialog {
         txtChungGiaBanChan = new JTextField("0");
         addPropertyRow(panel, gbc, row++, chkGiaBanChan, true, "Giá bán chẵn:", txtChungGiaBanChan);
 
-        // 15. Đơn giá 2
+        // 15. Giá 2
         chkGia2 = new JCheckBox();
         txtChungGia2 = new JTextField("0");
-        addPropertyRow(panel, gbc, row++, chkGia2, true, "Đơn giá 2:", txtChungGia2);
+        addPropertyRow(panel, gbc, row++, chkGia2, true, labelGia2 + ":", txtChungGia2);
 
-        // 16. Giá bán 3
+        // 16. Giá 3
         chkGia3 = new JCheckBox();
         txtChungGia3 = new JTextField("0");
-        addPropertyRow(panel, gbc, row++, chkGia3, true, "Giá bán 3:", txtChungGia3);
+        addPropertyRow(panel, gbc, row++, chkGia3, true, labelGia3 + ":", txtChungGia3);
 
-        // 17. Giá vốn
+        // 17. Giá 4 (nếu có)
+        if (systemConfig != null && systemConfig.isSuDungGia4()) {
+            chkGia4 = new JCheckBox();
+            txtChungGia4 = new JTextField("0");
+            addPropertyRow(panel, gbc, row++, chkGia4, true, labelGia4 + ":", txtChungGia4);
+        }
+
+        // Giá vốn
         chkGiaVon = new JCheckBox();
         txtChungGiaVon = new JTextField("0");
         addPropertyRow(panel, gbc, row++, chkGiaVon, true, "Giá vốn:", txtChungGiaVon);
 
-        // 18. Hãng sản xuất
+        // Hãng sản xuất
         chkHangSX = new JCheckBox();
         cbChungHangSX = new JComboBox<>();
         cbChungHangSX.setEditable(true);
         addPropertyRow(panel, gbc, row++, chkHangSX, true, "Hãng sản xuất:", cbChungHangSX);
 
-        // 19. Có hạn sử dụng
+        // Có hạn sử dụng
         chkCoHan = new JCheckBox();
         chkChungCoHan = new JCheckBox();
         chkChungCoHan.setOpaque(false);
         addPropertyRow(panel, gbc, row++, chkCoHan, true, "Có hạn sử dụng:", chkChungCoHan);
 
-        // 20. Size
+        // Size
         chkSize = new JCheckBox();
         txtChungSize = new JTextField();
         addPropertyRow(panel, gbc, row++, chkSize, true, "Size:", txtChungSize);
 
-        // 21. Tồn tối thiểu
+        // Tồn tối thiểu
         chkTonMin = new JCheckBox();
         txtChungTonMin = new JTextField("0");
         addPropertyRow(panel, gbc, row++, chkTonMin, true, "Tồn tối thiểu:", txtChungTonMin);
 
-        // 22. Tồn tối đa
+        // Tồn tối đa
         chkTonMax = new JCheckBox();
         txtChungTonMax = new JTextField("0");
         addPropertyRow(panel, gbc, row++, chkTonMax, true, "Tồn tối đa:", txtChungTonMax);
 
-        // 23. Ảnh
+        // Ảnh
         chkAnh = new JCheckBox();
         txtChungAnh = new JTextField();
         addPropertyRow(panel, gbc, row++, chkAnh, true, "Ảnh:", txtChungAnh);
 
-        // 24. Hoa hồng
+        // Hoa hồng
         chkHoaHong = new JCheckBox();
         txtChungHoaHong = new JTextField("0");
         addPropertyRow(panel, gbc, row++, chkHoaHong, true, "Hoa hồng:", txtChungHoaHong);
 
-        // 25. Đối tác ký gửi
+        // Đối tác ký gửi
         chkDoiTac = new JCheckBox();
         cbChungDoiTac = new JComboBox<>();
         cbChungDoiTac.setEditable(true);
@@ -480,35 +534,10 @@ public class ThemNhanhMatHangDialog extends JDialog {
 
     private void addNewRows(int count) {
         for (int i = 0; i < count; i++) {
-            Object[] row = new Object[GRID_COLUMNS.length];
-            for (int c = 0; c < GRID_COLUMNS.length; c++) {
-                String col = GRID_COLUMNS[c];
-                if ("Mã hàng".equals(col)) row[c] = chkMaHang.isSelected() ? txtChungMaHang.getText().trim() : "";
-                else if ("Tên mặt hàng".equals(col)) row[c] = chkTenHang.isSelected() ? txtChungTenHang.getText().trim() : "";
-                else if ("Nhóm mặt hàng".equals(col)) row[c] = chkNhomHang.isSelected() && cbChungNhomHang.getSelectedItem() != null ? cbChungNhomHang.getSelectedItem().toString() : "";
-                else if ("Đơn vị tính".equals(col)) row[c] = chkDVT.isSelected() && cbChungDVT.getSelectedItem() != null ? cbChungDVT.getSelectedItem().toString() : "";
-                else if ("Giá bán".equals(col)) row[c] = chkGiaBan.isSelected() ? txtChungGiaBan.getText().trim() : "0";
-                else if ("Giá nhập".equals(col)) row[c] = chkGiaNhap.isSelected() ? txtChungGiaNhap.getText().trim() : "0";
-                else if ("Mặc định giảm giá".equals(col)) row[c] = chkGiamGiaPt.isSelected() ? txtChungGiamGiaPt.getText().trim() : "0";
-                else if ("Mặc định giảm tiền".equals(col)) row[c] = chkGiamGiaTien.isSelected() ? txtChungGiamGiaTien.getText().trim() : "0";
-                else if ("Ghi chú".equals(col)) row[c] = chkGhiChu.isSelected() ? txtChungGhiChu.getText().trim() : "";
-                else if ("Không in chế biến".equals(col)) row[c] = chkKhongIn.isSelected() && chkChungKhongIn.isSelected();
-                else if ("Bảo hành".equals(col)) row[c] = chkBaoHanh.isSelected() ? txtChungBaoHanh.getText().trim() : "";
-                else if ("Đơn vị tính chẵn".equals(col)) row[c] = chkDVTChan.isSelected() && cbChungDVTChan.getSelectedItem() != null ? cbChungDVTChan.getSelectedItem().toString() : "";
-                else if ("Quy đổi".equals(col)) row[c] = chkQuyDoi.isSelected() ? txtChungQuyDoi.getText().trim() : "0";
-                else if ("Giá bán chẵn".equals(col)) row[c] = chkGiaBanChan.isSelected() ? txtChungGiaBanChan.getText().trim() : "0";
-                else if ("Đơn giá 2".equals(col)) row[c] = chkGia2.isSelected() ? txtChungGia2.getText().trim() : "0";
-                else if ("Giá bán 3".equals(col)) row[c] = chkGia3.isSelected() ? txtChungGia3.getText().trim() : "0";
-                else if ("Giá vốn".equals(col)) row[c] = chkGiaVon.isSelected() ? txtChungGiaVon.getText().trim() : "0";
-                else if ("Hãng sản xuất".equals(col)) row[c] = chkHangSX.isSelected() && cbChungHangSX.getSelectedItem() != null ? cbChungHangSX.getSelectedItem().toString() : "";
-                else if ("Có hạn sử dụng".equals(col)) row[c] = chkCoHan.isSelected() && chkChungCoHan.isSelected();
-                else if ("Size".equals(col)) row[c] = chkSize.isSelected() ? txtChungSize.getText().trim() : "";
-                else if ("Tồn tối thiểu".equals(col)) row[c] = chkTonMin.isSelected() ? txtChungTonMin.getText().trim() : "0";
-                else if ("Tồn tối đa".equals(col)) row[c] = chkTonMax.isSelected() ? txtChungTonMax.getText().trim() : "0";
-                else if ("Ảnh".equals(col)) row[c] = chkAnh.isSelected() ? txtChungAnh.getText().trim() : "";
-                else if ("Hoa hồng".equals(col)) row[c] = chkHoaHong.isSelected() ? txtChungHoaHong.getText().trim() : "0";
-                else if ("Đối tác ký gửi".equals(col)) row[c] = chkDoiTac.isSelected() && cbChungDoiTac.getSelectedItem() != null ? cbChungDoiTac.getSelectedItem().toString() : "";
-                else row[c] = "";
+            Object[] row = new Object[gridColumns.length];
+            for (int c = 0; c < gridColumns.length; c++) {
+                String col = gridColumns[c];
+                row[c] = getDefaultPropertyForColumn(col);
             }
             tableModel.addRow(row);
         }
@@ -539,19 +568,18 @@ public class ThemNhanhMatHangDialog extends JDialog {
             for (String line : lines) {
                 if (line.trim().isEmpty()) continue;
                 String[] cells = line.split("\t", -1);
-                Object[] row = new Object[GRID_COLUMNS.length];
+                Object[] row = new Object[gridColumns.length];
 
-                for (int c = 0; c < GRID_COLUMNS.length; c++) {
+                for (int c = 0; c < gridColumns.length; c++) {
                     if (c < cells.length && !cells[c].trim().isEmpty()) {
                         String val = cells[c].trim();
-                        if ("Không in chế biến".equals(GRID_COLUMNS[c]) || "Có hạn sử dụng".equals(GRID_COLUMNS[c])) {
-                            row[c] = "true".equalsIgnoreCase(val) || "1".equals(val) || "x".equalsIgnoreCase(val);
+                        if ("Không in chế biến".equals(gridColumns[c]) || "Có hạn sử dụng".equals(gridColumns[c])) {
+                            row[c] = "true".equalsIgnoreCase(val) || "1".equals(val) || "x".equalsIgnoreCase(val) || "có".equalsIgnoreCase(val);
                         } else {
                             row[c] = val;
                         }
                     } else {
-                        // Lấy giá trị mặc định từ thuộc tính chung
-                        row[c] = getDefaultPropertyForColumn(GRID_COLUMNS[c]);
+                        row[c] = getDefaultPropertyForColumn(gridColumns[c]);
                     }
                 }
                 tableModel.addRow(row);
@@ -580,8 +608,9 @@ public class ThemNhanhMatHangDialog extends JDialog {
         if ("Đơn vị tính chẵn".equals(col)) return chkDVTChan.isSelected() && cbChungDVTChan.getSelectedItem() != null ? cbChungDVTChan.getSelectedItem().toString() : "";
         if ("Quy đổi".equals(col)) return chkQuyDoi.isSelected() ? txtChungQuyDoi.getText().trim() : "0";
         if ("Giá bán chẵn".equals(col)) return chkGiaBanChan.isSelected() ? txtChungGiaBanChan.getText().trim() : "0";
-        if ("Đơn giá 2".equals(col)) return chkGia2.isSelected() ? txtChungGia2.getText().trim() : "0";
-        if ("Giá bán 3".equals(col)) return chkGia3.isSelected() ? txtChungGia3.getText().trim() : "0";
+        if (labelGia2.equals(col)) return chkGia2.isSelected() ? txtChungGia2.getText().trim() : "0";
+        if (labelGia3.equals(col)) return chkGia3.isSelected() ? txtChungGia3.getText().trim() : "0";
+        if (labelGia4.equals(col) && chkGia4 != null) return chkGia4.isSelected() ? txtChungGia4.getText().trim() : "0";
         if ("Giá vốn".equals(col)) return chkGiaVon.isSelected() ? txtChungGiaVon.getText().trim() : "0";
         if ("Hãng sản xuất".equals(col)) return chkHangSX.isSelected() && cbChungHangSX.getSelectedItem() != null ? cbChungHangSX.getSelectedItem().toString() : "";
         if ("Có hạn sử dụng".equals(col)) return chkCoHan.isSelected() && chkChungCoHan.isSelected();
@@ -595,35 +624,31 @@ public class ThemNhanhMatHangDialog extends JDialog {
     }
 
     private void onOpenExcelChooser() {
-        List<String> colList = new ArrayList<>();
-        for (String c : GRID_COLUMNS) colList.add(c);
-
         XuatMauVaChonExcelDialog dialog = new XuatMauVaChonExcelDialog(
                 this,
-                colList,
-                colList,
-                this::applyImportedExcelRows
+                this::applyImportedMappedRows
         );
         dialog.setVisible(true);
     }
 
-    private void applyImportedExcelRows(List<List<Object>> rows) {
+    public void applyImportedMappedRows(List<Map<String, Object>> rows) {
         if (rows == null || rows.isEmpty()) return;
 
         int count = 0;
-        for (List<Object> rowList : rows) {
-            Object[] row = new Object[GRID_COLUMNS.length];
-            for (int c = 0; c < GRID_COLUMNS.length; c++) {
-                if (c < rowList.size()) {
-                    Object val = rowList.get(c);
-                    if ("Không in chế biến".equals(GRID_COLUMNS[c]) || "Có hạn sử dụng".equals(GRID_COLUMNS[c])) {
-                        String s = val != null ? val.toString().trim() : "";
-                        row[c] = "true".equalsIgnoreCase(s) || "1".equals(s) || "x".equalsIgnoreCase(s);
-                    } else {
-                        row[c] = val != null ? val.toString() : "";
-                    }
+        for (Map<String, Object> map : rows) {
+            Object[] row = new Object[gridColumns.length];
+            for (int c = 0; c < gridColumns.length; c++) {
+                String col = gridColumns[c];
+                if (map.containsKey(col)) {
+                    row[c] = map.get(col);
+                } else if (labelGia2.equals(col) && map.containsKey("Đơn giá 2")) {
+                    row[c] = map.get("Đơn giá 2");
+                } else if (labelGia3.equals(col) && map.containsKey("giá blabla")) {
+                    row[c] = map.get("giá blabla");
+                } else if (labelGia3.equals(col) && map.containsKey("Giá bán 3")) {
+                    row[c] = map.get("Giá bán 3");
                 } else {
-                    row[c] = getDefaultPropertyForColumn(GRID_COLUMNS[c]);
+                    row[c] = getDefaultPropertyForColumn(col);
                 }
             }
             tableModel.addRow(row);
@@ -644,7 +669,6 @@ public class ThemNhanhMatHangDialog extends JDialog {
         for (int r = 0; r < rowCount; r++) {
             String name = getCellValue(r, "Tên mặt hàng");
             if (name.isEmpty()) {
-                // Bỏ qua dòng trống tên mặt hàng
                 continue;
             }
 
@@ -668,8 +692,11 @@ public class ThemNhanhMatHangDialog extends JDialog {
             mh.setGiamGiaTien(parseDouble(getCellValue(r, "Mặc định giảm tiền")));
             mh.setQuyDoi(parseDouble(getCellValue(r, "Quy đổi")));
             mh.setGiaBanChan(parseDouble(getCellValue(r, "Giá bán chẵn")));
-            mh.setGiaBan2(parseDouble(getCellValue(r, "Đơn giá 2")));
-            mh.setGiaBan3(parseDouble(getCellValue(r, "Giá bán 3")));
+            mh.setGiaBan2(parseDouble(getCellValue(r, labelGia2)));
+            mh.setGiaBan3(parseDouble(getCellValue(r, labelGia3)));
+            if (systemConfig != null && systemConfig.isSuDungGia4()) {
+                mh.setGiaBan4(parseDouble(getCellValue(r, labelGia4)));
+            }
 
             mh.setGhiChu(getCellValue(r, "Ghi chú"));
             mh.setBaoHanh(getCellValue(r, "Bảo hành"));
