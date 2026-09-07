@@ -262,4 +262,29 @@ public class DonHang {
 
     public String getLyDoHuy() { return lyDoHuy; }
     public void setLyDoHuy(String lyDoHuy) { this.lyDoHuy = lyDoHuy; }
+
+    private String ban;
+    private int soKhach;
+    private String tenKhoThanhPham;
+    private String tenKhoVatTu;
+    private String datHangNCCId;
+    private String soPhieuDatHangNCC;
+
+    public String getBan() { return ban; }
+    public void setBan(String ban) { this.ban = ban; }
+
+    public int getSoKhach() { return soKhach; }
+    public void setSoKhach(int soKhach) { this.soKhach = soKhach; }
+
+    public String getTenKhoThanhPham() { return tenKhoThanhPham; }
+    public void setTenKhoThanhPham(String tenKhoThanhPham) { this.tenKhoThanhPham = tenKhoThanhPham; }
+
+    public String getTenKhoVatTu() { return tenKhoVatTu; }
+    public void setTenKhoVatTu(String tenKhoVatTu) { this.tenKhoVatTu = tenKhoVatTu; }
+
+    public String getDatHangNCCId() { return datHangNCCId; }
+    public void setDatHangNCCId(String datHangNCCId) { this.datHangNCCId = datHangNCCId; }
+
+    public String getSoPhieuDatHangNCC() { return soPhieuDatHangNCC; }
+    public void setSoPhieuDatHangNCC(String soPhieuDatHangNCC) { this.soPhieuDatHangNCC = soPhieuDatHangNCC; }
 }

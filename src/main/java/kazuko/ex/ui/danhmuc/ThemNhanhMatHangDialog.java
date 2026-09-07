@@ -16,6 +16,10 @@ import javax.swing.border.LineBorder;
 import javax.swing.border.MatteBorder;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
+import javax.swing.table.TableColumn;
+import javax.swing.table.TableColumnModel;
+import javax.swing.table.TableCellEditor;
+import javax.swing.DefaultCellEditor;
 import java.awt.*;
 import java.awt.datatransfer.DataFlavor;
 import java.util.ArrayList;
@@ -37,6 +41,7 @@ public class ThemNhanhMatHangDialog extends JDialog {
 
     private JTable tableGrid;
     private DefaultTableModel tableModel;
+    private final List<TableColumn> allTableColumns = new ArrayList<>();
     private JSpinner spSoDong;
 
     // Các thuộc tính chung (Right Panel)
@@ -257,26 +262,20 @@ public class ThemNhanhMatHangDialog extends JDialog {
         th.setBackground(new Color(230, 238, 248));
         th.setPreferredSize(new Dimension(100, 26));
 
-        // Setup column widths
-        for (int i = 0; i < tableGrid.getColumnCount(); i++) {
-            String name = tableGrid.getColumnName(i);
-            if ("Tên mặt hàng".equals(name)) tableGrid.getColumnModel().getColumn(i).setPreferredWidth(180);
-            else if ("Nhóm mặt hàng".equals(name) || "Ghi chú".equals(name)) tableGrid.getColumnModel().getColumn(i).setPreferredWidth(130);
-            else if ("Mã hàng".equals(name) || "Đơn vị tính".equals(name)) tableGrid.getColumnModel().getColumn(i).setPreferredWidth(90);
-            else if (name.contains("Giá") || name.contains("tiền") || name.contains("giá") || name.contains("haha")) tableGrid.getColumnModel().getColumn(i).setPreferredWidth(95);
-            else tableGrid.getColumnModel().getColumn(i).setPreferredWidth(100);
-        }
-
-        JScrollPane scrollTable = new JScrollPane(tableGrid);
-        scrollTable.setBorder(new LineBorder(new Color(190, 205, 225)));
-        leftMainPanel.add(scrollTable, BorderLayout.CENTER);
-
         // 2.3 Right Panel: Các thuộc tính chung
         JPanel rightPanel = createRightPropertiesPanel();
         JScrollPane scrollRight = new JScrollPane(rightPanel);
         scrollRight.setPreferredSize(new Dimension(320, 500));
         scrollRight.setBorder(new MatteBorder(0, 1, 0, 0, new Color(190, 205, 225)));
         scrollRight.getVerticalScrollBar().setUnitIncrement(16);
+
+        // Setup column model and initial visibility
+        setupTableColumns();
+        updateGridColumnsVisibility();
+
+        JScrollPane scrollTable = new JScrollPane(tableGrid);
+        scrollTable.setBorder(new LineBorder(new Color(190, 205, 225)));
+        leftMainPanel.add(scrollTable, BorderLayout.CENTER);
 
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, leftMainPanel, scrollRight);
         splitPane.setResizeWeight(0.72);
@@ -331,11 +330,11 @@ public class ThemNhanhMatHangDialog extends JDialog {
         txtChungMaHang = new JTextField();
         addPropertyRow(panel, gbc, row++, chkMaHang, false, "Mã hàng:", txtChungMaHang);
 
-        // 2. Tên mặt hàng (Checked, light yellow)
+        // 2. Tên mặt hàng (Unchecked by default)
         chkTenHang = new JCheckBox();
         txtChungTenHang = new JTextField();
         txtChungTenHang.setBackground(new Color(255, 255, 220));
-        addPropertyRow(panel, gbc, row++, chkTenHang, true, "Tên mặt hàng:", txtChungTenHang);
+        addPropertyRow(panel, gbc, row++, chkTenHang, false, "Tên mặt hàng:", txtChungTenHang);
 
         // 3. Nhóm mặt hàng
         chkNhomHang = new JCheckBox();
@@ -470,6 +469,22 @@ public class ThemNhanhMatHangDialog extends JDialog {
         chk.setSelected(isChecked);
         chk.setOpaque(false);
 
+        inputComp.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        inputComp.setPreferredSize(new Dimension(110, 22));
+        inputComp.setEnabled(isChecked);
+        if (inputComp instanceof JTextField) {
+            ((JTextField) inputComp).setEditable(isChecked);
+        }
+
+        chk.addActionListener(e -> {
+            boolean sel = chk.isSelected();
+            inputComp.setEnabled(sel);
+            if (inputComp instanceof JTextField) {
+                ((JTextField) inputComp).setEditable(sel);
+            }
+            updateGridColumnsVisibility();
+        });
+
         gbc.gridy = row;
         gbc.gridx = 0;
         gbc.weightx = 0;
@@ -483,9 +498,78 @@ public class ThemNhanhMatHangDialog extends JDialog {
 
         gbc.gridx = 2;
         gbc.weightx = 1.0;
-        inputComp.setFont(new Font("Segoe UI", Font.PLAIN, 11));
-        inputComp.setPreferredSize(new Dimension(110, 22));
         panel.add(inputComp, gbc);
+    }
+
+    private void setupTableColumns() {
+        allTableColumns.clear();
+        for (int i = 0; i < gridColumns.length; i++) {
+            String name = gridColumns[i];
+            TableColumn tc = new TableColumn(i);
+            tc.setHeaderValue(name);
+
+            if ("Tên mặt hàng".equals(name)) tc.setPreferredWidth(180);
+            else if ("Nhóm mặt hàng".equals(name) || "Ghi chú".equals(name)) tc.setPreferredWidth(130);
+            else if ("Mã hàng".equals(name) || "Đơn vị tính".equals(name)) tc.setPreferredWidth(90);
+            else if (name.contains("Giá") || name.contains("tiền") || name.contains("giá") || name.contains("haha")) tc.setPreferredWidth(95);
+            else tc.setPreferredWidth(100);
+
+            allTableColumns.add(tc);
+        }
+    }
+
+    private boolean isFieldCheckedInCommonProperties(String col) {
+        if ("Mã hàng".equals(col)) return chkMaHang != null && chkMaHang.isSelected();
+        if ("Tên mặt hàng".equals(col)) return chkTenHang != null && chkTenHang.isSelected();
+        if ("Nhóm mặt hàng".equals(col)) return chkNhomHang != null && chkNhomHang.isSelected();
+        if ("Đơn vị tính".equals(col)) return chkDVT != null && chkDVT.isSelected();
+        if ("Giá bán".equals(col)) return chkGiaBan != null && chkGiaBan.isSelected();
+        if ("Giá nhập".equals(col)) return chkGiaNhap != null && chkGiaNhap.isSelected();
+        if ("Mặc định giảm giá".equals(col)) return chkGiamGiaPt != null && chkGiamGiaPt.isSelected();
+        if ("Mặc định giảm tiền".equals(col)) return chkGiamGiaTien != null && chkGiamGiaTien.isSelected();
+        if ("Ghi chú".equals(col)) return chkGhiChu != null && chkGhiChu.isSelected();
+        if ("Không in chế biến".equals(col)) return chkKhongIn != null && chkKhongIn.isSelected();
+        if ("Bảo hành".equals(col)) return chkBaoHanh != null && chkBaoHanh.isSelected();
+        if ("Đơn vị tính chẵn".equals(col)) return chkDVTChan != null && chkDVTChan.isSelected();
+        if ("Quy đổi".equals(col)) return chkQuyDoi != null && chkQuyDoi.isSelected();
+        if ("Giá bán chẵn".equals(col)) return chkGiaBanChan != null && chkGiaBanChan.isSelected();
+        if (labelGia2.equals(col)) return chkGia2 != null && chkGia2.isSelected();
+        if (labelGia3.equals(col)) return chkGia3 != null && chkGia3.isSelected();
+        if (labelGia4.equals(col)) return chkGia4 != null && chkGia4.isSelected();
+        if ("Giá vốn".equals(col)) return chkGiaVon != null && chkGiaVon.isSelected();
+        if ("Hãng sản xuất".equals(col)) return chkHangSX != null && chkHangSX.isSelected();
+        if ("Có hạn sử dụng".equals(col)) return chkCoHan != null && chkCoHan.isSelected();
+        if ("Size".equals(col)) return chkSize != null && chkSize.isSelected();
+        if ("Tồn tối thiểu".equals(col)) return chkTonMin != null && chkTonMin.isSelected();
+        if ("Tồn tối đa".equals(col)) return chkTonMax != null && chkTonMax.isSelected();
+        if ("Ảnh".equals(col)) return chkAnh != null && chkAnh.isSelected();
+        if ("Hoa hồng".equals(col)) return chkHoaHong != null && chkHoaHong.isSelected();
+        if ("Đối tác ký gửi".equals(col)) return chkDoiTac != null && chkDoiTac.isSelected();
+        return false;
+    }
+
+    public void updateGridColumnsVisibility() {
+        if (tableGrid == null || allTableColumns.isEmpty()) return;
+
+        if (tableGrid.isEditing()) {
+            TableCellEditor editor = tableGrid.getCellEditor();
+            if (editor != null) editor.stopCellEditing();
+        }
+
+        TableColumnModel cm = tableGrid.getColumnModel();
+        while (cm.getColumnCount() > 0) {
+            cm.removeColumn(cm.getColumn(0));
+        }
+
+        for (int i = 0; i < allTableColumns.size(); i++) {
+            String colName = gridColumns[i];
+            if (!isFieldCheckedInCommonProperties(colName)) {
+                cm.addColumn(allTableColumns.get(i));
+            }
+        }
+
+        tableGrid.revalidate();
+        tableGrid.repaint();
     }
 
     private JButton createToolButton(String text, String iconName, Color fg) {
@@ -564,6 +648,7 @@ public class ThemNhanhMatHangDialog extends JDialog {
 
             String[] lines = data.split("\r?\n");
             int addedCount = 0;
+            int visibleCount = tableGrid.getColumnCount();
 
             for (String line : lines) {
                 if (line.trim().isEmpty()) continue;
@@ -571,15 +656,27 @@ public class ThemNhanhMatHangDialog extends JDialog {
                 Object[] row = new Object[gridColumns.length];
 
                 for (int c = 0; c < gridColumns.length; c++) {
-                    if (c < cells.length && !cells[c].trim().isEmpty()) {
+                    row[c] = getDefaultPropertyForColumn(gridColumns[c]);
+                }
+
+                if (cells.length <= visibleCount) {
+                    for (int t = 0; t < cells.length && t < visibleCount; t++) {
+                        int modelCol = tableGrid.convertColumnIndexToModel(t);
+                        String val = cells[t].trim();
+                        if ("Không in chế biến".equals(gridColumns[modelCol]) || "Có hạn sử dụng".equals(gridColumns[modelCol])) {
+                            row[modelCol] = "true".equalsIgnoreCase(val) || "1".equals(val) || "x".equalsIgnoreCase(val) || "có".equalsIgnoreCase(val);
+                        } else {
+                            row[modelCol] = val;
+                        }
+                    }
+                } else {
+                    for (int c = 0; c < gridColumns.length && c < cells.length; c++) {
                         String val = cells[c].trim();
                         if ("Không in chế biến".equals(gridColumns[c]) || "Có hạn sử dụng".equals(gridColumns[c])) {
                             row[c] = "true".equalsIgnoreCase(val) || "1".equals(val) || "x".equalsIgnoreCase(val) || "có".equalsIgnoreCase(val);
                         } else {
                             row[c] = val;
                         }
-                    } else {
-                        row[c] = getDefaultPropertyForColumn(gridColumns[c]);
                     }
                 }
                 tableModel.addRow(row);
@@ -723,9 +820,18 @@ public class ThemNhanhMatHangDialog extends JDialog {
         }
 
         int successCount = 0;
+        int updateCount = 0;
         for (MatHang mh : toInsert) {
-            if (matHangDAO.insert(mh)) {
-                successCount++;
+            MatHang existing = matHangDAO.findByCode(mh.getCode());
+            if (existing != null) {
+                mh.setId(existing.getId());
+                if (matHangDAO.update(mh)) {
+                    updateCount++;
+                }
+            } else {
+                if (matHangDAO.insert(mh)) {
+                    successCount++;
+                }
             }
         }
 
@@ -735,7 +841,7 @@ public class ThemNhanhMatHangDialog extends JDialog {
 
         JOptionPane.showMessageDialog(
                 this,
-                "Đã thêm thành công " + successCount + " mặt hàng vào hệ thống!",
+                "Đã lưu thành công " + (successCount + updateCount) + " mặt hàng vào hệ thống!\n- Thêm mới: " + successCount + "\n- Cập nhật: " + updateCount,
                 "Thành công",
                 JOptionPane.INFORMATION_MESSAGE
         );
@@ -743,6 +849,12 @@ public class ThemNhanhMatHangDialog extends JDialog {
     }
 
     private String getCellValue(int row, String colName) {
+        if (isFieldCheckedInCommonProperties(colName)) {
+            Object def = getDefaultPropertyForColumn(colName);
+            if (def != null && !def.toString().trim().isEmpty()) {
+                return def.toString().trim();
+            }
+        }
         int col = getColumnIndex(colName);
         if (col < 0) return "";
         Object val = tableModel.getValueAt(row, col);
@@ -750,6 +862,9 @@ public class ThemNhanhMatHangDialog extends JDialog {
     }
 
     private Object getRawCellValue(int row, String colName) {
+        if (isFieldCheckedInCommonProperties(colName)) {
+            return getDefaultPropertyForColumn(colName);
+        }
         int col = getColumnIndex(colName);
         if (col < 0) return null;
         return tableModel.getValueAt(row, col);

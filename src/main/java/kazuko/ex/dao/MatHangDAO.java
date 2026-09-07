@@ -435,6 +435,17 @@ public class MatHangDAO extends BaseDAO {
         return null;
     }
 
+    public MatHang findByCode(String code) {
+        if (code == null || code.trim().isEmpty()) return null;
+        String trimmed = code.trim();
+        for (MatHang mh : getAll()) {
+            if (mh.getCode() != null && mh.getCode().trim().equalsIgnoreCase(trimmed)) {
+                return mh;
+            }
+        }
+        return null;
+    }
+
     public MatHang getById(String id) {
         return findById(id);
     }

@@ -42,16 +42,14 @@ public class InspectMatHangDbTest {
                 }
             }
 
-            // Try selecting one row from DMATHANG
-            try (Statement st = conn.createStatement();
-                 ResultSet rs = st.executeQuery("SELECT FIRST 1 * FROM DMATHANG")) {
-                java.sql.ResultSetMetaData rsmd = rs.getMetaData();
-                System.out.println("\n=== DMATHANG RESULT SET COLUMNS (" + rsmd.getColumnCount() + ") ===");
-                for (int i = 1; i <= rsmd.getColumnCount(); i++) {
-                    System.out.println(i + ". " + rsmd.getColumnName(i) + " (" + rsmd.getColumnTypeName(i) + ")");
+            String[] checkTables = {"TDONHANG", "TLUUTAM", "DDINHLUONG", "TDATHANG"};
+            for (String tbl : checkTables) {
+                try (ResultSet cols = meta.getColumns(null, null, tbl, "%")) {
+                    System.out.println("\n=== COLUMNS FOR TABLE: " + tbl + " ===");
+                    while (cols.next()) {
+                        System.out.println(" - " + cols.getString("COLUMN_NAME") + " (" + cols.getString("TYPE_NAME") + "[" + cols.getInt("COLUMN_SIZE") + "])");
+                    }
                 }
-            } catch (Exception e) {
-                System.out.println("Could not select from DMATHANG: " + e.getMessage());
             }
 
         } catch (Exception e) {

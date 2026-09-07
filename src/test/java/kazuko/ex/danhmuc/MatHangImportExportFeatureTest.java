@@ -4,6 +4,7 @@ import kazuko.ex.dao.MatHangDAO;
 import kazuko.ex.dao.SystemConfigDAO;
 import kazuko.ex.model.danhmuc.MatHang;
 import kazuko.ex.model.system.SystemConfig;
+import kazuko.ex.ui.danhmuc.ThemNhanhMatHangDialog;
 import kazuko.ex.ui.danhmuc.ThemTuExcelMatHangDialog;
 import kazuko.ex.util.MatHangExcelUtil;
 import org.apache.poi.ss.usermodel.*;
@@ -175,5 +176,60 @@ public class MatHangImportExportFeatureTest {
             assertEquals("Bút bi Thiên Long 0.5", parsed.get(0).get("Tên mặt hàng"));
             assertEquals("5000", parsed.get(0).get("Giá bán").toString().replace(",", ""));
         }
+    }
+
+    @Test
+    public void testThemNhanhMatHangDynamicColumnsAndAutoUpdate() {
+        ThemNhanhMatHangDialog dialog = new ThemNhanhMatHangDialog(null, () -> {});
+        assertNotNull(dialog);
+
+        javax.swing.JTable table = findComponentOfType(dialog, javax.swing.JTable.class);
+        assertNotNull(table);
+
+        // Initially: Mã hàng and Tên mặt hàng are unticked -> visible on table
+        // All other 23 fields are ticked -> hidden from table
+        assertEquals(2, table.getColumnCount(), "Initially table should have 2 columns (Mã hàng, Tên mặt hàng)");
+        assertEquals("Mã hàng", table.getColumnName(0));
+        assertEquals("Tên mặt hàng", table.getColumnName(1));
+
+        // Test DAO auto-update on duplicate code
+        String testCode = "MH_TEST_UPDATE_" + System.currentTimeMillis();
+        MatHang mh1 = new MatHang();
+        mh1.setCode(testCode);
+        mh1.setName("Mặt hàng ban đầu");
+        mh1.setGiaBan(100000);
+
+        boolean inserted = matHangDAO.insert(mh1);
+        assertTrue(inserted);
+
+        MatHang found = matHangDAO.findByCode(testCode);
+        assertNotNull(found);
+        assertEquals("Mặt hàng ban đầu", found.getName());
+
+        found.setName("Mặt hàng đã cập nhật");
+        found.setGiaBan(120000);
+        boolean updated = matHangDAO.update(found);
+        assertTrue(updated);
+
+        MatHang foundAfter = matHangDAO.findByCode(testCode);
+        assertNotNull(foundAfter);
+        assertEquals("Mặt hàng đã cập nhật", foundAfter.getName());
+        assertEquals(120000.0, foundAfter.getGiaBan());
+
+        // Clean up
+        matHangDAO.delete(foundAfter.getId());
+    }
+
+    private <T> T findComponentOfType(java.awt.Container container, Class<T> type) {
+        for (java.awt.Component comp : container.getComponents()) {
+            if (type.isInstance(comp)) {
+                return type.cast(comp);
+            }
+            if (comp instanceof java.awt.Container) {
+                T found = findComponentOfType((java.awt.Container) comp, type);
+                if (found != null) return found;
+            }
+        }
+        return null;
     }
 }

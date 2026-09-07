@@ -124,6 +124,54 @@ public class DatHangNCCDAO {
         return list;
     }
 
+    public List<DatHangNCC> getByMatHang(String matHangId, String matHangCode) {
+        List<DatHangNCC> list = new ArrayList<>();
+        if ((matHangId == null || matHangId.trim().isEmpty()) && (matHangCode == null || matHangCode.trim().isEmpty())) {
+            return list;
+        }
+
+        StringBuilder sql = new StringBuilder(
+                "SELECT DISTINCT d.*, ncc.NAME AS TENNHACUNGCAP, u.NAME AS TENNGUOITAO, um.NAME AS TENNGUOISUA " +
+                "FROM TDATHANGNCC d " +
+                "INNER JOIN TDATHANGNCCCHITIET ct ON ct.TDATHANGNCCID = d.ID " +
+                "LEFT JOIN DMATHANG m ON ct.DMATHANGID = m.ID " +
+                "LEFT JOIN DNHACUNGCAP ncc ON d.DNHACUNGCAPID = ncc.ID " +
+                "LEFT JOIN SUSER u ON d.USERCREATEDID = u.ID " +
+                "LEFT JOIN SUSER um ON d.USERMODIFIEDID = um.ID " +
+                "WHERE (d.STATUS IS NULL OR d.STATUS >= 0) " +
+                "  AND (ct.STATUS IS NULL OR ct.STATUS >= 0) AND ("
+        );
+
+        List<Object> params = new ArrayList<>();
+        boolean hasParam = false;
+        if (matHangId != null && !matHangId.trim().isEmpty()) {
+            sql.append("ct.DMATHANGID = ? ");
+            params.add(matHangId.trim());
+            hasParam = true;
+        }
+        if (matHangCode != null && !matHangCode.trim().isEmpty()) {
+            if (hasParam) sql.append("OR ");
+            sql.append("LOWER(m.CODE) = LOWER(?) ");
+            params.add(matHangCode.trim());
+        }
+        sql.append(") ORDER BY d.NGAY DESC, d.NAME DESC");
+
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapResultSetToDatHangNCC(rs));
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Lỗi getByMatHang DatHangNCC: " + e.getMessage());
+        }
+        return list;
+    }
+
     public DatHangNCC getById(String id) {
         if (id == null || id.trim().isEmpty()) return null;
         String sql = "SELECT d.*, ncc.NAME AS TENNHACUNGCAP, u.NAME AS TENNGUOITAO, um.NAME AS TENNGUOISUA " +

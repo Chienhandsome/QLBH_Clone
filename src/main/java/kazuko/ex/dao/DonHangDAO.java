@@ -2156,4 +2156,185 @@ public class DonHangDAO extends BaseDAO {
 
         return list;
     }
+
+    public List<DonHang> getPhieuSanXuatByMatHang(String matHangId, String matHangCode) {
+        List<DonHang> list = new ArrayList<>();
+        if ((matHangId == null || matHangId.trim().isEmpty()) && (matHangCode == null || matHangCode.trim().isEmpty())) {
+            return list;
+        }
+
+        StringBuilder sql = new StringBuilder(
+                "SELECT DISTINCT d.ID, d.NAME, d.NGAY, d.TONGCONG, d.BAN, d.SOKHACH, " +
+                "d.DKHONHAPID, kn.NAME AS TENKHONHAP, " +
+                "d.DKHOXUATID, kx.NAME AS TENKHOXUAT, " +
+                "d.TDATHANGNCCID, dncc.NAME AS TENDATHANGNCC " +
+                "FROM TDONHANG d " +
+                "INNER JOIN TDONHANGCHITIET ct ON ct.TDONHANGID = d.ID " +
+                "LEFT JOIN DMATHANG m ON ct.DMATHANGID = m.ID " +
+                "LEFT JOIN DKHOHANG kn ON d.DKHONHAPID = kn.ID " +
+                "LEFT JOIN DKHOHANG kx ON d.DKHOXUATID = kx.ID " +
+                "LEFT JOIN TDATHANGNCC dncc ON d.TDATHANGNCCID = dncc.ID " +
+                "WHERE (d.STATUS IS NULL OR d.STATUS >= 0) " +
+                "  AND (ct.STATUS IS NULL OR ct.STATUS >= 0) AND ("
+        );
+
+        List<Object> params = new ArrayList<>();
+        boolean hasParam = false;
+        if (matHangId != null && !matHangId.trim().isEmpty()) {
+            sql.append("ct.DMATHANGID = ? ");
+            params.add(matHangId.trim());
+            hasParam = true;
+        }
+        if (matHangCode != null && !matHangCode.trim().isEmpty()) {
+            if (hasParam) sql.append("OR ");
+            sql.append("LOWER(m.CODE) = LOWER(?) ");
+            params.add(matHangCode.trim());
+        }
+        sql.append(") ORDER BY d.NGAY DESC, d.NAME DESC");
+
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    DonHang dh = new DonHang();
+                    dh.setId(rs.getString("ID"));
+                    dh.setName(rs.getString("NAME"));
+                    dh.setNgay(rs.getTimestamp("NGAY"));
+                    dh.setTongCong(rs.getDouble("TONGCONG"));
+                    dh.setBan(rs.getString("BAN"));
+                    dh.setSoKhach(rs.getInt("SOKHACH"));
+                    dh.setKhoNhapId(rs.getString("DKHONHAPID"));
+                    dh.setTenKhoThanhPham(rs.getString("TENKHONHAP"));
+                    dh.setKhoXuatId(rs.getString("DKHOXUATID"));
+                    dh.setTenKhoVatTu(rs.getString("TENKHOXUAT"));
+                    dh.setDatHangNCCId(rs.getString("TDATHANGNCCID"));
+                    dh.setSoPhieuDatHangNCC(rs.getString("TENDATHANGNCC"));
+                    list.add(dh);
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Lỗi getPhieuSanXuatByMatHang: " + e.getMessage());
+        }
+        return list;
+    }
+
+    public List<DonHang> getDonHangByKhachHang(String khachHangId, String maKhach) {
+        List<DonHang> list = new ArrayList<>();
+        if ((khachHangId == null || khachHangId.trim().isEmpty()) && (maKhach == null || maKhach.trim().isEmpty())) {
+            return list;
+        }
+
+        StringBuilder sql = new StringBuilder(
+                "SELECT d.*, kh.NAME AS TENKHACH_FINAL, kh.MAKHACH, u.NAME AS TENNGUOITAO, ut.NAME AS TENNGUOITHANHTOAN " +
+                "FROM TDONHANG d " +
+                "LEFT JOIN DKHACHHANG kh ON d.DKHACHHANGID = kh.ID " +
+                "LEFT JOIN SUSER u ON d.USERCREATEDID = u.ID " +
+                "LEFT JOIN SUSER ut ON d.USERTHANHTOANID = ut.ID " +
+                "WHERE (d.STATUS IS NULL OR d.STATUS >= 0) AND (d.LOAI = 0 OR d.LOAI IS NULL) AND ("
+        );
+
+        List<Object> params = new ArrayList<>();
+        boolean hasParam = false;
+        if (khachHangId != null && !khachHangId.trim().isEmpty()) {
+            sql.append("d.DKHACHHANGID = ? ");
+            params.add(khachHangId.trim());
+            hasParam = true;
+        }
+        if (maKhach != null && !maKhach.trim().isEmpty()) {
+            if (hasParam) sql.append("OR ");
+            sql.append("LOWER(kh.MAKHACH) = LOWER(?) ");
+            params.add(maKhach.trim());
+        }
+        sql.append(") ORDER BY d.NGAY DESC, d.TIMECREATED DESC, d.NAME DESC");
+
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    DonHang dh = mapResultSetToDonHang(rs);
+                    String tenKh = rs.getString("TENKHACH_FINAL");
+                    if (tenKh != null && !tenKh.trim().isEmpty()) {
+                        dh.setTenKhach(tenKh);
+                    }
+                    String ttBoi = rs.getString("TENNGUOITHANHTOAN");
+                    if (ttBoi == null || ttBoi.trim().isEmpty()) {
+                        ttBoi = rs.getString("TENNGUOITAO");
+                    }
+                    dh.setNguoiThanhToan(ttBoi != null ? ttBoi : "Administrator");
+                    list.add(dh);
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Lỗi getDonHangByKhachHang: " + e.getMessage());
+        }
+        return list;
+    }
+
+    public List<DonHang> getPhieuSanXuatByKhachHang(String khachHangId, String maKhach) {
+        List<DonHang> list = new ArrayList<>();
+        if ((khachHangId == null || khachHangId.trim().isEmpty()) && (maKhach == null || maKhach.trim().isEmpty())) {
+            return list;
+        }
+
+        StringBuilder sql = new StringBuilder(
+                "SELECT DISTINCT d.ID, d.NAME, d.NGAY, d.TONGCONG, d.BAN, d.SOKHACH, " +
+                "d.DKHONHAPID, kn.NAME AS TENKHONHAP, " +
+                "d.DKHOXUATID, kx.NAME AS TENKHOXUAT, " +
+                "d.TDATHANGNCCID, dncc.NAME AS TENDATHANGNCC " +
+                "FROM TDONHANG d " +
+                "LEFT JOIN DKHACHHANG kh ON d.DKHACHHANGID = kh.ID " +
+                "LEFT JOIN DKHOHANG kn ON d.DKHONHAPID = kn.ID " +
+                "LEFT JOIN DKHOHANG kx ON d.DKHOXUATID = kx.ID " +
+                "LEFT JOIN TDATHANGNCC dncc ON d.TDATHANGNCCID = dncc.ID " +
+                "WHERE (d.STATUS IS NULL OR d.STATUS >= 0) AND ("
+        );
+
+        List<Object> params = new ArrayList<>();
+        boolean hasParam = false;
+        if (khachHangId != null && !khachHangId.trim().isEmpty()) {
+            sql.append("d.DKHACHHANGID = ? ");
+            params.add(khachHangId.trim());
+            hasParam = true;
+        }
+        if (maKhach != null && !maKhach.trim().isEmpty()) {
+            if (hasParam) sql.append("OR ");
+            sql.append("LOWER(kh.MAKHACH) = LOWER(?) ");
+            params.add(maKhach.trim());
+        }
+        sql.append(") ORDER BY d.NGAY DESC, d.NAME DESC");
+
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    DonHang dh = new DonHang();
+                    dh.setId(rs.getString("ID"));
+                    dh.setName(rs.getString("NAME"));
+                    dh.setNgay(rs.getTimestamp("NGAY"));
+                    dh.setTongCong(rs.getDouble("TONGCONG"));
+                    dh.setBan(rs.getString("BAN"));
+                    dh.setSoKhach(rs.getInt("SOKHACH"));
+                    dh.setKhoNhapId(rs.getString("DKHONHAPID"));
+                    dh.setTenKhoThanhPham(rs.getString("TENKHONHAP"));
+                    dh.setKhoXuatId(rs.getString("DKHOXUATID"));
+                    dh.setTenKhoVatTu(rs.getString("TENKHOXUAT"));
+                    dh.setDatHangNCCId(rs.getString("TDATHANGNCCID"));
+                    dh.setSoPhieuDatHangNCC(rs.getString("TENDATHANGNCC"));
+                    list.add(dh);
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Lỗi getPhieuSanXuatByKhachHang: " + e.getMessage());
+        }
+        return list;
+    }
 }

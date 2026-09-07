@@ -1,13 +1,17 @@
 package kazuko.ex.ui.danhmuc;
 
+import kazuko.ex.dao.DatHangNCCDAO;
+import kazuko.ex.dao.DonHangDAO;
 import kazuko.ex.dao.DonViTinhDAO;
 import kazuko.ex.dao.MatHangDAO;
 import kazuko.ex.dao.NhomMatHangDAO;
 import kazuko.ex.dao.SystemConfigDAO;
+import kazuko.ex.model.banhang.DonHang;
 import kazuko.ex.model.danhmuc.DonViTinh;
 import kazuko.ex.model.danhmuc.MatHang;
 import kazuko.ex.model.danhmuc.NhomMatHang;
 import kazuko.ex.model.danhmuc.TieuChiPhanLoai;
+import kazuko.ex.model.dathang.DatHangNCC;
 import kazuko.ex.model.system.SystemConfig;
 import kazuko.ex.util.AppColors;
 import kazuko.ex.util.CurrencyUtil;
@@ -53,6 +57,8 @@ public class DanhMucMatHangPanel extends JPanel {
     private final NhomMatHangDAO nhomMatHangDAO = new NhomMatHangDAO();
     private final DonViTinhDAO donViTinhDAO = new DonViTinhDAO();
     private final SystemConfigDAO systemConfigDAO = new SystemConfigDAO();
+    private final DonHangDAO donHangDAO = new DonHangDAO();
+    private final DatHangNCCDAO datHangNCCDAO = new DatHangNCCDAO();
     private SystemConfig systemConfig;
 
     private TieuChiPhanLoai currentTieuChi = TieuChiPhanLoai.NHOM_MAT_HANG;
@@ -73,6 +79,22 @@ public class DanhMucMatHangPanel extends JPanel {
     private JLabel lblCreatedUser;
     private JLabel lblModifiedTime;
     private JLabel lblModifiedUser;
+
+    // Tab Đặt hàng nhà cung cấp
+    private JTable tableDatHangNCC;
+    private DefaultTableModel modelDatHangNCC;
+    private List<String> visibleColsDatHangNCC;
+    private final List<String> allColsDatHangNCC = Arrays.asList("Số phiếu", "Ngày", "Nhà cung cấp", "Tổng cộng", "Phí vận chuyển", "Tiền giảm giá", "Tỉ lệ giảm giá", "Tiền thuế", "Tỉ lệ thuế", "Tiền hàng", "Ghi chú");
+    private final List<String> defaultColsDatHangNCC = Arrays.asList("Số phiếu", "Ngày", "Nhà cung cấp", "Tổng cộng", "Phí vận chuyển", "Tiền giảm giá", "Tỉ lệ giảm giá", "Tiền thuế", "Tỉ lệ thuế", "Tiền hàng", "Ghi chú");
+    private List<DatHangNCC> currentDatHangNCCList = new ArrayList<>();
+
+    // Tab Sản xuất
+    private JTable tableSanXuat;
+    private DefaultTableModel modelSanXuat;
+    private List<String> visibleColsSanXuat;
+    private final List<String> allColsSanXuat = Arrays.asList("Số phiếu", "Ngày", "Tổng cộng", "Kho thành phẩm", "Kho vật tư", "Bàn", "Số khách", "Đặt hàng nhà cung cấp");
+    private final List<String> defaultColsSanXuat = Arrays.asList("Số phiếu", "Ngày", "Tổng cộng", "Kho thành phẩm", "Kho vật tư", "Bàn", "Số khách", "Đặt hàng nhà cung cấp");
+    private List<DonHang> currentSanXuatList = new ArrayList<>();
 
     private JButton btnAddMatHang;
     private JButton btnEdit;
@@ -209,9 +231,11 @@ public class DanhMucMatHangPanel extends JPanel {
         treeNhomHang.setRowHeight(22);
 
         // Drag and drop sắp xếp / phân cấp (cho Nhóm hàng)
-        treeNhomHang.setDragEnabled(true);
-        treeNhomHang.setDropMode(DropMode.ON_OR_INSERT);
-        treeNhomHang.setTransferHandler(new TreeTransferHandler(nhomMatHangDAO, () -> loadCriteriaTree(currentTieuChi, currentSelectedNhom)));
+        if (!GraphicsEnvironment.isHeadless()) {
+            treeNhomHang.setDragEnabled(true);
+            treeNhomHang.setDropMode(DropMode.ON_OR_INSERT);
+            treeNhomHang.setTransferHandler(new TreeTransferHandler(nhomMatHangDAO, () -> loadCriteriaTree(currentTieuChi, currentSelectedNhom)));
+        }
 
         treeNhomHang.setCellRenderer(new DefaultTreeCellRenderer() {
             @Override
@@ -559,7 +583,7 @@ public class DanhMucMatHangPanel extends JPanel {
         JPanel bottomInfoPanel = createBottomTabbedPanel();
 
         JSplitPane rightSplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT, tableContainer, bottomInfoPanel);
-        rightSplit.setResizeWeight(0.85);
+        rightSplit.setResizeWeight(0.75);
         rightSplit.setDividerSize(4);
         rightPanel.add(rightSplit, BorderLayout.CENTER);
 
@@ -569,7 +593,7 @@ public class DanhMucMatHangPanel extends JPanel {
 
     private JPanel createBottomTabbedPanel() {
         JPanel panel = new JPanel(new BorderLayout());
-        panel.setPreferredSize(new Dimension(600, 95));
+        panel.setPreferredSize(new Dimension(600, 150));
         panel.setBackground(Color.WHITE);
 
         JTabbedPane tabInfo = new JTabbedPane();
@@ -598,11 +622,449 @@ public class DanhMucMatHangPanel extends JPanel {
         pnlInfo.add(lblModifiedUser);
 
         tabInfo.addTab("Thông tin", pnlInfo);
-        tabInfo.addTab("Đặt hàng nhà cung cấp", new JPanel());
-        tabInfo.addTab("Sản xuất", new JPanel());
+        tabInfo.addTab("Đặt hàng nhà cung cấp", createTabDatHangNCC());
+        tabInfo.addTab("Sản xuất", createTabSanXuat());
 
         panel.add(tabInfo, BorderLayout.CENTER);
         return panel;
+    }
+
+    private JPanel createTabDatHangNCC() {
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setBackground(Color.WHITE);
+
+        visibleColsDatHangNCC = new ArrayList<>(defaultColsDatHangNCC);
+        List<String> headers = new ArrayList<>();
+        headers.add(""); // Col 0: Pointer
+        headers.addAll(visibleColsDatHangNCC);
+
+        modelDatHangNCC = new DefaultTableModel(headers.toArray(new String[0]), 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) { return false; }
+        };
+
+        tableDatHangNCC = new JTable(modelDatHangNCC);
+        tableDatHangNCC.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+        tableDatHangNCC.setRowHeight(22);
+        tableDatHangNCC.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        tableDatHangNCC.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        tableDatHangNCC.setShowGrid(true);
+        tableDatHangNCC.setGridColor(new Color(225, 232, 240));
+
+        JTableHeader th = tableDatHangNCC.getTableHeader();
+        th.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        th.setBackground(new Color(230, 238, 248));
+        th.setForeground(new Color(30, 30, 30));
+        th.setPreferredSize(new Dimension(100, 24));
+
+        th.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                if (e.isPopupTrigger() || SwingUtilities.isRightMouseButton(e)) {
+                    showDatHangNCCHeaderPopup(e);
+                }
+            }
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                if (e.isPopupTrigger()) {
+                    showDatHangNCCHeaderPopup(e);
+                }
+            }
+        });
+
+        setupDatHangNCCTableRenderers();
+
+        JScrollPane scroll = new JScrollPane(tableDatHangNCC);
+        scroll.setBorder(null);
+        panel.add(scroll, BorderLayout.CENTER);
+        return panel;
+    }
+
+    private void setupDatHangNCCTableRenderers() {
+        DecimalFormat dfMoney = new DecimalFormat("#,##0.##");
+        Color greenSelectionBg = new Color(94, 163, 38);
+        Color greenSelectionFg = Color.WHITE;
+
+        // Pointer / Row index renderer
+        DefaultTableCellRenderer pointerRenderer = new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int col) {
+                JLabel lbl = (JLabel) super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, col);
+                lbl.setHorizontalAlignment(SwingConstants.CENTER);
+                lbl.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+                if (isSelected) {
+                    lbl.setText("▶ " + (row + 1));
+                    lbl.setBackground(greenSelectionBg);
+                    lbl.setForeground(greenSelectionFg);
+                } else {
+                    lbl.setText(String.valueOf(row + 1));
+                    lbl.setBackground(row % 2 == 0 ? Color.WHITE : new Color(248, 251, 255));
+                    lbl.setForeground(Color.DARK_GRAY);
+                }
+                return lbl;
+            }
+        };
+
+        // Text renderer
+        DefaultTableCellRenderer textRenderer = new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int col) {
+                JLabel lbl = (JLabel) super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, col);
+                if (isSelected) {
+                    lbl.setBackground(greenSelectionBg);
+                    lbl.setForeground(greenSelectionFg);
+                } else {
+                    lbl.setBackground(row % 2 == 0 ? Color.WHITE : new Color(248, 251, 255));
+                    lbl.setForeground(Color.BLACK);
+                }
+                return lbl;
+            }
+        };
+
+        // Number/Price renderer (Right aligned)
+        DefaultTableCellRenderer numberRenderer = new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int col) {
+                JLabel lbl = (JLabel) super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, col);
+                lbl.setHorizontalAlignment(SwingConstants.RIGHT);
+                if (value instanceof Number) {
+                    double v = ((Number) value).doubleValue();
+                    lbl.setText(dfMoney.format(v));
+                }
+                if (isSelected) {
+                    lbl.setBackground(greenSelectionBg);
+                    lbl.setForeground(greenSelectionFg);
+                } else {
+                    lbl.setBackground(row % 2 == 0 ? Color.WHITE : new Color(248, 251, 255));
+                    lbl.setForeground(Color.BLACK);
+                }
+                return lbl;
+            }
+        };
+
+        // Center renderer (Date, Code)
+        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int col) {
+                JLabel lbl = (JLabel) super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, col);
+                lbl.setHorizontalAlignment(SwingConstants.CENTER);
+                if (isSelected) {
+                    lbl.setBackground(greenSelectionBg);
+                    lbl.setForeground(greenSelectionFg);
+                } else {
+                    lbl.setBackground(row % 2 == 0 ? Color.WHITE : new Color(248, 251, 255));
+                    lbl.setForeground(Color.BLACK);
+                }
+                return lbl;
+            }
+        };
+
+        for (int i = 0; i < tableDatHangNCC.getColumnCount(); i++) {
+            String col = tableDatHangNCC.getColumnName(i);
+            TableColumn tc = tableDatHangNCC.getColumnModel().getColumn(i);
+            if (i == 0) {
+                tc.setCellRenderer(pointerRenderer);
+                tc.setPreferredWidth(35);
+                tc.setMaxWidth(45);
+            } else if ("Số phiếu".equals(col)) {
+                tc.setCellRenderer(centerRenderer);
+                tc.setPreferredWidth(100);
+            } else if ("Ngày".equals(col)) {
+                tc.setCellRenderer(centerRenderer);
+                tc.setPreferredWidth(85);
+            } else if ("Nhà cung cấp".equals(col)) {
+                tc.setCellRenderer(textRenderer);
+                tc.setPreferredWidth(160);
+            } else if ("Ghi chú".equals(col)) {
+                tc.setCellRenderer(textRenderer);
+                tc.setPreferredWidth(150);
+            } else {
+                // Tổng cộng, Phí vận chuyển, Tiền giảm giá, Tỉ lệ giảm giá, Tiền thuế, Tỉ lệ thuế, Tiền hàng
+                tc.setCellRenderer(numberRenderer);
+                tc.setPreferredWidth(85);
+            }
+        }
+    }
+
+    private void showDatHangNCCHeaderPopup(MouseEvent e) {
+        JPopupMenu popup = new JPopupMenu();
+        JMenuItem miChooseCols = new JMenuItem("Chọn cột hiển thị...", IconHelper.getIcon("table_column.png", 14, 14));
+        if (miChooseCols.getIcon() == null) {
+            miChooseCols.setIcon(IconHelper.getIcon("1282529873_objects.png", 14, 14));
+        }
+        miChooseCols.addActionListener(ev -> {
+            Window owner = SwingUtilities.getWindowAncestor(this);
+            ChonCotHienThiDialog dlg = new ChonCotHienThiDialog(owner, visibleColsDatHangNCC, allColsDatHangNCC, defaultColsDatHangNCC, newCols -> {
+                visibleColsDatHangNCC = new ArrayList<>(newCols);
+                renderDatHangNCCTable();
+            });
+            dlg.setVisible(true);
+        });
+        popup.add(miChooseCols);
+        popup.show(e.getComponent(), e.getX(), e.getY());
+    }
+
+    private void renderDatHangNCCTable() {
+        List<String> headers = new ArrayList<>();
+        headers.add(""); // Col 0: pointer
+        headers.addAll(visibleColsDatHangNCC);
+
+        modelDatHangNCC.setColumnIdentifiers(headers.toArray(new String[0]));
+        modelDatHangNCC.setRowCount(0);
+
+        SimpleDateFormat sdfDate = new SimpleDateFormat("dd/MM/yyyy");
+
+        for (DatHangNCC d : currentDatHangNCCList) {
+            List<Object> row = new ArrayList<>();
+            for (String col : headers) {
+                if (col.isEmpty()) {
+                    row.add("");
+                } else if ("Số phiếu".equals(col)) {
+                    row.add(d.getName() != null ? d.getName() : "");
+                } else if ("Ngày".equals(col)) {
+                    row.add(d.getNgay() != null ? sdfDate.format(d.getNgay()) : "");
+                } else if ("Nhà cung cấp".equals(col)) {
+                    row.add(d.getTenNhaCungCap() != null ? d.getTenNhaCungCap() : "");
+                } else if ("Tổng cộng".equals(col)) {
+                    row.add(d.getTongCong());
+                } else if ("Phí vận chuyển".equals(col)) {
+                    row.add(d.getPhiVanChuyen());
+                } else if ("Tiền giảm giá".equals(col)) {
+                    row.add(d.getTienGiamGia());
+                } else if ("Tỉ lệ giảm giá".equals(col)) {
+                    row.add(d.getTiLeGiamGia());
+                } else if ("Tiền thuế".equals(col)) {
+                    row.add(d.getTienThue());
+                } else if ("Tỉ lệ thuế".equals(col)) {
+                    row.add(d.getTiLeThue());
+                } else if ("Tiền hàng".equals(col)) {
+                    row.add(d.getTienHang());
+                } else if ("Ghi chú".equals(col)) {
+                    row.add(d.getNote() != null ? d.getNote() : "");
+                } else {
+                    row.add("");
+                }
+            }
+            modelDatHangNCC.addRow(row.toArray());
+        }
+
+        setupDatHangNCCTableRenderers();
+        if (!currentDatHangNCCList.isEmpty()) {
+            tableDatHangNCC.setRowSelectionInterval(0, 0);
+        }
+    }
+
+    private JPanel createTabSanXuat() {
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setBackground(Color.WHITE);
+
+        visibleColsSanXuat = new ArrayList<>(defaultColsSanXuat);
+        List<String> headers = new ArrayList<>();
+        headers.add(""); // Col 0: Pointer
+        headers.addAll(visibleColsSanXuat);
+
+        modelSanXuat = new DefaultTableModel(headers.toArray(new String[0]), 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) { return false; }
+        };
+
+        tableSanXuat = new JTable(modelSanXuat);
+        tableSanXuat.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+        tableSanXuat.setRowHeight(22);
+        tableSanXuat.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        tableSanXuat.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        tableSanXuat.setShowGrid(true);
+        tableSanXuat.setGridColor(new Color(225, 232, 240));
+
+        JTableHeader th = tableSanXuat.getTableHeader();
+        th.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        th.setBackground(new Color(230, 238, 248));
+        th.setForeground(new Color(30, 30, 30));
+        th.setPreferredSize(new Dimension(100, 24));
+
+        th.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                if (e.isPopupTrigger() || SwingUtilities.isRightMouseButton(e)) {
+                    showSanXuatHeaderPopup(e);
+                }
+            }
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                if (e.isPopupTrigger()) {
+                    showSanXuatHeaderPopup(e);
+                }
+            }
+        });
+
+        setupSanXuatTableRenderers();
+
+        JScrollPane scroll = new JScrollPane(tableSanXuat);
+        scroll.setBorder(null);
+        panel.add(scroll, BorderLayout.CENTER);
+        return panel;
+    }
+
+    private void setupSanXuatTableRenderers() {
+        DecimalFormat dfMoney = new DecimalFormat("#,##0.##");
+
+        // Pointer / Row index renderer
+        DefaultTableCellRenderer pointerRenderer = new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int col) {
+                JLabel lbl = (JLabel) super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, col);
+                lbl.setHorizontalAlignment(SwingConstants.CENTER);
+                lbl.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+                if (isSelected) {
+                    lbl.setText("▶ " + (row + 1));
+                    lbl.setBackground(new Color(210, 230, 250));
+                    lbl.setForeground(new Color(25, 65, 135));
+                } else {
+                    lbl.setText(String.valueOf(row + 1));
+                    lbl.setBackground(row % 2 == 0 ? Color.WHITE : new Color(248, 251, 255));
+                    lbl.setForeground(Color.DARK_GRAY);
+                }
+                return lbl;
+            }
+        };
+
+        // Text renderer
+        DefaultTableCellRenderer textRenderer = new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int col) {
+                JLabel lbl = (JLabel) super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, col);
+                if (!isSelected) {
+                    lbl.setBackground(row % 2 == 0 ? Color.WHITE : new Color(248, 251, 255));
+                }
+                return lbl;
+            }
+        };
+
+        // Number/Price renderer (Right aligned)
+        DefaultTableCellRenderer numberRenderer = new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int col) {
+                JLabel lbl = (JLabel) super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, col);
+                lbl.setHorizontalAlignment(SwingConstants.RIGHT);
+                if (value instanceof Number) {
+                    double v = ((Number) value).doubleValue();
+                    lbl.setText(dfMoney.format(v));
+                }
+                if (!isSelected) {
+                    lbl.setBackground(row % 2 == 0 ? Color.WHITE : new Color(248, 251, 255));
+                }
+                return lbl;
+            }
+        };
+
+        // Center renderer (Date, Code, Bàn, Số khách)
+        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int col) {
+                JLabel lbl = (JLabel) super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, col);
+                lbl.setHorizontalAlignment(SwingConstants.CENTER);
+                if (!isSelected) {
+                    lbl.setBackground(row % 2 == 0 ? Color.WHITE : new Color(248, 251, 255));
+                }
+                return lbl;
+            }
+        };
+
+        for (int i = 0; i < tableSanXuat.getColumnCount(); i++) {
+            String col = tableSanXuat.getColumnName(i);
+            TableColumn tc = tableSanXuat.getColumnModel().getColumn(i);
+            if (i == 0) {
+                tc.setCellRenderer(pointerRenderer);
+                tc.setPreferredWidth(35);
+                tc.setMaxWidth(45);
+            } else if ("Số phiếu".equals(col)) {
+                tc.setCellRenderer(centerRenderer);
+                tc.setPreferredWidth(100);
+            } else if ("Ngày".equals(col)) {
+                tc.setCellRenderer(centerRenderer);
+                tc.setPreferredWidth(85);
+            } else if ("Tổng cộng".equals(col)) {
+                tc.setCellRenderer(numberRenderer);
+                tc.setPreferredWidth(100);
+            } else if ("Kho thành phẩm".equals(col) || "Kho vật tư".equals(col)) {
+                tc.setCellRenderer(textRenderer);
+                tc.setPreferredWidth(120);
+            } else if ("Bàn".equals(col)) {
+                tc.setCellRenderer(centerRenderer);
+                tc.setPreferredWidth(60);
+            } else if ("Số khách".equals(col)) {
+                tc.setCellRenderer(centerRenderer);
+                tc.setPreferredWidth(65);
+            } else if ("Đặt hàng nhà cung cấp".equals(col)) {
+                tc.setCellRenderer(centerRenderer);
+                tc.setPreferredWidth(120);
+            } else {
+                tc.setCellRenderer(textRenderer);
+                tc.setPreferredWidth(100);
+            }
+        }
+    }
+
+    private void showSanXuatHeaderPopup(MouseEvent e) {
+        JPopupMenu popup = new JPopupMenu();
+        JMenuItem miChooseCols = new JMenuItem("Chọn cột hiển thị...", IconHelper.getIcon("table_column.png", 14, 14));
+        if (miChooseCols.getIcon() == null) {
+            miChooseCols.setIcon(IconHelper.getIcon("1282529873_objects.png", 14, 14));
+        }
+        miChooseCols.addActionListener(ev -> {
+            Window owner = SwingUtilities.getWindowAncestor(this);
+            ChonCotHienThiDialog dlg = new ChonCotHienThiDialog(owner, visibleColsSanXuat, allColsSanXuat, defaultColsSanXuat, newCols -> {
+                visibleColsSanXuat = new ArrayList<>(newCols);
+                renderSanXuatTable();
+            });
+            dlg.setVisible(true);
+        });
+        popup.add(miChooseCols);
+        popup.show(e.getComponent(), e.getX(), e.getY());
+    }
+
+    private void renderSanXuatTable() {
+        List<String> headers = new ArrayList<>();
+        headers.add(""); // Col 0: pointer
+        headers.addAll(visibleColsSanXuat);
+
+        modelSanXuat.setColumnIdentifiers(headers.toArray(new String[0]));
+        modelSanXuat.setRowCount(0);
+
+        SimpleDateFormat sdfDate = new SimpleDateFormat("dd/MM/yyyy");
+
+        for (DonHang d : currentSanXuatList) {
+            List<Object> row = new ArrayList<>();
+            for (String col : headers) {
+                if (col.isEmpty()) {
+                    row.add("");
+                } else if ("Số phiếu".equals(col)) {
+                    row.add(d.getName() != null ? d.getName() : "");
+                } else if ("Ngày".equals(col)) {
+                    row.add(d.getNgay() != null ? sdfDate.format(d.getNgay()) : "");
+                } else if ("Tổng cộng".equals(col)) {
+                    row.add(d.getTongCong());
+                } else if ("Kho thành phẩm".equals(col)) {
+                    row.add(d.getTenKhoThanhPham() != null ? d.getTenKhoThanhPham() : (d.getTenKhoNhap() != null ? d.getTenKhoNhap() : ""));
+                } else if ("Kho vật tư".equals(col)) {
+                    row.add(d.getTenKhoVatTu() != null ? d.getTenKhoVatTu() : (d.getTenKhoXuat() != null ? d.getTenKhoXuat() : ""));
+                } else if ("Bàn".equals(col)) {
+                    row.add(d.getBan() != null ? d.getBan() : "");
+                } else if ("Số khách".equals(col)) {
+                    row.add(d.getSoKhach() > 0 ? d.getSoKhach() : "");
+                } else if ("Đặt hàng nhà cung cấp".equals(col)) {
+                    row.add(d.getSoPhieuDatHangNCC() != null ? d.getSoPhieuDatHangNCC() : "");
+                } else {
+                    row.add("");
+                }
+            }
+            modelSanXuat.addRow(row.toArray());
+        }
+
+        setupSanXuatTableRenderers();
+        if (!currentSanXuatList.isEmpty()) {
+            tableSanXuat.setRowSelectionInterval(0, 0);
+        }
     }
 
     private void setupTableRenderers() {
@@ -1305,6 +1767,16 @@ public class DanhMucMatHangPanel extends JPanel {
             lblCreatedUser.setText("Khởi tạo bởi: " + (mh.getUserCreatedName() != null ? mh.getUserCreatedName() : "Administrator"));
             lblModifiedTime.setText("Sửa đổi gần nhất: " + modifiedTime);
             lblModifiedUser.setText("Sửa đổi bởi: " + (mh.getUserModifiedName() != null ? mh.getUserModifiedName() : "Administrator"));
+
+            // Load DatHangNCC for selected product
+            currentDatHangNCCList = datHangNCCDAO.getByMatHang(mh.getId(), mh.getCode());
+            renderDatHangNCCTable();
+
+            // Load SanXuat for selected product
+            currentSanXuatList = donHangDAO.getPhieuSanXuatByMatHang(mh.getId(), mh.getCode());
+            renderSanXuatTable();
+        } else {
+            clearBottomInfo();
         }
     }
 
@@ -1313,6 +1785,16 @@ public class DanhMucMatHangPanel extends JPanel {
         lblCreatedUser.setText("Khởi tạo bởi: --");
         lblModifiedTime.setText("Sửa đổi gần nhất: --");
         lblModifiedUser.setText("Sửa đổi bởi: --");
+
+        currentDatHangNCCList.clear();
+        if (modelDatHangNCC != null) {
+            modelDatHangNCC.setRowCount(0);
+        }
+
+        currentSanXuatList.clear();
+        if (modelSanXuat != null) {
+            modelSanXuat.setRowCount(0);
+        }
     }
 
     private void onSearch() {

@@ -6,6 +6,7 @@ import kazuko.ex.model.danhmuc.KhachHang;
 import kazuko.ex.model.danhmuc.NhomKhachHang;
 import kazuko.ex.util.ExcelExporter;
 import kazuko.ex.util.IconHelper;
+import kazuko.ex.util.KhachHangExcelUtil;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -17,6 +18,7 @@ import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableCellRenderer;
+import javax.swing.table.TableColumn;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.DefaultTreeModel;
@@ -27,6 +29,7 @@ import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
 import java.awt.event.*;
 import java.net.URL;
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.List;
@@ -53,6 +56,7 @@ public class DanhMucKhachHangPanel extends JPanel {
     private JButton btnDelete;
     private JButton btnRestore;
     private List<KhachHang> currentList = new ArrayList<>();
+    private List<String> visibleColumns = new ArrayList<>(getDefaultVisibleColumns());
     private String currentSelectedNhom = "Tất cả";
     private String currentSelectedNhomId = null;
     private String currentSortField = "Mã khách";
@@ -319,7 +323,7 @@ public class DanhMucKhachHangPanel extends JPanel {
         btnEdit.addActionListener(e -> onEditSelectedCustomer());
         btnDelete.addActionListener(e -> onDeleteSelectedCustomer());
         btnRestore.addActionListener(e -> onRestoreSelectedCustomer());
-        btnImportExcel.addActionListener(e -> JOptionPane.showMessageDialog(this, "Chức năng Nhập Excel đang hoàn thiện!", "Thông báo", JOptionPane.INFORMATION_MESSAGE));
+        btnImportExcel.addActionListener(e -> onOpenThemNhanhExcel());
         btnExportExcel.addActionListener(e -> onExportExcel());
         btnPrint.addActionListener(e -> JOptionPane.showMessageDialog(this, "Đã gửi dữ liệu sang máy in!", "In ấn", JOptionPane.INFORMATION_MESSAGE));
 
@@ -333,7 +337,10 @@ public class DanhMucKhachHangPanel extends JPanel {
         rightPanel.add(topBar, BorderLayout.NORTH);
 
         // 2. Table Khách hàng
-        String[] columns = {"", "Mã khách", "Tên khách hàng", "Địa chỉ", "Điện thoại", "Email", "Nhóm khách hàng", "Mã số thuế", "Nhân viên", "Ngày thành lập/sinh nhật"};
+        List<String> fullColList = new ArrayList<>();
+        fullColList.add(""); // 0: Pointer
+        fullColList.addAll(visibleColumns);
+        String[] columns = fullColList.toArray(new String[0]);
 
         tableModel = new DefaultTableModel(columns, 0) {
             @Override
@@ -355,7 +362,7 @@ public class DanhMucKhachHangPanel extends JPanel {
         th.setForeground(new Color(30, 30, 30));
         th.setPreferredSize(new Dimension(100, 26));
 
-        // Click sort header
+        // Click sort header & right click popup header
         th.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
@@ -376,6 +383,20 @@ public class DanhMucKhachHangPanel extends JPanel {
                             th.repaint();
                         }
                     }
+                }
+            }
+
+            @Override
+            public void mousePressed(MouseEvent e) {
+                if (e.isPopupTrigger()) {
+                    showTableHeaderPopup(e);
+                }
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                if (e.isPopupTrigger()) {
+                    showTableHeaderPopup(e);
                 }
             }
         });
@@ -539,12 +560,24 @@ public class DanhMucKhachHangPanel extends JPanel {
             }
         };
 
+        DefaultTableCellRenderer rightRenderer = new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int col) {
+                JLabel lbl = (JLabel) super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, col);
+                lbl.setHorizontalAlignment(SwingConstants.RIGHT);
+                if (!isSelected) {
+                    lbl.setBackground(row % 2 == 0 ? Color.WHITE : new Color(248, 251, 255));
+                }
+                return lbl;
+            }
+        };
+
         for (int i = 0; i < tableKhachHang.getColumnCount(); i++) {
             String col = tableKhachHang.getColumnName(i);
-            if (i == 0) {
-                tableKhachHang.getColumnModel().getColumn(0).setCellRenderer(pointerRenderer);
-                tableKhachHang.getColumnModel().getColumn(0).setPreferredWidth(26);
-                tableKhachHang.getColumnModel().getColumn(0).setMaxWidth(30);
+            if (i == 0 || col.isEmpty()) {
+                tableKhachHang.getColumnModel().getColumn(i).setCellRenderer(pointerRenderer);
+                tableKhachHang.getColumnModel().getColumn(i).setPreferredWidth(26);
+                tableKhachHang.getColumnModel().getColumn(i).setMaxWidth(30);
             } else if ("Mã khách".equals(col)) {
                 tableKhachHang.getColumnModel().getColumn(i).setCellRenderer(textRenderer);
                 tableKhachHang.getColumnModel().getColumn(i).setPreferredWidth(95);
@@ -572,6 +605,18 @@ public class DanhMucKhachHangPanel extends JPanel {
             } else if ("Ngày thành lập/sinh nhật".equals(col)) {
                 tableKhachHang.getColumnModel().getColumn(i).setCellRenderer(textRenderer);
                 tableKhachHang.getColumnModel().getColumn(i).setPreferredWidth(120);
+            } else if ("Tỉnh thành".equals(col)) {
+                tableKhachHang.getColumnModel().getColumn(i).setCellRenderer(textRenderer);
+                tableKhachHang.getColumnModel().getColumn(i).setPreferredWidth(110);
+            } else if ("Facebook".equals(col)) {
+                tableKhachHang.getColumnModel().getColumn(i).setCellRenderer(textRenderer);
+                tableKhachHang.getColumnModel().getColumn(i).setPreferredWidth(120);
+            } else if ("Điểm tích lũy ban đầu".equals(col)) {
+                tableKhachHang.getColumnModel().getColumn(i).setCellRenderer(rightRenderer);
+                tableKhachHang.getColumnModel().getColumn(i).setPreferredWidth(120);
+            } else if ("Ghi chú".equals(col)) {
+                tableKhachHang.getColumnModel().getColumn(i).setCellRenderer(textRenderer);
+                tableKhachHang.getColumnModel().getColumn(i).setPreferredWidth(150);
             } else {
                 tableKhachHang.getColumnModel().getColumn(i).setCellRenderer(textRenderer);
                 tableKhachHang.getColumnModel().getColumn(i).setPreferredWidth(100);
@@ -715,6 +760,10 @@ public class DanhMucKhachHangPanel extends JPanel {
                 String na = a.getName() != null ? a.getName() : "";
                 String nb = b.getName() != null ? b.getName() : "";
                 cmp = na.compareToIgnoreCase(nb);
+            } else if ("Địa chỉ".equalsIgnoreCase(currentSortField)) {
+                String da = a.getDiaChi() != null ? a.getDiaChi() : "";
+                String db = b.getDiaChi() != null ? b.getDiaChi() : "";
+                cmp = da.compareToIgnoreCase(db);
             } else if ("Nhóm khách hàng".equalsIgnoreCase(currentSortField)) {
                 String ga = a.getTenNhomKhachHang() != null ? a.getTenNhomKhachHang() : "";
                 String gb = b.getTenNhomKhachHang() != null ? b.getTenNhomKhachHang() : "";
@@ -723,10 +772,36 @@ public class DanhMucKhachHangPanel extends JPanel {
                 String pa = a.getDienThoai() != null ? a.getDienThoai() : "";
                 String pb = b.getDienThoai() != null ? b.getDienThoai() : "";
                 cmp = pa.compareToIgnoreCase(pb);
+            } else if ("Email".equalsIgnoreCase(currentSortField)) {
+                String ea = a.getEmail() != null ? a.getEmail() : "";
+                String eb = b.getEmail() != null ? b.getEmail() : "";
+                cmp = ea.compareToIgnoreCase(eb);
+            } else if ("Mã số thuế".equalsIgnoreCase(currentSortField)) {
+                String ma = a.getMaSoThue() != null ? a.getMaSoThue() : "";
+                String mb = b.getMaSoThue() != null ? b.getMaSoThue() : "";
+                cmp = ma.compareToIgnoreCase(mb);
             } else if ("Nhân viên".equalsIgnoreCase(currentSortField)) {
                 String sa = a.getTenNhanVien() != null ? a.getTenNhanVien() : "";
                 String sb = b.getTenNhanVien() != null ? b.getTenNhanVien() : "";
                 cmp = sa.compareToIgnoreCase(sb);
+            } else if ("Ngày thành lập/sinh nhật".equalsIgnoreCase(currentSortField)) {
+                long ta = a.getNgaySinhNhat() != null ? a.getNgaySinhNhat().getTime() : 0;
+                long tb = b.getNgaySinhNhat() != null ? b.getNgaySinhNhat().getTime() : 0;
+                cmp = Long.compare(ta, tb);
+            } else if ("Tỉnh thành".equalsIgnoreCase(currentSortField)) {
+                String ta = a.getTinhThanh() != null ? a.getTinhThanh() : "";
+                String tb = b.getTinhThanh() != null ? b.getTinhThanh() : "";
+                cmp = ta.compareToIgnoreCase(tb);
+            } else if ("Facebook".equalsIgnoreCase(currentSortField)) {
+                String fa = a.getFacebook() != null ? a.getFacebook() : "";
+                String fb = b.getFacebook() != null ? b.getFacebook() : "";
+                cmp = fa.compareToIgnoreCase(fb);
+            } else if ("Điểm tích lũy ban đầu".equalsIgnoreCase(currentSortField)) {
+                cmp = Double.compare(a.getDiemTichLuyBanDau(), b.getDiemTichLuyBanDau());
+            } else if ("Ghi chú".equalsIgnoreCase(currentSortField)) {
+                String ga = a.getGhiChu() != null ? a.getGhiChu() : "";
+                String gb = b.getGhiChu() != null ? b.getGhiChu() : "";
+                cmp = ga.compareToIgnoreCase(gb);
             }
             return currentSortAsc ? cmp : -cmp;
         });
@@ -734,24 +809,50 @@ public class DanhMucKhachHangPanel extends JPanel {
 
     private void renderTableData() {
         tableModel.setRowCount(0);
+        DecimalFormat dfNumber = new DecimalFormat("#,##0.##");
         int idx = 1;
         for (KhachHang kh : currentList) {
             String dob = "";
             if (kh.getNgaySinhNhat() != null) {
                 dob = sdfDate.format(new Date(kh.getNgaySinhNhat().getTime()));
             }
-            tableModel.addRow(new Object[]{
-                    String.format("%02d", idx++),
-                    kh.getMaKhach() != null ? kh.getMaKhach() : "",
-                    kh.getName() != null ? kh.getName() : "",
-                    kh.getDiaChi() != null ? kh.getDiaChi() : "",
-                    kh.getDienThoai() != null ? kh.getDienThoai() : "",
-                    kh.getEmail() != null ? kh.getEmail() : "",
-                    kh.getTenNhomKhachHang() != null ? kh.getTenNhomKhachHang() : "",
-                    kh.getMaSoThue() != null ? kh.getMaSoThue() : "",
-                    kh.getTenNhanVien() != null ? kh.getTenNhanVien() : "",
-                    dob
-            });
+            List<Object> row = new ArrayList<>();
+            for (int c = 0; c < tableModel.getColumnCount(); c++) {
+                String col = tableModel.getColumnName(c);
+                if (col == null || col.isEmpty()) {
+                    row.add(String.format("%02d", idx));
+                } else if ("Mã khách".equals(col)) {
+                    row.add(kh.getMaKhach() != null ? kh.getMaKhach() : "");
+                } else if ("Tên khách hàng".equals(col)) {
+                    row.add(kh.getName() != null ? kh.getName() : "");
+                } else if ("Địa chỉ".equals(col)) {
+                    row.add(kh.getDiaChi() != null ? kh.getDiaChi() : "");
+                } else if ("Điện thoại".equals(col)) {
+                    row.add(kh.getDienThoai() != null ? kh.getDienThoai() : "");
+                } else if ("Email".equals(col)) {
+                    row.add(kh.getEmail() != null ? kh.getEmail() : "");
+                } else if ("Nhóm khách hàng".equals(col)) {
+                    row.add(kh.getTenNhomKhachHang() != null ? kh.getTenNhomKhachHang() : "");
+                } else if ("Mã số thuế".equals(col)) {
+                    row.add(kh.getMaSoThue() != null ? kh.getMaSoThue() : "");
+                } else if ("Nhân viên".equals(col)) {
+                    row.add(kh.getTenNhanVien() != null ? kh.getTenNhanVien() : "");
+                } else if ("Ngày thành lập/sinh nhật".equals(col)) {
+                    row.add(dob);
+                } else if ("Tỉnh thành".equals(col)) {
+                    row.add(kh.getTinhThanh() != null ? kh.getTinhThanh() : "");
+                } else if ("Facebook".equals(col)) {
+                    row.add(kh.getFacebook() != null ? kh.getFacebook() : "");
+                } else if ("Điểm tích lũy ban đầu".equals(col)) {
+                    row.add(kh.getDiemTichLuyBanDau() != 0 ? dfNumber.format(kh.getDiemTichLuyBanDau()) : "0");
+                } else if ("Ghi chú".equals(col)) {
+                    row.add(kh.getGhiChu() != null ? kh.getGhiChu() : "");
+                } else {
+                    row.add("");
+                }
+            }
+            idx++;
+            tableModel.addRow(row.toArray());
         }
 
         if (tableKhachHang.getRowCount() > 0) {
@@ -1078,7 +1179,16 @@ public class DanhMucKhachHangPanel extends JPanel {
     }
 
     private void onExportExcel() {
-        ExcelExporter.exportTable(tableKhachHang, "DanhMuc_KhachHang", "Khách hàng", this);
+        KhachHangExcelUtil.exportKhachHangList(this, currentList, visibleColumns, "DanhMuc_KhachHang.xlsx");
+    }
+
+    private void onOpenThemNhanhExcel() {
+        Window owner = SwingUtilities.getWindowAncestor(this);
+        ThemNhanhKhachHangDialog dialog = new ThemNhanhKhachHangDialog(owner, () -> {
+            loadNhomTree(currentSelectedNhom);
+            loadTableData(currentSelectedNhom, currentSelectedNhomId, txtSearch.getText().trim());
+        });
+        dialog.setVisible(true);
     }
 
     private void showTablePopup(MouseEvent e) {
@@ -1108,6 +1218,8 @@ public class DanhMucKhachHangPanel extends JPanel {
             JMenuItem miAdd = new JMenuItem("Thêm khách hàng", IconHelper.getIcon("plus.png", 16, 16));
             JMenuItem miEdit = new JMenuItem("Chỉnh sửa", IconHelper.getIcon("pencil.png", 16, 16));
             JMenuItem miDelete = new JMenuItem("Xóa", IconHelper.getIcon("cross.png", 16, 16));
+            JMenuItem miAutoResize = new JMenuItem("Tự động dãn cột");
+            JMenuItem miChooseCols = new JMenuItem("Cột hiển thị");
             JMenuItem miExport = new JMenuItem("Xuất Excel", IconHelper.getIcon("export_excel.png", 16, 16));
             JMenuItem miPrint = new JMenuItem("In danh sách", IconHelper.getIcon("Preview.png", 16, 16));
             JMenuItem miRefresh = new JMenuItem("Làm mới", IconHelper.getIcon("Refresh.png", 16, 16));
@@ -1115,6 +1227,8 @@ public class DanhMucKhachHangPanel extends JPanel {
             miAdd.addActionListener(ev -> onAddNewCustomer());
             miEdit.addActionListener(ev -> onEditSelectedCustomer());
             miDelete.addActionListener(ev -> onDeleteSelectedCustomer());
+            miAutoResize.addActionListener(ev -> autoResizeColumnWidths());
+            miChooseCols.addActionListener(ev -> onOpenColumnChooser());
             miExport.addActionListener(ev -> onExportExcel());
             miPrint.addActionListener(ev -> JOptionPane.showMessageDialog(this, "Đã gửi dữ liệu sang máy in!", "In ấn", JOptionPane.INFORMATION_MESSAGE));
             miRefresh.addActionListener(ev -> loadTableData(currentSelectedNhom, currentSelectedNhomId, txtSearch.getText().trim()));
@@ -1123,12 +1237,137 @@ public class DanhMucKhachHangPanel extends JPanel {
             popup.add(miEdit);
             popup.add(miDelete);
             popup.addSeparator();
+            popup.add(miAutoResize);
+            popup.add(miChooseCols);
+            popup.addSeparator();
             popup.add(miExport);
             popup.add(miPrint);
             popup.add(miRefresh);
         }
 
         popup.show(tableKhachHang, e.getX(), e.getY());
+    }
+
+    private void showTableHeaderPopup(MouseEvent e) {
+        JPopupMenu popup = new JPopupMenu();
+
+        JMenuItem miAdd = new JMenuItem("Thêm Khách hàng", IconHelper.getIcon("plus.png", 16, 16));
+        if (miAdd.getIcon() == null) miAdd.setIcon(IconHelper.getIcon("users.png", 16, 16));
+        miAdd.addActionListener(ev -> onAddNewCustomer());
+        popup.add(miAdd);
+
+        popup.addSeparator();
+
+        JMenuItem miAutoResize = new JMenuItem("Tự động dãn cột");
+        miAutoResize.addActionListener(ev -> autoResizeColumnWidths());
+        popup.add(miAutoResize);
+
+        JMenuItem miChooseCols = new JMenuItem("Cột hiển thị");
+        miChooseCols.addActionListener(ev -> onOpenColumnChooser());
+        popup.add(miChooseCols);
+
+        popup.show(tableKhachHang.getTableHeader(), e.getX(), e.getY());
+    }
+
+    public List<String> getDefaultVisibleColumns() {
+        List<String> list = new ArrayList<>();
+        list.add("Mã khách");
+        list.add("Tên khách hàng");
+        list.add("Địa chỉ");
+        list.add("Điện thoại");
+        list.add("Email");
+        list.add("Nhóm khách hàng");
+        list.add("Mã số thuế");
+        list.add("Nhân viên");
+        list.add("Ngày thành lập/sinh nhật");
+        list.add("Tỉnh thành");
+        list.add("Facebook");
+        return list;
+    }
+
+    public List<String> getAllPossibleColumns() {
+        List<String> list = new ArrayList<>();
+        list.add("Mã khách");
+        list.add("Tên khách hàng");
+        list.add("Địa chỉ");
+        list.add("Điện thoại");
+        list.add("Email");
+        list.add("Nhóm khách hàng");
+        list.add("Mã số thuế");
+        list.add("Nhân viên");
+        list.add("Ngày thành lập/sinh nhật");
+        list.add("Tỉnh thành");
+        list.add("Facebook");
+        list.add("Điểm tích lũy ban đầu");
+        list.add("Ghi chú");
+        return list;
+    }
+
+    public List<String> getVisibleColumns() {
+        return new ArrayList<>(visibleColumns);
+    }
+
+    public void rebuildTableColumns(List<String> newColumns) {
+        this.visibleColumns = new ArrayList<>(newColumns);
+        List<String> fullColList = new ArrayList<>();
+        fullColList.add(""); // 0: Pointer
+        fullColList.addAll(visibleColumns);
+
+        String[] cols = fullColList.toArray(new String[0]);
+        tableModel.setColumnIdentifiers(cols);
+
+        setupTableRenderers();
+        renderTableData();
+    }
+
+    public void autoResizeColumnWidths() {
+        for (int column = 0; column < tableKhachHang.getColumnCount(); column++) {
+            if (column == 0) {
+                tableKhachHang.getColumnModel().getColumn(0).setPreferredWidth(26);
+                tableKhachHang.getColumnModel().getColumn(0).setMaxWidth(30);
+                continue;
+            }
+            TableColumn tableColumn = tableKhachHang.getColumnModel().getColumn(column);
+            int preferredWidth = 50;
+
+            // Chiều rộng của Header
+            TableCellRenderer headerRenderer = tableKhachHang.getTableHeader().getDefaultRenderer();
+            if (headerRenderer != null) {
+                Component headerComp = headerRenderer.getTableCellRendererComponent(
+                        tableKhachHang, tableColumn.getHeaderValue(), false, false, 0, column);
+                if (headerComp != null) {
+                    preferredWidth = Math.max(preferredWidth, headerComp.getPreferredSize().width + 20);
+                }
+            }
+
+            // Chiều rộng của các dòng dữ liệu (tối đa kiểm tra 100 dòng đầu)
+            int rowCount = Math.min(tableKhachHang.getRowCount(), 100);
+            for (int row = 0; row < rowCount; row++) {
+                TableCellRenderer cellRenderer = tableKhachHang.getCellRenderer(row, column);
+                if (cellRenderer != null) {
+                    Component c = tableKhachHang.prepareRenderer(cellRenderer, row, column);
+                    if (c != null) {
+                        int width = c.getPreferredSize().width + tableKhachHang.getIntercellSpacing().width + 16;
+                        preferredWidth = Math.max(preferredWidth, width);
+                    }
+                }
+            }
+
+            tableColumn.setPreferredWidth(Math.min(preferredWidth, 350));
+        }
+        tableKhachHang.getTableHeader().repaint();
+    }
+
+    private void onOpenColumnChooser() {
+        Window owner = SwingUtilities.getWindowAncestor(this);
+        ChonCotHienThiDialog dialog = new ChonCotHienThiDialog(
+                owner,
+                visibleColumns,
+                getAllPossibleColumns(),
+                getDefaultVisibleColumns(),
+                this::rebuildTableColumns
+        );
+        dialog.setVisible(true);
     }
 
     private void setupShortcuts() {
