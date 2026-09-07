@@ -25,26 +25,95 @@ public class QuickSearchDialog extends JDialog {
     private DefaultListModel<String> listModel;
 
     private static final List<String> ALL_FUNCTIONS = Arrays.asList(
-            "BẢNG TỔNG HỢP THỊ PHẦN",
-            "BÁO CÁO 20 MẶT HÀNG BÁN CHẠY NHẤT",
+            // BÁO CÁO QUỸ
+            "DANH SÁCH PHIẾU THU THEO NGÀY",
+            "DANH SÁCH PHIẾU THU THEO LÝ DO THU CHI",
+            "DANH SÁCH PHIẾU CHI THEO NGÀY",
+            "DANH SÁCH PHIẾU CHI THEO LÝ DO THU CHI",
+            "TỔNG HỢP THU CHI THEO NGÀY",
+            "TỔNG HỢP THU CHI THEO LÝ DO",
+            "BÁO CÁO TỒN QUỸ",
+
+            // BÁO CÁO DANH MỤC
+            "DANH SÁCH KHÁCH HÀNG THEO NHÓM",
+            "DANH SÁCH KHÁCH HÀNG THEO NHÂN VIÊN",
+            "DANH SÁCH NHÀ CUNG CẤP THEO NHÓM",
+            "DANH SÁCH ĐỢT KHUYẾN MẠI",
+            "DANH SÁCH MẶT HÀNG THEO NHÓM",
+            "DANH SÁCH MẶT HÀNG THEO HÃNG SẢN XUẤT",
+            "KHÁCH HÀNG ĐẾN NGÀY SINH NHẬT",
+
+            // BÁO CÁO BÁN HÀNG
+            "KHÁCH HÀNG THÂN THIẾT",
             "BÁO CÁO BÁN HÀNG THEO GIỜ",
-            "BÁO CÁO BÁN HÀNG THEO KHÁCH HÀNG",
             "BÁO CÁO BÁN HÀNG THEO KÍCH THƯỚC",
+            "BÁO CÁO TỔNG HỢP GIÁ TRỊ BÁN THEO THÁNG",
+            "BÁO CÁO TỔNG HỢP SỐ LƯỢNG BÁN THEO THÁNG",
             "BÁO CÁO BÁN HÀNG THEO NGÀY",
-            "BÁO CÁO BÁN HÀNG THEO NHÂN VIÊN KINH DOANH",
-            "BÁO CÁO BÁN HÀNG THEO THU NGÂN",
             "BÁO CÁO CHI TIẾT BÁN HÀNG THEO NGÀY",
+            "BÁO CÁO BÁN HÀNG THEO KHÁCH HÀNG",
+            "BÁO CÁO BÁN HÀNG THEO NHÂN VIÊN KINH DOANH",
+            "TỔNG HỢP MẶT HÀNG BÁN THEO KHÁCH HÀNG",
+            "TỔNG HỢP MẶT HÀNG BÁN THEO NGÀY",
+            "TỔNG HỢP MẶT HÀNG BÁN THEO NHÂN VIÊN KINH DOANH",
+            "TỔNG HỢP BÁN HÀNG THEO NGÀY",
+            "TỔNG HỢP BÁN THEO KHÁCH HÀNG",
+            "TỔNG HỢP BÁN THEO NHÂN VIÊN BÁN",
+            "TỔNG HỢP BÁN THEO THU NGÂN",
+            "TỔNG HỢP MẶT HÀNG BÁN THEO THU NGÂN",
             "BÁO CÁO CHI TIẾT BÁN HÀNG THEO THU NGÂN",
+            "BÁO CÁO BÁN HÀNG THEO THU NGÂN",
+            "TỔNG HỢP TIỀN VẬN CHUYỂN THEO NHÂN VIÊN",
+            "CHI TIẾT BÁN HÀNG THEO ĐỐI TÁC",
+            "TỔNG HỢP HOA HỒNG THEO NVKD",
+            "CHI TIẾT BÁN HÀNG THEO HÓA ĐƠN",
             "BÁO CÁO CHI TIẾT HÀNG KHUYẾN MẠI",
-            "BÁO CÁO BÁN HÀNG",
-            "BÁO CÁO KHO HÀNG",
-            "BÁO CÁO QUỸ",
+
+            // BÁO CÁO ĐẶT HÀNG
+            "DANH SÁCH ĐẶT HÀNG THEO NGÀY",
+            "DANH SÁCH ĐẶT HÀNG THEO KHÁCH HÀNG",
+            "TỔNG HỢP ĐẶT HÀNG THEO NGÀY",
+            "TỔNG HỢP ĐẶT HÀNG THEO KHÁCH HÀNG",
+            "TỔNG HỢP MẶT HÀNG ĐẶT THEO KHÁCH HÀNG",
+            "TỔNG HỢP MẶT HÀNG ĐẶT THEO NGÀY",
+
+            // BÁO CÁO KHO HÀNG
+            "BÁO CÁO NHẬP XUẤT TỒN THEO KHO",
+            "BÁO CÁO TỔNG HỢP NHẬP KHO",
+            "BÁO CÁO TỔNG HỢP XUẤT KHO",
+            "BÁO CÁO TỔNG HỢP CHUYỂN KHO",
+            "BÁO CÁO TỔNG HỢP KIỂM KÊ KHO",
+            "BÁO CÁO TỒN KHO THEO MẶT HÀNG",
+            "BÁO CÁO TỒN KHO DƯỚI ĐỊNH MỨC",
+            "BÁO CÁO THẺ KHO CHI TIẾT",
+
+            // BÁO CÁO CÔNG NỢ
+            "TỔNG HỢP CÔNG NỢ KHÁCH HÀNG",
+            "CHI TIẾT CÔNG NỢ KHÁCH HÀNG",
+            "TỔNG HỢP CÔNG NỢ NHÀ CUNG CẤP",
+            "CHI TIẾT CÔNG NỢ NHÀ CUNG CẤP",
+            "BÁO CÁO CÔNG NỢ ĐẾN HẠN",
+
+            // BÁO CÁO QUẢN TRỊ
             "TỔNG HỢP KẾT QUẢ KINH DOANH (KQKD)",
+            "BÁO CÁO LỢI NHUẬN BÁN HÀNG THEO MẶT HÀNG",
+            "BÁO CÁO LỢI NHUẬN BÁN HÀNG THEO KHÁCH HÀNG",
+            "BÁO CÁO LỢI NHUẬN THEO NHÂN VIÊN KINH DOANH",
+            "BÁO CÁO 20 MẶT HÀNG BÁN CHẠY NHẤT",
+            "BẢNG TỔNG HỢP THỊ PHẦN",
+
+            // BÁO CÁO BIỂU ĐỒ
+            "BIỂU ĐỒ DOANH THU THEO THÁNG",
+            "BIỂU ĐỒ DOANH THU THEO NHÂN VIÊN",
+            "BIỂU ĐỒ TĂNG TRƯỞNG DOANH THU",
+            "BIỂU ĐỒ MẶT HÀNG BÁN CHẠY",
+            "BIỂU ĐỒ CƠ CẤU NHÓM HÀNG",
+
+            // CHỨC NĂNG HỆ THỐNG & HOẠT ĐỘNG KHÁC
             "HÓA ĐƠN BÁN HÀNG",
             "QUẢN LÝ BÁN HÀNG",
             "BÁO GIÁ KHÁCH HÀNG",
             "KHÁCH ĐẶT HÀNG",
-            "KHÁCH HÀNG THÂN THIẾT",
             "GỬI TIN NHẮN KHÁCH HÀNG",
             "LƯU VẾT HOẠT ĐỘNG",
             "THỐNG KÊ DOANH THU",
