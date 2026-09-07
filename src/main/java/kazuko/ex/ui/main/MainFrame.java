@@ -553,7 +553,7 @@ public class MainFrame extends JFrame {
 
         JMenuItem miChiTieuDT = new JMenuItem("Chỉ tiêu doanh thu");
         miChiTieuDT.setIcon(IconHelper.getIcon("property.png", 16, 16));
-        miChiTieuDT.addActionListener(e -> openTab("Chỉ tiêu doanh thu", createPlaceholderPanel("Chỉ tiêu doanh thu")));
+        miChiTieuDT.addActionListener(e -> openTab("Chỉ tiêu doanh thu", new kazuko.ex.ui.quantri.ChiTieuDoanhThuPanel()));
 
         JMenuItem miXoaDuLieu = new JMenuItem("Xóa dữ liệu");
         miXoaDuLieu.setIcon(IconHelper.getIcon("clear.png", 16, 16));

@@ -1,9 +1,23 @@
 package kazuko.ex.ui.danhmuc;
 
+import kazuko.ex.dao.BaoGiaDAO;
+import kazuko.ex.dao.CongNoKhachHangDAO;
+import kazuko.ex.dao.DonHangDAO;
+import kazuko.ex.dao.KhachDatHangDAO;
 import kazuko.ex.dao.KhachHangDAO;
 import kazuko.ex.dao.NhomKhachHangDAO;
+import kazuko.ex.dao.PhieuChiDAO;
+import kazuko.ex.dao.PhieuThuDAO;
+import kazuko.ex.dao.TangGiamDiemDAO;
+import kazuko.ex.model.baogia.BaoGia;
+import kazuko.ex.model.banhang.DonHang;
+import kazuko.ex.model.congno.ChiTietCongNoKhachHangEntry;
 import kazuko.ex.model.danhmuc.KhachHang;
 import kazuko.ex.model.danhmuc.NhomKhachHang;
+import kazuko.ex.model.danhmuc.TangGiamDiem;
+import kazuko.ex.model.dathang.KhachDatHang;
+import kazuko.ex.model.quy.PhieuChi;
+import kazuko.ex.model.quy.PhieuThu;
 import kazuko.ex.util.ExcelExporter;
 import kazuko.ex.util.IconHelper;
 import kazuko.ex.util.KhachHangExcelUtil;
@@ -37,6 +51,13 @@ import java.util.List;
 public class DanhMucKhachHangPanel extends JPanel {
     private final KhachHangDAO khachHangDAO = new KhachHangDAO();
     private final NhomKhachHangDAO nhomKhachHangDAO = new NhomKhachHangDAO();
+    private final BaoGiaDAO baoGiaDAO = new BaoGiaDAO();
+    private final KhachDatHangDAO khachDatHangDAO = new KhachDatHangDAO();
+    private final DonHangDAO donHangDAO = new DonHangDAO();
+    private final TangGiamDiemDAO tangGiamDiemDAO = new TangGiamDiemDAO();
+    private final PhieuThuDAO phieuThuDAO = new PhieuThuDAO();
+    private final PhieuChiDAO phieuChiDAO = new PhieuChiDAO();
+    private final CongNoKhachHangDAO congNoKhachHangDAO = new CongNoKhachHangDAO();
 
     private JTree treeNhomKhachHang;
     private DefaultTreeModel treeModel;
@@ -50,6 +71,70 @@ public class DanhMucKhachHangPanel extends JPanel {
     private JLabel lblCreatedUser;
     private JLabel lblModifiedTime;
     private JLabel lblModifiedUser;
+
+    // Tab 2: Báo giá
+    private JTable tableBaoGia;
+    private DefaultTableModel modelBaoGia;
+    private List<String> visibleColsBaoGia;
+    private final List<String> allColsBaoGia = Arrays.asList("Ngày", "Số phiếu", "Tên khách", "Địa chỉ", "Điện thoại", "Tiền hàng", "Tiền giảm giá", "Tổng cộng", "Tỉ lệ thuế", "Tiền thuế", "Phí vận chuyển", "Email", "Ghi chú", "Khách hàng", "Tỉ lệ giảm giá");
+    private final List<String> defaultColsBaoGia = new ArrayList<>(allColsBaoGia);
+    private List<BaoGia> currentBaoGiaList = new ArrayList<>();
+
+    // Tab 3: Đặt hàng
+    private JTable tableDatHang;
+    private DefaultTableModel modelDatHang;
+    private List<String> visibleColsDatHang;
+    private final List<String> allColsDatHang = Arrays.asList("Ngày", "Số phiếu", "Tên khách", "Địa chỉ", "Điện thoại", "Email", "Tổng cộng", "Tỉ lệ thuế", "Tiền thuế", "Phí vận chuyển", "Ghi chú", "Khách hàng", "Tỉ lệ giảm giá", "Tiền giảm giá", "Tiền hàng");
+    private final List<String> defaultColsDatHang = Arrays.asList("Ngày", "Số phiếu", "Tên khách", "Địa chỉ", "Điện thoại", "Email", "Tổng cộng", "Tỉ lệ thuế", "Tiền thuế", "Phí vận chuyển");
+    private List<KhachDatHang> currentDatHangList = new ArrayList<>();
+
+    // Tab 4: Đơn hàng
+    private JTable tableDonHang;
+    private DefaultTableModel modelDonHang;
+    private List<String> visibleColsDonHang;
+    private final List<String> allColsDonHang = Arrays.asList("Số phiếu", "Ngày", "Khách hàng", "Tiền hàng", "Giảm giá", "Đổi trả", "Tổng cộng", "Giờ thanh toán", "Thanh toán bởi", "Ghi chú");
+    private final List<String> defaultColsDonHang = Arrays.asList("Số phiếu", "Ngày", "Khách hàng", "Tiền hàng", "Giảm giá", "Đổi trả", "Tổng cộng", "Giờ thanh toán", "Thanh toán bởi", "Ghi chú");
+    private List<DonHang> currentDonHangList = new ArrayList<>();
+
+    // Tab 5: Sản xuất
+    private JTable tableSanXuat;
+    private DefaultTableModel modelSanXuat;
+    private List<String> visibleColsSanXuat;
+    private final List<String> allColsSanXuat = Arrays.asList("Số phiếu", "Ngày", "Tổng cộng", "Kho thành phẩm", "Kho vật tư", "Bàn", "Số khách", "Đặt hàng nhà cung cấp");
+    private final List<String> defaultColsSanXuat = Arrays.asList("Số phiếu", "Ngày", "Tổng cộng", "Kho thành phẩm", "Kho vật tư", "Bàn", "Số khách", "Đặt hàng nhà cung cấp");
+    private List<DonHang> currentSanXuatList = new ArrayList<>();
+
+    // Tab 6: Tăng giảm điểm
+    private JTable tableTangGiamDiem;
+    private DefaultTableModel modelTangGiamDiem;
+    private List<String> visibleColsTangGiamDiem;
+    private final List<String> allColsTangGiamDiem = Arrays.asList("Số phiếu", "Ngày", "Khách hàng", "Điểm tăng", "Điểm giảm", "Lý do", "Ghi chú");
+    private final List<String> defaultColsTangGiamDiem = Arrays.asList("Số phiếu", "Ngày", "Khách hàng", "Điểm tăng", "Điểm giảm", "Lý do", "Ghi chú");
+    private List<TangGiamDiem> currentTangGiamDiemList = new ArrayList<>();
+
+    // Tab 7: Phiếu thu
+    private JTable tablePhieuThu;
+    private DefaultTableModel modelPhieuThu;
+    private List<String> visibleColsPhieuThu;
+    private final List<String> allColsPhieuThu = Arrays.asList("Số phiếu", "Ngày", "Phân loại thu", "Người nộp", "Địa chỉ", "Số tiền", "Lý do thu", "Chứng từ gốc", "Ghi chú");
+    private final List<String> defaultColsPhieuThu = Arrays.asList("Số phiếu", "Ngày", "Phân loại thu", "Người nộp", "Địa chỉ", "Số tiền", "Lý do thu", "Chứng từ gốc", "Ghi chú");
+    private List<PhieuThu> currentPhieuThuList = new ArrayList<>();
+
+    // Tab 8: Phiếu chi
+    private JTable tablePhieuChi;
+    private DefaultTableModel modelPhieuChi;
+    private List<String> visibleColsPhieuChi;
+    private final List<String> allColsPhieuChi = Arrays.asList("Số phiếu", "Ngày", "Phân loại chi", "Người nhận", "Địa chỉ", "Số tiền", "Lý do chi", "Chứng từ gốc", "Ghi chú");
+    private final List<String> defaultColsPhieuChi = Arrays.asList("Số phiếu", "Ngày", "Phân loại chi", "Người nhận", "Địa chỉ", "Số tiền", "Lý do chi", "Chứng từ gốc", "Ghi chú");
+    private List<PhieuChi> currentPhieuChiList = new ArrayList<>();
+
+    // Tab 9: Phiếu thu công nợ
+    private JTable tablePhieuThuCongNo;
+    private DefaultTableModel modelPhieuThuCongNo;
+    private List<String> visibleColsPhieuThuCongNo;
+    private final List<String> allColsPhieuThuCongNo = Arrays.asList("Số phiếu", "Ngày", "Số tiền", "Diễn giải", "Loại chứng từ", "Còn nợ");
+    private final List<String> defaultColsPhieuThuCongNo = Arrays.asList("Số phiếu", "Ngày", "Số tiền", "Diễn giải", "Loại chứng từ", "Còn nợ");
+    private List<ChiTietCongNoKhachHangEntry> currentCongNoList = new ArrayList<>();
 
     private JButton btnAddKhachHang;
     private JButton btnEdit;
@@ -439,7 +524,7 @@ public class DanhMucKhachHangPanel extends JPanel {
         JPanel bottomDetails = createBottomTabbedPanel();
 
         JSplitPane rightSplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT, scrollPane, bottomDetails);
-        rightSplit.setResizeWeight(0.85);
+        rightSplit.setResizeWeight(0.72);
         rightSplit.setDividerSize(4);
         rightSplit.setBorder(null);
 
@@ -451,7 +536,8 @@ public class DanhMucKhachHangPanel extends JPanel {
 
     private JPanel createBottomTabbedPanel() {
         JPanel panel = new JPanel(new BorderLayout());
-        panel.setPreferredSize(new Dimension(100, 110));
+        panel.setPreferredSize(new Dimension(100, 180));
+        panel.setMinimumSize(new Dimension(100, 110));
 
         JTabbedPane tabInfo = new JTabbedPane(JTabbedPane.TOP);
         tabInfo.setFont(new Font("Segoe UI", Font.PLAIN, 12));
@@ -478,17 +564,272 @@ public class DanhMucKhachHangPanel extends JPanel {
         pnlInfo.add(lblModifiedUser);
 
         tabInfo.addTab("Thông tin", pnlInfo);
-        tabInfo.addTab("Báo giá", new JPanel());
-        tabInfo.addTab("Đặt hàng", new JPanel());
-        tabInfo.addTab("Đơn hàng", new JPanel());
-        tabInfo.addTab("Sản xuất", new JPanel());
-        tabInfo.addTab("Tăng giảm điểm", new JPanel());
-        tabInfo.addTab("Phiếu thu", new JPanel());
-        tabInfo.addTab("Phiếu chi", new JPanel());
-        tabInfo.addTab("Phiếu thu công nợ", new JPanel());
+        tabInfo.addTab("Báo giá", createBaoGiaTab());
+        tabInfo.addTab("Đặt hàng", createDatHangTab());
+        tabInfo.addTab("Đơn hàng", createDonHangTab());
+        tabInfo.addTab("Sản xuất", createSanXuatTab());
+        tabInfo.addTab("Tăng giảm điểm", createTangGiamDiemTab());
+        tabInfo.addTab("Phiếu thu", createPhieuThuTab());
+        tabInfo.addTab("Phiếu chi", createPhieuChiTab());
+        tabInfo.addTab("Phiếu thu công nợ", createPhieuThuCongNoTab());
 
         panel.add(tabInfo, BorderLayout.CENTER);
         return panel;
+    }
+
+    private JPanel createBaoGiaTab() {
+        visibleColsBaoGia = new ArrayList<>(defaultColsBaoGia);
+        modelBaoGia = createDetailModel(visibleColsBaoGia);
+        tableBaoGia = createDetailTable(modelBaoGia, () -> showDetailColumnChooser(
+                visibleColsBaoGia, allColsBaoGia, defaultColsBaoGia, cols -> {
+                    visibleColsBaoGia = new ArrayList<>(cols);
+                    renderBaoGiaTable();
+                }));
+        return wrapDetailTable(tableBaoGia);
+    }
+
+    private JPanel createDatHangTab() {
+        visibleColsDatHang = new ArrayList<>(defaultColsDatHang);
+        modelDatHang = createDetailModel(visibleColsDatHang);
+        tableDatHang = createDetailTable(modelDatHang, () -> showDetailColumnChooser(
+                visibleColsDatHang, allColsDatHang, defaultColsDatHang, cols -> {
+                    visibleColsDatHang = new ArrayList<>(cols);
+                    renderDatHangTable();
+                }));
+        return wrapDetailTable(tableDatHang);
+    }
+
+    private JPanel createDonHangTab() {
+        visibleColsDonHang = new ArrayList<>(defaultColsDonHang);
+        modelDonHang = createDetailModel(visibleColsDonHang);
+        tableDonHang = createDetailTable(modelDonHang, () -> showDetailColumnChooser(
+                visibleColsDonHang, allColsDonHang, defaultColsDonHang, cols -> {
+                    visibleColsDonHang = new ArrayList<>(cols);
+                    renderDonHangTable();
+                }));
+        return wrapDetailTable(tableDonHang);
+    }
+
+    private JPanel createSanXuatTab() {
+        visibleColsSanXuat = new ArrayList<>(defaultColsSanXuat);
+        modelSanXuat = createDetailModel(visibleColsSanXuat);
+        tableSanXuat = createDetailTable(modelSanXuat, () -> showDetailColumnChooser(
+                visibleColsSanXuat, allColsSanXuat, defaultColsSanXuat, cols -> {
+                    visibleColsSanXuat = new ArrayList<>(cols);
+                    renderSanXuatTable();
+                }));
+        return wrapDetailTable(tableSanXuat);
+    }
+
+    private JPanel createTangGiamDiemTab() {
+        visibleColsTangGiamDiem = new ArrayList<>(defaultColsTangGiamDiem);
+        modelTangGiamDiem = createDetailModel(visibleColsTangGiamDiem);
+        tableTangGiamDiem = createDetailTable(modelTangGiamDiem, () -> showDetailColumnChooser(
+                visibleColsTangGiamDiem, allColsTangGiamDiem, defaultColsTangGiamDiem, cols -> {
+                    visibleColsTangGiamDiem = new ArrayList<>(cols);
+                    renderTangGiamDiemTable();
+                }));
+        return wrapDetailTable(tableTangGiamDiem);
+    }
+
+    private JPanel createPhieuThuTab() {
+        visibleColsPhieuThu = new ArrayList<>(defaultColsPhieuThu);
+        modelPhieuThu = createDetailModel(visibleColsPhieuThu);
+        tablePhieuThu = createDetailTable(modelPhieuThu, () -> showDetailColumnChooser(
+                visibleColsPhieuThu, allColsPhieuThu, defaultColsPhieuThu, cols -> {
+                    visibleColsPhieuThu = new ArrayList<>(cols);
+                    renderPhieuThuTable();
+                }));
+        return wrapDetailTable(tablePhieuThu);
+    }
+
+    private JPanel createPhieuChiTab() {
+        visibleColsPhieuChi = new ArrayList<>(defaultColsPhieuChi);
+        modelPhieuChi = createDetailModel(visibleColsPhieuChi);
+        tablePhieuChi = createDetailTable(modelPhieuChi, () -> showDetailColumnChooser(
+                visibleColsPhieuChi, allColsPhieuChi, defaultColsPhieuChi, cols -> {
+                    visibleColsPhieuChi = new ArrayList<>(cols);
+                    renderPhieuChiTable();
+                }));
+        return wrapDetailTable(tablePhieuChi);
+    }
+
+    private JPanel createPhieuThuCongNoTab() {
+        visibleColsPhieuThuCongNo = new ArrayList<>(defaultColsPhieuThuCongNo);
+        modelPhieuThuCongNo = createDetailModel(visibleColsPhieuThuCongNo);
+        tablePhieuThuCongNo = createDetailTable(modelPhieuThuCongNo, () -> showDetailColumnChooser(
+                visibleColsPhieuThuCongNo, allColsPhieuThuCongNo, defaultColsPhieuThuCongNo, cols -> {
+                    visibleColsPhieuThuCongNo = new ArrayList<>(cols);
+                    renderPhieuThuCongNoTable();
+                }));
+        return wrapDetailTable(tablePhieuThuCongNo);
+    }
+
+    private DefaultTableModel createDetailModel(List<String> visibleColumns) {
+        List<String> headers = detailHeaders(visibleColumns);
+        return new DefaultTableModel(headers.toArray(new String[0]), 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+    }
+
+    private List<String> detailHeaders(List<String> visibleColumns) {
+        List<String> headers = new ArrayList<>();
+        headers.add("");
+        headers.addAll(visibleColumns);
+        return headers;
+    }
+
+    private JTable createDetailTable(DefaultTableModel model, Runnable chooseColumnsAction) {
+        JTable table = new JTable(model);
+        table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+        table.setRowHeight(22);
+        table.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        table.setShowGrid(true);
+        table.setGridColor(new Color(225, 232, 240));
+
+        JTableHeader header = table.getTableHeader();
+        header.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        header.setBackground(new Color(230, 238, 248));
+        header.setForeground(new Color(30, 30, 30));
+        header.setPreferredSize(new Dimension(100, 26));
+
+        MouseAdapter popupListener = new MouseAdapter() {
+            private void showPopup(MouseEvent e) {
+                if (e.isPopupTrigger()) {
+                    JPopupMenu popup = new JPopupMenu();
+                    JMenuItem chooseColumns = new JMenuItem("Chọn cột hiển thị...", IconHelper.getIcon("table_column.png", 14, 14));
+                    chooseColumns.addActionListener(event -> chooseColumnsAction.run());
+                    popup.add(chooseColumns);
+                    popup.show(e.getComponent(), e.getX(), e.getY());
+                }
+            }
+
+            @Override public void mousePressed(MouseEvent e) { showPopup(e); }
+            @Override public void mouseReleased(MouseEvent e) { showPopup(e); }
+        };
+        header.addMouseListener(popupListener);
+        table.addMouseListener(popupListener);
+
+        setupDetailTableRenderers(table);
+        return table;
+    }
+
+    private JPanel wrapDetailTable(JTable table) {
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setBackground(Color.WHITE);
+        JScrollPane scrollPane = new JScrollPane(table);
+        scrollPane.setBorder(null);
+        panel.add(scrollPane, BorderLayout.CENTER);
+        return panel;
+    }
+
+    private void showDetailColumnChooser(List<String> visibleColumns, List<String> allColumns,
+                                         List<String> defaultColumns,
+                                         java.util.function.Consumer<List<String>> callback) {
+        Window owner = SwingUtilities.getWindowAncestor(this);
+        ChonCotHienThiDialog dialog = new ChonCotHienThiDialog(
+                owner, visibleColumns, allColumns, defaultColumns, callback);
+        dialog.setVisible(true);
+    }
+
+    private void setupDetailTableRenderers(JTable table) {
+        DecimalFormat decimalFormat = new DecimalFormat("#,##0.##");
+
+        DefaultTableCellRenderer pointerRenderer = new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable target, Object value, boolean isSelected,
+                                                           boolean hasFocus, int row, int column) {
+                JLabel label = (JLabel) super.getTableCellRendererComponent(
+                        target, value, isSelected, hasFocus, row, column);
+                label.setHorizontalAlignment(SwingConstants.CENTER);
+                label.setText(isSelected ? "▶" : "");
+                if (!isSelected) label.setBackground(detailRowColor(row));
+                return label;
+            }
+        };
+
+        DefaultTableCellRenderer textRenderer = new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable target, Object value, boolean isSelected,
+                                                           boolean hasFocus, int row, int column) {
+                JLabel label = (JLabel) super.getTableCellRendererComponent(
+                        target, value, isSelected, hasFocus, row, column);
+                label.setHorizontalAlignment(SwingConstants.LEFT);
+                if (!isSelected) label.setBackground(detailRowColor(row));
+                return label;
+            }
+        };
+
+        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable target, Object value, boolean isSelected,
+                                                           boolean hasFocus, int row, int column) {
+                JLabel label = (JLabel) super.getTableCellRendererComponent(
+                        target, value, isSelected, hasFocus, row, column);
+                label.setHorizontalAlignment(SwingConstants.CENTER);
+                if (!isSelected) label.setBackground(detailRowColor(row));
+                return label;
+            }
+        };
+
+        DefaultTableCellRenderer numberRenderer = new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable target, Object value, boolean isSelected,
+                                                           boolean hasFocus, int row, int column) {
+                JLabel label = (JLabel) super.getTableCellRendererComponent(
+                        target, value, isSelected, hasFocus, row, column);
+                label.setHorizontalAlignment(SwingConstants.RIGHT);
+                if (value instanceof Number) {
+                    label.setText(decimalFormat.format(((Number) value).doubleValue()));
+                }
+                if (!isSelected) label.setBackground(detailRowColor(row));
+                return label;
+            }
+        };
+
+        for (int i = 0; i < table.getColumnCount(); i++) {
+            String columnName = table.getColumnName(i);
+            TableColumn column = table.getColumnModel().getColumn(i);
+            if (i == 0) {
+                column.setCellRenderer(pointerRenderer);
+                column.setPreferredWidth(28);
+                column.setMaxWidth(32);
+            } else if (isNumericDetailColumn(columnName)) {
+                column.setCellRenderer(numberRenderer);
+                column.setPreferredWidth(columnName.startsWith("Tỉ lệ") ? 82 : 105);
+            } else if ("Ngày".equals(columnName) || "Số phiếu".equals(columnName)
+                    || "Giờ thanh toán".equals(columnName) || "Số khách".equals(columnName)) {
+                column.setCellRenderer(centerRenderer);
+                column.setPreferredWidth("Ngày".equals(columnName) ? 90 : 105);
+            } else {
+                column.setCellRenderer(textRenderer);
+                if ("Địa chỉ".equals(columnName)) column.setPreferredWidth(170);
+                else if (columnName.contains("khách") || columnName.contains("Khách")
+                        || columnName.contains("Người") || columnName.contains("Phân loại")) column.setPreferredWidth(145);
+                else if ("Email".equals(columnName) || columnName.contains("Ghi chú")
+                        || columnName.contains("Lý do") || columnName.contains("Diễn giải")) column.setPreferredWidth(150);
+                else column.setPreferredWidth(105);
+            }
+        }
+    }
+
+    private boolean isNumericDetailColumn(String columnName) {
+        return columnName != null && (columnName.startsWith("Tiền")
+                || columnName.startsWith("Tổng")
+                || columnName.startsWith("Tỉ lệ")
+                || columnName.startsWith("Điểm")
+                || "Giảm giá".equals(columnName)
+                || "Đổi trả".equals(columnName)
+                || "Số tiền".equals(columnName)
+                || "Còn nợ".equals(columnName));
+    }
+
+    private Color detailRowColor(int row) {
+        return row % 2 == 0 ? Color.WHITE : new Color(248, 251, 255);
     }
 
     private void setupTableRenderers() {
@@ -871,6 +1212,272 @@ public class DanhMucKhachHangPanel extends JPanel {
         }
     }
 
+    private void resetDetailModel(DefaultTableModel model, List<String> visibleColumns) {
+        model.setColumnIdentifiers(detailHeaders(visibleColumns).toArray(new String[0]));
+        model.setRowCount(0);
+    }
+
+    private String formatDetailDate(Date value) {
+        return value != null ? sdfDate.format(value) : "";
+    }
+
+    private String textOrEmpty(String value) {
+        return value != null ? value : "";
+    }
+
+    private String firstNonBlank(String first, String second) {
+        if (first != null && !first.trim().isEmpty()) return first;
+        return textOrEmpty(second);
+    }
+
+    private void finishDetailRender(JTable table, int rowCount) {
+        setupDetailTableRenderers(table);
+        if (rowCount > 0) table.setRowSelectionInterval(0, 0);
+    }
+
+    private void renderBaoGiaTable() {
+        resetDetailModel(modelBaoGia, visibleColsBaoGia);
+        List<String> headers = detailHeaders(visibleColsBaoGia);
+        for (BaoGia item : currentBaoGiaList) {
+            List<Object> row = new ArrayList<>();
+            for (String column : headers) {
+                switch (column) {
+                    case "Ngày": row.add(formatDetailDate(item.getNgay())); break;
+                    case "Số phiếu": row.add(textOrEmpty(item.getName())); break;
+                    case "Tên khách": row.add(textOrEmpty(item.getTenKhach())); break;
+                    case "Địa chỉ": row.add(textOrEmpty(item.getDiaChi())); break;
+                    case "Điện thoại": row.add(textOrEmpty(item.getDienThoai())); break;
+                    case "Tiền hàng": row.add(item.getTienHang()); break;
+                    case "Tiền giảm giá": row.add(item.getTienGiamGia()); break;
+                    case "Tổng cộng": row.add(item.getTongCong()); break;
+                    case "Tỉ lệ thuế": row.add(item.getTiLeThue()); break;
+                    case "Tiền thuế": row.add(item.getTienThue()); break;
+                    case "Phí vận chuyển": row.add(item.getPhiVanChuyen()); break;
+                    case "Email": row.add(textOrEmpty(item.getEmail())); break;
+                    case "Ghi chú": row.add(textOrEmpty(item.getNote())); break;
+                    case "Khách hàng": row.add(textOrEmpty(item.getTenKhach())); break;
+                    case "Tỉ lệ giảm giá": row.add(item.getTiLeGiamGia()); break;
+                    default: row.add("");
+                }
+            }
+            modelBaoGia.addRow(row.toArray());
+        }
+        finishDetailRender(tableBaoGia, currentBaoGiaList.size());
+    }
+
+    private void renderDatHangTable() {
+        resetDetailModel(modelDatHang, visibleColsDatHang);
+        List<String> headers = detailHeaders(visibleColsDatHang);
+        for (KhachDatHang item : currentDatHangList) {
+            List<Object> row = new ArrayList<>();
+            for (String column : headers) {
+                switch (column) {
+                    case "Ngày": row.add(formatDetailDate(item.getNgay())); break;
+                    case "Số phiếu": row.add(textOrEmpty(item.getName())); break;
+                    case "Tên khách": row.add(textOrEmpty(item.getTenKhach())); break;
+                    case "Địa chỉ": row.add(textOrEmpty(item.getDiaChi())); break;
+                    case "Điện thoại": row.add(textOrEmpty(item.getDienThoai())); break;
+                    case "Email": row.add(textOrEmpty(item.getEmail())); break;
+                    case "Tổng cộng": row.add(item.getTongCong()); break;
+                    case "Tỉ lệ thuế": row.add(item.getTiLeThue()); break;
+                    case "Tiền thuế": row.add(item.getTienThue()); break;
+                    case "Phí vận chuyển": row.add(item.getPhiVanChuyen()); break;
+                    case "Ghi chú": row.add(textOrEmpty(item.getNote())); break;
+                    case "Khách hàng": row.add(textOrEmpty(item.getTenKhach())); break;
+                    case "Tỉ lệ giảm giá": row.add(item.getTiLeGiamGia()); break;
+                    case "Tiền giảm giá": row.add(item.getTienGiamGia()); break;
+                    case "Tiền hàng": row.add(item.getTienHang()); break;
+                    default: row.add("");
+                }
+            }
+            modelDatHang.addRow(row.toArray());
+        }
+        finishDetailRender(tableDatHang, currentDatHangList.size());
+    }
+
+    private void renderDonHangTable() {
+        resetDetailModel(modelDonHang, visibleColsDonHang);
+        List<String> headers = detailHeaders(visibleColsDonHang);
+        for (DonHang item : currentDonHangList) {
+            List<Object> row = new ArrayList<>();
+            for (String column : headers) {
+                switch (column) {
+                    case "Số phiếu": row.add(textOrEmpty(item.getName())); break;
+                    case "Ngày": row.add(formatDetailDate(item.getNgay())); break;
+                    case "Khách hàng": row.add(textOrEmpty(item.getTenKhach())); break;
+                    case "Tiền hàng": row.add(item.getTienHang()); break;
+                    case "Giảm giá": row.add(item.getTienGiamGia()); break;
+                    case "Đổi trả": row.add(item.getTienDoiTra()); break;
+                    case "Tổng cộng": row.add(item.getTongCong()); break;
+                    case "Giờ thanh toán": row.add(textOrEmpty(item.getGioThanhToan())); break;
+                    case "Thanh toán bởi": row.add(textOrEmpty(item.getNguoiThanhToan())); break;
+                    case "Ghi chú": row.add(textOrEmpty(item.getGhiChu())); break;
+                    default: row.add("");
+                }
+            }
+            modelDonHang.addRow(row.toArray());
+        }
+        finishDetailRender(tableDonHang, currentDonHangList.size());
+    }
+
+    private void renderSanXuatTable() {
+        resetDetailModel(modelSanXuat, visibleColsSanXuat);
+        List<String> headers = detailHeaders(visibleColsSanXuat);
+        for (DonHang item : currentSanXuatList) {
+            List<Object> row = new ArrayList<>();
+            for (String column : headers) {
+                switch (column) {
+                    case "Số phiếu": row.add(textOrEmpty(item.getName())); break;
+                    case "Ngày": row.add(formatDetailDate(item.getNgay())); break;
+                    case "Tổng cộng": row.add(item.getTongCong()); break;
+                    case "Kho thành phẩm": row.add(textOrEmpty(item.getTenKhoThanhPham())); break;
+                    case "Kho vật tư": row.add(textOrEmpty(item.getTenKhoVatTu())); break;
+                    case "Bàn": row.add(textOrEmpty(item.getBan())); break;
+                    case "Số khách": row.add(item.getSoKhach()); break;
+                    case "Đặt hàng nhà cung cấp": row.add(textOrEmpty(item.getSoPhieuDatHangNCC())); break;
+                    default: row.add("");
+                }
+            }
+            modelSanXuat.addRow(row.toArray());
+        }
+        finishDetailRender(tableSanXuat, currentSanXuatList.size());
+    }
+
+    private void renderTangGiamDiemTable() {
+        resetDetailModel(modelTangGiamDiem, visibleColsTangGiamDiem);
+        List<String> headers = detailHeaders(visibleColsTangGiamDiem);
+        for (TangGiamDiem item : currentTangGiamDiemList) {
+            List<Object> row = new ArrayList<>();
+            for (String column : headers) {
+                switch (column) {
+                    case "Số phiếu": row.add(textOrEmpty(item.getSoPhieu())); break;
+                    case "Ngày": row.add(formatDetailDate(item.getNgay())); break;
+                    case "Khách hàng": row.add(textOrEmpty(item.getTenKhachHang())); break;
+                    case "Điểm tăng": row.add(item.getDiemTang()); break;
+                    case "Điểm giảm": row.add(item.getDiemGiam()); break;
+                    case "Lý do": row.add(textOrEmpty(item.getLyDo())); break;
+                    case "Ghi chú": row.add(textOrEmpty(item.getNote())); break;
+                    default: row.add("");
+                }
+            }
+            modelTangGiamDiem.addRow(row.toArray());
+        }
+        finishDetailRender(tableTangGiamDiem, currentTangGiamDiemList.size());
+    }
+
+    private void renderPhieuThuTable() {
+        resetDetailModel(modelPhieuThu, visibleColsPhieuThu);
+        List<String> headers = detailHeaders(visibleColsPhieuThu);
+        for (PhieuThu item : currentPhieuThuList) {
+            List<Object> row = new ArrayList<>();
+            for (String column : headers) {
+                switch (column) {
+                    case "Số phiếu": row.add(textOrEmpty(item.getSoPhieu())); break;
+                    case "Ngày": row.add(formatDetailDate(item.getNgay())); break;
+                    case "Phân loại thu": row.add(textOrEmpty(item.getTenPhanLoai())); break;
+                    case "Người nộp": row.add(firstNonBlank(item.getTenDoiTuong(), item.getTenKhachHang())); break;
+                    case "Địa chỉ": row.add(textOrEmpty(item.getDiaChi())); break;
+                    case "Số tiền": row.add(item.getSoTien()); break;
+                    case "Lý do thu": row.add(textOrEmpty(item.getLyDoThu())); break;
+                    case "Chứng từ gốc": row.add(textOrEmpty(item.getChungTuGoc())); break;
+                    case "Ghi chú": row.add(textOrEmpty(item.getGhiChu())); break;
+                    default: row.add("");
+                }
+            }
+            modelPhieuThu.addRow(row.toArray());
+        }
+        finishDetailRender(tablePhieuThu, currentPhieuThuList.size());
+    }
+
+    private void renderPhieuChiTable() {
+        resetDetailModel(modelPhieuChi, visibleColsPhieuChi);
+        List<String> headers = detailHeaders(visibleColsPhieuChi);
+        for (PhieuChi item : currentPhieuChiList) {
+            List<Object> row = new ArrayList<>();
+            for (String column : headers) {
+                switch (column) {
+                    case "Số phiếu": row.add(textOrEmpty(item.getSoPhieu())); break;
+                    case "Ngày": row.add(formatDetailDate(item.getNgay())); break;
+                    case "Phân loại chi": row.add(textOrEmpty(item.getTenPhanLoai())); break;
+                    case "Người nhận": row.add(firstNonBlank(item.getTenDoiTuong(), item.getTenKhachHang())); break;
+                    case "Địa chỉ": row.add(textOrEmpty(item.getDiaChi())); break;
+                    case "Số tiền": row.add(item.getSoTien()); break;
+                    case "Lý do chi": row.add(textOrEmpty(item.getLyDoChi())); break;
+                    case "Chứng từ gốc": row.add(textOrEmpty(item.getChungTuGoc())); break;
+                    case "Ghi chú": row.add(textOrEmpty(item.getGhiChu())); break;
+                    default: row.add("");
+                }
+            }
+            modelPhieuChi.addRow(row.toArray());
+        }
+        finishDetailRender(tablePhieuChi, currentPhieuChiList.size());
+    }
+
+    private void renderPhieuThuCongNoTable() {
+        resetDetailModel(modelPhieuThuCongNo, visibleColsPhieuThuCongNo);
+        List<String> headers = detailHeaders(visibleColsPhieuThuCongNo);
+        for (ChiTietCongNoKhachHangEntry item : currentCongNoList) {
+            List<Object> row = new ArrayList<>();
+            for (String column : headers) {
+                switch (column) {
+                    case "Số phiếu": row.add(textOrEmpty(item.getSoPhieu())); break;
+                    case "Ngày": row.add(formatDetailDate(item.getNgay())); break;
+                    case "Số tiền":
+                        row.add("DONHANG".equals(item.getLoaiChungTu())
+                                ? item.getTongCong() - item.getTienThanhToan()
+                                : item.getTienThanhToan());
+                        break;
+                    case "Diễn giải": row.add(textOrEmpty(item.getDienGiai())); break;
+                    case "Loại chứng từ": row.add(textOrEmpty(item.getLoaiChungTu())); break;
+                    case "Còn nợ": row.add(item.getLuyKe()); break;
+                    default: row.add("");
+                }
+            }
+            modelPhieuThuCongNo.addRow(row.toArray());
+        }
+        finishDetailRender(tablePhieuThuCongNo, currentCongNoList.size());
+    }
+
+    private void loadSelectedCustomerDetails(KhachHang customer) {
+        currentBaoGiaList = baoGiaDAO.getDanhSachBaoGia(null, null, null, customer.getId());
+        currentDatHangList = khachDatHangDAO.getDanhSachKhachDatHang(null, null, null, customer.getId());
+        currentDonHangList = donHangDAO.getDonHangByKhachHang(customer.getId(), customer.getMaKhach());
+        currentSanXuatList = donHangDAO.getPhieuSanXuatByKhachHang(customer.getId(), customer.getMaKhach());
+        currentTangGiamDiemList = tangGiamDiemDAO.getByKhachHangId(customer.getId());
+        currentPhieuThuList = phieuThuDAO.getByKhachHangId(customer.getId());
+        currentPhieuChiList = phieuChiDAO.getByKhachHangId(customer.getId());
+        currentCongNoList = congNoKhachHangDAO.getChiTietCongNo(customer.getId(), null, null);
+
+        renderBaoGiaTable();
+        renderDatHangTable();
+        renderDonHangTable();
+        renderSanXuatTable();
+        renderTangGiamDiemTable();
+        renderPhieuThuTable();
+        renderPhieuChiTable();
+        renderPhieuThuCongNoTable();
+    }
+
+    private void clearBottomDetails() {
+        currentBaoGiaList = new ArrayList<>();
+        currentDatHangList = new ArrayList<>();
+        currentDonHangList = new ArrayList<>();
+        currentSanXuatList = new ArrayList<>();
+        currentTangGiamDiemList = new ArrayList<>();
+        currentPhieuThuList = new ArrayList<>();
+        currentPhieuChiList = new ArrayList<>();
+        currentCongNoList = new ArrayList<>();
+
+        if (modelBaoGia != null) renderBaoGiaTable();
+        if (modelDatHang != null) renderDatHangTable();
+        if (modelDonHang != null) renderDonHangTable();
+        if (modelSanXuat != null) renderSanXuatTable();
+        if (modelTangGiamDiem != null) renderTangGiamDiemTable();
+        if (modelPhieuThu != null) renderPhieuThuTable();
+        if (modelPhieuChi != null) renderPhieuChiTable();
+        if (modelPhieuThuCongNo != null) renderPhieuThuCongNoTable();
+    }
+
     private void updateBottomInfo() {
         int selected = tableKhachHang.getSelectedRow();
         if (selected >= 0 && selected < currentList.size()) {
@@ -879,11 +1486,13 @@ public class DanhMucKhachHangPanel extends JPanel {
             lblCreatedUser.setText("Khởi tạo bởi: " + (kh.getUserCreatedName() != null ? kh.getUserCreatedName() : "--"));
             lblModifiedTime.setText("Sửa đổi gần nhất: " + (kh.getTimeModified() != null ? sdfDateTime.format(kh.getTimeModified()) : "--"));
             lblModifiedUser.setText("Sửa đổi bởi: " + (kh.getUserModifiedName() != null ? kh.getUserModifiedName() : "--"));
+            loadSelectedCustomerDetails(kh);
         } else {
             lblCreatedTime.setText("Khởi tạo: --");
             lblCreatedUser.setText("Khởi tạo bởi: --");
             lblModifiedTime.setText("Sửa đổi gần nhất: --");
             lblModifiedUser.setText("Sửa đổi bởi: --");
+            clearBottomDetails();
         }
     }
 

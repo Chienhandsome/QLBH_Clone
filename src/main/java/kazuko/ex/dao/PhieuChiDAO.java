@@ -423,4 +423,52 @@ public class PhieuChiDAO extends BaseDAO {
         }
         return null;
     }
+
+    public List<PhieuChi> getByKhachHangId(String khachHangId) {
+        if (khachHangId == null || khachHangId.trim().isEmpty()) return new ArrayList<>();
+        List<PhieuChi> list = new ArrayList<>();
+        try (Connection conn = getConnection()) {
+            ensureTableExists(conn);
+            String sql = "SELECT * FROM TPHIEUCHI WHERE DKHACHHANGID = ? AND (STATUS IS NULL OR STATUS >= 0) ORDER BY NGAY DESC, TIMECREATED DESC";
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setString(1, khachHangId.trim());
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        PhieuChi pc = new PhieuChi();
+                        pc.setId(rs.getString("ID"));
+                        pc.setSoPhieu(rs.getString("SOPHIEU"));
+                        pc.setNgay(rs.getTimestamp("NGAY"));
+                        pc.setPhanLoaiId(rs.getString("DLYDOTHUCHIID"));
+                        pc.setTenPhanLoai(rs.getString("TENPHANLOAI"));
+                        pc.setLyDoChi(rs.getString("LYDOCHI"));
+                        pc.setChungTuGoc(rs.getString("CHUNGTUGOC"));
+                        pc.setLoaiDoiTuong(rs.getString("LOAIDOITUONG"));
+                        pc.setTenDoiTuong(rs.getString("TENDOITUONG"));
+                        pc.setDiaChi(rs.getString("DIACHI"));
+                        pc.setNhanVienId(rs.getString("DNHANVIENID"));
+                        pc.setKhachHangId(rs.getString("DKHACHHANGID"));
+                        pc.setNhaCungCapId(rs.getString("DNHACUNGCAPID"));
+                        pc.setSoTien(rs.getDouble("SOTIEN"));
+                        pc.setChuyenTuTaiKhoan(rs.getInt("CHUYENTUTAIKHOAN") == 1);
+                        pc.setTaiKhoanNganHangId(rs.getString("DTAIKHOANNGANHANGID"));
+                        pc.setCuaHangId(rs.getString("DCUAHANGID"));
+                        pc.setKhongThayDoiCongNo(rs.getInt("KHONGTHAYDOICONGNO") == 1);
+                        pc.setGhiChu(rs.getString("NOTE"));
+                        pc.setStatus(rs.getInt("STATUS"));
+                        pc.setTimeCreated(rs.getTimestamp("TIMECREATED"));
+                        pc.setUserCreatedId(rs.getString("USERCREATEDID"));
+                        list.add(pc);
+                    }
+                }
+            }
+        } catch (Exception ignored) {}
+
+        for (PhieuChi m : MEMORY_PHIEU_CHI) {
+            if (khachHangId.trim().equals(m.getKhachHangId()) && m.getStatus() >= 0
+                    && list.stream().noneMatch(x -> Objects.equals(x.getId(), m.getId()))) {
+                list.add(m);
+            }
+        }
+        return list;
+    }
 }
