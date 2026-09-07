@@ -9,6 +9,19 @@ public class SUser {
     private Integer isAdmin;
     private String groupUserId;
 
+    private String groupUserName;
+    private String dNhanVienId;
+    private String dNhanVienName;
+    private String userId;
+    private String cardCode;
+    private String note;
+    private String simageId;
+    private Integer status = 30;
+    private java.sql.Timestamp timeCreated;
+    private java.sql.Timestamp timeModified;
+    private String userCreatedId;
+    private String userModifiedId;
+
     public SUser() {}
 
     public SUser(String id, String username, String name, String password, String email, Integer isAdmin, String groupUserId) {
@@ -42,12 +55,48 @@ public class SUser {
     public String getGroupUserId() { return groupUserId; }
     public void setGroupUserId(String groupUserId) { this.groupUserId = groupUserId; }
 
+    public String getGroupUserName() { return groupUserName; }
+    public void setGroupUserName(String groupUserName) { this.groupUserName = groupUserName; }
+
+    public String getdNhanVienId() { return dNhanVienId; }
+    public void setdNhanVienId(String dNhanVienId) { this.dNhanVienId = dNhanVienId; }
+
+    public String getdNhanVienName() { return dNhanVienName; }
+    public void setdNhanVienName(String dNhanVienName) { this.dNhanVienName = dNhanVienName; }
+
+    public String getUserId() { return userId; }
+    public void setUserId(String userId) { this.userId = userId; }
+
+    public String getCardCode() { return cardCode; }
+    public void setCardCode(String cardCode) { this.cardCode = cardCode; }
+
+    public String getNote() { return note; }
+    public void setNote(String note) { this.note = note; }
+
+    public String getSimageId() { return simageId; }
+    public void setSimageId(String simageId) { this.simageId = simageId; }
+
+    public Integer getStatus() { return status; }
+    public void setStatus(Integer status) { this.status = status; }
+
+    public java.sql.Timestamp getTimeCreated() { return timeCreated; }
+    public void setTimeCreated(java.sql.Timestamp timeCreated) { this.timeCreated = timeCreated; }
+
+    public java.sql.Timestamp getTimeModified() { return timeModified; }
+    public void setTimeModified(java.sql.Timestamp timeModified) { this.timeModified = timeModified; }
+
+    public String getUserCreatedId() { return userCreatedId; }
+    public void setUserCreatedId(String userCreatedId) { this.userCreatedId = userCreatedId; }
+
+    public String getUserModifiedId() { return userModifiedId; }
+    public void setUserModifiedId(String userModifiedId) { this.userModifiedId = userModifiedId; }
+
     public boolean isAdminUser() {
-        return isAdmin != null && isAdmin == 1;
+        return (isAdmin != null && isAdmin == 1) || "Admin".equalsIgnoreCase(username);
     }
 
     @Override
     public String toString() {
-        return name != null && !name.isEmpty() ? name : username;
+        return name != null && !name.isEmpty() ? name : (username != null ? username : "");
     }
 }

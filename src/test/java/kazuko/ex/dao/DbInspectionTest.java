@@ -431,4 +431,34 @@ public class DbInspectionTest {
             e.printStackTrace();
         }
     }
+
+    @Test
+    public void testInspectNoteTables() {
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            DatabaseMetaData meta = conn.getMetaData();
+            System.out.println("\n=== COLUMNS IN SQUICKNOTE ===");
+            List<String> cols = new ArrayList<>();
+            try (ResultSet rs = meta.getColumns(null, null, "SQUICKNOTE", "%")) {
+                while (rs.next()) {
+                    String col = rs.getString("COLUMN_NAME");
+                    cols.add(col);
+                    System.out.println("Col: " + col + " | Type: " + rs.getString("TYPE_NAME") + " | Size: " + rs.getInt("COLUMN_SIZE"));
+                }
+            }
+
+            System.out.println("\n=== DATA IN SQUICKNOTE ===");
+            try (PreparedStatement ps = conn.prepareStatement("SELECT * FROM SQUICKNOTE");
+                 ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    StringBuilder sb = new StringBuilder("Row: ");
+                    for (String col : cols) {
+                        sb.append(col).append("=").append(rs.getObject(col)).append(", ");
+                    }
+                    System.out.println(sb.toString());
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 }

@@ -40,6 +40,7 @@ public class AuthService {
                 String dbPass = user.getPassword() != null ? user.getPassword().trim() : "";
                 if (dbPass.isEmpty() || dbPass.equals(inputPass)) {
                     currentUser = user;
+                    PermissionService.getInstance().initPermissions(user);
                     return new AuthResult(true, user, "Đăng nhập thành công!");
                 } else {
                     return new AuthResult(false, null, "Mật khẩu không chính xác!");
@@ -55,6 +56,7 @@ public class AuthService {
                         defaultAdmin.setName("Administrator");
                         defaultAdmin.setIsAdmin(1);
                         currentUser = defaultAdmin;
+                        PermissionService.getInstance().initPermissions(defaultAdmin);
                         return new AuthResult(true, defaultAdmin, "Đăng nhập với tài khoản Admin mặc định!");
                     }
                 }
@@ -95,5 +97,6 @@ public class AuthService {
 
     public static void logout() {
         currentUser = null;
+        PermissionService.getInstance().initPermissions(null);
     }
 }

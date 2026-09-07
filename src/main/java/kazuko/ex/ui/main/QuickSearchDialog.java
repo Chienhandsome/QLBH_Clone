@@ -1,5 +1,6 @@
 package kazuko.ex.ui.main;
 
+import kazuko.ex.service.PermissionService;
 import kazuko.ex.util.AppColors;
 import kazuko.ex.util.IconHelper;
 
@@ -240,7 +241,11 @@ public class QuickSearchDialog extends JDialog {
 
         // Center Panel: Danh sách chức năng
         listModel = new DefaultListModel<>();
-        ALL_FUNCTIONS.forEach(listModel::addElement);
+        for (String f : ALL_FUNCTIONS) {
+            if (PermissionService.getInstance().isFunctionAllowed(f) && PermissionService.getInstance().isReportAllowed(f)) {
+                listModel.addElement(f);
+            }
+        }
 
         listFunctions = new JList<>(listModel);
         listFunctions.setFont(new Font("Segoe UI", Font.PLAIN, 13));
@@ -348,6 +353,9 @@ public class QuickSearchDialog extends JDialog {
         String query = removeAccent(txtSearch.getText().trim().toLowerCase(Locale.ROOT));
         listModel.clear();
         for (String func : ALL_FUNCTIONS) {
+            if (!PermissionService.getInstance().isFunctionAllowed(func) || !PermissionService.getInstance().isReportAllowed(func)) {
+                continue;
+            }
             String normFunc = removeAccent(func.toLowerCase(Locale.ROOT));
             if (normFunc.contains(query)) {
                 listModel.addElement(func);

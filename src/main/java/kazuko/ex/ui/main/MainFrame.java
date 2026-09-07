@@ -2,6 +2,7 @@ package kazuko.ex.ui.main;
 
 import kazuko.ex.model.system.SUser;
 import kazuko.ex.service.AuthService;
+import kazuko.ex.service.PermissionService;
 import kazuko.ex.ui.auth.DatabaseConfigDialog;
 import kazuko.ex.ui.auth.DoiMatKhauDialog;
 import kazuko.ex.ui.auth.LoginForm;
@@ -45,7 +46,9 @@ import kazuko.ex.ui.quy.TonQuyPanel;
 import kazuko.ex.ui.quy.TaoPhieuChiDialog;
 import kazuko.ex.ui.quy.TaoPhieuThuDialog;
 import kazuko.ex.ui.system.CauHinhToanHeThongDialog;
+import kazuko.ex.ui.system.GhiChuNhanhDialog;
 import kazuko.ex.ui.system.KhoiPhucCSDLDialog;
+import kazuko.ex.ui.system.QuanLyNguoiDungDialog;
 import kazuko.ex.ui.system.SaoLuuCSDLDialog;
 import kazuko.ex.ui.system.TaoMoiCSDLDialog;
 import kazuko.ex.util.AppColors;
@@ -70,6 +73,7 @@ public class MainFrame extends JFrame {
 
     public MainFrame(SUser user) {
         this.currentUser = user;
+        PermissionService.getInstance().initPermissions(user);
         initComponents();
     }
 
@@ -148,10 +152,26 @@ public class MainFrame extends JFrame {
         container.add(pnlTabControls);
         container.add(mainTabbedPane);
 
-        // Mở sẵn tab Danh mục mặt hàng
-        openTab("Danh mục mặt hàng", new DanhMucMatHangPanel());
+        // Mở sẵn tab mặc định được phép
+        openDefaultPermittedTab();
 
         return container;
+    }
+
+    private void openDefaultPermittedTab() {
+        if (PermissionService.getInstance().isFunctionAllowed("Danh mục mặt hàng")) {
+            openTab("Danh mục mặt hàng", new DanhMucMatHangPanel());
+        } else if (PermissionService.getInstance().isFunctionAllowed("Hóa đơn bán hàng")) {
+            openTab("Hóa đơn bán hàng", new HoaDonBanHangPanel());
+        } else if (PermissionService.getInstance().isFunctionAllowed("Quản lý bán hàng")) {
+            openTab("Quản lý bán hàng", new QuanLyBanHangPanel());
+        } else if (PermissionService.getInstance().isFunctionAllowed("Tồn kho")) {
+            openTab("Tồn kho", new QuanLyTonKhoPanel());
+        } else if (PermissionService.getInstance().isFunctionAllowed("Danh mục khách hàng")) {
+            openTab("Danh mục khách hàng", new DanhMucKhachHangPanel());
+        } else {
+            openTab("Bảng tin", createPlaceholderPanel("HỆ THỐNG QUẢN LÝ BÁN HÀNG"));
+        }
     }
 
     private JButton createTabControlButton(Icon icon, String tooltip) {
@@ -213,7 +233,7 @@ public class MainFrame extends JFrame {
         if (selected >= 0) {
             mainTabbedPane.remove(selected);
             if (mainTabbedPane.getTabCount() == 0) {
-                openTab("Danh mục mặt hàng", new DanhMucMatHangPanel());
+                openDefaultPermittedTab();
             }
         }
     }
@@ -226,14 +246,10 @@ public class MainFrame extends JFrame {
         JMenu mCSDL = new JMenu("Cơ sở dữ liệu...");
         mCSDL.setIcon(IconHelper.getIcon("database1.png", 16, 16));
 
-        JMenuItem miTaoMoi = new JMenuItem("Tạo mới");
-        JMenuItem miSaoLuu = new JMenuItem("Sao lưu");
-        JMenuItem miPhucHoi = new JMenuItem("Phục hồi");
+        JMenuItem miTaoMoi = createFunctionMenuItem("Tạo mới", "Tạo mới cơ sở dữ liệu", null, null, e -> new TaoMoiCSDLDialog(this).setVisible(true));
+        JMenuItem miSaoLuu = createFunctionMenuItem("Sao lưu", "Sao lưu cơ sở dữ liệu", null, null, e -> new SaoLuuCSDLDialog(this).setVisible(true));
+        JMenuItem miPhucHoi = createFunctionMenuItem("Phục hồi", "Phục hồi cơ sở dữ liệu", null, null, e -> new KhoiPhucCSDLDialog(this).setVisible(true));
         
-        miTaoMoi.addActionListener(e -> new TaoMoiCSDLDialog(this).setVisible(true));
-        miSaoLuu.addActionListener(e -> new SaoLuuCSDLDialog(this).setVisible(true));
-        miPhucHoi.addActionListener(e -> new KhoiPhucCSDLDialog(this).setVisible(true));
-
         mCSDL.add(miTaoMoi);
         mCSDL.add(miSaoLuu);
         mCSDL.add(miPhucHoi);
@@ -263,31 +279,12 @@ public class MainFrame extends JFrame {
         JMenu mHoatDong = new JMenu("HOẠT ĐỘNG");
 
         // Group 1: Danh mục & Khách hàng
-        JMenuItem miCuaHang = new JMenuItem("Danh mục cửa hàng");
-        miCuaHang.setIcon(IconHelper.getIcon("Folder2.png", 16, 16));
-        miCuaHang.addActionListener(e -> new CuaHangDialog(this).setVisible(true));
-
-        JMenuItem miMatHang = new JMenuItem("Danh mục mặt hàng");
-        miMatHang.setIcon(IconHelper.getIcon("1282529873_objects.png", 16, 16));
-        miMatHang.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_M, InputEvent.CTRL_DOWN_MASK));
-        miMatHang.addActionListener(e -> openTab("Danh mục mặt hàng", new DanhMucMatHangPanel()));
-
-        JMenuItem miKhachHang = new JMenuItem("Danh mục khách hàng");
-        miKhachHang.setIcon(IconHelper.getIcon("users.png", 16, 16));
-        miKhachHang.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_K, InputEvent.CTRL_DOWN_MASK));
-        miKhachHang.addActionListener(e -> openTab("Danh mục khách hàng", new DanhMucKhachHangPanel()));
-
-        JMenuItem miTinNhan = new JMenuItem("Gửi tin nhắn tới khách hàng");
-        miTinNhan.setIcon(IconHelper.getIcon("mail-send.png", 16, 16));
-        miTinNhan.addActionListener(e -> openTab("Gửi tin nhắn tới khách hàng", createPlaceholderPanel("Gửi tin nhắn tới khách hàng")));
-
-        JMenuItem miKhuyenMai = new JMenuItem("Danh mục đợt khuyến mại");
-        miKhuyenMai.setIcon(IconHelper.getIcon("bookmark-import.png", 16, 16));
-        miKhuyenMai.addActionListener(e -> openTab("Danh mục đợt khuyến mại", new DanhMucDotKhuyenMaiPanel()));
-
-        JMenuItem miThanThiet = new JMenuItem("Khách hàng thân thiết");
-        miThanThiet.setIcon(IconHelper.getIcon("btnCard.Icon.png", 16, 16));
-        miThanThiet.addActionListener(e -> openTab("Khách hàng thân thiết", new KhachHangThanThietPanel()));
+        JMenuItem miCuaHang = createFunctionMenuItem("Danh mục cửa hàng", "Folder2.png", e -> new CuaHangDialog(this).setVisible(true));
+        JMenuItem miMatHang = createFunctionMenuItem("Danh mục mặt hàng", "1282529873_objects.png", KeyStroke.getKeyStroke(KeyEvent.VK_M, InputEvent.CTRL_DOWN_MASK), e -> openTab("Danh mục mặt hàng", new DanhMucMatHangPanel()));
+        JMenuItem miKhachHang = createFunctionMenuItem("Danh mục khách hàng", "users.png", KeyStroke.getKeyStroke(KeyEvent.VK_K, InputEvent.CTRL_DOWN_MASK), e -> openTab("Danh mục khách hàng", new DanhMucKhachHangPanel()));
+        JMenuItem miTinNhan = createFunctionMenuItem("Gửi tin nhắn tới khách hàng", "mail-send.png", e -> openTab("Gửi tin nhắn tới khách hàng", createPlaceholderPanel("Gửi tin nhắn tới khách hàng")));
+        JMenuItem miKhuyenMai = createFunctionMenuItem("Danh mục đợt khuyến mại", "bookmark-import.png", e -> openTab("Danh mục đợt khuyến mại", new DanhMucDotKhuyenMaiPanel()));
+        JMenuItem miThanThiet = createFunctionMenuItem("Khách hàng thân thiết", "btnCard.Icon.png", e -> openTab("Khách hàng thân thiết", new KhachHangThanThietPanel()));
 
         mHoatDong.add(miCuaHang);
         mHoatDong.add(miMatHang);
@@ -300,13 +297,8 @@ public class MainFrame extends JFrame {
         mHoatDong.addSeparator();
 
         // Group 2: Báo giá & Đặt hàng
-        JMenuItem miBaoGia = new JMenuItem("Báo giá bán hàng");
-        miBaoGia.setIcon(IconHelper.getIcon("report--pencil.png", 16, 16));
-        miBaoGia.addActionListener(e -> openTab("Báo giá bán hàng", new BaoGiaBanHangPanel()));
-
-        JMenuItem miDatHang = new JMenuItem("Khách đặt hàng");
-        miDatHang.setIcon(IconHelper.getIcon("tsbLogedUser.Image.png", 16, 16));
-        miDatHang.addActionListener(e -> openTab("Khách đặt hàng", new KhachDatHangPanel()));
+        JMenuItem miBaoGia = createFunctionMenuItem("Báo giá bán hàng", "Báo giá", "report--pencil.png", null, e -> openTab("Báo giá bán hàng", new BaoGiaBanHangPanel()));
+        JMenuItem miDatHang = createFunctionMenuItem("Khách đặt hàng", "Đặt hàng", "tsbLogedUser.Image.png", null, e -> openTab("Khách đặt hàng", new KhachDatHangPanel()));
 
         mHoatDong.add(miBaoGia);
         mHoatDong.add(miDatHang);
@@ -315,15 +307,8 @@ public class MainFrame extends JFrame {
         mHoatDong.addSeparator();
 
         // Group 3: Bán hàng & Hóa đơn
-        JMenuItem miHoaDon = new JMenuItem("Hóa đơn bán hàng");
-        miHoaDon.setIcon(IconHelper.getIcon("btnNew.Image.png", 16, 16));
-        miHoaDon.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_H, InputEvent.CTRL_DOWN_MASK));
-        miHoaDon.addActionListener(e -> openTab("Hóa đơn bán hàng", new HoaDonBanHangPanel()));
-
-        JMenuItem miQLBanHang = new JMenuItem("Quản lý bán hàng");
-        miQLBanHang.setIcon(IconHelper.getIcon("btnOpen.Image.png", 16, 16));
-        miQLBanHang.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Q, InputEvent.CTRL_DOWN_MASK));
-        miQLBanHang.addActionListener(e -> openTab("Quản lý bán hàng", new QuanLyBanHangPanel()));
+        JMenuItem miHoaDon = createFunctionMenuItem("Hóa đơn bán hàng", "btnNew.Image.png", KeyStroke.getKeyStroke(KeyEvent.VK_H, InputEvent.CTRL_DOWN_MASK), e -> openTab("Hóa đơn bán hàng", new HoaDonBanHangPanel()));
+        JMenuItem miQLBanHang = createFunctionMenuItem("Quản lý bán hàng", "btnOpen.Image.png", KeyStroke.getKeyStroke(KeyEvent.VK_Q, InputEvent.CTRL_DOWN_MASK), e -> openTab("Quản lý bán hàng", new QuanLyBanHangPanel()));
 
         mHoatDong.add(miHoaDon);
         mHoatDong.add(miQLBanHang);
@@ -332,9 +317,7 @@ public class MainFrame extends JFrame {
         mHoatDong.addSeparator();
 
         // Group 4: Nhật ký
-        JMenuItem miLuuVet = new JMenuItem("Lưu vết hoạt động");
-        miLuuVet.setIcon(IconHelper.getIcon("tsbLog.Image.png", 16, 16));
-        miLuuVet.addActionListener(e -> openTab("Lưu vết hoạt động", createPlaceholderPanel("Lưu vết hoạt động")));
+        JMenuItem miLuuVet = createFunctionMenuItem("Lưu vết hoạt động", "tsbLog.Image.png", e -> openTab("Lưu vết hoạt động", createPlaceholderPanel("Lưu vết hoạt động")));
 
         mHoatDong.add(miLuuVet);
 
@@ -342,23 +325,10 @@ public class MainFrame extends JFrame {
         mHoatDong.addSeparator();
 
         // Group 5: Thống kê & Báo cáo
-        JMenuItem miTKDoanhThu = new JMenuItem("Thống kê doanh thu");
-        miTKDoanhThu.setIcon(IconHelper.getIcon("Statistic16.png", 16, 16));
-        miTKDoanhThu.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_T, InputEvent.CTRL_DOWN_MASK));
-        miTKDoanhThu.addActionListener(e -> openTab("Thống kê doanh thu", createPlaceholderPanel("Thống kê doanh thu")));
-
-        JMenuItem miTKMatHang = new JMenuItem("Thống kê mặt hàng bán");
-        miTKMatHang.setIcon(IconHelper.getIcon("Tree.png", 16, 16));
-        miTKMatHang.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_L, InputEvent.CTRL_DOWN_MASK));
-        miTKMatHang.addActionListener(e -> openTab("Thống kê mặt hàng bán", createPlaceholderPanel("Thống kê mặt hàng bán")));
-
-        JMenuItem miTongHopKQKD = new JMenuItem("Tổng hợp kết quả kinh doanh");
-        miTongHopKQKD.setIcon(IconHelper.getIcon("Report.png", 16, 16));
-        miTongHopKQKD.addActionListener(e -> openTab("Tổng hợp KQKD", createPlaceholderPanel("Tổng hợp kết quả kinh doanh")));
-
-        JMenuItem miChiTietHD = new JMenuItem("Chi tiết hoạt động ngày");
-        miChiTietHD.setIcon(IconHelper.getIcon("arrow-000-medium.png", 16, 16));
-        miChiTietHD.addActionListener(e -> openTab("Chi tiết hoạt động", createPlaceholderPanel("Chi tiết hoạt động")));
+        JMenuItem miTKDoanhThu = createFunctionMenuItem("Thống kê doanh thu", "Statistic16.png", KeyStroke.getKeyStroke(KeyEvent.VK_T, InputEvent.CTRL_DOWN_MASK), e -> openTab("Thống kê doanh thu", createPlaceholderPanel("Thống kê doanh thu")));
+        JMenuItem miTKMatHang = createFunctionMenuItem("Thống kê mặt hàng bán", "Tree.png", KeyStroke.getKeyStroke(KeyEvent.VK_L, InputEvent.CTRL_DOWN_MASK), e -> openTab("Thống kê mặt hàng bán", createPlaceholderPanel("Thống kê mặt hàng bán")));
+        JMenuItem miTongHopKQKD = createFunctionMenuItem("Tổng hợp kết quả kinh doanh", "Report.png", e -> openTab("Tổng hợp KQKD", createPlaceholderPanel("Tổng hợp kết quả kinh doanh")));
+        JMenuItem miChiTietHD = createFunctionMenuItem("Chi tiết hoạt động ngày", "arrow-000-medium.png", e -> openTab("Chi tiết hoạt động", createPlaceholderPanel("Chi tiết hoạt động")));
 
         mHoatDong.add(miTKDoanhThu);
         mHoatDong.add(miTKMatHang);
@@ -368,42 +338,20 @@ public class MainFrame extends JFrame {
         // 3. KHO HÀNG
         JMenu mKhoHang = new JMenu("KHO HÀNG");
 
-        JMenuItem miKhoHang = new JMenuItem("Danh mục kho hàng");
-        miKhoHang.setIcon(IconHelper.getIcon("Home.png", 16, 16));
-        miKhoHang.addActionListener(e -> new KhoHangDialog(this).setVisible(true));
-
-        JMenuItem miNCC = new JMenuItem("Danh mục nhà cung cấp");
-        miNCC.setIcon(IconHelper.getIcon("users.png", 16, 16));
-        miNCC.addActionListener(e -> openTab("Danh mục nhà cung cấp", new DanhMucNhaCungCapPanel()));
+        JMenuItem miKhoHang = createFunctionMenuItem("Danh mục kho hàng", "Home.png", e -> new KhoHangDialog(this).setVisible(true));
+        JMenuItem miNCC = createFunctionMenuItem("Danh mục nhà cung cấp", "users.png", e -> openTab("Danh mục nhà cung cấp", new DanhMucNhaCungCapPanel()));
 
         mKhoHang.add(miKhoHang);
         mKhoHang.add(miNCC);
 
         mKhoHang.addSeparator();
 
-        JMenuItem miDatHangNCC = new JMenuItem("Đặt hàng nhà cung cấp");
-        miDatHangNCC.setIcon(IconHelper.getIcon("report--pencil.png", 16, 16));
-        miDatHangNCC.addActionListener(e -> openTab("Đặt hàng nhà cung cấp", new DatHangNhaCungCapPanel()));
-
-        JMenuItem miNhapKho = new JMenuItem("Nhập hàng vào kho");
-        miNhapKho.setIcon(IconHelper.getIcon("navigation-000-frame.png", 16, 16));
-        miNhapKho.addActionListener(e -> openTab("Quản lý nhập kho", new QuanLyNhapKhoPanel()));
-
-        JMenuItem miXuatKhac = new JMenuItem("Xuất kho");
-        miXuatKhac.setIcon(IconHelper.getIcon("navigation-180-frame.png", 16, 16));
-        miXuatKhac.addActionListener(e -> openTab("Quản lý xuất kho", new QuanLyXuatKhoPanel()));
-
-        JMenuItem miChuyenKho = new JMenuItem("Chuyển kho");
-        miChuyenKho.setIcon(IconHelper.getIcon("document_valid.png", 16, 16));
-        miChuyenKho.addActionListener(e -> openTab("Quản lý chuyển kho", new QuanLyChuyenKhoPanel()));
-
-        JMenuItem miKiemKe = new JMenuItem("Kiểm kê kho");
-        miKiemKe.setIcon(IconHelper.getIcon("edit-column.png", 16, 16));
-        miKiemKe.addActionListener(e -> openTab("Quản lý kiểm kê", new QuanLyKiemKePanel()));
-
-        JMenuItem miTinhGiaVon = new JMenuItem("Tính lại giá vốn");
-        miTinhGiaVon.setIcon(IconHelper.getIcon("Refresh.png", 16, 16));
-        miTinhGiaVon.addActionListener(e -> new TinhLaiGiaVonDialog(this).setVisible(true));
+        JMenuItem miDatHangNCC = createFunctionMenuItem("Đặt hàng nhà cung cấp", "Quản lý đặt hàng nhà cung cấp", "report--pencil.png", null, e -> openTab("Đặt hàng nhà cung cấp", new DatHangNhaCungCapPanel()));
+        JMenuItem miNhapKho = createFunctionMenuItem("Nhập hàng vào kho", "Nhập kho", "navigation-000-frame.png", null, e -> openTab("Quản lý nhập kho", new QuanLyNhapKhoPanel()));
+        JMenuItem miXuatKhac = createFunctionMenuItem("Xuất kho", "navigation-180-frame.png", e -> openTab("Quản lý xuất kho", new QuanLyXuatKhoPanel()));
+        JMenuItem miChuyenKho = createFunctionMenuItem("Chuyển kho", "document_valid.png", e -> openTab("Quản lý chuyển kho", new QuanLyChuyenKhoPanel()));
+        JMenuItem miKiemKe = createFunctionMenuItem("Kiểm kê kho", "edit-column.png", e -> openTab("Quản lý kiểm kê", new QuanLyKiemKePanel()));
+        JMenuItem miTinhGiaVon = createFunctionMenuItem("Tính lại giá vốn", "Refresh.png", e -> new TinhLaiGiaVonDialog(this).setVisible(true));
 
         mKhoHang.add(miDatHangNCC);
         mKhoHang.add(miNhapKho);
@@ -414,14 +362,8 @@ public class MainFrame extends JFrame {
 
         mKhoHang.addSeparator();
 
-        JMenuItem miTonKho = new JMenuItem("Tồn kho");
-        miTonKho.setIcon(IconHelper.getIcon("Folder.png", 16, 16));
-        miTonKho.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_T, InputEvent.CTRL_DOWN_MASK | InputEvent.SHIFT_DOWN_MASK));
-        miTonKho.addActionListener(e -> openTab("Tồn kho", new QuanLyTonKhoPanel()));
-
-        JMenuItem miTonNhieuKho = new JMenuItem("Tồn nhiều kho");
-        miTonNhieuKho.setIcon(IconHelper.getIcon("tsbTimeStamp.Image.png", 16, 16));
-        miTonNhieuKho.addActionListener(e -> openTab("Tồn nhiều kho", new QuanLyTonNhieuKhoPanel()));
+        JMenuItem miTonKho = createFunctionMenuItem("Tồn kho", "Folder.png", KeyStroke.getKeyStroke(KeyEvent.VK_T, InputEvent.CTRL_DOWN_MASK | InputEvent.SHIFT_DOWN_MASK), e -> openTab("Tồn kho", new QuanLyTonKhoPanel()));
+        JMenuItem miTonNhieuKho = createFunctionMenuItem("Tồn nhiều kho", "Tồn kho", "tsbTimeStamp.Image.png", null, e -> openTab("Tồn nhiều kho", new QuanLyTonNhieuKhoPanel()));
 
         mKhoHang.add(miTonKho);
         mKhoHang.add(miTonNhieuKho);
@@ -429,36 +371,18 @@ public class MainFrame extends JFrame {
         // 4. QUỸ
         JMenu mQuy = new JMenu("QUỸ");
 
-        JMenuItem miLyDoTC = new JMenuItem("Danh mục lý do thu chi");
-        miLyDoTC.setIcon(IconHelper.getIcon("congno.png", 16, 16));
-        miLyDoTC.addActionListener(e -> new LyDoThuChiDialog(this).setVisible(true));
-
-        JMenuItem miTKNH = new JMenuItem("Danh mục tài khoản ngân hàng");
-        miTKNH.setIcon(IconHelper.getIcon("database1.png", 16, 16));
-        miTKNH.addActionListener(e -> new TaiKhoanNganHangDialog(this).setVisible(true));
+        JMenuItem miLyDoTC = createFunctionMenuItem("Danh mục lý do thu chi", "congno.png", e -> new LyDoThuChiDialog(this).setVisible(true));
+        JMenuItem miTKNH = createFunctionMenuItem("Danh mục tài khoản ngân hàng", "database1.png", e -> new TaiKhoanNganHangDialog(this).setVisible(true));
 
         mQuy.add(miLyDoTC);
         mQuy.add(miTKNH);
 
         mQuy.addSeparator();
 
-        JMenuItem miTaoThu = new JMenuItem("Tạo phiếu thu");
-        miTaoThu.setIcon(IconHelper.getIcon("arrow-000-medium.png", 16, 16));
-        miTaoThu.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_T, InputEvent.CTRL_DOWN_MASK | InputEvent.SHIFT_DOWN_MASK));
-        miTaoThu.addActionListener(e -> new TaoPhieuThuDialog(this).setVisible(true));
-
-        JMenuItem miTaoChi = new JMenuItem("Tạo phiếu chi");
-        miTaoChi.setIcon(IconHelper.getIcon("arrow-180-medium.png", 16, 16));
-        miTaoChi.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C, InputEvent.CTRL_DOWN_MASK | InputEvent.SHIFT_DOWN_MASK));
-        miTaoChi.addActionListener(e -> new TaoPhieuChiDialog(this).setVisible(true));
-
-        JMenuItem miDSThu = new JMenuItem("Danh mục phiếu thu");
-        miDSThu.setIcon(IconHelper.getIcon("btnCard.Icon.png", 16, 16));
-        miDSThu.addActionListener(e -> openTab("Danh mục phiếu thu", new DanhMucPhieuThuPanel()));
-
-        JMenuItem miDSChi = new JMenuItem("Danh mục phiếu chi");
-        miDSChi.setIcon(IconHelper.getIcon("tsbTimeStamp.Image.png", 16, 16));
-        miDSChi.addActionListener(e -> openTab("Danh mục phiếu chi", new DanhMucPhieuChiPanel()));
+        JMenuItem miTaoThu = createFunctionMenuItem("Tạo phiếu thu", "Thu chi", "arrow-000-medium.png", KeyStroke.getKeyStroke(KeyEvent.VK_T, InputEvent.CTRL_DOWN_MASK | InputEvent.SHIFT_DOWN_MASK), e -> new TaoPhieuThuDialog(this).setVisible(true));
+        JMenuItem miTaoChi = createFunctionMenuItem("Tạo phiếu chi", "Thu chi", "arrow-180-medium.png", KeyStroke.getKeyStroke(KeyEvent.VK_C, InputEvent.CTRL_DOWN_MASK | InputEvent.SHIFT_DOWN_MASK), e -> new TaoPhieuChiDialog(this).setVisible(true));
+        JMenuItem miDSThu = createFunctionMenuItem("Danh mục phiếu thu", "Danh mục phiếu thu chi", "btnCard.Icon.png", null, e -> openTab("Danh mục phiếu thu", new DanhMucPhieuThuPanel()));
+        JMenuItem miDSChi = createFunctionMenuItem("Danh mục phiếu chi", "Danh mục phiếu thu chi", "tsbTimeStamp.Image.png", null, e -> openTab("Danh mục phiếu chi", new DanhMucPhieuChiPanel()));
 
         mQuy.add(miTaoThu);
         mQuy.add(miTaoChi);
@@ -467,22 +391,15 @@ public class MainFrame extends JFrame {
 
         mQuy.addSeparator();
 
-        JMenuItem miTonQuy = new JMenuItem("Tồn quỹ");
-        miTonQuy.setIcon(IconHelper.getIcon("report--pencil.png", 16, 16));
-        miTonQuy.addActionListener(e -> openTab("Tồn quỹ", new TonQuyPanel()));
+        JMenuItem miTonQuy = createFunctionMenuItem("Tồn quỹ", "report--pencil.png", e -> openTab("Tồn quỹ", new TonQuyPanel()));
 
         mQuy.add(miTonQuy);
 
         // 5. CÔNG NỢ
         JMenu mCongNo = new JMenu("CÔNG NỢ");
 
-        JMenuItem miCongNoKH = new JMenuItem("Công nợ khách hàng");
-        miCongNoKH.setIcon(IconHelper.getIcon("congno.png", 16, 16));
-        miCongNoKH.addActionListener(e -> openTab("Công nợ khách hàng", new QuanLyCongNoKhachHangPanel()));
-
-        JMenuItem miCongNoNCC = new JMenuItem("Công nợ nhà cung cấp");
-        miCongNoNCC.setIcon(IconHelper.getIcon("tsbGenTotal.Image.png", 16, 16));
-        miCongNoNCC.addActionListener(e -> openTab("Công nợ nhà cung cấp", new QuanLyCongNoNhaCungCapPanel()));
+        JMenuItem miCongNoKH = createFunctionMenuItem("Công nợ khách hàng", "congno.png", e -> openTab("Công nợ khách hàng", new QuanLyCongNoKhachHangPanel()));
+        JMenuItem miCongNoNCC = createFunctionMenuItem("Công nợ nhà cung cấp", "tsbGenTotal.Image.png", e -> openTab("Công nợ nhà cung cấp", new QuanLyCongNoNhaCungCapPanel()));
 
         mCongNo.add(miCongNoKH);
         mCongNo.add(miCongNoNCC);
@@ -490,34 +407,18 @@ public class MainFrame extends JFrame {
         // 6. NHÂN SỰ
         JMenu mNhanSu = new JMenu("NHÂN SỰ");
 
-        JMenuItem miNhanVien = new JMenuItem("Danh mục nhân viên");
-        miNhanVien.setIcon(IconHelper.getIcon("users.png", 16, 16));
-        miNhanVien.addActionListener(e -> new NhanVienDialog(this).setVisible(true));
-
-        JMenuItem miCaLamViec = new JMenuItem("Danh mục ca làm việc");
-        miCaLamViec.setIcon(IconHelper.getIcon("property.png", 16, 16));
-        miCaLamViec.addActionListener(e -> new CaLamViecDialog(this).setVisible(true));
+        JMenuItem miNhanVien = createFunctionMenuItem("Danh mục nhân viên", "users.png", e -> new NhanVienDialog(this).setVisible(true));
+        JMenuItem miCaLamViec = createFunctionMenuItem("Danh mục ca làm việc", "property.png", e -> new CaLamViecDialog(this).setVisible(true));
 
         mNhanSu.add(miNhanVien);
         mNhanSu.add(miCaLamViec);
 
         mNhanSu.addSeparator();
 
-        JMenuItem miTamUng = new JMenuItem("Tạm ứng lương");
-        miTamUng.setIcon(IconHelper.getIcon("receipt--pencil.png", 16, 16));
-        miTamUng.addActionListener(e -> openTab("Tạm ứng lương", new TamUngLuongPanel()));
-
-        JMenuItem miThuongPhat = new JMenuItem("Thưởng phạt");
-        miThuongPhat.setIcon(IconHelper.getIcon("asterisk-yellow.png", 16, 16));
-        miThuongPhat.addActionListener(e -> openTab("Thưởng phạt", new ThuongPhatPanel()));
-
-        JMenuItem miChamCong = new JMenuItem("Chấm công");
-        miChamCong.setIcon(IconHelper.getIcon("document_valid.png", 16, 16));
-        miChamCong.addActionListener(e -> openTab("Chấm công", new ChamCongPanel()));
-
-        JMenuItem miTinhLuong = new JMenuItem("Tính lương");
-        miTinhLuong.setIcon(IconHelper.getIcon("Statistic16.png", 16, 16));
-        miTinhLuong.addActionListener(e -> openTab("Tính lương", new TinhLuongPanel()));
+        JMenuItem miTamUng = createFunctionMenuItem("Tạm ứng lương", "receipt--pencil.png", e -> openTab("Tạm ứng lương", new TamUngLuongPanel()));
+        JMenuItem miThuongPhat = createFunctionMenuItem("Thưởng phạt", "Quản lý thưởng phạt", "asterisk-yellow.png", null, e -> openTab("Thưởng phạt", new ThuongPhatPanel()));
+        JMenuItem miChamCong = createFunctionMenuItem("Chấm công", "document_valid.png", e -> openTab("Chấm công", new ChamCongPanel()));
+        JMenuItem miTinhLuong = createFunctionMenuItem("Tính lương", "Statistic16.png", e -> openTab("Tính lương", new TinhLuongPanel()));
 
         mNhanSu.add(miTamUng);
         mNhanSu.add(miThuongPhat);
@@ -527,19 +428,15 @@ public class MainFrame extends JFrame {
         // 7. QUẢN TRỊ
         JMenu mQuanTri = new JMenu("QUẢN TRỊ");
 
-        JMenuItem miThuVienAnh = new JMenuItem("Thư viện ảnh...");
-        miThuVienAnh.addActionListener(e -> openTab("Thư viện ảnh", createPlaceholderPanel("Thư viện ảnh")));
+        JMenuItem miThuVienAnh = createFunctionMenuItem("Thư viện ảnh...", "Thư viện ảnh", null, null, e -> openTab("Thư viện ảnh", createPlaceholderPanel("Thư viện ảnh")));
         mQuanTri.add(miThuVienAnh);
 
         mQuanTri.addSeparator();
 
         JMenu mDuLieuBanDau = new JMenu("Dữ liệu ban đầu");
-        JMenuItem miCongNoKHBD = new JMenuItem("Công nợ khách hàng ban đầu");
-        JMenuItem miCongNoNCCBD = new JMenuItem("Công nợ nhà cung cấp ban đầu");
-        JMenuItem miTonKhoBD = new JMenuItem("Tồn kho ban đầu");
-        miCongNoKHBD.addActionListener(e -> new CongNoKhachHangBanDauDialog(this).setVisible(true));
-        miCongNoNCCBD.addActionListener(e -> new CongNoNhaCungCapBanDauDialog(this).setVisible(true));
-        miTonKhoBD.addActionListener(e -> {
+        JMenuItem miCongNoKHBD = createFunctionMenuItem("Công nợ khách hàng ban đầu", "Dữ liệu ban đầu", null, null, e -> new CongNoKhachHangBanDauDialog(this).setVisible(true));
+        JMenuItem miCongNoNCCBD = createFunctionMenuItem("Công nợ nhà cung cấp ban đầu", "Dữ liệu ban đầu", null, null, e -> new CongNoNhaCungCapBanDauDialog(this).setVisible(true));
+        JMenuItem miTonKhoBD = createFunctionMenuItem("Tồn kho ban đầu", "Dữ liệu ban đầu", null, null, e -> {
             ChonKhoBanDauDialog selectDlg = new ChonKhoBanDauDialog(this);
             selectDlg.setVisible(true);
             if (selectDlg.isConfirmed() && selectDlg.getSelectedKho() != null) {
@@ -551,21 +448,10 @@ public class MainFrame extends JFrame {
         mDuLieuBanDau.add(miTonKhoBD);
         mQuanTri.add(mDuLieuBanDau);
 
-        JMenuItem miChiTieuDT = new JMenuItem("Chỉ tiêu doanh thu");
-        miChiTieuDT.setIcon(IconHelper.getIcon("property.png", 16, 16));
-        miChiTieuDT.addActionListener(e -> openTab("Chỉ tiêu doanh thu", new kazuko.ex.ui.quantri.ChiTieuDoanhThuPanel()));
-
-        JMenuItem miXoaDuLieu = new JMenuItem("Xóa dữ liệu");
-        miXoaDuLieu.setIcon(IconHelper.getIcon("clear.png", 16, 16));
-        miXoaDuLieu.addActionListener(e -> openTab("Xóa dữ liệu", createPlaceholderPanel("Xóa dữ liệu")));
-
-        JMenuItem miDevTools = new JMenuItem("Công cụ nhà phát triển");
-        miDevTools.setIcon(IconHelper.getIcon("page_white_code.png", 16, 16));
-        miDevTools.addActionListener(e -> openTab("Công cụ nhà phát triển", createPlaceholderPanel("Công cụ nhà phát triển")));
-
-        JMenuItem miNguoiDung = new JMenuItem("Người dùng và phân quyền");
-        miNguoiDung.setIcon(IconHelper.getIcon("users.png", 16, 16));
-        miNguoiDung.addActionListener(e -> openTab("Người dùng và phân quyền", createPlaceholderPanel("Người dùng và phân quyền")));
+        JMenuItem miChiTieuDT = createFunctionMenuItem("Chỉ tiêu doanh thu", "Danh mục chỉ tiêu doanh thu", "property.png", null, e -> openTab("Chỉ tiêu doanh thu", new kazuko.ex.ui.quantri.ChiTieuDoanhThuPanel()));
+        JMenuItem miXoaDuLieu = createFunctionMenuItem("Xóa dữ liệu", "clear.png", e -> openTab("Xóa dữ liệu", createPlaceholderPanel("Xóa dữ liệu")));
+        JMenuItem miDevTools = createFunctionMenuItem("Công cụ nhà phát triển", "page_white_code.png", e -> openTab("Công cụ nhà phát triển", createPlaceholderPanel("Công cụ nhà phát triển")));
+        JMenuItem miNguoiDung = createFunctionMenuItem("Người dùng và phân quyền", "Quản lý người dùng", "users.png", null, e -> new QuanLyNguoiDungDialog(this).setVisible(true));
 
         mQuanTri.add(miChiTieuDT);
         mQuanTri.add(miXoaDuLieu);
@@ -574,11 +460,11 @@ public class MainFrame extends JFrame {
 
         mQuanTri.addSeparator();
 
-        JMenuItem miCauHinh = new JMenuItem("Cấu hình toàn hệ thống");
-        miCauHinh.setFont(miCauHinh.getFont().deriveFont(Font.BOLD));
-        miCauHinh.setIcon(IconHelper.getIcon("wrench-screwdriver.png", 16, 16));
-        miCauHinh.addActionListener(e -> new CauHinhToanHeThongDialog(this).setVisible(true));
-        mQuanTri.add(miCauHinh);
+        JMenuItem miCauHinh = createFunctionMenuItem("Cấu hình toàn hệ thống", "wrench-screwdriver.png", e -> new CauHinhToanHeThongDialog(this).setVisible(true));
+        if (miCauHinh != null) {
+            miCauHinh.setFont(miCauHinh.getFont().deriveFont(Font.BOLD));
+            mQuanTri.add(miCauHinh);
+        }
 
         // 8. BÁO CÁO
         JMenu mBaoCao = new JMenu("BÁO CÁO");
@@ -735,6 +621,11 @@ public class MainFrame extends JFrame {
         mBaoCao.add(mBaoCaoQuanTri);
         mBaoCao.add(mBaoCaoBieuDo);
 
+        // Hide entire Báo cáo menu if Báo cáo function is not permitted
+        if (!PermissionService.getInstance().isFunctionAllowed("Báo cáo")) {
+            mBaoCao.setVisible(false);
+        }
+
         // 9. TRỢ GIÚP
         JMenu mTroGiup = new JMenu("TRỢ GIÚP");
         mTroGiup.add(new JMenuItem("Đăng kí bản quyền"));
@@ -750,35 +641,110 @@ public class MainFrame extends JFrame {
         menuBar.add(mBaoCao);
         menuBar.add(mTroGiup);
 
+        applyPermissionsToMenuBar(menuBar);
+
         return menuBar;
+    }
+
+    private JMenuItem createFunctionMenuItem(String title, String functionName, String iconName, KeyStroke accelerator, ActionListener listener) {
+        JMenuItem mi = new JMenuItem(title);
+        if (iconName != null && !iconName.isEmpty()) {
+            ImageIcon icon = IconHelper.getIcon(iconName, 16, 16);
+            if (icon != null) {
+                mi.setIcon(icon);
+            }
+        }
+        if (accelerator != null) {
+            mi.setAccelerator(accelerator);
+        }
+        if (listener != null) {
+            mi.addActionListener(listener);
+        }
+
+        String checkName = (functionName != null && !functionName.isEmpty()) ? functionName : title;
+        boolean allowed = PermissionService.getInstance().isFunctionAllowed(checkName);
+        mi.setVisible(allowed);
+        mi.putClientProperty("permitted", allowed);
+        return mi;
+    }
+
+    private JMenuItem createFunctionMenuItem(String title, String iconName, ActionListener listener) {
+        return createFunctionMenuItem(title, title, iconName, null, listener);
+    }
+
+    private JMenuItem createFunctionMenuItem(String title, String iconName, KeyStroke accelerator, ActionListener listener) {
+        return createFunctionMenuItem(title, title, iconName, accelerator, listener);
+    }
+
+    private void applyPermissionsToMenuBar(JMenuBar menuBar) {
+        for (int i = 0; i < menuBar.getMenuCount(); i++) {
+            JMenu menu = menuBar.getMenu(i);
+            if (menu != null) {
+                cleanMenuAndEvaluateVisibility(menu);
+            }
+        }
+    }
+
+    private boolean cleanMenuAndEvaluateVisibility(JMenu menu) {
+        int visibleItemCount = 0;
+        Component[] components = menu.getPopupMenu().getComponents();
+        boolean previousWasSeparator = true;
+
+        for (Component c : components) {
+            if (c instanceof JMenu) {
+                JMenu subMenu = (JMenu) c;
+                boolean subHasVisible = cleanMenuAndEvaluateVisibility(subMenu);
+                subMenu.setVisible(subHasVisible);
+                if (subHasVisible) {
+                    visibleItemCount++;
+                    previousWasSeparator = false;
+                }
+            } else if (c instanceof JMenuItem) {
+                JMenuItem item = (JMenuItem) c;
+                if (item.isVisible()) {
+                    visibleItemCount++;
+                    previousWasSeparator = false;
+                }
+            } else if (c instanceof JPopupMenu.Separator || c instanceof JSeparator) {
+                if (previousWasSeparator) {
+                    c.setVisible(false);
+                } else {
+                    previousWasSeparator = true;
+                }
+            }
+        }
+
+        // Clean up trailing separator
+        for (int i = components.length - 1; i >= 0; i--) {
+            Component c = components[i];
+            if (c.isVisible()) {
+                if (c instanceof JPopupMenu.Separator || c instanceof JSeparator) {
+                    c.setVisible(false);
+                } else {
+                    break;
+                }
+            }
+        }
+
+        boolean isMenuVisible = (visibleItemCount > 0);
+        menu.setVisible(isMenuVisible);
+        return isMenuVisible;
     }
 
     private ResponsiveToolBar createRibbonToolBar() {
         ResponsiveToolBar bar = new ResponsiveToolBar();
 
-        JButton btnHoaDon = createToolButton("Hóa đơn", "btnNew.Image.png");
-        JButton btnQLBanHang = createToolButton("Quản lý bán hàng", "btnOpen.Image.png");
-        JButton btnTKDoanhThu = createToolButton("Thống kê doanh thu", "Statistic16.png");
-        JButton btnTKMatHang = createToolButton("Thống kê mặt hàng bán", "1282529873_objects.png");
-        JButton btnChiTietHD = createToolButton("Chi tiết hoạt động", "Report.png");
-        JButton btnTongHopKQKD = createToolButton("Tổng hợp KQKD", "Tree.png");
-        JButton btnTonKho = createToolButton("Tồn kho", "Folder2.png");
-        JButton btnGhiChu = createToolButton("Ghi chú", "FilterEdit.png");
-        JButton btnBaoCao = createToolButton("Báo cáo", "Preview.png");
-        JButton btnThoat = createToolButton("Thoát", "Cancelled.png");
-        JButton btnMoNhanh = createToolButton("Mở nhanh", "tsbQuickOpen.Image.png");
-
-        btnHoaDon.addActionListener(e -> openTab("Hóa đơn bán hàng", new HoaDonBanHangPanel()));
-        btnQLBanHang.addActionListener(e -> openTab("Quản lý bán hàng", new QuanLyBanHangPanel()));
-        btnTKDoanhThu.addActionListener(e -> openTab("Thống kê doanh thu", createPlaceholderPanel("Thống kê doanh thu")));
-        btnTKMatHang.addActionListener(e -> openTab("Danh mục mặt hàng", new DanhMucMatHangPanel()));
-        btnChiTietHD.addActionListener(e -> openTab("Chi tiết hoạt động", createPlaceholderPanel("Chi tiết hoạt động")));
-        btnTongHopKQKD.addActionListener(e -> openTab("Tổng hợp KQKD", createPlaceholderPanel("Tổng hợp kết quả kinh doanh")));
-        btnTonKho.addActionListener(e -> openTab("Tồn kho", new QuanLyTonKhoPanel()));
-        btnGhiChu.addActionListener(e -> openTab("Ghi chú", createPlaceholderPanel("Ghi chú")));
-        btnBaoCao.addActionListener(e -> openTab("Báo cáo", createPlaceholderPanel("Báo cáo")));
-        btnThoat.addActionListener(e -> onExit());
-        btnMoNhanh.addActionListener(e -> openQuickSearchDialog());
+        JButton btnHoaDon = createRibbonToolButton("Hóa đơn", "Hóa đơn bán hàng", "btnNew.Image.png", e -> openTab("Hóa đơn bán hàng", new HoaDonBanHangPanel()));
+        JButton btnQLBanHang = createRibbonToolButton("Quản lý bán hàng", "Quản lý bán hàng", "btnOpen.Image.png", e -> openTab("Quản lý bán hàng", new QuanLyBanHangPanel()));
+        JButton btnTKDoanhThu = createRibbonToolButton("Thống kê doanh thu", "Thống kê doanh thu", "Statistic16.png", e -> openTab("Thống kê doanh thu", createPlaceholderPanel("Thống kê doanh thu")));
+        JButton btnTKMatHang = createRibbonToolButton("Thống kê mặt hàng bán", "Thống kê mặt hàng bán", "1282529873_objects.png", e -> openTab("Danh mục mặt hàng", new DanhMucMatHangPanel()));
+        JButton btnChiTietHD = createRibbonToolButton("Chi tiết hoạt động", "Chi tiết hoạt động ngày", "Report.png", e -> openTab("Chi tiết hoạt động", createPlaceholderPanel("Chi tiết hoạt động")));
+        JButton btnTongHopKQKD = createRibbonToolButton("Tổng hợp KQKD", "Tổng hợp kết quả kinh doanh", "Tree.png", e -> openTab("Tổng hợp KQKD", createPlaceholderPanel("Tổng hợp kết quả kinh doanh")));
+        JButton btnTonKho = createRibbonToolButton("Tồn kho", "Tồn kho", "Folder2.png", e -> openTab("Tồn kho", new QuanLyTonKhoPanel()));
+        JButton btnGhiChu = createRibbonToolButton("Ghi chú", null, "FilterEdit.png", e -> openQuickNoteDialog());
+        JButton btnBaoCao = createRibbonToolButton("Báo cáo", "Báo cáo", "Preview.png", e -> openTab("Báo cáo", createPlaceholderPanel("Báo cáo")));
+        JButton btnThoat = createRibbonToolButton("Thoát", null, "Cancelled.png", e -> onExit());
+        JButton btnMoNhanh = createRibbonToolButton("Mở nhanh", null, "tsbQuickOpen.Image.png", e -> openQuickSearchDialog());
 
         bar.addToolButton(btnHoaDon);
         bar.addToolButton(btnQLBanHang);
@@ -795,6 +761,20 @@ public class MainFrame extends JFrame {
         return bar;
     }
 
+    private JButton createRibbonToolButton(String text, String functionName, String iconName, ActionListener listener) {
+        JButton btn = createToolButton(text, iconName);
+        if (listener != null) {
+            btn.addActionListener(listener);
+        }
+        boolean allowed = true;
+        if (functionName != null && !functionName.isEmpty()) {
+            allowed = PermissionService.getInstance().isFunctionAllowed(functionName);
+        }
+        btn.putClientProperty("permitted", allowed);
+        btn.setVisible(allowed);
+        return btn;
+    }
+
     private JButton createToolButton(String text, String iconName) {
         JButton btn = new JButton(text);
         if (iconName != null && !iconName.isEmpty()) {
@@ -808,6 +788,12 @@ public class MainFrame extends JFrame {
     }
 
     public void openTab(String title, JPanel panel) {
+        if (!PermissionService.getInstance().isFunctionAllowed(title)) {
+            JOptionPane.showMessageDialog(this,
+                    "Bạn không có quyền truy cập chức năng: " + title,
+                    "Thông báo", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
         int index = mainTabbedPane.indexOfTab(title);
         if (index >= 0) {
             mainTabbedPane.setSelectedIndex(index);
@@ -845,6 +831,10 @@ public class MainFrame extends JFrame {
         }
     }
 
+    private void openQuickNoteDialog() {
+        new GhiChuNhanhDialog(this).setVisible(true);
+    }
+
     private void openQuickSearchDialog() {
         QuickSearchDialog dialog = new QuickSearchDialog(this, this::handleQuickAction);
         dialog.setVisible(true);
@@ -852,7 +842,17 @@ public class MainFrame extends JFrame {
 
     private void handleQuickAction(String action) {
         if (action == null) return;
+        if (!PermissionService.getInstance().isFunctionAllowed(action) && !PermissionService.getInstance().isReportAllowed(action)) {
+            JOptionPane.showMessageDialog(this,
+                    "Bạn không có quyền truy cập chức năng: " + action,
+                    "Thông báo", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
         switch (action) {
+            case "GHI CHÚ":
+            case "GHI CHÚ NHANH":
+                openQuickNoteDialog();
+                break;
             case "DANH MỤC NHÂN VIÊN":
                 new NhanVienDialog(this).setVisible(true);
                 break;
@@ -1194,6 +1194,10 @@ public class MainFrame extends JFrame {
 
             int currentWidth = 0;
             for (JButton btn : buttons) {
+                if (Boolean.FALSE.equals(btn.getClientProperty("permitted"))) {
+                    btn.setVisible(false);
+                    continue;
+                }
                 int btnWidth = btn.getPreferredSize().width + 8;
                 if (currentWidth + btnWidth <= availableWidth) {
                     btn.setVisible(true);
@@ -1213,6 +1217,9 @@ public class MainFrame extends JFrame {
 
             boolean anyHidden = false;
             for (JButton btn : buttons) {
+                if (Boolean.FALSE.equals(btn.getClientProperty("permitted"))) {
+                    continue;
+                }
                 if (!btn.isVisible()) {
                     JMenuItem item = new JMenuItem(btn.getText(), btn.getIcon());
                     item.setFont(new Font("Segoe UI", Font.PLAIN, 12));
@@ -1227,6 +1234,9 @@ public class MainFrame extends JFrame {
 
             if (!anyHidden) {
                 for (JButton btn : buttons) {
+                    if (Boolean.FALSE.equals(btn.getClientProperty("permitted"))) {
+                        continue;
+                    }
                     JMenuItem item = new JMenuItem(btn.getText(), btn.getIcon());
                     item.setFont(new Font("Segoe UI", Font.PLAIN, 12));
                     item.setBackground(Color.WHITE);
@@ -1237,7 +1247,9 @@ public class MainFrame extends JFrame {
                 }
             }
 
-            popup.show(btnOverflow, btnOverflow.getWidth() - popup.getPreferredSize().width, btnOverflow.getHeight());
+            if (popup.getComponentCount() > 0) {
+                popup.show(btnOverflow, btnOverflow.getWidth() - popup.getPreferredSize().width, btnOverflow.getHeight());
+            }
         }
     }
 
