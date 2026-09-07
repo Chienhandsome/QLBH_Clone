@@ -2,12 +2,17 @@ package kazuko.ex.ui.quantri;
 
 import kazuko.ex.dao.ChiTieuDoanhThuDAO;
 import kazuko.ex.model.quantri.ChiTieuDoanhThu.Group;
+import kazuko.ex.util.IconHelper;
+
 import javax.swing.*;
+import javax.swing.border.CompoundBorder;
+import javax.swing.border.EmptyBorder;
+import javax.swing.border.LineBorder;
+import javax.swing.border.MatteBorder;
 import java.awt.*;
-import java.util.Map;
+import java.awt.event.KeyEvent;
+import java.util.*;
 import java.util.List;
-import java.util.HashSet;
-import java.util.Set;
 
 final class NhomChiTieuDialog extends JDialog {
     private String savedId;
@@ -18,61 +23,169 @@ final class NhomChiTieuDialog extends JDialog {
         return dialog.savedId;
     }
 
-    private record ImageChoice(String id, String name) { @Override public String toString() { return name; } }
+    private record ImageChoice(String id, String name) {
+        @Override
+        public String toString() {
+            return name;
+        }
+    }
 
     private NhomChiTieuDialog(Window owner, ChiTieuDoanhThuDAO dao, Group g) {
         super(owner, "Nhóm chỉ tiêu doanh thu", ModalityType.APPLICATION_MODAL);
-        JPanel body = new JPanel(new BorderLayout(10, 12));
-        body.setBorder(BorderFactory.createEmptyBorder(15, 15, 12, 15)); body.setBackground(ChiTieuUI.BLUE);
-        JLabel title = new JLabel(g.folder() ? "Thư mục chỉ tiêu doanh thu" : "Chỉnh sửa nhóm chỉ tiêu doanh thu");
-        title.setFont(ChiTieuUI.FONT.deriveFont(Font.BOLD, 14f)); body.add(title, BorderLayout.NORTH);
-        JPanel fields = new JPanel(new BorderLayout(10, 8)); fields.setOpaque(false);
-        JPanel top = new JPanel(new BorderLayout(8, 0)); top.setOpaque(false);
-        JTextField name = new JTextField(g.name());
-        JComboBox<ImageChoice> images = new JComboBox<>();
-        images.addItem(new ImageChoice(null, "Mặc định"));
-        try {
-            for (Map.Entry<String,String> image : dao.images().entrySet())
-                images.addItem(new ImageChoice(image.getKey(), image.getValue()));
-        } catch (Exception e) { images.setToolTipText("Không tải được danh sách ảnh: " + e.getMessage()); }
-        if (g.imageId() != null) {
-            boolean found = false;
-            for (int i=0; i<images.getItemCount(); i++) if (g.imageId().equals(images.getItemAt(i).id())) {
-                images.setSelectedIndex(i); found = true; break;
-            }
-            if (!found) { ImageChoice old = new ImageChoice(g.imageId(), "Ảnh hiện tại"); images.addItem(old); images.setSelectedItem(old); }
+        setLayout(new BorderLayout());
+        setResizable(false);
+
+        boolean isEditing = (g.id() != null);
+
+        // 1. Header Banner (Matching Screenshot 3)
+        JPanel banner = new JPanel(new BorderLayout(10, 0));
+        banner.setBackground(Color.WHITE);
+        banner.setBorder(new CompoundBorder(
+                new MatteBorder(0, 0, 1, 0, new Color(205, 215, 228)),
+                new EmptyBorder(8, 14, 8, 14)
+        ));
+
+        JLabel iconLabel = new JLabel(IconHelper.getIcon("icon_note_edit.png", 32, 32));
+        if (iconLabel.getIcon() == null) {
+            iconLabel.setIcon(IconHelper.getIcon("pencil.png", 28, 28));
         }
-        images.setPreferredSize(new Dimension(150, 26));
-        top.add(new JLabel("Tên nhóm:"), BorderLayout.WEST); top.add(name); top.add(images, BorderLayout.EAST);
-        JPanel headingFields=new JPanel(new BorderLayout(0,8));headingFields.setOpaque(false);headingFields.add(top,BorderLayout.NORTH);
-        JComboBox<Group> parents=new JComboBox<>();
-        parents.addItem(new Group(null,"Cấp cao nhất","",null,true,null,30));
+
+        JLabel titleLabel = new JLabel(isEditing ? "Chỉnh sửa nhóm chỉ tiêu doanh thu" : "Thêm mới nhóm chỉ tiêu doanh thu");
+        titleLabel.setFont(ChiTieuUI.FONT_TITLE);
+        titleLabel.setForeground(new Color(20, 45, 85));
+
+        banner.add(iconLabel, BorderLayout.WEST);
+        banner.add(titleLabel, BorderLayout.CENTER);
+        add(banner, BorderLayout.NORTH);
+
+        // 2. Form Body (Matching Screenshot 3)
+        JPanel form = new JPanel(new GridBagLayout());
+        form.setBackground(ChiTieuUI.COLOR_FORM_BG);
+        form.setBorder(new EmptyBorder(12, 14, 12, 14));
+
+        GridBagConstraints c = new GridBagConstraints();
+        c.insets = new Insets(4, 4, 4, 4);
+        c.fill = GridBagConstraints.HORIZONTAL;
+
+        // Row 1: Tên nhóm chỉ tiêu doanh thu + Ảnh
+        c.gridx = 0;
+        c.gridy = 0;
+        c.weightx = 0.0;
+        JLabel lblName = new JLabel("Tên nhóm chỉ tiêu doa...:");
+        lblName.setFont(ChiTieuUI.FONT);
+        form.add(lblName, c);
+
+        c.gridx = 1;
+        c.weightx = 1.0;
+        JTextField name = new JTextField(g.name(), 18);
+        name.setFont(ChiTieuUI.FONT);
+        name.setBackground(Color.WHITE);
+        name.setBorder(new CompoundBorder(new LineBorder(new Color(0, 102, 204), 1), new EmptyBorder(2, 4, 2, 4)));
+        form.add(name, c);
+
+        c.gridx = 2;
+        c.weightx = 0.0;
+        JLabel lblImg = new JLabel("Ảnh:");
+        lblImg.setFont(ChiTieuUI.FONT);
+        form.add(lblImg, c);
+
+        c.gridx = 3;
+        c.weightx = 0.0;
+        JComboBox<ImageChoice> image = new JComboBox<>();
+        image.setFont(ChiTieuUI.FONT);
+        image.setBackground(Color.WHITE);
+        image.setPreferredSize(new Dimension(90, 24));
+        image.addItem(new ImageChoice("", ""));
         try {
-            List<Group> all=dao.groups();Set<String> excluded=new HashSet<>();if(g.id()!=null)excluded.add(g.id());
-            boolean changed;
-            do {changed=false;for(Group item:all)if(excluded.contains(item.parentId()))changed|=excluded.add(item.id());}while(changed);
-            for(Group item:all)if(item.status()>=0&&!excluded.contains(item.id()))parents.addItem(item);
-            for(int i=0;i<parents.getItemCount();i++)if(java.util.Objects.equals(g.parentId(),parents.getItemAt(i).id()))parents.setSelectedIndex(i);
-        } catch(Exception e) { ChiTieuUI.error(this,e); }
-        JPanel parentLine=new JPanel(new BorderLayout(8,0));parentLine.setOpaque(false);
-        parentLine.add(new JLabel("Nhóm cha:"),BorderLayout.WEST);parentLine.add(parents);headingFields.add(parentLine);
-        fields.add(headingFields, BorderLayout.NORTH);
-        JTextArea note = new JTextArea(g.note(), 5, 40); note.setLineWrap(true); note.setWrapStyleWord(true);
-        JPanel notes = new JPanel(new BorderLayout(8, 0)); notes.setOpaque(false);
-        notes.add(new JLabel("Ghi chú:"), BorderLayout.WEST); notes.add(new JScrollPane(note)); fields.add(notes);
-        body.add(fields);
-        JPanel footer = new JPanel(new FlowLayout(FlowLayout.RIGHT)); footer.setOpaque(false);
-        Runnable save = () -> {
+            for (Map.Entry<String, String> entry : dao.images().entrySet()) {
+                image.addItem(new ImageChoice(entry.getKey(), entry.getValue()));
+                if (Objects.equals(entry.getKey(), g.imageId())) {
+                    image.setSelectedIndex(image.getItemCount() - 1);
+                }
+            }
+        } catch (Exception ignored) {}
+        form.add(image, c);
+
+        // Row 2: Ghi chú
+        c.gridx = 0;
+        c.gridy = 1;
+        c.weightx = 0.0;
+        c.anchor = GridBagConstraints.NORTHWEST;
+        JLabel lblNote = new JLabel("Ghi chú:");
+        lblNote.setFont(ChiTieuUI.FONT);
+        form.add(lblNote, c);
+
+        c.gridx = 1;
+        c.gridwidth = 3;
+        c.weightx = 1.0;
+        c.weighty = 1.0;
+        c.fill = GridBagConstraints.BOTH;
+        JTextArea note = new JTextArea(g.note(), 4, 20);
+        note.setFont(ChiTieuUI.FONT);
+        note.setLineWrap(true);
+        note.setWrapStyleWord(true);
+        note.setBorder(new EmptyBorder(4, 4, 4, 4));
+
+        JScrollPane scrollNote = new JScrollPane(note);
+        scrollNote.setBorder(new LineBorder(new Color(0, 102, 204), 1));
+        scrollNote.setPreferredSize(new Dimension(340, 85));
+        form.add(scrollNote, c);
+
+        add(form, BorderLayout.CENTER);
+
+        // 3. Footer Buttons (Matching Screenshot 3)
+        JPanel footer = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 8));
+        footer.setBackground(ChiTieuUI.COLOR_FOOTER_BG);
+        footer.setBorder(new MatteBorder(1, 0, 0, 0, ChiTieuUI.COLOR_FOOTER_BORDER));
+
+        JButton btnSave = new JButton("Ghi dữ liệu");
+        btnSave.setFont(ChiTieuUI.FONT_BOLD);
+        btnSave.setFocusPainted(false);
+        btnSave.setBackground(Color.WHITE);
+        btnSave.setPreferredSize(new Dimension(95, 26));
+
+        JButton btnCancel = new JButton("Thoát");
+        btnCancel.setFont(ChiTieuUI.FONT_BOLD);
+        btnCancel.setFocusPainted(false);
+        btnCancel.setBackground(Color.WHITE);
+        btnCancel.setPreferredSize(new Dimension(80, 26));
+
+        btnSave.addActionListener(e -> {
+            String n = name.getText().trim();
+            if (n.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Vui lòng nhập tên nhóm chỉ tiêu doanh thu.", "Cảnh báo", JOptionPane.WARNING_MESSAGE);
+                name.requestFocusInWindow();
+                return;
+            }
             try {
-                savedId = dao.saveGroup(new Group(g.id(), name.getText(), note.getText(), ((Group)parents.getSelectedItem()).id(), g.folder(),
-                        ((ImageChoice)images.getSelectedItem()).id(), g.status()));
+                ImageChoice img = (ImageChoice) image.getSelectedItem();
+                savedId = dao.saveGroup(new Group(
+                        g.id(),
+                        n,
+                        note.getText().trim(),
+                        g.parentId(),
+                        g.folder(),
+                        img == null ? null : img.id(),
+                        g.status()
+                ));
                 dispose();
-            } catch (Exception e) { ChiTieuUI.error(this, e); }
-        };
-        JButton saveButton = ChiTieuUI.button("Ghi dữ liệu", "Save.png", save);
-        footer.add(saveButton); footer.add(ChiTieuUI.button("Thoát", "", this::dispose)); body.add(footer, BorderLayout.SOUTH);
-        setContentPane(body); getRootPane().setDefaultButton(saveButton);
+            } catch (Exception ex) {
+                ChiTieuUI.error(this, ex);
+            }
+        });
+
+        btnCancel.addActionListener(e -> dispose());
+
+        footer.add(btnSave);
+        footer.add(btnCancel);
+        add(footer, BorderLayout.SOUTH);
+
+        // Phím tắt Enter & Escape
+        getRootPane().setDefaultButton(btnSave);
         ChiTieuUI.bind(getRootPane(), "ESCAPE", this::dispose);
-        setSize(620, 335); setLocationRelativeTo(owner);
+
+        pack();
+        setSize(480, 240);
+        setLocationRelativeTo(owner);
     }
 }

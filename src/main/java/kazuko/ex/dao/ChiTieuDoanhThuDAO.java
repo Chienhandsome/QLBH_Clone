@@ -214,22 +214,152 @@ public class ChiTieuDoanhThuDAO {
         return id;
     }
 
-    public void setTrash(String id, boolean group, boolean trash) throws SQLException {
-        try (Connection c = connect()) {
-            if (group && trash) {
-                try (PreparedStatement s = c.prepareStatement("SELECT ID FROM DCHITIEUDOANHTHU WHERE DNHOMCHITIEUDOANHTHUID=? "
-                        + "UNION ALL SELECT ID FROM DNHOMCHITIEUDOANHTHU WHERE PARENTID=?")) {
-                    s.setString(1, id); s.setString(2, id);
-                    try (ResultSet r = s.executeQuery()) {
-                        if (r.next()) throw new SQLException("Nhóm đang có kế hoạch hoặc nhóm con. Hãy chuyển các mục đó sang nhóm khác trước.");
+    public Set<String> getAllDescendantGroupIds(Connection c, String rootId) throws SQLException {
+        Set<String> allIds = new LinkedHashSet<>();
+        if (rootId == null || rootId.trim().isEmpty()) return allIds;
+        allIds.add(rootId.trim());
+
+        List<Group> allGroups = new ArrayList<>();
+        try (Statement s = c.createStatement();
+             ResultSet r = s.executeQuery("SELECT ID, PARENTID FROM DNHOMCHITIEUDOANHTHU")) {
+            while (r.next()) {
+                allGroups.add(new Group(r.getString("ID"), null, null, r.getString("PARENTID"), false, null, 0));
+            }
+        }
+
+        boolean added;
+        do {
+            added = false;
+            for (Group g : allGroups) {
+                if (g.parentId() != null && !g.parentId().trim().isEmpty() && g.id() != null) {
+                    if (allIds.contains(g.parentId().trim())) {
+                        if (allIds.add(g.id().trim())) {
+                            added = true;
+                        }
                     }
                 }
             }
-            String table = group ? "DNHOMCHITIEUDOANHTHU" : "DCHITIEUDOANHTHU";
-            try (PreparedStatement s = c.prepareStatement("UPDATE " + table
-                    + " SET STATUS=?,TIMEMODIFIED=CURRENT_TIMESTAMP,USERMODIFIEDID=? WHERE ID=?")) {
-                s.setInt(1, trash ? -1 : 30); s.setString(2, userId()); s.setString(3, id);
-                if (s.executeUpdate() != 1) throw new SQLException("Dữ liệu không còn tồn tại.");
+        } while (added);
+
+        return allIds;
+    }
+
+    public void setTrash(String id, boolean group, boolean trash) throws SQLException {
+        try (Connection c = connect()) {
+            c.setAutoCommit(false);
+            try {
+                int status = trash ? -1 : 30;
+                String user = userId();
+                if (group) {
+                    Set<String> groupIds = getAllDescendantGroupIds(c, id);
+                    if (!groupIds.isEmpty()) {
+                        StringBuilder inClause = new StringBuilder();
+                        for (int i = 0; i < groupIds.size(); i++) {
+                            if (i > 0) inClause.append(",");
+                            inClause.append("?");
+                        }
+
+                        // 1. Update groups status
+                        String updateGroupSql = "UPDATE DNHOMCHITIEUDOANHTHU SET STATUS=?, TIMEMODIFIED=CURRENT_TIMESTAMP, USERMODIFIEDID=? WHERE ID IN (" + inClause + ")";
+                        try (PreparedStatement s = c.prepareStatement(updateGroupSql)) {
+                            s.setInt(1, status);
+                            s.setString(2, user);
+                            int idx = 3;
+                            for (String gid : groupIds) {
+                                s.setString(idx++, gid);
+                            }
+                            s.executeUpdate();
+                        }
+
+                        // 2. Update plans status in those groups
+                        String updatePlanSql = "UPDATE DCHITIEUDOANHTHU SET STATUS=?, TIMEMODIFIED=CURRENT_TIMESTAMP, USERMODIFIEDID=? WHERE DNHOMCHITIEUDOANHTHUID IN (" + inClause + ")";
+                        try (PreparedStatement s = c.prepareStatement(updatePlanSql)) {
+                            s.setInt(1, status);
+                            s.setString(2, user);
+                            int idx = 3;
+                            for (String gid : groupIds) {
+                                s.setString(idx++, gid);
+                            }
+                            s.executeUpdate();
+                        }
+                    }
+                } else {
+                    String updatePlanSql = "UPDATE DCHITIEUDOANHTHU SET STATUS=?, TIMEMODIFIED=CURRENT_TIMESTAMP, USERMODIFIEDID=? WHERE ID=?";
+                    try (PreparedStatement s = c.prepareStatement(updatePlanSql)) {
+                        s.setInt(1, status);
+                        s.setString(2, user);
+                        s.setString(3, id);
+                        if (s.executeUpdate() != 1) throw new SQLException("Dữ liệu không còn tồn tại.");
+                    }
+                }
+                c.commit();
+            } catch (SQLException | RuntimeException e) {
+                c.rollback();
+                throw e;
+            }
+        }
+    }
+
+    public void deletePermanent(String id, boolean group) throws SQLException {
+        try (Connection c = connect()) {
+            c.setAutoCommit(false);
+            try {
+                if (group) {
+                    Set<String> groupIds = getAllDescendantGroupIds(c, id);
+                    if (!groupIds.isEmpty()) {
+                        StringBuilder inClause = new StringBuilder();
+                        for (int i = 0; i < groupIds.size(); i++) {
+                            if (i > 0) inClause.append(",");
+                            inClause.append("?");
+                        }
+
+                        // 1. Delete details in DCHITIEUCHITIET
+                        String delDetailsSql = "DELETE FROM DCHITIEUCHITIET WHERE DCHITIEUDOANHTHUID IN "
+                                + "(SELECT ID FROM DCHITIEUDOANHTHU WHERE DNHOMCHITIEUDOANHTHUID IN (" + inClause + "))";
+                        try (PreparedStatement s = c.prepareStatement(delDetailsSql)) {
+                            int idx = 1;
+                            for (String gid : groupIds) {
+                                s.setString(idx++, gid);
+                            }
+                            s.executeUpdate();
+                        }
+
+                        // 2. Delete plans in DCHITIEUDOANHTHU
+                        String delPlansSql = "DELETE FROM DCHITIEUDOANHTHU WHERE DNHOMCHITIEUDOANHTHUID IN (" + inClause + ")";
+                        try (PreparedStatement s = c.prepareStatement(delPlansSql)) {
+                            int idx = 1;
+                            for (String gid : groupIds) {
+                                s.setString(idx++, gid);
+                            }
+                            s.executeUpdate();
+                        }
+
+                        // 3. Delete groups in DNHOMCHITIEUDOANHTHU
+                        String delGroupsSql = "DELETE FROM DNHOMCHITIEUDOANHTHU WHERE ID IN (" + inClause + ")";
+                        try (PreparedStatement s = c.prepareStatement(delGroupsSql)) {
+                            int idx = 1;
+                            for (String gid : groupIds) {
+                                s.setString(idx++, gid);
+                            }
+                            s.executeUpdate();
+                        }
+                    }
+                } else {
+                    // 1. Delete details
+                    try (PreparedStatement s = c.prepareStatement("DELETE FROM DCHITIEUCHITIET WHERE DCHITIEUDOANHTHUID=?")) {
+                        s.setString(1, id);
+                        s.executeUpdate();
+                    }
+                    // 2. Delete plan
+                    try (PreparedStatement s = c.prepareStatement("DELETE FROM DCHITIEUDOANHTHU WHERE ID=?")) {
+                        s.setString(1, id);
+                        s.executeUpdate();
+                    }
+                }
+                c.commit();
+            } catch (SQLException | RuntimeException e) {
+                c.rollback();
+                throw e;
             }
         }
     }
