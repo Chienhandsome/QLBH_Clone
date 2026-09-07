@@ -2062,4 +2062,98 @@ public class DonHangDAO extends BaseDAO {
 
         return list;
     }
+
+    public List<kazuko.ex.model.khohang.TonNhieuKhoItem> getTonNhieuKhoMatrix() {
+        List<kazuko.ex.model.khohang.TonNhieuKhoItem> list = new ArrayList<>();
+        Map<String, Map<String, Double>> matrixStock = new HashMap<>();
+
+        // 1. Quét toàn bộ chi tiết xuất nhập phân nhóm theo mặt hàng và kho
+        String sqlNhap = "SELECT c.DMATHANGID, d.DKHONHAPID, SUM(c.SLNHAP) AS TONGNHAP " +
+                "FROM TDONHANGCHITIET c " +
+                "JOIN TDONHANG d ON c.TDONHANGID = d.ID " +
+                "WHERE (d.STATUS IS NULL OR d.STATUS >= 0) AND d.DKHONHAPID IS NOT NULL AND c.SLNHAP > 0 " +
+                "GROUP BY c.DMATHANGID, d.DKHONHAPID";
+
+        String sqlXuat = "SELECT c.DMATHANGID, d.DKHOXUATID, SUM(c.SLXUAT) AS TONGXUAT " +
+                "FROM TDONHANGCHITIET c " +
+                "JOIN TDONHANG d ON c.TDONHANGID = d.ID " +
+                "WHERE (d.STATUS IS NULL OR d.STATUS >= 0) AND d.DKHOXUATID IS NOT NULL AND c.SLXUAT > 0 " +
+                "GROUP BY c.DMATHANGID, d.DKHOXUATID";
+
+        try (Connection conn = getConnection()) {
+            try (PreparedStatement ps = conn.prepareStatement(sqlNhap);
+                 ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    String mhId = rs.getString("DMATHANGID");
+                    String kId = rs.getString("DKHONHAPID");
+                    double sl = rs.getDouble("TONGNHAP");
+                    if (mhId != null && kId != null) {
+                        matrixStock.computeIfAbsent(mhId.trim(), k -> new HashMap<>())
+                                .merge(kId.trim(), sl, Double::sum);
+                    }
+                }
+            }
+            try (PreparedStatement ps = conn.prepareStatement(sqlXuat);
+                 ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    String mhId = rs.getString("DMATHANGID");
+                    String kId = rs.getString("DKHOXUATID");
+                    double sl = rs.getDouble("TONGXUAT");
+                    if (mhId != null && kId != null) {
+                        matrixStock.computeIfAbsent(mhId.trim(), k -> new HashMap<>())
+                                .merge(kId.trim(), -sl, Double::sum);
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Lỗi getTonNhieuKhoMatrix stock: " + e.getMessage());
+        }
+
+        // 2. Lấy danh mục mặt hàng
+        String itemSql = "SELECT m.ID, m.CODE AS MA, m.NAME AS TENHANG, m.DNHOMMATHANGID, nh.NAME AS TENNHOM, " +
+                "m.QUYDOI, m.BAOHANH, m.TONTOITHIEU, " +
+                "dv1.NAME AS TENDVT1, dv2.NAME AS TENDVT2, hsx.NAME AS TENHANGSX " +
+                "FROM DMATHANG m " +
+                "LEFT JOIN DNHOMMATHANG nh ON m.DNHOMMATHANGID = nh.ID " +
+                "LEFT JOIN DDONVITINH dv1 ON m.DDONVITINHID = dv1.ID " +
+                "LEFT JOIN DDONVITINH dv2 ON m.DDONVITINHCHANID = dv2.ID " +
+                "LEFT JOIN DHANGSANXUAT hsx ON m.DHANGSANXUATID = hsx.ID " +
+                "WHERE (m.STATUS IS NULL OR m.STATUS >= 0) " +
+                "ORDER BY m.CODE ASC";
+
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(itemSql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                kazuko.ex.model.khohang.TonNhieuKhoItem item = new kazuko.ex.model.khohang.TonNhieuKhoItem();
+                String mhId = rs.getString("ID");
+                item.setMatHangId(mhId);
+                item.setMaHang(rs.getString("MA"));
+                item.setTenHang(rs.getString("TENHANG"));
+                item.setNhomHangId(rs.getString("DNHOMMATHANGID"));
+                item.setNhomHangName(rs.getString("TENNHOM"));
+                item.setDonViTinh(rs.getString("TENDVT1"));
+                item.setDonViTinh2(rs.getString("TENDVT2"));
+                item.setBaoHanh(rs.getString("BAOHANH"));
+                item.setHangSx(rs.getString("TENHANGSX"));
+                item.setTonToiThieu(rs.getDouble("TONTOITHIEU"));
+                double quyDoi = rs.getDouble("QUYDOI");
+                item.setQuyDoi(quyDoi > 0 ? quyDoi : 1.0);
+
+                Map<String, Double> khoStockMap = matrixStock.getOrDefault(mhId != null ? mhId.trim() : "", new HashMap<>());
+                double totalTon = 0.0;
+                for (Map.Entry<String, Double> entry : khoStockMap.entrySet()) {
+                    item.setTonKho(entry.getKey(), entry.getValue());
+                    totalTon += entry.getValue();
+                }
+                item.setTongTon(totalTon);
+
+                list.add(item);
+            }
+        } catch (SQLException e) {
+            System.err.println("Lỗi getTonNhieuKhoMatrix itemSql: " + e.getMessage());
+        }
+
+        return list;
+    }
 }

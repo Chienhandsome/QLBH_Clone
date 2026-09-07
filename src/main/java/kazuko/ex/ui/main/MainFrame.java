@@ -10,6 +10,8 @@ import kazuko.ex.ui.common.StatusPanel;
 import kazuko.ex.ui.danhmuc.CaLamViecDialog;
 import kazuko.ex.ui.danhmuc.CuaHangDialog;
 import kazuko.ex.ui.danhmuc.DanhMucDotKhuyenMaiPanel;
+import kazuko.ex.ui.congno.QuanLyCongNoKhachHangPanel;
+import kazuko.ex.ui.congno.QuanLyCongNoNhaCungCapPanel;
 import kazuko.ex.ui.danhmuc.DanhMucKhachHangPanel;
 import kazuko.ex.ui.danhmuc.DanhMucMatHangPanel;
 import kazuko.ex.ui.danhmuc.DanhMucNhaCungCapPanel;
@@ -26,6 +28,7 @@ import kazuko.ex.ui.khohang.QuanLyChuyenKhoPanel;
 import kazuko.ex.ui.khohang.QuanLyKiemKePanel;
 import kazuko.ex.ui.khohang.QuanLyNhapKhoPanel;
 import kazuko.ex.ui.khohang.QuanLyTonKhoPanel;
+import kazuko.ex.ui.khohang.QuanLyTonNhieuKhoPanel;
 import kazuko.ex.ui.khohang.QuanLyXuatKhoPanel;
 import kazuko.ex.ui.khohang.TinhLaiGiaVonDialog;
 import kazuko.ex.ui.nhansu.ChamCongPanel;
@@ -414,7 +417,7 @@ public class MainFrame extends JFrame {
 
         JMenuItem miTonNhieuKho = new JMenuItem("Tồn nhiều kho");
         miTonNhieuKho.setIcon(IconHelper.getIcon("tsbTimeStamp.Image.png", 16, 16));
-        miTonNhieuKho.addActionListener(e -> openTab("Tồn nhiều kho", createPlaceholderPanel("Tồn nhiều kho")));
+        miTonNhieuKho.addActionListener(e -> openTab("Tồn nhiều kho", new QuanLyTonNhieuKhoPanel()));
 
         mKhoHang.add(miTonKho);
         mKhoHang.add(miTonNhieuKho);
@@ -471,11 +474,11 @@ public class MainFrame extends JFrame {
 
         JMenuItem miCongNoKH = new JMenuItem("Công nợ khách hàng");
         miCongNoKH.setIcon(IconHelper.getIcon("congno.png", 16, 16));
-        miCongNoKH.addActionListener(e -> openTab("Công nợ khách hàng", createPlaceholderPanel("Công nợ khách hàng")));
+        miCongNoKH.addActionListener(e -> openTab("Công nợ khách hàng", new QuanLyCongNoKhachHangPanel()));
 
         JMenuItem miCongNoNCC = new JMenuItem("Công nợ nhà cung cấp");
         miCongNoNCC.setIcon(IconHelper.getIcon("tsbGenTotal.Image.png", 16, 16));
-        miCongNoNCC.addActionListener(e -> openTab("Công nợ nhà cung cấp", createPlaceholderPanel("Công nợ nhà cung cấp")));
+        miCongNoNCC.addActionListener(e -> openTab("Công nợ nhà cung cấp", new QuanLyCongNoNhaCungCapPanel()));
 
         mCongNo.add(miCongNoKH);
         mCongNo.add(miCongNoNCC);
@@ -753,6 +756,10 @@ public class MainFrame extends JFrame {
             case "QUẢN LÝ TỒN KHO":
                 openTab("Tồn kho", new QuanLyTonKhoPanel());
                 break;
+            case "TỒN NHIỀU KHO":
+            case "QUẢN LÝ TỒN NHIỀU KHO":
+                openTab("Tồn nhiều kho", new QuanLyTonNhieuKhoPanel());
+                break;
             case "KHÁCH ĐẶT HÀNG":
             case "ĐẶT HÀNG":
                 openTab("Khách đặt hàng", new KhachDatHangPanel());
@@ -765,9 +772,17 @@ public class MainFrame extends JFrame {
             case "DANH MỤC KHÁCH HÀNG":
                 openTab("Danh mục khách hàng", new DanhMucKhachHangPanel());
                 break;
+            case "CÔNG NỢ KHÁCH HÀNG":
+            case "CÔNG NỢ KHÁCH":
+                openTab("Công nợ khách hàng", new QuanLyCongNoKhachHangPanel());
+                break;
             case "DANH MỤC NHÀ CUNG CẤP":
             case "NHÀ CUNG CẤP":
                 openTab("Danh mục nhà cung cấp", new DanhMucNhaCungCapPanel());
+                break;
+            case "CÔNG NỢ NHÀ CUNG CẤP":
+            case "CÔNG NỢ NCC":
+                openTab("Công nợ nhà cung cấp", new QuanLyCongNoNhaCungCapPanel());
                 break;
             case "DANH MỤC PHIẾU THU":
             case "PHIẾU THU":

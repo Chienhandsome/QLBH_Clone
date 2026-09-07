@@ -405,4 +405,30 @@ public class DbInspectionTest {
             e.printStackTrace();
         }
     }
+
+    @Test
+    public void testInspectThuChiTables() {
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            DatabaseMetaData meta = conn.getMetaData();
+            System.out.println("\n=== ALL TABLES MATCHING THU, CHI, CONGNO, QUY ===");
+            try (ResultSet rs = meta.getTables(null, null, "%", new String[]{"TABLE"})) {
+                while (rs.next()) {
+                    String tName = rs.getString("TABLE_NAME");
+                    String upper = tName.toUpperCase();
+                    if (upper.contains("THU") || upper.contains("CHI") || upper.contains("QUY") || upper.contains("CONGNO") || upper.contains("PHIEU") || upper.contains("SO")) {
+                        System.out.println("Table: " + tName);
+                        try (ResultSet cols = meta.getColumns(null, null, tName, "%")) {
+                            StringBuilder sb = new StringBuilder("  Cols: ");
+                            while (cols.next()) {
+                                sb.append(cols.getString("COLUMN_NAME")).append(", ");
+                            }
+                            System.out.println(sb.toString());
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 }
