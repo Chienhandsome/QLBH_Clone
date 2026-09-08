@@ -44,6 +44,17 @@ import kazuko.ex.ui.baocao.ChiTietHangBanTheoDoiTacPanel;
 import kazuko.ex.ui.baocao.TongHopHoaHongTheoNVKDPanel;
 import kazuko.ex.ui.baocao.ChiTietBanHangTheoHoaDonPanel;
 import kazuko.ex.ui.baocao.BaoCaoChiTietHangKhuyenMaiPanel;
+import kazuko.ex.ui.baocao.BaoCaoDanhSachDatHangTheoNgayPanel;
+import kazuko.ex.ui.baocao.BaoCaoDanhSachDatHangTheoKhachHangPanel;
+import kazuko.ex.ui.baocao.TongHopDatHangTheoNgayPanel;
+import kazuko.ex.ui.baocao.TongHopDatHangTheoKhachHangPanel;
+import kazuko.ex.ui.baocao.TongHopMatHangDatTheoKhachHangPanel;
+import kazuko.ex.ui.baocao.TongHopMatHangDatTheoNgayPanel;
+import kazuko.ex.ui.baocao.BaoCaoTonKhoTheoKichThuocPanel;
+import kazuko.ex.ui.baocao.BaoCaoDanhSachPhieuKiemKeTheoNgayPanel;
+import kazuko.ex.ui.baocao.TongHopMatHangKiemKeTheoNgayPanel;
+import kazuko.ex.ui.baocao.TongHopMatHangKiemKeTheoNhanVienPanel;
+import kazuko.ex.ui.baocao.BaoCaoDanhSachPhieuKiemKeTheoNhanVienPanel;
 import kazuko.ex.ui.baogia.BaoGiaBanHangPanel;
 
 
@@ -1174,6 +1185,16 @@ public class MainFrame extends JFrame {
             case "SINH NHẬT KHÁCH HÀNG":
                 openTab("KHÁCH HÀNG ĐẾN NGÀY SINH NHẬT", new BaoCaoKhachHangSinhNhatPanel());
                 break;
+            case "DANH SÁCH ĐẶT HÀNG THEO NGÀY":
+            case "BÁO CÁO ĐẶT HÀNG THEO NGÀY":
+            case "ĐẶT HÀNG THEO NGÀY":
+                openTab("Danh sách đặt hàng theo ngày", new BaoCaoDanhSachDatHangTheoNgayPanel());
+                break;
+            case "DANH SÁCH ĐẶT HÀNG THEO KHÁCH HÀNG":
+            case "BÁO CÁO ĐẶT HÀNG THEO KHÁCH HÀNG":
+            case "ĐẶT HÀNG THEO KHÁCH HÀNG":
+                openTab("Danh sách đặt hàng theo khách hàng", new BaoCaoDanhSachDatHangTheoKhachHangPanel());
+                break;
             case "ĐỐI CHIẾU CÔNG NỢ KHÁCH HÀNG":
             case "BÁO CÁO CÔNG NỢ KHÁCH HÀNG":
             case "TỔNG HỢP CÔNG NỢ KHÁCH HÀNG":
@@ -1188,8 +1209,11 @@ public class MainFrame extends JFrame {
             case "CÔNG NỢ NCC":
                 openTab("Công nợ nhà cung cấp", new QuanLyCongNoNhaCungCapPanel());
                 break;
-            case "BÁO CÁO HÀNG TỒN KHO":
             case "BÁO CÁO TỒN KHO THEO KÍCH THƯỚC":
+            case "TỒN KHO THEO KÍCH THƯỚC":
+                openTab("Báo cáo tồn kho theo kích thước", new BaoCaoTonKhoTheoKichThuocPanel());
+                break;
+            case "BÁO CÁO HÀNG TỒN KHO":
             case "BÁO CÁO TỔNG HỢP XUẤT NHẬP TỒN":
             case "BÁO CÁO NHẬP XUẤT TỒN THEO KHO":
             case "BÁO CÁO TỒN KHO THEO MẶT HÀNG":
@@ -1245,11 +1269,22 @@ public class MainFrame extends JFrame {
             case "DANH MỤC PHIẾU CHI":
                 openTab("Danh mục phiếu chi", new DanhMucPhieuChiPanel());
                 break;
-            case "DANH SÁCH ĐẶT HÀNG THEO NGÀY":
-            case "DANH SÁCH ĐẶT HÀNG THEO KHÁCH HÀNG":
             case "TỔNG HỢP ĐẶT HÀNG THEO NGÀY":
+                openTab("Tổng hợp đặt hàng theo ngày", new TongHopDatHangTheoNgayPanel());
+                break;
             case "TỔNG HỢP ĐẶT HÀNG THEO KHÁCH HÀNG":
+                openTab("Tổng hợp đặt hàng theo khách hàng", new TongHopDatHangTheoKhachHangPanel());
+                break;
+            case "TỔNG HỢP MẶT HÀNG ĐẶT THEO KHÁCH HÀNG":
+            case "MẶT HÀNG ĐẶT THEO KHÁCH HÀNG":
+                openTab("Tổng hợp mặt hàng đặt theo khách hàng", new TongHopMatHangDatTheoKhachHangPanel());
+                break;
+            case "TỔNG HỢP MẶT HÀNG ĐẶT THEO NGÀY":
+            case "MẶT HÀNG ĐẶT THEO NGÀY":
+                openTab("Tổng hợp mặt hàng đặt theo ngày", new TongHopMatHangDatTheoNgayPanel());
+                break;
             case "KHÁCH ĐẶT HÀNG":
+            case "ĐẶT HÀNG":
                 openTab("Khách đặt hàng", new KhachDatHangPanel());
                 break;
             case "DANH SÁCH PHIẾU NHẬP KHO THEO NGÀY":
@@ -1286,11 +1321,24 @@ public class MainFrame extends JFrame {
                 openTab("Quản lý chuyển kho", new QuanLyChuyenKhoPanel());
                 break;
             case "DANH SÁCH PHIẾU KIỂM KÊ THEO NGÀY":
+            case "BÁO CÁO KIỂM KÊ THEO NGÀY":
+                openTab("Danh sách phiếu kiểm kê theo ngày", new BaoCaoDanhSachPhieuKiemKeTheoNgayPanel());
+                break;
             case "DANH SÁCH PHIẾU KIỂM KÊ THEO NHÂN VIÊN":
+            case "BÁO CÁO KIỂM KÊ THEO NHÂN VIÊN":
+                openTab("Danh sách phiếu kiểm kê theo nhân viên", new BaoCaoDanhSachPhieuKiemKeTheoNhanVienPanel());
+                break;
             case "TỔNG HỢP MẶT HÀNG PHIẾU KIỂM KÊ THEO NGÀY":
+            case "TỔNG HỢP MẶT HÀNG KIỂM KÊ THEO NGÀY":
+                openTab("Tổng hợp mặt hàng phiếu kiểm kê theo ngày", new TongHopMatHangKiemKeTheoNgayPanel());
+                break;
             case "TỔNG HỢP MẶT HÀNG PHIẾU KIỂM KÊ THEO NHÂN VIÊN":
+            case "TỔNG HỢP MẶT HÀNG KIỂM KÊ THEO NHÂN VIÊN":
+                openTab("Tổng hợp mặt hàng phiếu kiểm kê theo nhân viên", new TongHopMatHangKiemKeTheoNhanVienPanel());
+                break;
             case "BÁO CÁO TỔNG HỢP KIỂM KÊ KHO":
             case "QUẢN LÝ KIỂM KÊ":
+            case "PHIẾU KIỂM KÊ":
                 openTab("Quản lý kiểm kê", new QuanLyKiemKePanel());
                 break;
             default:
