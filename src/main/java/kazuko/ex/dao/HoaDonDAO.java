@@ -588,9 +588,13 @@ public class HoaDonDAO extends BaseDAO {
         try { dh.setMaKhach(rs.getString("MAKHACH")); } catch (Exception ignored) {}
         try { dh.setDiaChiKhach(rs.getString("DIACHIKHACH")); } catch (Exception ignored) {}
         try { dh.setDienThoaiKhach(rs.getString("DIENTHOAIKHACH")); } catch (Exception ignored) {}
+        try { dh.setUserCreatedId(rs.getString("USERCREATEDID")); } catch (Exception ignored) {}
+        try { dh.setPhiVanChuyen(rs.getDouble("PHIVANCHUYEN")); } catch (Exception ignored) {}
+        try { dh.setTienDoiTra(rs.getDouble("DOITRA")); } catch (Exception ignored) {}
         try {
             Timestamp tc = rs.getTimestamp("TIMECREATED");
             if (tc != null) {
+                dh.setTimeCreated(new Date(tc.getTime()));
                 SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm");
                 dh.setGioThanhToan(timeFormat.format(new Date(tc.getTime())));
             }

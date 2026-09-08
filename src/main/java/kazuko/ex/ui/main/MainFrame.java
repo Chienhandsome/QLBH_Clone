@@ -34,6 +34,16 @@ import kazuko.ex.ui.baocao.TongHopMatHangBanTheoNgayPanel;
 import kazuko.ex.ui.baocao.TongHopMatHangBanTheoNhanVienPanel;
 import kazuko.ex.ui.baocao.TongHopBanHangTheoNgayPanel;
 import kazuko.ex.ui.baocao.TongHopBanTheoKhachHangPanel;
+import kazuko.ex.ui.baocao.TongHopBanTheoNhanVienBanPanel;
+import kazuko.ex.ui.baocao.TongHopBanTheoThuNganPanel;
+import kazuko.ex.ui.baocao.BaoCaoChiTietBanHangTheoThuNganPanel;
+import kazuko.ex.ui.baocao.BaoCaoBanHangTheoThuNganPanel;
+import kazuko.ex.ui.baocao.TongHopMatHangBanTheoThuNganPanel;
+import kazuko.ex.ui.baocao.TongHopTienVanChuyenTheoNhanVienPanel;
+import kazuko.ex.ui.baocao.ChiTietHangBanTheoDoiTacPanel;
+import kazuko.ex.ui.baocao.TongHopHoaHongTheoNVKDPanel;
+import kazuko.ex.ui.baocao.ChiTietBanHangTheoHoaDonPanel;
+import kazuko.ex.ui.baocao.BaoCaoChiTietHangKhuyenMaiPanel;
 import kazuko.ex.ui.baogia.BaoGiaBanHangPanel;
 
 
@@ -1110,6 +1120,47 @@ public class MainFrame extends JFrame {
                 break;
             case "TỔNG HỢP BÁN THEO KHÁCH HÀNG":
                 openTab("Tổng hợp bán theo khách hàng", new TongHopBanTheoKhachHangPanel());
+                break;
+            case "TỔNG HỢP BÁN THEO NHÂN VIÊN BÁN":
+            case "TỔNG HỢP BÁN THEO NHÂN VIÊN":
+                openTab("Tổng hợp bán theo nhân viên bán", new TongHopBanTheoNhanVienBanPanel());
+                break;
+            case "TỔNG HỢP BÁN THEO THU NGÂN":
+                openTab("Tổng hợp bán theo thu ngân", new TongHopBanTheoThuNganPanel());
+                break;
+            case "TỔNG HỢP MẶT HÀNG BÁN THEO THU NGÂN":
+                openTab("Tổng hợp mặt hàng bán theo thu ngân", new TongHopMatHangBanTheoThuNganPanel());
+                break;
+            case "BÁO CÁO CHI TIẾT BÁN HÀNG THEO THU NGÂN":
+            case "CHI TIẾT BÁN HÀNG THEO THU NGÂN":
+                openTab("Báo cáo chi tiết bán hàng theo thu ngân", new BaoCaoChiTietBanHangTheoThuNganPanel());
+                break;
+            case "BÁO CÁO BÁN HÀNG THEO THU NGÂN":
+            case "BÁO CÁO BÁN HÀNGTHEO THU NGÂN":
+                openTab("Báo cáo bán hàng theo thu ngân", new BaoCaoBanHangTheoThuNganPanel());
+                break;
+            case "TỔNG HỢP TIỀN VẬN CHUYỂN THEO NHÂN VIÊN":
+            case "TIỀN VẬN CHUYỂN THEO NHÂN VIÊN":
+                openTab("Tổng hợp tiền vận chuyển theo nhân viên", new TongHopTienVanChuyenTheoNhanVienPanel());
+                break;
+            case "CHI TIẾT BÁN HÀNG THEO ĐỐI TÁC":
+            case "CHI TIẾT HÀNG BÁN THEO ĐỐI TÁC":
+            case "BÁN HÀNG THEO ĐỐI TÁC":
+                openTab("Chi tiết bán hàng theo đối tác", new ChiTietHangBanTheoDoiTacPanel());
+                break;
+            case "TỔNG HỢP HOA HỒNG THEO NVKD":
+            case "TỔNG HỢP HOA HỒNG THEO NHÂN VIÊN":
+            case "HOA HỒNG THEO NVKD":
+                openTab("Tổng hợp hoa hồng theo NVKD", new TongHopHoaHongTheoNVKDPanel());
+                break;
+            case "CHI TIẾT BÁN HÀNG THEO HÓA ĐƠN":
+            case "BÁN HÀNG THEO HÓA ĐƠN":
+                openTab("Chi tiết bán hàng theo hóa đơn", new ChiTietBanHangTheoHoaDonPanel());
+                break;
+            case "BÁO CÁO CHI TIẾT HÀNG KHUYẾN MẠI":
+            case "CHI TIẾT HÀNG KHUYẾN MẠI":
+            case "HÀNG KHUYẾN MẠI":
+                openTab("Báo cáo chi tiết hàng khuyến mại", new BaoCaoChiTietHangKhuyenMaiPanel());
                 break;
             case "DANH SÁCH ĐỢT KHUYẾN MẠI":
             case "BÁO CÁO ĐỢT KHUYẾN MẠI":

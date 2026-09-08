@@ -199,4 +199,144 @@ public class BaoCaoBanHangReportTest {
 
         System.out.println("Báo cáo Tổng hợp bán theo khách hàng tạo thành công! Số trang: " + print.getPages().size());
     }
+
+    @Test
+    public void testTongHopBanTheoNhanVienBanReport() throws Exception {
+        BaoCaoBanHangReportService service = new BaoCaoBanHangReportService();
+
+        JasperReport report = service.getCompiledReportTongHopBanTheoNhanVienBan();
+        Assertions.assertNotNull(report, "JasperReport TongHopBanTheoNhanVienBan không được null");
+
+        JasperPrint print = service.generateTongHopBanTheoNhanVienBan(null, null, null, null);
+        Assertions.assertNotNull(print, "JasperPrint TongHopBanTheoNhanVienBan không được null");
+        Assertions.assertTrue(print.getPages().size() >= 1, "Số trang phải >= 1");
+
+        System.out.println("Báo cáo Tổng hợp bán theo nhân viên bán tạo thành công! Số trang: " + print.getPages().size());
+    }
+
+    @Test
+    public void testTongHopBanTheoThuNganReport() throws Exception {
+        BaoCaoBanHangReportService service = new BaoCaoBanHangReportService();
+
+        JasperReport report = service.getCompiledReportTongHopBanTheoThuNgan();
+        Assertions.assertNotNull(report, "JasperReport TongHopBanTheoThuNgan không được null");
+
+        JasperPrint print = service.generateTongHopBanTheoThuNgan(null, null, null, null);
+        Assertions.assertNotNull(print, "JasperPrint TongHopBanTheoThuNgan không được null");
+        Assertions.assertTrue(print.getPages().size() >= 1, "Số trang phải >= 1");
+
+        System.out.println("Báo cáo Tổng hợp bán theo thu ngân tạo thành công! Số trang: " + print.getPages().size());
+    }
+
+    @Test
+    public void testChiTietBanHangTheoThuNganReport() throws Exception {
+        BaoCaoBanHangReportService service = new BaoCaoBanHangReportService();
+
+        JasperReport report = service.getCompiledReportChiTietTheoThuNgan();
+        Assertions.assertNotNull(report, "JasperReport ChiTietBanHangTheoThuNgan không được null");
+
+        JasperPrint print = service.generateChiTietBanHangTheoThuNgan(null, null, null);
+        Assertions.assertNotNull(print, "JasperPrint ChiTietBanHangTheoThuNgan không được null");
+        Assertions.assertTrue(print.getPages().size() >= 1, "Số trang phải >= 1");
+
+        System.out.println("Báo cáo Chi tiết bán hàng theo thu ngân tạo thành công! Số trang: " + print.getPages().size());
+    }
+
+    @Test
+    public void testBanHangTheoThuNganReport() throws Exception {
+        BaoCaoBanHangReportService service = new BaoCaoBanHangReportService();
+
+        JasperReport report = service.getCompiledReportBanHangTheoThuNgan();
+        Assertions.assertNotNull(report, "JasperReport BanHangTheoThuNgan không được null");
+
+        JasperPrint print = service.generateBanHangTheoThuNgan(null, null, null, null, null);
+        Assertions.assertNotNull(print, "JasperPrint BanHangTheoThuNgan không được null");
+        Assertions.assertTrue(print.getPages().size() >= 1, "Số trang phải >= 1");
+
+        System.out.println("Báo cáo Bán hàng theo thu ngân tạo thành công! Số trang: " + print.getPages().size());
+    }
+
+    @Test
+    public void testTongHopMatHangBanTheoThuNganReport() throws Exception {
+        BaoCaoBanHangReportService service = new BaoCaoBanHangReportService();
+
+        JasperReport report = service.getCompiledReportTongHopMatHangTheoThuNgan();
+        Assertions.assertNotNull(report, "JasperReport TongHopMatHangTheoThuNgan không được null");
+
+        JasperPrint print = service.generateTongHopMatHangBanTheoThuNgan(null, null, null, null);
+        Assertions.assertNotNull(print, "JasperPrint TongHopMatHangTheoThuNgan không được null");
+        Assertions.assertTrue(print.getPages().size() >= 1, "Số trang phải >= 1");
+
+        System.out.println("Báo cáo Tổng hợp mặt hàng bán theo thu ngân tạo thành công! Số trang: " + print.getPages().size());
+    }
+
+    @Test
+    public void testTongHopTienVanChuyenTheoNhanVienReport() throws Exception {
+        BaoCaoBanHangReportService service = new BaoCaoBanHangReportService();
+
+        JasperReport report = service.getCompiledReportTienVanChuyenTheoNhanVien();
+        Assertions.assertNotNull(report, "JasperReport TienVanChuyenTheoNhanVien không được null");
+
+        JasperPrint print = service.generateTongHopTienVanChuyenTheoNhanVien(null, null, null);
+        Assertions.assertNotNull(print, "JasperPrint TienVanChuyenTheoNhanVien không được null");
+        Assertions.assertTrue(print.getPages().size() >= 1, "Số trang phải >= 1");
+
+        System.out.println("Báo cáo Tổng hợp tiền vận chuyển theo nhân viên tạo thành công! Số trang: " + print.getPages().size());
+    }
+
+    @Test
+    public void testChiTietHangBanTheoDoiTacReport() throws Exception {
+        BaoCaoBanHangReportService service = new BaoCaoBanHangReportService();
+
+        JasperReport report = service.getCompiledReportChiTietHangBanTheoDoiTac();
+        Assertions.assertNotNull(report, "JasperReport ChiTietHangBanTheoDoiTac không được null");
+
+        JasperPrint print = service.generateChiTietHangBanTheoDoiTac(null, null, null, null);
+        Assertions.assertNotNull(print, "JasperPrint ChiTietHangBanTheoDoiTac không được null");
+        Assertions.assertTrue(print.getPages().size() >= 1, "Số trang phải >= 1");
+
+        System.out.println("Báo cáo Chi tiết hàng bán theo đối tác tạo thành công! Số trang: " + print.getPages().size());
+    }
+
+    @Test
+    public void testTongHopHoaHongTheoNVKDReport() throws Exception {
+        BaoCaoBanHangReportService service = new BaoCaoBanHangReportService();
+
+        JasperReport report = service.getCompiledReportTongHopHoaHongTheoNVKD();
+        Assertions.assertNotNull(report, "JasperReport TongHopHoaHongTheoNVKD không được null");
+
+        JasperPrint print = service.generateTongHopHoaHongTheoNVKD(null, null, null, null, null, null);
+        Assertions.assertNotNull(print, "JasperPrint TongHopHoaHongTheoNVKD không được null");
+        Assertions.assertTrue(print.getPages().size() >= 1, "Số trang phải >= 1");
+
+        System.out.println("Báo cáo Tổng hợp hoa hồng theo NVKD tạo thành công! Số trang: " + print.getPages().size());
+    }
+
+    @Test
+    public void testChiTietBanHangTheoHoaDonReport() throws Exception {
+        BaoCaoBanHangReportService service = new BaoCaoBanHangReportService();
+
+        JasperReport report = service.getCompiledReportChiTietBanHangTheoHoaDon();
+        Assertions.assertNotNull(report, "JasperReport ChiTietBanHangTheoHoaDon không được null");
+
+        JasperPrint print = service.generateChiTietBanHangTheoHoaDon(null, null, null);
+        Assertions.assertNotNull(print, "JasperPrint ChiTietBanHangTheoHoaDon không được null");
+        Assertions.assertTrue(print.getPages().size() >= 1, "Số trang phải >= 1");
+
+        System.out.println("Báo cáo Chi tiết bán hàng theo hóa đơn tạo thành công! Số trang: " + print.getPages().size());
+    }
+
+    @Test
+    public void testChiTietHangKhuyenMaiReport() throws Exception {
+        BaoCaoBanHangReportService service = new BaoCaoBanHangReportService();
+
+        JasperReport report = service.getCompiledReportChiTietHangKhuyenMai();
+        Assertions.assertNotNull(report, "JasperReport ChiTietHangKhuyenMai không được null");
+
+        JasperPrint print = service.generateChiTietHangKhuyenMai(null, null, null, null);
+        Assertions.assertNotNull(print, "JasperPrint ChiTietHangKhuyenMai không được null");
+        Assertions.assertTrue(print.getPages().size() >= 1, "Số trang phải >= 1");
+
+        System.out.println("Báo cáo Chi tiết hàng khuyến mại tạo thành công! Số trang: " + print.getPages().size());
+    }
 }
