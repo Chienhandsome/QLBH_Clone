@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport whenNoDataType="AllSectionsNoDetail"
+              xmlns="http://jasperreports.sourceforge.net/jasperreports"
+              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+              xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd"
+              name="bao_cao_tong_hop_gia_tri_ban_theo_thang"
+              pageWidth="842" pageHeight="595" orientation="Landscape"
+              columnWidth="782" leftMargin="30" rightMargin="30" topMargin="20" bottomMargin="20"
+              uuid="f0f99a9c-7f57-40ed-a2dd-501732fc34de">
+    <parameter name="p_companyName" class="java.lang.String"/>
+    <parameter name="p_companyAddress" class="java.lang.String"/>
+    <parameter name="p_companyPhone" class="java.lang.String"/>
+    <parameter name="p_companyEmail" class="java.lang.String"/>
+    <parameter name="p_logoImage" class="java.lang.Object"/>
+    <parameter name="p_reportTitle" class="java.lang.String"/>
+    <parameter name="p_thangNam" class="java.lang.String"/>
+    <parameter name="p_ngayLap" class="java.lang.String"/>
+    <field name="stt" class="java.lang.Integer"/>
+    <field name="groupHeader" class="java.lang.String"/>
+    <field name="maSP" class="java.lang.String"/>
+    <field name="tenSP" class="java.lang.String"/>
+    <field name="donViTinh" class="java.lang.String"/>
+    <field name="tongBan" class="java.lang.Double"/>
+    <field name="d01" class="java.lang.Double"/>
+    <field name="d02" class="java.lang.Double"/>
+    <field name="d03" class="java.lang.Double"/>
+    <field name="d04" class="java.lang.Double"/>
+    <field name="d05" class="java.lang.Double"/>
+    <field name="d06" class="java.lang.Double"/>
+    <field name="d07" class="java.lang.Double"/>
+    <field name="d08" class="java.lang.Double"/>
+    <field name="d09" class="java.lang.Double"/>
+    <field name="d10" class="java.lang.Double"/>
+    <field name="d11" class="java.lang.Double"/>
+    <field name="d12" class="java.lang.Double"/>
+    <field name="d13" class="java.lang.Double"/>
+    <field name="d14" class="java.lang.Double"/>
+    <field name="d15" class="java.lang.Double"/>
+    <field name="d16" class="java.lang.Double"/>
+    <field name="d17" class="java.lang.Double"/>
+    <field name="d18" class="java.lang.Double"/>
+    <field name="d19" class="java.lang.Double"/>
+    <field name="d20" class="java.lang.Double"/>
+    <field name="d21" class="java.lang.Double"/>
+    <field name="d22" class="java.lang.Double"/>
+    <field name="d23" class="java.lang.Double"/>
+    <field name="d24" class="java.lang.Double"/>
+    <field name="d25" class="java.lang.Double"/>
+    <field name="d26" class="java.lang.Double"/>
+    <field name="d27" class="java.lang.Double"/>
+    <field name="d28" class="java.lang.Double"/>
+    <field name="d29" class="java.lang.Double"/>
+    <field name="d30" class="java.lang.Double"/>
+    <field name="d31" class="java.lang.Double"/>
+    <group name="GroupNhom">
+        <groupExpression><![CDATA[$F{groupHeader}]]></groupExpression>
+        <groupHeader>
+            <band height="18">
+                <textField isBlankWhenNull="true">
+                    <reportElement x="0" y="0" width="782" height="18" uuid="f1b0f538-d6b4-4276-9fc2-b43420da001b"/>
+                    <box leftPadding="5">
+                        <topPen lineWidth="0.5" lineColor="#808080"/>
+                        <leftPen lineWidth="0.5" lineColor="#808080"/>
+                        <bottomPen lineWidth="0.5" lineColor="#808080"/>
+                        <rightPen lineWidth="0.5" lineColor="#808080"/>
+                    </box>
+                    <textElement verticalAlignment="Middle">
+                        <font fontName="SansSerif" size="8" isBold="true"/>
+                    </textElement>
+                    <textFieldExpression><![CDATA[$F{groupHeader}]]></textFieldExpression>
+                </textField>
+            </band>
+        </groupHeader>
+    </group>
+    <title>
+        <band height="100">
+            <image scaleImage="RetainShape" hAlign="Center" vAlign="Middle" onErrorType="Blank">
+                <reportElement x="50" y="0" width="110" height="55" uuid="2a7a1e2d-8776-4bd4-a410-301d696ea56b"/>
+                <imageExpression><![CDATA[$P{p_logoImage}]]></imageExpression>
+            </image>
+            <textField isBlankWhenNull="true">
+                <reportElement x="180" y="0" width="550" height="18" uuid="b6b847f8-ad16-461d-975d-ed57ffca37c9"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
+                    <font fontName="SansSerif" size="12" isBold="true"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$P{p_companyName} != null ? $P{p_companyName} : "CÔNG TY TNHH NGỌC CHÂU ÂU"]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement x="180" y="18" width="550" height="14" uuid="282986e4-f339-4210-8154-58aee7913ba1"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
+                    <font fontName="SansSerif" size="8"/>
+                </textElement>
+                <textFieldExpression><![CDATA["Địa chỉ: " + ($P{p_companyAddress} != null ? $P{p_companyAddress} : "")]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement x="180" y="32" width="550" height="14" uuid="0ed3c8bf-0de5-44f9-9e75-4034e41c1e48"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
+                    <font fontName="SansSerif" size="8"/>
+                </textElement>
+                <textFieldExpression><![CDATA["Điện thoại: " + ($P{p_companyPhone} != null ? $P{p_companyPhone} : "") + ($P{p_companyEmail} != null && !$P{p_companyEmail}.isEmpty() ? ", Email: " + $P{p_companyEmail} : "")]]></textFieldExpression>
+            </textField>
+            <line>
+                <reportElement x="0" y="52" width="782" height="1" forecolor="#E67E22" uuid="408c0e4a-9b7a-46eb-8889-3f4e14994b47"/>
+                <graphicElement><pen lineWidth="1.5"/></graphicElement>
+            </line>
+            <textField isBlankWhenNull="true">
+                <reportElement x="0" y="62" width="782" height="22" uuid="44b80d61-c712-4a72-8246-b1320cf30b5b"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
+                    <font fontName="SansSerif" size="13" isBold="true"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$P{p_reportTitle} != null ? $P{p_reportTitle} : "BÁO CÁO TỔNG HỢP GIÁ TRỊ BÁN THEO THÁNG"]]></textFieldExpression>
+            </textField>
+            <staticText>
+                <reportElement x="650" y="84" width="132" height="14" uuid="0de569eb-6237-4606-91ed-f3ac1b0fcbe7"/>
+                <textElement textAlignment="Right" verticalAlignment="Middle"><font fontName="SansSerif" size="8" isBold="true"/></textElement>
+                <text><![CDATA[(Đơn vị: nghìn đồng)]]></text>
+            </staticText>
+        </band>
+    </title>
+    <columnHeader>
+        <band height="36">
+            <staticText><reportElement x="0" y="0" width="22" height="36" uuid="01ae35b9-81ba-4c88-a8cc-52931d2a6a39"/><box><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box><textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="SansSerif" size="7" isBold="true"/></textElement><text><![CDATA[TT]]></text></staticText>
+            <staticText><reportElement x="22" y="0" width="48" height="36" uuid="06cce8d0-cfe5-496e-a4b4-640ebd75a56c"/><box><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box><textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="SansSerif" size="7" isBold="true"/></textElement><text><![CDATA[Mã SP]]></text></staticText>
+            <staticText><reportElement x="70" y="0" width="120" height="36" uuid="4171f040-e645-4cd9-a1bd-ebb8f08a1087"/><box><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box><textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="SansSerif" size="7" isBold="true"/></textElement><text><![CDATA[Sản phẩm]]></text></staticText>
+            <staticText><reportElement x="190" y="0" width="30" height="36" uuid="446158d7-5e6b-4754-ba81-8ef2c5bf1293"/><box><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box><textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="SansSerif" size="7" isBold="true"/></textElement><text><![CDATA[ĐVT]]></text></staticText>
+            <staticText><reportElement x="220" y="0" width="40" height="36" uuid="77a9d95e-3fce-4fc9-95aa-aae1987e2a46"/><box><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box><textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="SansSerif" size="7" isBold="true"/></textElement><text><![CDATA[Tổng bán]]></text></staticText>
+            <textField isBlankWhenNull="true"><reportElement x="260" y="0" width="522" height="18" uuid="b8f3712a-3fa8-42a8-b313-2a8fd3a6ca43"/><box><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box><textElement textAlignment="Left" verticalAlignment="Middle"><font fontName="SansSerif" size="9" isBold="true"/></textElement><textFieldExpression><![CDATA["THÁNG: " + ($P{p_thangNam} != null ? $P{p_thangNam} : "")]]></textFieldExpression></textField>
+            <staticText><reportElement x="260" y="18" width="16" height="18" uuid="9a537d13-1e77-4bb2-9606-af7942447a0d"/><box><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box><textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="SansSerif" size="7" isBold="true"/></textElement><text><![CDATA[01]]></text></staticText>
+            <staticText><reportElement x="276" y="18" width="16" height="18" uuid="3258aa5d-953d-4b02-8e88-048363f99349"/><box><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box><textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="SansSerif" size="7" isBold="true"/></textElement><text><![CDATA[02]]></text></staticText>
+            <staticText><reportElement x="292" y="18" width="16" height="18" uuid="ae896806-4407-4296-860b-54a03578f5f3"/><box><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box><textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="SansSerif" size="7" isBold="true"/></textElement><text><![CDATA[03]]></text></staticText>
+            <staticText><reportElement x="308" y="18" width="16" height="18" uuid="13c3f9d6-2d02-4b8e-ab31-d849c37d2805"/><box><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box><textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="SansSerif" size="7" isBold="true"/></textElement><text><![CDATA[04]]></text></staticText>
+            <staticText><reportElement x="324" y="18" width="16" height="18" uuid="a791cb82-0268-4c5e-859f-1483b3c6a962"/><box><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box><textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="SansSerif" size="7" isBold="true"/></textElement><text><![CDATA[05]]></text></staticText>
+            <staticText><reportElement x="340" y="18" width="16" height="18" uuid="081c4649-7e15-46e8-a92d-bee593a98eef"/><box><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box><textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="SansSerif" size="7" isBold="true"/></textElement><text><![CDATA[06]]></text></staticText>
+            <staticText><reportElement x="356" y="18" width="16" height="18" uuid="b01c9ad1-7674-4ae3-962c-295578167c5f"/><box><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box><textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="SansSerif" size="7" isBold="true"/></textElement><text><![CDATA[07]]></text></staticText>
+            <staticText><reportElement x="372" y="18" width="16" height="18" uuid="557428c6-3066-4004-af40-91a9ecbfdf1f"/><box><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box><textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="SansSerif" size="7" isBold="true"/></textElement><text><![CDATA[08]]></text></staticText>
+            <staticText><reportElement x="388" y="18" width="16" height="18" uuid="85963477-7f8e-4755-b1c5-1fe1e99db4eb"/><box><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box><textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="SansSerif" size="7" isBold="true"/></textElement><text><![CDATA[09]]></text></staticText>
+            <staticText><reportElement x="404" y="18" width="16" height="18" uuid="dceaadf2-d300-4a90-8a3c-fa961b90c994"/><box><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box><textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="SansSerif" size="7" isBold="true"/></textElement><text><![CDATA[10]]></text></staticText>
+            <staticText><reportElement x="420" y="18" width="16" height="18" uuid="87fe48d8-6d43-435c-8ede-e2e15195e05d"/><box><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box><textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="SansSerif" size="7" isBold="true"/></textElement><text><![CDATA[11]]></text></staticText>
+            <staticText><reportElement x="436" y="18" width="16" height="18" uuid="f2ef1c06-e587-4765-ab59-f7376d979b3c"/><box><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box><textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="SansSerif" size="7" isBold="true"/></textElement><text><![CDATA[12]]></text></staticText>
+            <staticText><reportElement x="452" y="18" width="16" height="18" uuid="459c7684-d2e9-4df4-93cb-a9c4b1863890"/><box><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box><textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="SansSerif" size="7" isBold="true"/></textElement><text><![CDATA[13]]></text></staticText>
+            <staticText><reportElement x="468" y="18" width="16" height="18" uuid="b2dc8646-9b00-4bdd-9136-e54278e1f5a3"/><box><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box><textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="SansSerif" size="7" isBold="true"/></textElement><text><![CDATA[14]]></text></staticText>
+            <staticText><reportElement x="484" y="18" width="16" height="18" uuid="410cf078-46cb-4096-9d8b-88e6b531f67b"/><box><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box><textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="SansSerif" size="7" isBold="true"/></textElement><text><![CDATA[15]]></text></staticText>
+            <staticText><reportElement x="500" y="18" width="16" height="18" uuid="372d547d-896b-4cf5-a7a5-3a0bba246f5d"/><box><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box><textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="SansSerif" size="7" isBold="true"/></textElement><text><![CDATA[16]]></text></staticText>
+            <staticText><reportElement x="516" y="18" width="16" height="18" uuid="85232b41-f61b-45a7-86c0-bfa0d00567e2"/><box><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box><textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="SansSerif" size="7" isBold="true"/></textElement><text><![CDATA[17]]></text></staticText>
+            <staticText><reportElement x="532" y="18" width="16" height="18" uuid="c442693e-215b-4798-85cb-e9b03daf9d6a"/><box><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box><textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="SansSerif" size="7" isBold="true"/></textElement><text><![CDATA[18]]></text></staticText>
+            <staticText><reportElement x="548" y="18" width="16" height="18" uuid="7d730f44-3cc9-49f2-b808-d03c89e9f0bc"/><box><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box><textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="SansSerif" size="7" isBold="true"/></textElement><text><![CDATA[19]]></text></staticText>
+            <staticText><reportElement x="564" y="18" width="16" height="18" uuid="d309169b-6998-43ab-b741-764fd6def028"/><box><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box><textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="SansSerif" size="7" isBold="true"/></textElement><text><![CDATA[20]]></text></staticText>
+            <staticText><reportElement x="580" y="18" width="16" height="18" uuid="ffa4d614-c5e7-478d-a2dc-9ba6263c7dfe"/><box><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box><textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="SansSerif" size="7" isBold="true"/></textElement><text><![CDATA[21]]></text></staticText>
+            <staticText><reportElement x="596" y="18" width="16" height="18" uuid="43e70ecd-3929-426e-a172-5ce14327c4e5"/><box><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box><textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="SansSerif" size="7" isBold="true"/></textElement><text><![CDATA[22]]></text></staticText>
+            <staticText><reportElement x="612" y="18" width="16" height="18" uuid="40bb61ed-9d41-4c73-9d6c-6d0427b07329"/><box><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box><textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="SansSerif" size="7" isBold="true"/></textElement><text><![CDATA[23]]></text></staticText>
+            <staticText><reportElement x="628" y="18" width="16" height="18" uuid="aa487517-5b27-481b-b2b9-7a7573375159"/><box><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box><textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="SansSerif" size="7" isBold="true"/></textElement><text><![CDATA[24]]></text></staticText>
+            <staticText><reportElement x="644" y="18" width="16" height="18" uuid="fe273e0e-c53c-46f1-b566-685bd248d0b7"/><box><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box><textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="SansSerif" size="7" isBold="true"/></textElement><text><![CDATA[25]]></text></staticText>
+            <staticText><reportElement x="660" y="18" width="16" height="18" uuid="596f4573-ce80-4cc0-b1ac-6f4b6b25a4bb"/><box><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box><textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="SansSerif" size="7" isBold="true"/></textElement><text><![CDATA[26]]></text></staticText>
+            <staticText><reportElement x="676" y="18" width="16" height="18" uuid="870cafba-42b1-4fa8-91d5-ff36eaaedfd7"/><box><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box><textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="SansSerif" size="7" isBold="true"/></textElement><text><![CDATA[27]]></text></staticText>
+            <staticText><reportElement x="692" y="18" width="16" height="18" uuid="55ae112e-1628-4cc0-a423-f8c06e68bdf0"/><box><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box><textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="SansSerif" size="7" isBold="true"/></textElement><text><![CDATA[28]]></text></staticText>
+            <staticText><reportElement x="708" y="18" width="16" height="18" uuid="4f4fdbf0-3757-4314-a1a2-177cdc1dde34"/><box><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box><textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="SansSerif" size="7" isBold="true"/></textElement><text><![CDATA[29]]></text></staticText>
+            <staticText><reportElement x="724" y="18" width="16" height="18" uuid="7fd80a1d-5af0-49e7-90cf-7aebce5e5796"/><box><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box><textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="SansSerif" size="7" isBold="true"/></textElement><text><![CDATA[30]]></text></staticText>
+            <staticText><reportElement x="740" y="18" width="42" height="18" uuid="42cb9085-0acb-4f5a-947f-ba5c5af6210c"/><box><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box><textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="SansSerif" size="7" isBold="true"/></textElement><text><![CDATA[31]]></text></staticText>
+        </band>
+    </columnHeader>
+    <detail>
+        <band height="18">
+            <textField isBlankWhenNull="true"><reportElement x="0" y="0" width="22" height="18" uuid="83150aaf-08e1-4319-a4c7-ffa73b65fd2a"/><box><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box><textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="SansSerif" size="7"/></textElement><textFieldExpression><![CDATA[$F{stt}]]></textFieldExpression></textField>
+            <textField isBlankWhenNull="true"><reportElement x="22" y="0" width="48" height="18" uuid="8f39d16a-3cf4-474b-b633-da6995e3f3d5"/><box leftPadding="2"><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box><textElement verticalAlignment="Middle"><font fontName="SansSerif" size="7"/></textElement><textFieldExpression><![CDATA[$F{maSP}]]></textFieldExpression></textField>
+            <textField isBlankWhenNull="true"><reportElement x="70" y="0" width="120" height="18" uuid="5476539f-f138-4784-ade1-d0728ce1fc1e"/><box leftPadding="2"><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box><textElement verticalAlignment="Middle"><font fontName="SansSerif" size="7"/></textElement><textFieldExpression><![CDATA[$F{tenSP}]]></textFieldExpression></textField>
+            <textField isBlankWhenNull="true"><reportElement x="190" y="0" width="30" height="18" uuid="5b5b7ff5-5a65-4e25-8e78-57dab583a472"/><box><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box><textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="SansSerif" size="7"/></textElement><textFieldExpression><![CDATA[$F{donViTinh}]]></textFieldExpression></textField>
+            <textField pattern="#,##0" isBlankWhenNull="true"><reportElement x="220" y="0" width="40" height="18" uuid="bc77777e-1b67-4655-b181-38c3d8f3c7b7"/><box rightPadding="2"><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box><textElement textAlignment="Right" verticalAlignment="Middle"><font fontName="SansSerif" size="7"/></textElement><textFieldExpression><![CDATA[$F{tongBan}]]></textFieldExpression></textField>
+            <textField pattern="#,##0" isBlankWhenNull="true"><reportElement x="260" y="0" width="16" height="18" uuid="a177682b-be1e-4f53-a8af-f21a49f69c42"/><box rightPadding="1"><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box><textElement textAlignment="Right" verticalAlignment="Middle"><font fontName="SansSerif" size="6"/></textElement><textFieldExpression><![CDATA[$F{d01}]]></textFieldExpression></textField>
+            <textField pattern="#,##0" isBlankWhenNull="true"><reportElement x="276" y="0" width="16" height="18" uuid="e813ecf9-4773-4ca0-bf8a-8bcaf97cd09f"/><box rightPadding="1"><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box><textElement textAlignment="Right" verticalAlignment="Middle"><font fontName="SansSerif" size="6"/></textElement><textFieldExpression><![CDATA[$F{d02}]]></textFieldExpression></textField>
+            <textField pattern="#,##0" isBlankWhenNull="true"><reportElement x="292" y="0" width="16" height="18" uuid="d6b03b9d-88b5-43fa-b8a6-aafae43f027e"/><box rightPadding="1"><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box><textElement textAlignment="Right" verticalAlignment="Middle"><font fontName="SansSerif" size="6"/></textElement><textFieldExpression><![CDATA[$F{d03}]]></textFieldExpression></textField>
+            <textField pattern="#,##0" isBlankWhenNull="true"><reportElement x="308" y="0" width="16" height="18" uuid="94bffa23-78af-42de-9a95-4d0efa3331cf"/><box rightPadding="1"><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box><textElement textAlignment="Right" verticalAlignment="Middle"><font fontName="SansSerif" size="6"/></textElement><textFieldExpression><![CDATA[$F{d04}]]></textFieldExpression></textField>
+            <textField pattern="#,##0" isBlankWhenNull="true"><reportElement x="324" y="0" width="16" height="18" uuid="a1694c68-d8f5-429e-84fe-ef24d944d5a7"/><box rightPadding="1"><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box><textElement textAlignment="Right" verticalAlignment="Middle"><font fontName="SansSerif" size="6"/></textElement><textFieldExpression><![CDATA[$F{d05}]]></textFieldExpression></textField>
+            <textField pattern="#,##0" isBlankWhenNull="true"><reportElement x="340" y="0" width="16" height="18" uuid="93dd83c9-5353-450c-8037-dcd2faa2433f"/><box rightPadding="1"><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box><textElement textAlignment="Right" verticalAlignment="Middle"><font fontName="SansSerif" size="6"/></textElement><textFieldExpression><![CDATA[$F{d06}]]></textFieldExpression></textField>
+            <textField pattern="#,##0" isBlankWhenNull="true"><reportElement x="356" y="0" width="16" height="18" uuid="9a52cf63-e3a4-4152-90e3-55a7735e46d8"/><box rightPadding="1"><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box><textElement textAlignment="Right" verticalAlignment="Middle"><font fontName="SansSerif" size="6"/></textElement><textFieldExpression><![CDATA[$F{d07}]]></textFieldExpression></textField>
+            <textField pattern="#,##0" isBlankWhenNull="true"><reportElement x="372" y="0" width="16" height="18" uuid="db377ac4-ab46-4271-88af-effa6cd618bb"/><box rightPadding="1"><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box><textElement textAlignment="Right" verticalAlignment="Middle"><font fontName="SansSerif" size="6"/></textElement><textFieldExpression><![CDATA[$F{d08}]]></textFieldExpression></textField>
+            <textField pattern="#,##0" isBlankWhenNull="true"><reportElement x="388" y="0" width="16" height="18" uuid="d78e22e3-2430-4967-a7eb-fbce21ee61cc"/><box rightPadding="1"><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box><textElement textAlignment="Right" verticalAlignment="Middle"><font fontName="SansSerif" size="6"/></textElement><textFieldExpression><![CDATA[$F{d09}]]></textFieldExpression></textField>
+            <textField pattern="#,##0" isBlankWhenNull="true"><reportElement x="404" y="0" width="16" height="18" uuid="dd28a7da-87c6-4911-b704-f4849edbdc2c"/><box rightPadding="1"><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box><textElement textAlignment="Right" verticalAlignment="Middle"><font fontName="SansSerif" size="6"/></textElement><textFieldExpression><![CDATA[$F{d10}]]></textFieldExpression></textField>
+            <textField pattern="#,##0" isBlankWhenNull="true"><reportElement x="420" y="0" width="16" height="18" uuid="3cf7ef1a-8ac6-4848-ad5a-737af5e14cd4"/><box rightPadding="1"><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box><textElement textAlignment="Right" verticalAlignment="Middle"><font fontName="SansSerif" size="6"/></textElement><textFieldExpression><![CDATA[$F{d11}]]></textFieldExpression></textField>
+            <textField pattern="#,##0" isBlankWhenNull="true"><reportElement x="436" y="0" width="16" height="18" uuid="7f5a5184-5ef0-4bc3-8119-a142c200ffae"/><box rightPadding="1"><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box><textElement textAlignment="Right" verticalAlignment="Middle"><font fontName="SansSerif" size="6"/></textElement><textFieldExpression><![CDATA[$F{d12}]]></textFieldExpression></textField>
+            <textField pattern="#,##0" isBlankWhenNull="true"><reportElement x="452" y="0" width="16" height="18" uuid="9c51e094-b80a-474b-845e-b051e9a1c5e5"/><box rightPadding="1"><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box><textElement textAlignment="Right" verticalAlignment="Middle"><font fontName="SansSerif" size="6"/></textElement><textFieldExpression><![CDATA[$F{d13}]]></textFieldExpression></textField>
+            <textField pattern="#,##0" isBlankWhenNull="true"><reportElement x="468" y="0" width="16" height="18" uuid="9cd20723-929b-4f6b-8204-7ffbc035814d"/><box rightPadding="1"><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box><textElement textAlignment="Right" verticalAlignment="Middle"><font fontName="SansSerif" size="6"/></textElement><textFieldExpression><![CDATA[$F{d14}]]></textFieldExpression></textField>
+            <textField pattern="#,##0" isBlankWhenNull="true"><reportElement x="484" y="0" width="16" height="18" uuid="25463d93-1f23-4b30-9249-35a9444269c4"/><box rightPadding="1"><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box><textElement textAlignment="Right" verticalAlignment="Middle"><font fontName="SansSerif" size="6"/></textElement><textFieldExpression><![CDATA[$F{d15}]]></textFieldExpression></textField>
+            <textField pattern="#,##0" isBlankWhenNull="true"><reportElement x="500" y="0" width="16" height="18" uuid="dd151bd2-95b7-4c7c-abe0-fcda05c4a3fa"/><box rightPadding="1"><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box><textElement textAlignment="Right" verticalAlignment="Middle"><font fontName="SansSerif" size="6"/></textElement><textFieldExpression><![CDATA[$F{d16}]]></textFieldExpression></textField>
+            <textField pattern="#,##0" isBlankWhenNull="true"><reportElement x="516" y="0" width="16" height="18" uuid="cd9107ae-440e-4cd8-beb7-4f4a535d7dee"/><box rightPadding="1"><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box><textElement textAlignment="Right" verticalAlignment="Middle"><font fontName="SansSerif" size="6"/></textElement><textFieldExpression><![CDATA[$F{d17}]]></textFieldExpression></textField>
+            <textField pattern="#,##0" isBlankWhenNull="true"><reportElement x="532" y="0" width="16" height="18" uuid="65d87d70-f24e-4f62-a13a-b0e5dc4f0cd5"/><box rightPadding="1"><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box><textElement textAlignment="Right" verticalAlignment="Middle"><font fontName="SansSerif" size="6"/></textElement><textFieldExpression><![CDATA[$F{d18}]]></textFieldExpression></textField>
+            <textField pattern="#,##0" isBlankWhenNull="true"><reportElement x="548" y="0" width="16" height="18" uuid="bee16d52-b322-4e9e-92d3-a76b7a7fa71d"/><box rightPadding="1"><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box><textElement textAlignment="Right" verticalAlignment="Middle"><font fontName="SansSerif" size="6"/></textElement><textFieldExpression><![CDATA[$F{d19}]]></textFieldExpression></textField>
+            <textField pattern="#,##0" isBlankWhenNull="true"><reportElement x="564" y="0" width="16" height="18" uuid="387638eb-eabf-46ce-916a-29dadefb1e59"/><box rightPadding="1"><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box><textElement textAlignment="Right" verticalAlignment="Middle"><font fontName="SansSerif" size="6"/></textElement><textFieldExpression><![CDATA[$F{d20}]]></textFieldExpression></textField>
+            <textField pattern="#,##0" isBlankWhenNull="true"><reportElement x="580" y="0" width="16" height="18" uuid="8e58f9a5-1096-4c47-83a5-5b620d3fd6d7"/><box rightPadding="1"><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box><textElement textAlignment="Right" verticalAlignment="Middle"><font fontName="SansSerif" size="6"/></textElement><textFieldExpression><![CDATA[$F{d21}]]></textFieldExpression></textField>
+            <textField pattern="#,##0" isBlankWhenNull="true"><reportElement x="596" y="0" width="16" height="18" uuid="06d32d6a-e3c4-40af-8543-50f550a677e5"/><box rightPadding="1"><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box><textElement textAlignment="Right" verticalAlignment="Middle"><font fontName="SansSerif" size="6"/></textElement><textFieldExpression><![CDATA[$F{d22}]]></textFieldExpression></textField>
+            <textField pattern="#,##0" isBlankWhenNull="true"><reportElement x="612" y="0" width="16" height="18" uuid="03920f83-684b-4ba2-a4d4-422d93291326"/><box rightPadding="1"><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box><textElement textAlignment="Right" verticalAlignment="Middle"><font fontName="SansSerif" size="6"/></textElement><textFieldExpression><![CDATA[$F{d23}]]></textFieldExpression></textField>
+            <textField pattern="#,##0" isBlankWhenNull="true"><reportElement x="628" y="0" width="16" height="18" uuid="1e8a426a-652b-4067-bf98-4ecf5ded32e1"/><box rightPadding="1"><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box><textElement textAlignment="Right" verticalAlignment="Middle"><font fontName="SansSerif" size="6"/></textElement><textFieldExpression><![CDATA[$F{d24}]]></textFieldExpression></textField>
+            <textField pattern="#,##0" isBlankWhenNull="true"><reportElement x="644" y="0" width="16" height="18" uuid="9b2d13cb-ddd6-467c-8124-74f8bad5eb46"/><box rightPadding="1"><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box><textElement textAlignment="Right" verticalAlignment="Middle"><font fontName="SansSerif" size="6"/></textElement><textFieldExpression><![CDATA[$F{d25}]]></textFieldExpression></textField>
+            <textField pattern="#,##0" isBlankWhenNull="true"><reportElement x="660" y="0" width="16" height="18" uuid="6145f188-a697-49e1-8620-de61085a6878"/><box rightPadding="1"><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box><textElement textAlignment="Right" verticalAlignment="Middle"><font fontName="SansSerif" size="6"/></textElement><textFieldExpression><![CDATA[$F{d26}]]></textFieldExpression></textField>
+            <textField pattern="#,##0" isBlankWhenNull="true"><reportElement x="676" y="0" width="16" height="18" uuid="c5a43c6f-3727-4653-89ed-f0985db73576"/><box rightPadding="1"><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box><textElement textAlignment="Right" verticalAlignment="Middle"><font fontName="SansSerif" size="6"/></textElement><textFieldExpression><![CDATA[$F{d27}]]></textFieldExpression></textField>
+            <textField pattern="#,##0" isBlankWhenNull="true"><reportElement x="692" y="0" width="16" height="18" uuid="d1651b60-9071-4c0a-b065-240c42b15dac"/><box rightPadding="1"><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box><textElement textAlignment="Right" verticalAlignment="Middle"><font fontName="SansSerif" size="6"/></textElement><textFieldExpression><![CDATA[$F{d28}]]></textFieldExpression></textField>
+            <textField pattern="#,##0" isBlankWhenNull="true"><reportElement x="708" y="0" width="16" height="18" uuid="2cbbff3e-327d-4c45-9b7b-b64d418df5e4"/><box rightPadding="1"><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box><textElement textAlignment="Right" verticalAlignment="Middle"><font fontName="SansSerif" size="6"/></textElement><textFieldExpression><![CDATA[$F{d29}]]></textFieldExpression></textField>
+            <textField pattern="#,##0" isBlankWhenNull="true"><reportElement x="724" y="0" width="16" height="18" uuid="12151e05-e5b1-47a5-9fce-8793c0e9096b"/><box rightPadding="1"><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box><textElement textAlignment="Right" verticalAlignment="Middle"><font fontName="SansSerif" size="6"/></textElement><textFieldExpression><![CDATA[$F{d30}]]></textFieldExpression></textField>
+            <textField pattern="#,##0" isBlankWhenNull="true"><reportElement x="740" y="0" width="42" height="18" uuid="797454a6-0f1b-4dfd-80c8-8981b821b0ab"/><box rightPadding="1"><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box><textElement textAlignment="Right" verticalAlignment="Middle"><font fontName="SansSerif" size="6"/></textElement><textFieldExpression><![CDATA[$F{d31}]]></textFieldExpression></textField>
+        </band>
+    </detail>
+    <pageFooter>
+        <band height="20">
+            <textField><reportElement x="682" y="0" width="100" height="20" uuid="df560c26-26b9-4807-bb9f-847be5d20315"/><textElement textAlignment="Right" verticalAlignment="Middle"><font fontName="SansSerif" size="8"/></textElement><textFieldExpression><![CDATA["Trang " + $V{PAGE_NUMBER}]]></textFieldExpression></textField>
+        </band>
+    </pageFooter>
+    <summary>
+        <band height="90">
+            <textField isBlankWhenNull="true"><reportElement x="580" y="20" width="200" height="14" uuid="662706b2-a943-44c2-bbdd-f5a79c2ad406"/><textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="SansSerif" size="8" isItalic="true"/></textElement><textFieldExpression><![CDATA[$P{p_ngayLap} != null ? $P{p_ngayLap} : "Ngày 08 tháng 09 năm 2026"]]></textFieldExpression></textField>
+            <staticText><reportElement x="580" y="36" width="200" height="16" uuid="ff073a6e-fe06-490b-bb83-436cf2cc9c79"/><textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="SansSerif" size="9" isBold="true"/></textElement><text><![CDATA[Người lập]]></text></staticText>
+            <staticText><reportElement x="580" y="52" width="200" height="14" uuid="b9f962e8-8e13-4a76-b72a-4728cc1a53ee"/><textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="SansSerif" size="8" isItalic="true"/></textElement><text><![CDATA[(Ký, họ tên)]]></text></staticText>
+        </band>
+    </summary>
+</jasperReport>

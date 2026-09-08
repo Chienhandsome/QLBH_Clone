@@ -49,4 +49,18 @@ public class BaoCaoKhachHangReportTest {
 
         System.out.println("Báo cáo Khách hàng sinh nhật tạo thành công! Số trang: " + print.getPages().size());
     }
+
+    @Test
+    public void testKhachHangThanThietReport() throws Exception {
+        BaoCaoKhachHangReportService service = new BaoCaoKhachHangReportService();
+
+        JasperReport report = service.getCompiledReportThanThiet();
+        Assertions.assertNotNull(report, "JasperReport ThanThiet không được null");
+
+        JasperPrint print = service.generateKhachHangThanThiet(null, null, null);
+        Assertions.assertNotNull(print, "JasperPrint ThanThiet không được null");
+        Assertions.assertTrue(print.getPages().size() >= 1, "Số trang phải >= 1");
+
+        System.out.println("Báo cáo Khách hàng thân thiết tạo thành công! Số trang: " + print.getPages().size());
+    }
 }

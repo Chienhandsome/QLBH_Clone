@@ -1,0 +1,228 @@
+package kazuko.ex.ui.baocao;
+
+import kazuko.ex.dao.CuaHangDAO;
+import kazuko.ex.dao.KhachHangDAO;
+import kazuko.ex.dao.NhanVienDAO;
+import kazuko.ex.model.danhmuc.CuaHang;
+import kazuko.ex.model.danhmuc.KhachHang;
+import kazuko.ex.model.danhmuc.NhanVien;
+import kazuko.ex.report.service.BaoCaoBanHangReportService;
+import kazuko.ex.util.IconHelper;
+import net.sf.jasperreports.engine.JasperPrint;
+import net.sf.jasperreports.swing.JRViewer;
+
+import javax.swing.*;
+import javax.swing.border.MatteBorder;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+
+public class BaoCaoBanHangTheoKhachHangPanel extends JPanel {
+
+    private final BaoCaoBanHangReportService reportService = new BaoCaoBanHangReportService();
+    private final KhachHangDAO khachHangDAO = new KhachHangDAO();
+    private final NhanVienDAO nhanVienDAO = new NhanVienDAO();
+    private final CuaHangDAO cuaHangDAO = new CuaHangDAO();
+
+    private JSpinner spFromDate;
+    private JSpinner spToDate;
+    private JComboBox<ComboItem> cbKhachHang;
+    private JComboBox<ComboItem> cbNhanVien;
+    private JComboBox<ComboItem> cbCuaHang;
+    private JButton btnTaiDuLieu;
+
+    private JPanel pnlViewerContainer;
+    private JRViewer currentViewer;
+
+    private boolean isInitializing = true;
+    private javax.swing.Timer debounceTimer;
+
+    public BaoCaoBanHangTheoKhachHangPanel() {
+        initComponents();
+        loadFilterData();
+        setupAutoReloadListeners();
+        isInitializing = false;
+        loadReport();
+    }
+
+    private void initComponents() {
+        setLayout(new BorderLayout());
+        setBackground(new Color(240, 245, 252));
+
+        // 1. Top Filter Panel
+        JPanel pnlTop = createFilterPanel();
+        add(pnlTop, BorderLayout.NORTH);
+
+        // 2. Center Report Viewer Container
+        pnlViewerContainer = new JPanel(new BorderLayout());
+        pnlViewerContainer.setBackground(new Color(215, 228, 242));
+
+        currentViewer = new JRViewer(null);
+        pnlViewerContainer.add(currentViewer, BorderLayout.CENTER);
+
+        add(pnlViewerContainer, BorderLayout.CENTER);
+
+        // F5 hotkey to refresh
+        getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_F5, 0), "refreshReport");
+        getActionMap().put("refreshReport", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                loadReport();
+            }
+        });
+    }
+
+    private void setupAutoReloadListeners() {
+        debounceTimer = new javax.swing.Timer(250, e -> loadReport());
+        debounceTimer.setRepeats(false);
+
+        spFromDate.addChangeListener(e -> onFilterChanged());
+        spToDate.addChangeListener(e -> onFilterChanged());
+        cbKhachHang.addActionListener(e -> onFilterChanged());
+        cbNhanVien.addActionListener(e -> onFilterChanged());
+        cbCuaHang.addActionListener(e -> onFilterChanged());
+    }
+
+    private void onFilterChanged() {
+        if (isInitializing) return;
+        if (debounceTimer != null) {
+            debounceTimer.restart();
+        } else {
+            loadReport();
+        }
+    }
+
+    private JPanel createFilterPanel() {
+        JPanel pnl = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 5));
+        pnl.setBackground(new Color(245, 248, 253));
+        pnl.setBorder(new MatteBorder(0, 0, 1, 0, new Color(205, 220, 240)));
+
+        Calendar cal = Calendar.getInstance();
+        Date toDate = cal.getTime();
+        cal.set(Calendar.DAY_OF_MONTH, 1);
+        Date fromDate = cal.getTime();
+
+        pnl.add(new JLabel("Từ:"));
+        spFromDate = new JSpinner(new SpinnerDateModel(fromDate, null, null, Calendar.DAY_OF_MONTH));
+        spFromDate.setEditor(new JSpinner.DateEditor(spFromDate, "dd/MM/yyyy"));
+        spFromDate.setPreferredSize(new Dimension(100, 26));
+        pnl.add(spFromDate);
+
+        pnl.add(new JLabel("Đến:"));
+        spToDate = new JSpinner(new SpinnerDateModel(toDate, null, null, Calendar.DAY_OF_MONTH));
+        spToDate.setEditor(new JSpinner.DateEditor(spToDate, "dd/MM/yyyy"));
+        spToDate.setPreferredSize(new Dimension(100, 26));
+        pnl.add(spToDate);
+
+        pnl.add(new JLabel("Khách hàng:"));
+        cbKhachHang = new JComboBox<>();
+        cbKhachHang.setPreferredSize(new Dimension(150, 26));
+        pnl.add(cbKhachHang);
+
+        pnl.add(new JLabel("Nhân viên xuất:"));
+        cbNhanVien = new JComboBox<>();
+        cbNhanVien.setPreferredSize(new Dimension(140, 26));
+        pnl.add(cbNhanVien);
+
+        pnl.add(new JLabel("Cửa hàng:"));
+        cbCuaHang = new JComboBox<>();
+        cbCuaHang.setPreferredSize(new Dimension(130, 26));
+        pnl.add(cbCuaHang);
+
+        // Nút Tải lại / Xem báo cáo
+        btnTaiDuLieu = new JButton("Tải dữ liệu (F5)");
+        btnTaiDuLieu.setIcon(IconHelper.getIcon("refresh", 16, 16));
+        btnTaiDuLieu.setBackground(new Color(51, 122, 183));
+        btnTaiDuLieu.setForeground(Color.WHITE);
+        btnTaiDuLieu.setFocusPainted(false);
+        btnTaiDuLieu.setPreferredSize(new Dimension(140, 26));
+        btnTaiDuLieu.addActionListener(e -> loadReport());
+        pnl.add(btnTaiDuLieu);
+
+        return pnl;
+    }
+
+    private void loadFilterData() {
+        cbKhachHang.removeAllItems();
+        cbKhachHang.addItem(new ComboItem("", "-- Tất cả khách hàng --"));
+        List<KhachHang> listKH = khachHangDAO.getAll();
+        for (KhachHang kh : listKH) {
+            cbKhachHang.addItem(new ComboItem(kh.getId(), kh.getName()));
+        }
+
+        cbNhanVien.removeAllItems();
+        cbNhanVien.addItem(new ComboItem("", "-- Tất cả nhân viên --"));
+        List<NhanVien> listNV = nhanVienDAO.getAll();
+        for (NhanVien nv : listNV) {
+            cbNhanVien.addItem(new ComboItem(nv.getId(), nv.getName()));
+        }
+
+        cbCuaHang.removeAllItems();
+        cbCuaHang.addItem(new ComboItem("", "-- Tất cả cửa hàng --"));
+        List<CuaHang> listCH = cuaHangDAO.getAll();
+        for (CuaHang ch : listCH) {
+            cbCuaHang.addItem(new ComboItem(ch.getId(), ch.getName()));
+        }
+    }
+
+    public void loadReport() {
+        btnTaiDuLieu.setEnabled(false);
+
+        Date fromDate = (Date) spFromDate.getValue();
+        Date toDate = (Date) spToDate.getValue();
+
+        ComboItem selectedKH = (ComboItem) cbKhachHang.getSelectedItem();
+        String khId = selectedKH != null ? selectedKH.getId() : "";
+
+        ComboItem selectedNV = (ComboItem) cbNhanVien.getSelectedItem();
+        String nvId = selectedNV != null ? selectedNV.getId() : "";
+
+        ComboItem selectedCH = (ComboItem) cbCuaHang.getSelectedItem();
+        String chId = selectedCH != null ? selectedCH.getId() : "";
+
+        SwingWorker<JasperPrint, Void> worker = new SwingWorker<>() {
+            @Override
+            protected JasperPrint doInBackground() throws Exception {
+                return reportService.generateBanHangTheoKhachHang(fromDate, toDate, khId, nvId, chId);
+            }
+
+            @Override
+            protected void done() {
+                try {
+                    JasperPrint print = get();
+                    pnlViewerContainer.removeAll();
+                    currentViewer = new JRViewer(print);
+                    pnlViewerContainer.add(currentViewer, BorderLayout.CENTER);
+                    pnlViewerContainer.revalidate();
+                    pnlViewerContainer.repaint();
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(BaoCaoBanHangTheoKhachHangPanel.this,
+                            "Lỗi tải báo cáo: " + ex.getMessage(),
+                            "Lỗi Báo Cáo", JOptionPane.ERROR_MESSAGE);
+                } finally {
+                    btnTaiDuLieu.setEnabled(true);
+                }
+            }
+        };
+        worker.execute();
+    }
+
+    private static class ComboItem {
+        private final String id;
+        private final String name;
+
+        public ComboItem(String id, String name) {
+            this.id = id;
+            this.name = name;
+        }
+
+        public String getId() { return id; }
+        public String getName() { return name; }
+
+        @Override
+        public String toString() { return name; }
+    }
+}

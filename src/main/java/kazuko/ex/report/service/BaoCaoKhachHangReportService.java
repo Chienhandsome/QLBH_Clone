@@ -2,16 +2,20 @@ package kazuko.ex.report.service;
 
 import kazuko.ex.dao.KhachHangDAO;
 import kazuko.ex.dao.SystemConfigDAO;
+import kazuko.ex.dao.TangGiamDiemDAO;
 import kazuko.ex.model.danhmuc.KhachHang;
+import kazuko.ex.model.danhmuc.KhachHangLoyaltySummary;
 import kazuko.ex.model.system.SystemConfig;
 import kazuko.ex.report.model.KhachHangReportRow;
 import kazuko.ex.report.model.KhachHangSinhNhatReportRow;
+import kazuko.ex.report.model.KhachHangThanThietReportRow;
 import net.sf.jasperreports.engine.*;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 
 import javax.imageio.ImageIO;
 import java.io.File;
 import java.io.InputStream;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 public class BaoCaoKhachHangReportService {
@@ -19,11 +23,13 @@ public class BaoCaoKhachHangReportService {
     private static JasperReport cachedReportNhom = null;
     private static JasperReport cachedReportNhanVien = null;
     private static JasperReport cachedReportSinhNhat = null;
+    private static JasperReport cachedReportThanThiet = null;
     private static Object cachedLogoImage = null;
     private static String cachedLogoPath = null;
 
     private final KhachHangDAO khachHangDAO = new KhachHangDAO();
     private final SystemConfigDAO configDAO = new SystemConfigDAO();
+    private final TangGiamDiemDAO tangGiamDiemDAO = new TangGiamDiemDAO();
 
     static {
         // Preload and compile in background
@@ -51,7 +57,23 @@ public class BaoCaoKhachHangReportService {
                     if (in != null) cachedReportSinhNhat = JasperCompileManager.compileReport(in);
                 }
             }
+            if (cachedReportThanThiet == null) {
+                try (InputStream in = BaoCaoKhachHangReportService.class.getResourceAsStream("/reports/khach_hang_than_thiet.jrxml")) {
+                    if (in != null) cachedReportThanThiet = JasperCompileManager.compileReport(in);
+                }
+            }
         } catch (Exception ignored) {}
+    }
+
+    public synchronized JasperReport getCompiledReportThanThiet() throws JRException {
+        if (cachedReportThanThiet != null) return cachedReportThanThiet;
+        try (InputStream in = getClass().getResourceAsStream("/reports/khach_hang_than_thiet.jrxml")) {
+            if (in == null) throw new JRException("Mẫu /reports/khach_hang_than_thiet.jrxml không tồn tại!");
+            cachedReportThanThiet = JasperCompileManager.compileReport(in);
+            return cachedReportThanThiet;
+        } catch (Exception e) {
+            throw new JRException(e);
+        }
     }
 
     public synchronized JasperReport getCompiledReportNhom() throws JRException {
@@ -295,6 +317,68 @@ public class BaoCaoKhachHangReportService {
         parameters.put("p_companyEmail", sysConfig.getEmail() != null ? sysConfig.getEmail() : "");
         parameters.put("p_logoImage", getCompanyLogo(sysConfig));
         parameters.put("p_reportTitle", "KHÁCH HÀNG ĐẾN NGÀY SINH NHẬT");
+
+        return JasperFillManager.fillReport(jasperReport, parameters, dataSource);
+    }
+
+    public JasperPrint generateKhachHangThanThiet(Date fromDate, Date toDate, String nhomKhachHangId) throws JRException {
+        JasperReport jasperReport = getCompiledReportThanThiet();
+        SystemConfig sysConfig = configDAO.loadConfig();
+
+        List<KhachHangLoyaltySummary> loyaltyList = tangGiamDiemDAO.getLoyaltySummaryList(100000.0);
+        List<KhachHangThanThietReportRow> rows = new ArrayList<>();
+
+        for (KhachHangLoyaltySummary item : loyaltyList) {
+            KhachHang kh = item.getKhachHang();
+            if (kh == null || kh.getStatus() < 0) continue;
+
+            if (nhomKhachHangId != null && !nhomKhachHangId.trim().isEmpty()) {
+                if (!nhomKhachHangId.equals(kh.getNhomKhachHangId())) {
+                    continue;
+                }
+            }
+
+            String groupHeader = "Nhóm khách hàng: " + (kh.getTenNhomKhachHang() != null && !kh.getTenNhomKhachHang().trim().isEmpty() ? kh.getTenNhomKhachHang() : "Khác");
+
+            KhachHangThanThietReportRow row = new KhachHangThanThietReportRow(
+                    0,
+                    groupHeader,
+                    kh.getName() != null ? kh.getName() : "",
+                    kh.getDiaChi() != null ? kh.getDiaChi() : "",
+                    kh.getDienThoai() != null ? kh.getDienThoai() : "",
+                    item.getDoanhSo(),
+                    item.getDiemTichLuy(),
+                    0.0,
+                    item.getDiemTichLuy()
+            );
+            rows.add(row);
+        }
+
+        // Sort by groupHeader, then tenKhachHang
+        rows.sort((r1, r2) -> {
+            int cmp = r1.getGroupHeader().compareToIgnoreCase(r2.getGroupHeader());
+            if (cmp != 0) return cmp;
+            return r1.getTenKhachHang().compareToIgnoreCase(r2.getTenKhachHang());
+        });
+
+        // Set STT
+        for (int i = 0; i < rows.size(); i++) {
+            rows.get(i).setStt(i + 1);
+        }
+
+        JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(rows);
+
+        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+        Map<String, Object> parameters = new HashMap<>();
+        parameters.put("p_companyName", sysConfig.getTenCongTy() != null && !sysConfig.getTenCongTy().isEmpty() ? sysConfig.getTenCongTy() : "CÔNG TY TNHH NGỌC CHÂU ÂU");
+        parameters.put("p_companyAddress", sysConfig.getDiaChi() != null ? sysConfig.getDiaChi() : "");
+        parameters.put("p_companyPhone", sysConfig.getSoDienThoai() != null ? sysConfig.getSoDienThoai() : "");
+        parameters.put("p_companyEmail", sysConfig.getEmail() != null ? sysConfig.getEmail() : "");
+        parameters.put("p_logoImage", getCompanyLogo(sysConfig));
+        parameters.put("p_reportTitle", "KHÁCH HÀNG THÂN THIẾT");
+        parameters.put("p_tuNgay", fromDate != null ? sdf.format(fromDate) : "");
+        parameters.put("p_denNgay", toDate != null ? sdf.format(toDate) : "");
+        parameters.put("p_nhomKhach", nhomKhachHangId != null && !nhomKhachHangId.trim().isEmpty() ? nhomKhachHangId : "Tất cả");
 
         return JasperFillManager.fillReport(jasperReport, parameters, dataSource);
     }

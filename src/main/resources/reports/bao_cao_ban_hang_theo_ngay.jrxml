@@ -1,0 +1,498 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport whenNoDataType="AllSectionsNoDetail"
+              xmlns="http://jasperreports.sourceforge.net/jasperreports"
+              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+              xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd"
+              name="bao_cao_ban_hang_theo_ngay"
+              pageWidth="842" pageHeight="595" orientation="Landscape"
+              columnWidth="782" leftMargin="30" rightMargin="30" topMargin="20" bottomMargin="20">
+
+    <parameter name="p_companyName" class="java.lang.String"/>
+    <parameter name="p_companyAddress" class="java.lang.String"/>
+    <parameter name="p_companyPhone" class="java.lang.String"/>
+    <parameter name="p_companyEmail" class="java.lang.String"/>
+    <parameter name="p_logoImage" class="java.lang.Object"/>
+    <parameter name="p_reportTitle" class="java.lang.String"/>
+    <parameter name="p_tuNgay" class="java.lang.String"/>
+    <parameter name="p_denNgay" class="java.lang.String"/>
+
+    <field name="stt" class="java.lang.Integer"/>
+    <field name="groupNgay" class="java.lang.String"/>
+    <field name="soPhieu" class="java.lang.String"/>
+    <field name="nhanVienBan" class="java.lang.String"/>
+    <field name="thuNgan" class="java.lang.String"/>
+    <field name="tienHang" class="java.lang.Double"/>
+    <field name="doiTra" class="java.lang.Double"/>
+    <field name="giamGia" class="java.lang.Double"/>
+    <field name="tongCong" class="java.lang.Double"/>
+    <field name="tienMat" class="java.lang.Double"/>
+    <field name="the" class="java.lang.Double"/>
+
+    <variable name="v_sumGroupTienHang" class="java.lang.Double" resetType="Group" resetGroup="GroupNgay" calculation="Sum">
+        <variableExpression><![CDATA[$F{tienHang}]]></variableExpression>
+    </variable>
+    <variable name="v_sumGroupDoiTra" class="java.lang.Double" resetType="Group" resetGroup="GroupNgay" calculation="Sum">
+        <variableExpression><![CDATA[$F{doiTra}]]></variableExpression>
+    </variable>
+    <variable name="v_sumGroupGiamGia" class="java.lang.Double" resetType="Group" resetGroup="GroupNgay" calculation="Sum">
+        <variableExpression><![CDATA[$F{giamGia}]]></variableExpression>
+    </variable>
+    <variable name="v_sumGroupTongCong" class="java.lang.Double" resetType="Group" resetGroup="GroupNgay" calculation="Sum">
+        <variableExpression><![CDATA[$F{tongCong}]]></variableExpression>
+    </variable>
+    <variable name="v_sumGroupTienMat" class="java.lang.Double" resetType="Group" resetGroup="GroupNgay" calculation="Sum">
+        <variableExpression><![CDATA[$F{tienMat}]]></variableExpression>
+    </variable>
+    <variable name="v_sumGroupThe" class="java.lang.Double" resetType="Group" resetGroup="GroupNgay" calculation="Sum">
+        <variableExpression><![CDATA[$F{the}]]></variableExpression>
+    </variable>
+
+    <variable name="v_totalTienHang" class="java.lang.Double" calculation="Sum">
+        <variableExpression><![CDATA[$F{tienHang}]]></variableExpression>
+    </variable>
+    <variable name="v_totalDoiTra" class="java.lang.Double" calculation="Sum">
+        <variableExpression><![CDATA[$F{doiTra}]]></variableExpression>
+    </variable>
+    <variable name="v_totalGiamGia" class="java.lang.Double" calculation="Sum">
+        <variableExpression><![CDATA[$F{giamGia}]]></variableExpression>
+    </variable>
+    <variable name="v_totalTongCong" class="java.lang.Double" calculation="Sum">
+        <variableExpression><![CDATA[$F{tongCong}]]></variableExpression>
+    </variable>
+    <variable name="v_totalTienMat" class="java.lang.Double" calculation="Sum">
+        <variableExpression><![CDATA[$F{tienMat}]]></variableExpression>
+    </variable>
+    <variable name="v_totalThe" class="java.lang.Double" calculation="Sum">
+        <variableExpression><![CDATA[$F{the}]]></variableExpression>
+    </variable>
+
+    <group name="GroupNgay">
+        <groupExpression><![CDATA[$F{groupNgay}]]></groupExpression>
+        <groupHeader>
+            <band height="20">
+                <textField isBlankWhenNull="true">
+                    <reportElement x="0" y="0" width="782" height="20"/>
+                    <box leftPadding="5">
+                        <topPen lineWidth="0.5" lineColor="#808080"/>
+                        <leftPen lineWidth="0.5" lineColor="#808080"/>
+                        <bottomPen lineWidth="0.5" lineColor="#808080"/>
+                        <rightPen lineWidth="0.5" lineColor="#808080"/>
+                    </box>
+                    <textElement verticalAlignment="Middle">
+                        <font fontName="SansSerif" size="9" isBold="true"/>
+                    </textElement>
+                    <textFieldExpression><![CDATA[$F{groupNgay}]]></textFieldExpression>
+                </textField>
+            </band>
+        </groupHeader>
+        <groupFooter>
+            <band height="20">
+                <staticText>
+                    <reportElement x="0" y="0" width="370" height="20"/>
+                    <box rightPadding="8">
+                        <topPen lineWidth="0.5" lineColor="#808080"/>
+                        <leftPen lineWidth="0.5" lineColor="#808080"/>
+                        <bottomPen lineWidth="0.5" lineColor="#808080"/>
+                        <rightPen lineWidth="0.5" lineColor="#808080"/>
+                    </box>
+                    <textElement textAlignment="Right" verticalAlignment="Middle">
+                        <font fontName="SansSerif" size="8" isBold="true"/>
+                    </textElement>
+                    <text><![CDATA[Tổng cộng]]></text>
+                </staticText>
+                <textField pattern="#,##0.00" isBlankWhenNull="true">
+                    <reportElement x="370" y="0" width="65" height="20"/>
+                    <box rightPadding="4">
+                        <topPen lineWidth="0.5" lineColor="#808080"/>
+                        <leftPen lineWidth="0.5" lineColor="#808080"/>
+                        <bottomPen lineWidth="0.5" lineColor="#808080"/>
+                        <rightPen lineWidth="0.5" lineColor="#808080"/>
+                    </box>
+                    <textElement textAlignment="Right" verticalAlignment="Middle">
+                        <font fontName="SansSerif" size="8" isBold="true"/>
+                    </textElement>
+                    <textFieldExpression><![CDATA[$V{v_sumGroupTienHang} != null ? $V{v_sumGroupTienHang} : 0.0]]></textFieldExpression>
+                </textField>
+                <textField pattern="#,##0.00" isBlankWhenNull="true">
+                    <reportElement x="435" y="0" width="65" height="20"/>
+                    <box rightPadding="4">
+                        <topPen lineWidth="0.5" lineColor="#808080"/>
+                        <leftPen lineWidth="0.5" lineColor="#808080"/>
+                        <bottomPen lineWidth="0.5" lineColor="#808080"/>
+                        <rightPen lineWidth="0.5" lineColor="#808080"/>
+                    </box>
+                    <textElement textAlignment="Right" verticalAlignment="Middle">
+                        <font fontName="SansSerif" size="8" isBold="true"/>
+                    </textElement>
+                    <textFieldExpression><![CDATA[$V{v_sumGroupDoiTra} != null ? $V{v_sumGroupDoiTra} : 0.0]]></textFieldExpression>
+                </textField>
+                <textField pattern="#,##0.00" isBlankWhenNull="true">
+                    <reportElement x="500" y="0" width="60" height="20"/>
+                    <box rightPadding="4">
+                        <topPen lineWidth="0.5" lineColor="#808080"/>
+                        <leftPen lineWidth="0.5" lineColor="#808080"/>
+                        <bottomPen lineWidth="0.5" lineColor="#808080"/>
+                        <rightPen lineWidth="0.5" lineColor="#808080"/>
+                    </box>
+                    <textElement textAlignment="Right" verticalAlignment="Middle">
+                        <font fontName="SansSerif" size="8" isBold="true"/>
+                    </textElement>
+                    <textFieldExpression><![CDATA[$V{v_sumGroupGiamGia} != null ? $V{v_sumGroupGiamGia} : 0.0]]></textFieldExpression>
+                </textField>
+                <textField pattern="#,##0.00" isBlankWhenNull="true">
+                    <reportElement x="560" y="0" width="75" height="20"/>
+                    <box rightPadding="4">
+                        <topPen lineWidth="0.5" lineColor="#808080"/>
+                        <leftPen lineWidth="0.5" lineColor="#808080"/>
+                        <bottomPen lineWidth="0.5" lineColor="#808080"/>
+                        <rightPen lineWidth="0.5" lineColor="#808080"/>
+                    </box>
+                    <textElement textAlignment="Right" verticalAlignment="Middle">
+                        <font fontName="SansSerif" size="8" isBold="true"/>
+                    </textElement>
+                    <textFieldExpression><![CDATA[$V{v_sumGroupTongCong} != null ? $V{v_sumGroupTongCong} : 0.0]]></textFieldExpression>
+                </textField>
+                <textField pattern="#,##0.00" isBlankWhenNull="true">
+                    <reportElement x="635" y="0" width="75" height="20"/>
+                    <box rightPadding="4">
+                        <topPen lineWidth="0.5" lineColor="#808080"/>
+                        <leftPen lineWidth="0.5" lineColor="#808080"/>
+                        <bottomPen lineWidth="0.5" lineColor="#808080"/>
+                        <rightPen lineWidth="0.5" lineColor="#808080"/>
+                    </box>
+                    <textElement textAlignment="Right" verticalAlignment="Middle">
+                        <font fontName="SansSerif" size="8" isBold="true"/>
+                    </textElement>
+                    <textFieldExpression><![CDATA[$V{v_sumGroupTienMat} != null ? $V{v_sumGroupTienMat} : 0.0]]></textFieldExpression>
+                </textField>
+                <textField pattern="#,##0.00" isBlankWhenNull="true">
+                    <reportElement x="710" y="0" width="72" height="20"/>
+                    <box rightPadding="4">
+                        <topPen lineWidth="0.5" lineColor="#808080"/>
+                        <leftPen lineWidth="0.5" lineColor="#808080"/>
+                        <bottomPen lineWidth="0.5" lineColor="#808080"/>
+                        <rightPen lineWidth="0.5" lineColor="#808080"/>
+                    </box>
+                    <textElement textAlignment="Right" verticalAlignment="Middle">
+                        <font fontName="SansSerif" size="8" isBold="true"/>
+                    </textElement>
+                    <textFieldExpression><![CDATA[$V{v_sumGroupThe} != null ? $V{v_sumGroupThe} : 0.0]]></textFieldExpression>
+                </textField>
+            </band>
+        </groupFooter>
+    </group>
+
+    <title>
+        <band height="100">
+            <image scaleImage="RetainShape" hAlign="Center" vAlign="Middle" onErrorType="Blank">
+                <reportElement x="10" y="0" width="120" height="55"/>
+                <imageExpression><![CDATA[$P{p_logoImage}]]></imageExpression>
+            </image>
+            <textField isBlankWhenNull="true">
+                <reportElement x="350" y="0" width="430" height="18"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
+                    <font fontName="SansSerif" size="11" isBold="true"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$P{p_companyName} != null ? $P{p_companyName} : "Công ty TNHH Ngọc Châu Âu"]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement x="350" y="18" width="430" height="15"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
+                    <font fontName="SansSerif" size="9"/>
+                </textElement>
+                <textFieldExpression><![CDATA["Địa chỉ: " + ($P{p_companyAddress} != null ? $P{p_companyAddress} : "455 Sư Vạn Hạnh, P.12, Q.10, TPHCM")]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement x="350" y="33" width="430" height="15"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
+                    <font fontName="SansSerif" size="9"/>
+                </textElement>
+                <textFieldExpression><![CDATA["Điện thoại: " + ($P{p_companyPhone} != null ? $P{p_companyPhone} : "(08) 6264 5788") + ($P{p_companyEmail} != null && !$P{p_companyEmail}.isEmpty() ? " Email: " + $P{p_companyEmail} : "")]]></textFieldExpression>
+            </textField>
+
+            <textField isBlankWhenNull="true">
+                <reportElement x="0" y="55" width="250" height="16"/>
+                <textElement verticalAlignment="Middle">
+                    <font fontName="SansSerif" size="9"/>
+                </textElement>
+                <textFieldExpression><![CDATA["Ngày từ " + ($P{p_tuNgay} != null ? $P{p_tuNgay} : "") + " đến " + ($P{p_denNgay} != null ? $P{p_denNgay} : "")]]></textFieldExpression>
+            </textField>
+
+            <textField isBlankWhenNull="true">
+                <reportElement x="350" y="58" width="430" height="24"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
+                    <font fontName="SansSerif" size="14" isBold="true"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$P{p_reportTitle} != null ? $P{p_reportTitle} : "BÁO CÁO BÁN HÀNG THEO NGÀY"]]></textFieldExpression>
+            </textField>
+        </band>
+    </title>
+
+    <columnHeader>
+        <band height="24">
+            <staticText>
+                <reportElement mode="Opaque" x="0" y="0" width="30" height="24" backcolor="#FFFFFF"/>
+                <box><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box>
+                <textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="SansSerif" size="8" isBold="true"/></textElement>
+                <text><![CDATA[STT]]></text>
+            </staticText>
+            <staticText>
+                <reportElement mode="Opaque" x="30" y="0" width="90" height="24" backcolor="#FFFFFF"/>
+                <box><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box>
+                <textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="SansSerif" size="8" isBold="true"/></textElement>
+                <text><![CDATA[Số phiếu]]></text>
+            </staticText>
+            <staticText>
+                <reportElement mode="Opaque" x="120" y="0" width="130" height="24" backcolor="#FFFFFF"/>
+                <box><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box>
+                <textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="SansSerif" size="8" isBold="true"/></textElement>
+                <text><![CDATA[Nhân viên bán]]></text>
+            </staticText>
+            <staticText>
+                <reportElement mode="Opaque" x="250" y="0" width="120" height="24" backcolor="#FFFFFF"/>
+                <box><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box>
+                <textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="SansSerif" size="8" isBold="true"/></textElement>
+                <text><![CDATA[Thu ngân]]></text>
+            </staticText>
+            <staticText>
+                <reportElement mode="Opaque" x="370" y="0" width="65" height="24" backcolor="#FFFFFF"/>
+                <box><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box>
+                <textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="SansSerif" size="8" isBold="true"/></textElement>
+                <text><![CDATA[Tiền hàng]]></text>
+            </staticText>
+            <staticText>
+                <reportElement mode="Opaque" x="435" y="0" width="65" height="24" backcolor="#FFFFFF"/>
+                <box><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box>
+                <textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="SansSerif" size="8" isBold="true"/></textElement>
+                <text><![CDATA[Đổi trả]]></text>
+            </staticText>
+            <staticText>
+                <reportElement mode="Opaque" x="500" y="0" width="60" height="24" backcolor="#FFFFFF"/>
+                <box><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box>
+                <textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="SansSerif" size="8" isBold="true"/></textElement>
+                <text><![CDATA[Giảm giá]]></text>
+            </staticText>
+            <staticText>
+                <reportElement mode="Opaque" x="560" y="0" width="75" height="24" backcolor="#FFFFFF"/>
+                <box><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box>
+                <textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="SansSerif" size="8" isBold="true"/></textElement>
+                <text><![CDATA[Tổng cộng]]></text>
+            </staticText>
+            <staticText>
+                <reportElement mode="Opaque" x="635" y="0" width="75" height="24" backcolor="#FFFFFF"/>
+                <box><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box>
+                <textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="SansSerif" size="8" isBold="true"/></textElement>
+                <text><![CDATA[Tiền mặt]]></text>
+            </staticText>
+            <staticText>
+                <reportElement mode="Opaque" x="710" y="0" width="72" height="24" backcolor="#FFFFFF"/>
+                <box><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box>
+                <textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="SansSerif" size="8" isBold="true"/></textElement>
+                <text><![CDATA[Thẻ]]></text>
+            </staticText>
+        </band>
+    </columnHeader>
+
+    <detail>
+        <band height="18">
+            <textField isBlankWhenNull="true">
+                <reportElement x="0" y="0" width="30" height="18"/>
+                <box><topPen lineWidth="0.5" lineColor="#808080"/><leftPen lineWidth="0.5" lineColor="#808080"/><bottomPen lineWidth="0.5" lineColor="#808080"/><rightPen lineWidth="0.5" lineColor="#808080"/></box>
+                <textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="SansSerif" size="8"/></textElement>
+                <textFieldExpression><![CDATA[$F{stt}]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement x="30" y="0" width="90" height="18"/>
+                <box leftPadding="4"><topPen lineWidth="0.5" lineColor="#808080"/><leftPen lineWidth="0.5" lineColor="#808080"/><bottomPen lineWidth="0.5" lineColor="#808080"/><rightPen lineWidth="0.5" lineColor="#808080"/></box>
+                <textElement verticalAlignment="Middle"><font fontName="SansSerif" size="8"/></textElement>
+                <textFieldExpression><![CDATA[$F{soPhieu}]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement x="120" y="0" width="130" height="18"/>
+                <box leftPadding="4"><topPen lineWidth="0.5" lineColor="#808080"/><leftPen lineWidth="0.5" lineColor="#808080"/><bottomPen lineWidth="0.5" lineColor="#808080"/><rightPen lineWidth="0.5" lineColor="#808080"/></box>
+                <textElement verticalAlignment="Middle"><font fontName="SansSerif" size="8"/></textElement>
+                <textFieldExpression><![CDATA[$F{nhanVienBan}]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement x="250" y="0" width="120" height="18"/>
+                <box leftPadding="4"><topPen lineWidth="0.5" lineColor="#808080"/><leftPen lineWidth="0.5" lineColor="#808080"/><bottomPen lineWidth="0.5" lineColor="#808080"/><rightPen lineWidth="0.5" lineColor="#808080"/></box>
+                <textElement verticalAlignment="Middle"><font fontName="SansSerif" size="8"/></textElement>
+                <textFieldExpression><![CDATA[$F{thuNgan}]]></textFieldExpression>
+            </textField>
+            <textField pattern="#,##0.00" isBlankWhenNull="true">
+                <reportElement x="370" y="0" width="65" height="18"/>
+                <box rightPadding="4"><topPen lineWidth="0.5" lineColor="#808080"/><leftPen lineWidth="0.5" lineColor="#808080"/><bottomPen lineWidth="0.5" lineColor="#808080"/><rightPen lineWidth="0.5" lineColor="#808080"/></box>
+                <textElement textAlignment="Right" verticalAlignment="Middle"><font fontName="SansSerif" size="8"/></textElement>
+                <textFieldExpression><![CDATA[$F{tienHang}]]></textFieldExpression>
+            </textField>
+            <textField pattern="#,##0.00" isBlankWhenNull="true">
+                <reportElement x="435" y="0" width="65" height="18"/>
+                <box rightPadding="4"><topPen lineWidth="0.5" lineColor="#808080"/><leftPen lineWidth="0.5" lineColor="#808080"/><bottomPen lineWidth="0.5" lineColor="#808080"/><rightPen lineWidth="0.5" lineColor="#808080"/></box>
+                <textElement textAlignment="Right" verticalAlignment="Middle"><font fontName="SansSerif" size="8"/></textElement>
+                <textFieldExpression><![CDATA[$F{doiTra}]]></textFieldExpression>
+            </textField>
+            <textField pattern="#,##0.00" isBlankWhenNull="true">
+                <reportElement x="500" y="0" width="60" height="18"/>
+                <box rightPadding="4"><topPen lineWidth="0.5" lineColor="#808080"/><leftPen lineWidth="0.5" lineColor="#808080"/><bottomPen lineWidth="0.5" lineColor="#808080"/><rightPen lineWidth="0.5" lineColor="#808080"/></box>
+                <textElement textAlignment="Right" verticalAlignment="Middle"><font fontName="SansSerif" size="8"/></textElement>
+                <textFieldExpression><![CDATA[$F{giamGia}]]></textFieldExpression>
+            </textField>
+            <textField pattern="#,##0.00" isBlankWhenNull="true">
+                <reportElement x="560" y="0" width="75" height="18"/>
+                <box rightPadding="4"><topPen lineWidth="0.5" lineColor="#808080"/><leftPen lineWidth="0.5" lineColor="#808080"/><bottomPen lineWidth="0.5" lineColor="#808080"/><rightPen lineWidth="0.5" lineColor="#808080"/></box>
+                <textElement textAlignment="Right" verticalAlignment="Middle"><font fontName="SansSerif" size="8"/></textElement>
+                <textFieldExpression><![CDATA[$F{tongCong}]]></textFieldExpression>
+            </textField>
+            <textField pattern="#,##0.00" isBlankWhenNull="true">
+                <reportElement x="635" y="0" width="75" height="18"/>
+                <box rightPadding="4"><topPen lineWidth="0.5" lineColor="#808080"/><leftPen lineWidth="0.5" lineColor="#808080"/><bottomPen lineWidth="0.5" lineColor="#808080"/><rightPen lineWidth="0.5" lineColor="#808080"/></box>
+                <textElement textAlignment="Right" verticalAlignment="Middle"><font fontName="SansSerif" size="8"/></textElement>
+                <textFieldExpression><![CDATA[$F{tienMat}]]></textFieldExpression>
+            </textField>
+            <textField pattern="#,##0.00" isBlankWhenNull="true">
+                <reportElement x="710" y="0" width="72" height="18"/>
+                <box rightPadding="4"><topPen lineWidth="0.5" lineColor="#808080"/><leftPen lineWidth="0.5" lineColor="#808080"/><bottomPen lineWidth="0.5" lineColor="#808080"/><rightPen lineWidth="0.5" lineColor="#808080"/></box>
+                <textElement textAlignment="Right" verticalAlignment="Middle"><font fontName="SansSerif" size="8"/></textElement>
+                <textFieldExpression><![CDATA[$F{the}]]></textFieldExpression>
+            </textField>
+        </band>
+    </detail>
+
+    <pageFooter>
+        <band height="20">
+            <textField>
+                <reportElement x="650" y="0" width="132" height="20"/>
+                <textElement textAlignment="Right" verticalAlignment="Middle">
+                    <font fontName="SansSerif" size="8"/>
+                </textElement>
+                <textFieldExpression><![CDATA["Trang " + $V{PAGE_NUMBER}]]></textFieldExpression>
+            </textField>
+        </band>
+    </pageFooter>
+
+    <summary>
+        <band height="90">
+            <staticText>
+                <reportElement x="0" y="0" width="370" height="20"/>
+                <box rightPadding="8">
+                    <topPen lineWidth="0.5" lineColor="#808080"/>
+                    <leftPen lineWidth="0.5" lineColor="#808080"/>
+                    <bottomPen lineWidth="0.5" lineColor="#808080"/>
+                    <rightPen lineWidth="0.5" lineColor="#808080"/>
+                </box>
+                <textElement textAlignment="Right" verticalAlignment="Middle">
+                    <font fontName="SansSerif" size="8" isBold="true"/>
+                </textElement>
+                <text><![CDATA[TỔNG CỘNG]]></text>
+            </staticText>
+            <textField pattern="#,##0.00" isBlankWhenNull="true">
+                <reportElement x="370" y="0" width="65" height="20"/>
+                <box rightPadding="4">
+                    <topPen lineWidth="0.5" lineColor="#808080"/>
+                    <leftPen lineWidth="0.5" lineColor="#808080"/>
+                    <bottomPen lineWidth="0.5" lineColor="#808080"/>
+                    <rightPen lineWidth="0.5" lineColor="#808080"/>
+                </box>
+                <textElement textAlignment="Right" verticalAlignment="Middle">
+                    <font fontName="SansSerif" size="8" isBold="true"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$V{v_totalTienHang} != null ? $V{v_totalTienHang} : 0.0]]></textFieldExpression>
+            </textField>
+            <textField pattern="#,##0.00" isBlankWhenNull="true">
+                <reportElement x="435" y="0" width="65" height="20"/>
+                <box rightPadding="4">
+                    <topPen lineWidth="0.5" lineColor="#808080"/>
+                    <leftPen lineWidth="0.5" lineColor="#808080"/>
+                    <bottomPen lineWidth="0.5" lineColor="#808080"/>
+                    <rightPen lineWidth="0.5" lineColor="#808080"/>
+                </box>
+                <textElement textAlignment="Right" verticalAlignment="Middle">
+                    <font fontName="SansSerif" size="8" isBold="true"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$V{v_totalDoiTra} != null ? $V{v_totalDoiTra} : 0.0]]></textFieldExpression>
+            </textField>
+            <textField pattern="#,##0.00" isBlankWhenNull="true">
+                <reportElement x="500" y="0" width="60" height="20"/>
+                <box rightPadding="4">
+                    <topPen lineWidth="0.5" lineColor="#808080"/>
+                    <leftPen lineWidth="0.5" lineColor="#808080"/>
+                    <bottomPen lineWidth="0.5" lineColor="#808080"/>
+                    <rightPen lineWidth="0.5" lineColor="#808080"/>
+                </box>
+                <textElement textAlignment="Right" verticalAlignment="Middle">
+                    <font fontName="SansSerif" size="8" isBold="true"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$V{v_totalGiamGia} != null ? $V{v_totalGiamGia} : 0.0]]></textFieldExpression>
+            </textField>
+            <textField pattern="#,##0.00" isBlankWhenNull="true">
+                <reportElement x="560" y="0" width="75" height="20"/>
+                <box rightPadding="4">
+                    <topPen lineWidth="0.5" lineColor="#808080"/>
+                    <leftPen lineWidth="0.5" lineColor="#808080"/>
+                    <bottomPen lineWidth="0.5" lineColor="#808080"/>
+                    <rightPen lineWidth="0.5" lineColor="#808080"/>
+                </box>
+                <textElement textAlignment="Right" verticalAlignment="Middle">
+                    <font fontName="SansSerif" size="8" isBold="true"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$V{v_totalTongCong} != null ? $V{v_totalTongCong} : 0.0]]></textFieldExpression>
+            </textField>
+            <textField pattern="#,##0.00" isBlankWhenNull="true">
+                <reportElement x="635" y="0" width="75" height="20"/>
+                <box rightPadding="4">
+                    <topPen lineWidth="0.5" lineColor="#808080"/>
+                    <leftPen lineWidth="0.5" lineColor="#808080"/>
+                    <bottomPen lineWidth="0.5" lineColor="#808080"/>
+                    <rightPen lineWidth="0.5" lineColor="#808080"/>
+                </box>
+                <textElement textAlignment="Right" verticalAlignment="Middle">
+                    <font fontName="SansSerif" size="8" isBold="true"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$V{v_totalTienMat} != null ? $V{v_totalTienMat} : 0.0]]></textFieldExpression>
+            </textField>
+            <textField pattern="#,##0.00" isBlankWhenNull="true">
+                <reportElement x="710" y="0" width="72" height="20"/>
+                <box rightPadding="4">
+                    <topPen lineWidth="0.5" lineColor="#808080"/>
+                    <leftPen lineWidth="0.5" lineColor="#808080"/>
+                    <bottomPen lineWidth="0.5" lineColor="#808080"/>
+                    <rightPen lineWidth="0.5" lineColor="#808080"/>
+                </box>
+                <textElement textAlignment="Right" verticalAlignment="Middle">
+                    <font fontName="SansSerif" size="8" isBold="true"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$V{v_totalThe} != null ? $V{v_totalThe} : 0.0]]></textFieldExpression>
+            </textField>
+
+            <staticText>
+                <reportElement x="60" y="35" width="160" height="15"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
+                    <font fontName="SansSerif" size="9" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Trưởng phòng]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="60" y="50" width="160" height="15"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
+                    <font fontName="SansSerif" size="8" isItalic="true"/>
+                </textElement>
+                <text><![CDATA[(Ký, họ tên)]]></text>
+            </staticText>
+
+            <staticText>
+                <reportElement x="560" y="35" width="160" height="15"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
+                    <font fontName="SansSerif" size="9" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Người lập]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="560" y="50" width="160" height="15"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
+                    <font fontName="SansSerif" size="8" isItalic="true"/>
+                </textElement>
+                <text><![CDATA[(Ký, họ tên)]]></text>
+            </staticText>
+        </band>
+    </summary>
+</jasperReport>

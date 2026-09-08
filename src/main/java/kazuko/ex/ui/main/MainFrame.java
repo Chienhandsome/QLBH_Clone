@@ -20,6 +20,15 @@ import kazuko.ex.ui.baocao.BaoCaoDotKhuyenMaiPanel;
 import kazuko.ex.ui.baocao.BaoCaoMatHangTheoNhomPanel;
 import kazuko.ex.ui.baocao.BaoCaoMatHangTheoHangSanXuatPanel;
 import kazuko.ex.ui.baocao.BaoCaoKhachHangSinhNhatPanel;
+import kazuko.ex.ui.baocao.BaoCaoKhachHangThanThietPanel;
+import kazuko.ex.ui.baocao.BaoCaoBanHangTheoGioPanel;
+import kazuko.ex.ui.baocao.BaoCaoBanHangTheoKichThuocPanel;
+import kazuko.ex.ui.baocao.BaoCaoTongHopGiaTriBanTheoThangPanel;
+import kazuko.ex.ui.baocao.BaoCaoTongHopSoLuongBanTheoThangPanel;
+import kazuko.ex.ui.baocao.BaoCaoBanHangTheoNgayPanel;
+import kazuko.ex.ui.baocao.BaoCaoChiTietBanHangTheoNgayPanel;
+import kazuko.ex.ui.baocao.BaoCaoBanHangTheoKhachHangPanel;
+import kazuko.ex.ui.baocao.BaoCaoBanHangTheoNhanVienPanel;
 import kazuko.ex.ui.baogia.BaoGiaBanHangPanel;
 
 
@@ -1049,7 +1058,37 @@ public class MainFrame extends JFrame {
                 openTab("BÁO CÁO TỒN QUỸ", new BaoCaoTonQuyPanel());
                 break;
             case "KHÁCH HÀNG THÂN THIẾT":
-                openTab("Khách hàng thân thiết", new KhachHangThanThietPanel());
+            case "BÁO CÁO KHÁCH HÀNG THÂN THIẾT":
+                openTab("Khách hàng thân thiết", new BaoCaoKhachHangThanThietPanel());
+                break;
+            case "BÁO CÁO BÁN HÀNG THEO GIỜ":
+            case "BÁN HÀNG THEO GIỜ":
+                openTab("Báo cáo bán hàng theo giờ", new BaoCaoBanHangTheoGioPanel());
+                break;
+            case "BÁO CÁO BÁN HÀNG THEO KÍCH THƯỚC":
+            case "BÁN HÀNG THEO KÍCH THƯỚC":
+                openTab("Báo cáo bán hàng theo kích thước", new BaoCaoBanHangTheoKichThuocPanel());
+                break;
+            case "BÁO CÁO TỔNG HỢP GIÁ TRỊ BÁN THEO THÁNG":
+            case "TỔNG HỢP GIÁ TRỊ BÁN THEO THÁNG":
+                openTab("Tổng hợp giá trị bán theo tháng", new BaoCaoTongHopGiaTriBanTheoThangPanel());
+                break;
+            case "BÁO CÁO TỔNG HỢP SỐ LƯỢNG BÁN THEO THÁNG":
+            case "TỔNG HỢP SỐ LƯỢNG BÁN THEO THÁNG":
+                openTab("Tổng hợp số lượng bán theo tháng", new BaoCaoTongHopSoLuongBanTheoThangPanel());
+                break;
+            case "BÁO CÁO BÁN HÀNG THEO NGÀY":
+                openTab("Báo cáo bán hàng theo ngày", new BaoCaoBanHangTheoNgayPanel());
+                break;
+            case "BÁO CÁO CHI TIẾT BÁN HÀNG THEO NGÀY":
+                openTab("Báo cáo chi tiết bán hàng theo ngày", new BaoCaoChiTietBanHangTheoNgayPanel());
+                break;
+            case "BÁO CÁO BÁN HÀNG THEO KHÁCH HÀNG":
+                openTab("Báo cáo bán hàng theo khách hàng", new BaoCaoBanHangTheoKhachHangPanel());
+                break;
+            case "BÁO CÁO BÁN HÀNG THEO NHÂN VIÊN KINH DOANH":
+            case "BÁO CÁO BÁN HÀNG THEO NHÂN VIÊN":
+                openTab("Báo cáo bán hàng theo nhân viên kinh doanh", new BaoCaoBanHangTheoNhanVienPanel());
                 break;
             case "DANH SÁCH ĐỢT KHUYẾN MẠI":
             case "BÁO CÁO ĐỢT KHUYẾN MẠI":
