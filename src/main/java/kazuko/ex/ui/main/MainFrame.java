@@ -58,6 +58,9 @@ import kazuko.ex.ui.baocao.BaoCaoDanhSachPhieuKiemKeTheoNhanVienPanel;
 import kazuko.ex.ui.baocao.TongHopMatHangXuatTheoNgayPanel;
 import kazuko.ex.ui.baocao.TongHopMatHangXuatTheoNhanVienPanel;
 import kazuko.ex.ui.baocao.BaoCaoDanhSachPhieuXuatTheoNhanVienPanel;
+import kazuko.ex.ui.baocao.TongHopXuatKhacTheoNgayPanel;
+import kazuko.ex.ui.baocao.TongHopXuatKhacTheoNhanVienPanel;
+import kazuko.ex.ui.baocao.BaoCaoDanhSachPhieuXuatTheoNgayPanel;
 import kazuko.ex.ui.baogia.BaoGiaBanHangPanel;
 
 
@@ -1315,8 +1318,16 @@ public class MainFrame extends JFrame {
                 openTab("Danh sách phiếu xuất kho theo nhân viên", new BaoCaoDanhSachPhieuXuatTheoNhanVienPanel());
                 break;
             case "DANH SÁCH PHIẾU XUẤT KHO THEO NGÀY":
+            case "DANH SÁCH PHIẾU XUẤT THEO NGÀY":
+                openTab("Danh sách phiếu xuất kho theo ngày", new BaoCaoDanhSachPhieuXuatTheoNgayPanel());
+                break;
             case "TỔNG HỢP XUẤT KHÁC THEO NGÀY":
+                openTab("Tổng hợp xuất khác theo ngày", new TongHopXuatKhacTheoNgayPanel());
+                break;
             case "TỔNG HỢP XUẤT KHÁC THEO NHÂN VIÊN XUẤT":
+            case "TỔNG HỢP XUẤT KHÁC THEO NHÂN VIÊN":
+                openTab("Tổng hợp xuất khác theo nhân viên", new TongHopXuatKhacTheoNhanVienPanel());
+                break;
             case "BÁO CÁO TỔNG HỢP XUẤT KHO":
             case "QUẢN LÝ XUẤT KHO":
                 openTab("Quản lý xuất kho", new QuanLyXuatKhoPanel());
