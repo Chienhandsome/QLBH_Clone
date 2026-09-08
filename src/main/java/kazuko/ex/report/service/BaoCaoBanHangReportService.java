@@ -27,6 +27,11 @@ public class BaoCaoBanHangReportService {
     private static JasperReport cachedReportChiTietTheoNgay = null;
     private static JasperReport cachedReportTheoKhachHang = null;
     private static JasperReport cachedReportTheoNhanVien = null;
+    private static JasperReport cachedReportTongHopMatHangTheoKhachHang = null;
+    private static JasperReport cachedReportTongHopMatHangTheoNgay = null;
+    private static JasperReport cachedReportTongHopMatHangTheoNhanVien = null;
+    private static JasperReport cachedReportTongHopBanHangTheoNgay = null;
+    private static JasperReport cachedReportTongHopBanTheoKhachHang = null;
 
     private static Object cachedLogoImage = null;
     private static String cachedLogoPath = null;
@@ -84,6 +89,31 @@ public class BaoCaoBanHangReportService {
             if (cachedReportTheoNhanVien == null) {
                 try (InputStream in = BaoCaoBanHangReportService.class.getResourceAsStream("/reports/bao_cao_ban_hang_theo_nhan_vien.jrxml")) {
                     if (in != null) cachedReportTheoNhanVien = JasperCompileManager.compileReport(in);
+                }
+            }
+            if (cachedReportTongHopMatHangTheoKhachHang == null) {
+                try (InputStream in = BaoCaoBanHangReportService.class.getResourceAsStream("/reports/tong_hop_mat_hang_ban_theo_khach_hang.jrxml")) {
+                    if (in != null) cachedReportTongHopMatHangTheoKhachHang = JasperCompileManager.compileReport(in);
+                }
+            }
+            if (cachedReportTongHopMatHangTheoNgay == null) {
+                try (InputStream in = BaoCaoBanHangReportService.class.getResourceAsStream("/reports/tong_hop_mat_hang_ban_theo_ngay.jrxml")) {
+                    if (in != null) cachedReportTongHopMatHangTheoNgay = JasperCompileManager.compileReport(in);
+                }
+            }
+            if (cachedReportTongHopMatHangTheoNhanVien == null) {
+                try (InputStream in = BaoCaoBanHangReportService.class.getResourceAsStream("/reports/tong_hop_mat_hang_ban_theo_nhan_vien.jrxml")) {
+                    if (in != null) cachedReportTongHopMatHangTheoNhanVien = JasperCompileManager.compileReport(in);
+                }
+            }
+            if (cachedReportTongHopBanHangTheoNgay == null) {
+                try (InputStream in = BaoCaoBanHangReportService.class.getResourceAsStream("/reports/tong_hop_ban_hang_theo_ngay.jrxml")) {
+                    if (in != null) cachedReportTongHopBanHangTheoNgay = JasperCompileManager.compileReport(in);
+                }
+            }
+            if (cachedReportTongHopBanTheoKhachHang == null) {
+                try (InputStream in = BaoCaoBanHangReportService.class.getResourceAsStream("/reports/tong_hop_ban_theo_khach_hang.jrxml")) {
+                    if (in != null) cachedReportTongHopBanTheoKhachHang = JasperCompileManager.compileReport(in);
                 }
             }
         } catch (Exception ignored) {}
@@ -172,6 +202,61 @@ public class BaoCaoBanHangReportService {
             if (in == null) throw new JRException("Mẫu /reports/bao_cao_ban_hang_theo_nhan_vien.jrxml không tồn tại!");
             cachedReportTheoNhanVien = JasperCompileManager.compileReport(in);
             return cachedReportTheoNhanVien;
+        } catch (Exception e) {
+            throw new JRException(e);
+        }
+    }
+
+    public synchronized JasperReport getCompiledReportTongHopMatHangTheoKhachHang() throws JRException {
+        if (cachedReportTongHopMatHangTheoKhachHang != null) return cachedReportTongHopMatHangTheoKhachHang;
+        try (InputStream in = getClass().getResourceAsStream("/reports/tong_hop_mat_hang_ban_theo_khach_hang.jrxml")) {
+            if (in == null) throw new JRException("Mẫu /reports/tong_hop_mat_hang_ban_theo_khach_hang.jrxml không tồn tại!");
+            cachedReportTongHopMatHangTheoKhachHang = JasperCompileManager.compileReport(in);
+            return cachedReportTongHopMatHangTheoKhachHang;
+        } catch (Exception e) {
+            throw new JRException(e);
+        }
+    }
+
+    public synchronized JasperReport getCompiledReportTongHopMatHangTheoNgay() throws JRException {
+        if (cachedReportTongHopMatHangTheoNgay != null) return cachedReportTongHopMatHangTheoNgay;
+        try (InputStream in = getClass().getResourceAsStream("/reports/tong_hop_mat_hang_ban_theo_ngay.jrxml")) {
+            if (in == null) throw new JRException("Mẫu /reports/tong_hop_mat_hang_ban_theo_ngay.jrxml không tồn tại!");
+            cachedReportTongHopMatHangTheoNgay = JasperCompileManager.compileReport(in);
+            return cachedReportTongHopMatHangTheoNgay;
+        } catch (Exception e) {
+            throw new JRException(e);
+        }
+    }
+
+    public synchronized JasperReport getCompiledReportTongHopMatHangTheoNhanVien() throws JRException {
+        if (cachedReportTongHopMatHangTheoNhanVien != null) return cachedReportTongHopMatHangTheoNhanVien;
+        try (InputStream in = getClass().getResourceAsStream("/reports/tong_hop_mat_hang_ban_theo_nhan_vien.jrxml")) {
+            if (in == null) throw new JRException("Mẫu /reports/tong_hop_mat_hang_ban_theo_nhan_vien.jrxml không tồn tại!");
+            cachedReportTongHopMatHangTheoNhanVien = JasperCompileManager.compileReport(in);
+            return cachedReportTongHopMatHangTheoNhanVien;
+        } catch (Exception e) {
+            throw new JRException(e);
+        }
+    }
+
+    public synchronized JasperReport getCompiledReportTongHopBanHangTheoNgay() throws JRException {
+        if (cachedReportTongHopBanHangTheoNgay != null) return cachedReportTongHopBanHangTheoNgay;
+        try (InputStream in = getClass().getResourceAsStream("/reports/tong_hop_ban_hang_theo_ngay.jrxml")) {
+            if (in == null) throw new JRException("Mẫu /reports/tong_hop_ban_hang_theo_ngay.jrxml không tồn tại!");
+            cachedReportTongHopBanHangTheoNgay = JasperCompileManager.compileReport(in);
+            return cachedReportTongHopBanHangTheoNgay;
+        } catch (Exception e) {
+            throw new JRException(e);
+        }
+    }
+
+    public synchronized JasperReport getCompiledReportTongHopBanTheoKhachHang() throws JRException {
+        if (cachedReportTongHopBanTheoKhachHang != null) return cachedReportTongHopBanTheoKhachHang;
+        try (InputStream in = getClass().getResourceAsStream("/reports/tong_hop_ban_theo_khach_hang.jrxml")) {
+            if (in == null) throw new JRException("Mẫu /reports/tong_hop_ban_theo_khach_hang.jrxml không tồn tại!");
+            cachedReportTongHopBanTheoKhachHang = JasperCompileManager.compileReport(in);
+            return cachedReportTongHopBanTheoKhachHang;
         } catch (Exception e) {
             throw new JRException(e);
         }
@@ -793,6 +878,348 @@ public class BaoCaoBanHangReportService {
         parameters.put("p_companyEmail", sysConfig.getEmail() != null ? sysConfig.getEmail() : "");
         parameters.put("p_logoImage", getCompanyLogo(sysConfig));
         parameters.put("p_reportTitle", "BÁO CÁO BÁN HÀNG THEO NHÂN VIÊN KINH DOANH");
+        parameters.put("p_tuNgay", tuNgay != null ? sdf.format(tuNgay) : "");
+        parameters.put("p_denNgay", denNgay != null ? sdf.format(denNgay) : "");
+
+        return JasperFillManager.fillReport(jasperReport, parameters, dataSource);
+    }
+
+    public JasperPrint generateTongHopMatHangBanTheoKhachHang(Date tuNgay, Date denNgay, String nhomKhachHangId, String khachHangId, String matHangId) throws JRException {
+        JasperReport jasperReport = getCompiledReportTongHopMatHangTheoKhachHang();
+        SystemConfig sysConfig = configDAO.loadConfig();
+
+        List<DonHang> allHoaDon = hoaDonDAO.getDanhSachHoaDon(tuNgay, denNgay, null, null);
+        Map<String, TongHopMatHangBanTheoKhachHangReportRow> rowMap = new LinkedHashMap<>();
+
+        for (DonHang dh : allHoaDon) {
+            if (dh.getStatus() < 0) continue;
+            if (khachHangId != null && !khachHangId.trim().isEmpty() && !khachHangId.equals(dh.getKhachHangId())) {
+                continue;
+            }
+
+            String tenKhach = dh.getTenKhach() != null && !dh.getTenKhach().isEmpty() ? dh.getTenKhach() : "Khách lẻ";
+            String groupKhach = "Khách hàng: " + tenKhach;
+
+            if (dh.getChiTietLayHang() != null) {
+                for (DonHangChiTiet ct : dh.getChiTietLayHang()) {
+                    String maHang = ct.getMaHang() != null ? ct.getMaHang() : (ct.getMatHangId() != null ? ct.getMatHangId() : "");
+                    if (matHangId != null && !matHangId.trim().isEmpty() && !matHangId.equals(maHang) && !matHangId.equals(ct.getMatHangId())) {
+                        continue;
+                    }
+                    String key = groupKhach + "___" + maHang;
+                    TongHopMatHangBanTheoKhachHangReportRow row = rowMap.get(key);
+                    if (row == null) {
+                        row = new TongHopMatHangBanTheoKhachHangReportRow(0, groupKhach, maHang, ct.getTenHang() != null ? ct.getTenHang() : "", ct.getTenDonViTinh() != null ? ct.getTenDonViTinh() : "Cái", 0.0, 0.0, ct.getDonGia(), 0.0);
+                        rowMap.put(key, row);
+                    }
+                    row.setSoLuongBan(row.getSoLuongBan() + ct.getSoLuong());
+                    row.setThanhTien(row.getThanhTien() + ct.getThanhTien());
+                }
+            }
+
+            if (dh.getChiTietTraHang() != null) {
+                for (DonHangChiTiet ct : dh.getChiTietTraHang()) {
+                    String maHang = ct.getMaHang() != null ? ct.getMaHang() : (ct.getMatHangId() != null ? ct.getMatHangId() : "");
+                    if (matHangId != null && !matHangId.trim().isEmpty() && !matHangId.equals(maHang) && !matHangId.equals(ct.getMatHangId())) {
+                        continue;
+                    }
+                    String key = groupKhach + "___" + maHang;
+                    TongHopMatHangBanTheoKhachHangReportRow row = rowMap.get(key);
+                    if (row == null) {
+                        row = new TongHopMatHangBanTheoKhachHangReportRow(0, groupKhach, maHang, ct.getTenHang() != null ? ct.getTenHang() : "", ct.getTenDonViTinh() != null ? ct.getTenDonViTinh() : "Cái", 0.0, 0.0, ct.getDonGia(), 0.0);
+                        rowMap.put(key, row);
+                    }
+                    row.setSoLuongTra(row.getSoLuongTra() + ct.getSoLuong());
+                    row.setThanhTien(row.getThanhTien() - ct.getThanhTien());
+                }
+            }
+        }
+
+        List<TongHopMatHangBanTheoKhachHangReportRow> rows = new ArrayList<>(rowMap.values());
+        rows.sort((r1, r2) -> {
+            int cmp = r1.getGroupKhachHang().compareToIgnoreCase(r2.getGroupKhachHang());
+            if (cmp != 0) return cmp;
+            return r1.getMaHang().compareToIgnoreCase(r2.getMaHang());
+        });
+
+        for (int i = 0; i < rows.size(); i++) {
+            rows.get(i).setStt(i + 1);
+        }
+
+        JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(rows);
+
+        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+        Map<String, Object> parameters = new HashMap<>();
+        parameters.put("p_companyName", sysConfig.getTenCongTy() != null && !sysConfig.getTenCongTy().isEmpty() ? sysConfig.getTenCongTy() : "Công ty TNHH Ngọc Châu Âu");
+        parameters.put("p_companyAddress", sysConfig.getDiaChi() != null ? sysConfig.getDiaChi() : "");
+        parameters.put("p_companyPhone", sysConfig.getSoDienThoai() != null ? sysConfig.getSoDienThoai() : "");
+        parameters.put("p_companyEmail", sysConfig.getEmail() != null ? sysConfig.getEmail() : "");
+        parameters.put("p_logoImage", getCompanyLogo(sysConfig));
+        parameters.put("p_reportTitle", "TỔNG HỢP MẶT HÀNG BÁN THEO KHÁCH HÀNG");
+        parameters.put("p_tuNgay", tuNgay != null ? sdf.format(tuNgay) : "");
+        parameters.put("p_denNgay", denNgay != null ? sdf.format(denNgay) : "");
+
+        return JasperFillManager.fillReport(jasperReport, parameters, dataSource);
+    }
+
+    public JasperPrint generateTongHopMatHangBanTheoNgay(Date tuNgay, Date denNgay, String khoXuatId, String nhanVienXuatId) throws JRException {
+        JasperReport jasperReport = getCompiledReportTongHopMatHangTheoNgay();
+        SystemConfig sysConfig = configDAO.loadConfig();
+
+        List<DonHang> allHoaDon = hoaDonDAO.getDanhSachHoaDon(tuNgay, denNgay, khoXuatId, null);
+        Map<String, TongHopMatHangBanTheoNgayReportRow> rowMap = new LinkedHashMap<>();
+
+        for (DonHang dh : allHoaDon) {
+            if (dh.getStatus() < 0) continue;
+            if (nhanVienXuatId != null && !nhanVienXuatId.trim().isEmpty() && !nhanVienXuatId.equals(dh.getNhanVienXuatId())) {
+                continue;
+            }
+
+            if (dh.getChiTietLayHang() != null) {
+                for (DonHangChiTiet ct : dh.getChiTietLayHang()) {
+                    String maHang = ct.getMaHang() != null ? ct.getMaHang() : (ct.getMatHangId() != null ? ct.getMatHangId() : "");
+                    TongHopMatHangBanTheoNgayReportRow row = rowMap.get(maHang);
+                    if (row == null) {
+                        row = new TongHopMatHangBanTheoNgayReportRow(0, maHang, ct.getTenHang() != null ? ct.getTenHang() : "", ct.getTenDonViTinh() != null ? ct.getTenDonViTinh() : "Cái", 0.0, 0.0, ct.getDonGia(), 0.0);
+                        rowMap.put(maHang, row);
+                    }
+                    row.setSoLuongBan(row.getSoLuongBan() + ct.getSoLuong());
+                    row.setThanhTien(row.getThanhTien() + ct.getThanhTien());
+                }
+            }
+
+            if (dh.getChiTietTraHang() != null) {
+                for (DonHangChiTiet ct : dh.getChiTietTraHang()) {
+                    String maHang = ct.getMaHang() != null ? ct.getMaHang() : (ct.getMatHangId() != null ? ct.getMatHangId() : "");
+                    TongHopMatHangBanTheoNgayReportRow row = rowMap.get(maHang);
+                    if (row == null) {
+                        row = new TongHopMatHangBanTheoNgayReportRow(0, maHang, ct.getTenHang() != null ? ct.getTenHang() : "", ct.getTenDonViTinh() != null ? ct.getTenDonViTinh() : "Cái", 0.0, 0.0, ct.getDonGia(), 0.0);
+                        rowMap.put(maHang, row);
+                    }
+                    row.setSoLuongTra(row.getSoLuongTra() + ct.getSoLuong());
+                    row.setThanhTien(row.getThanhTien() - ct.getThanhTien());
+                }
+            }
+        }
+
+        List<TongHopMatHangBanTheoNgayReportRow> rows = new ArrayList<>(rowMap.values());
+        rows.sort((r1, r2) -> r1.getMaHang().compareToIgnoreCase(r2.getMaHang()));
+
+        for (int i = 0; i < rows.size(); i++) {
+            rows.get(i).setStt(i + 1);
+        }
+
+        JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(rows);
+
+        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+        String ngayText;
+        if (tuNgay != null && denNgay != null && sdf.format(tuNgay).equals(sdf.format(denNgay))) {
+            ngayText = "Ngày: " + sdf.format(tuNgay);
+        } else {
+            ngayText = "Ngày từ " + (tuNgay != null ? sdf.format(tuNgay) : "") + " đến " + (denNgay != null ? sdf.format(denNgay) : "");
+        }
+
+        Map<String, Object> parameters = new HashMap<>();
+        parameters.put("p_companyName", sysConfig.getTenCongTy() != null && !sysConfig.getTenCongTy().isEmpty() ? sysConfig.getTenCongTy() : "Công ty TNHH Ngọc Châu Âu");
+        parameters.put("p_companyAddress", sysConfig.getDiaChi() != null ? sysConfig.getDiaChi() : "");
+        parameters.put("p_companyPhone", sysConfig.getSoDienThoai() != null ? sysConfig.getSoDienThoai() : "");
+        parameters.put("p_companyEmail", sysConfig.getEmail() != null ? sysConfig.getEmail() : "");
+        parameters.put("p_logoImage", getCompanyLogo(sysConfig));
+        parameters.put("p_reportTitle", "TỔNG HỢP MẶT HÀNG BÁN THEO NGÀY");
+        parameters.put("p_ngayText", ngayText);
+
+        return JasperFillManager.fillReport(jasperReport, parameters, dataSource);
+    }
+
+    public JasperPrint generateTongHopMatHangBanTheoNhanVien(Date tuNgay, Date denNgay, String khoXuatId, String nhanVienBanId, String nhanVienXuatId) throws JRException {
+        JasperReport jasperReport = getCompiledReportTongHopMatHangTheoNhanVien();
+        SystemConfig sysConfig = configDAO.loadConfig();
+
+        List<DonHang> allHoaDon = hoaDonDAO.getDanhSachHoaDon(tuNgay, denNgay, khoXuatId, null);
+        Map<String, TongHopMatHangBanTheoNhanVienReportRow> rowMap = new LinkedHashMap<>();
+
+        for (DonHang dh : allHoaDon) {
+            if (dh.getStatus() < 0) continue;
+            if (nhanVienBanId != null && !nhanVienBanId.trim().isEmpty() && !nhanVienBanId.equals(dh.getNhanVienXuatId())) {
+                continue;
+            }
+            if (nhanVienXuatId != null && !nhanVienXuatId.trim().isEmpty() && !nhanVienXuatId.equals(dh.getNhanVienXuatId())) {
+                continue;
+            }
+
+            String groupNV = "Nhân viên bán: " + (dh.getTenNhanVien() != null && !dh.getTenNhanVien().isEmpty() ? dh.getTenNhanVien() : "Chưa phân công");
+
+            if (dh.getChiTietLayHang() != null) {
+                for (DonHangChiTiet ct : dh.getChiTietLayHang()) {
+                    String maHang = ct.getMaHang() != null ? ct.getMaHang() : (ct.getMatHangId() != null ? ct.getMatHangId() : "");
+                    String key = groupNV + "___" + maHang;
+                    TongHopMatHangBanTheoNhanVienReportRow row = rowMap.get(key);
+                    if (row == null) {
+                        row = new TongHopMatHangBanTheoNhanVienReportRow(0, groupNV, ct.getTenHang() != null ? ct.getTenHang() : "", ct.getTenDonViTinh() != null ? ct.getTenDonViTinh() : "Cái", 0.0, 0.0, ct.getDonGia(), 0.0);
+                        rowMap.put(key, row);
+                    }
+                    row.setSoLuongBan(row.getSoLuongBan() + ct.getSoLuong());
+                    row.setThanhTien(row.getThanhTien() + ct.getThanhTien());
+                }
+            }
+
+            if (dh.getChiTietTraHang() != null) {
+                for (DonHangChiTiet ct : dh.getChiTietTraHang()) {
+                    String maHang = ct.getMaHang() != null ? ct.getMaHang() : (ct.getMatHangId() != null ? ct.getMatHangId() : "");
+                    String key = groupNV + "___" + maHang;
+                    TongHopMatHangBanTheoNhanVienReportRow row = rowMap.get(key);
+                    if (row == null) {
+                        row = new TongHopMatHangBanTheoNhanVienReportRow(0, groupNV, ct.getTenHang() != null ? ct.getTenHang() : "", ct.getTenDonViTinh() != null ? ct.getTenDonViTinh() : "Cái", 0.0, 0.0, ct.getDonGia(), 0.0);
+                        rowMap.put(key, row);
+                    }
+                    row.setSoLuongTra(row.getSoLuongTra() + ct.getSoLuong());
+                    row.setThanhTien(row.getThanhTien() - ct.getThanhTien());
+                }
+            }
+        }
+
+        List<TongHopMatHangBanTheoNhanVienReportRow> rows = new ArrayList<>(rowMap.values());
+        rows.sort((r1, r2) -> {
+            int cmp = r1.getGroupNhanVien().compareToIgnoreCase(r2.getGroupNhanVien());
+            if (cmp != 0) return cmp;
+            return r1.getMatHang().compareToIgnoreCase(r2.getMatHang());
+        });
+
+        for (int i = 0; i < rows.size(); i++) {
+            rows.get(i).setStt(i + 1);
+        }
+
+        JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(rows);
+
+        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+        Map<String, Object> parameters = new HashMap<>();
+        parameters.put("p_companyName", sysConfig.getTenCongTy() != null && !sysConfig.getTenCongTy().isEmpty() ? sysConfig.getTenCongTy() : "Công ty TNHH Ngọc Châu Âu");
+        parameters.put("p_companyAddress", sysConfig.getDiaChi() != null ? sysConfig.getDiaChi() : "");
+        parameters.put("p_companyPhone", sysConfig.getSoDienThoai() != null ? sysConfig.getSoDienThoai() : "");
+        parameters.put("p_companyEmail", sysConfig.getEmail() != null ? sysConfig.getEmail() : "");
+        parameters.put("p_logoImage", getCompanyLogo(sysConfig));
+        parameters.put("p_reportTitle", "TỔNG HỢP MẶT HÀNG BÁN THEO NHÂN VIÊN KINH DOANH");
+        parameters.put("p_tuNgay", tuNgay != null ? sdf.format(tuNgay) : "");
+        parameters.put("p_denNgay", denNgay != null ? sdf.format(denNgay) : "");
+
+        return JasperFillManager.fillReport(jasperReport, parameters, dataSource);
+    }
+
+    public JasperPrint generateTongHopBanHangTheoNgay(Date tuNgay, Date denNgay, String khoXuatId, String nhanVienXuatId, String khachHangId) throws JRException {
+        JasperReport jasperReport = getCompiledReportTongHopBanHangTheoNgay();
+        SystemConfig sysConfig = configDAO.loadConfig();
+
+        List<DonHang> allHoaDon = hoaDonDAO.getDanhSachHoaDon(tuNgay, denNgay, khoXuatId, null);
+        SimpleDateFormat dayFmt = new SimpleDateFormat("dd/MM/yyyy");
+        Map<String, TongHopBanHangTheoNgayReportRow> rowMap = new LinkedHashMap<>();
+
+        for (DonHang dh : allHoaDon) {
+            if (dh.getStatus() < 0) continue;
+            if (nhanVienXuatId != null && !nhanVienXuatId.trim().isEmpty() && !nhanVienXuatId.equals(dh.getNhanVienXuatId())) {
+                continue;
+            }
+            if (khachHangId != null && !khachHangId.trim().isEmpty() && !khachHangId.equals(dh.getKhachHangId())) {
+                continue;
+            }
+
+            Date dDate = dh.getNgay() != null ? dh.getNgay() : dh.getTimeCreated();
+            String ngayStr = dDate != null ? dayFmt.format(dDate) : "Chưa rõ";
+
+            double doiTra = 0.0;
+            if (dh.getChiTietTraHang() != null) {
+                for (DonHangChiTiet ct : dh.getChiTietTraHang()) {
+                    doiTra += ct.getThanhTien();
+                }
+            }
+
+            TongHopBanHangTheoNgayReportRow row = rowMap.get(ngayStr);
+            if (row == null) {
+                row = new TongHopBanHangTheoNgayReportRow(0, ngayStr, 0.0, 0.0, 0.0, 0.0, 0.0);
+                rowMap.put(ngayStr, row);
+            }
+            row.setTienHang(row.getTienHang() + dh.getTienHang());
+            row.setTienGiamGia(row.getTienGiamGia() + dh.getTienGiamGia());
+            row.setDoiTra(row.getDoiTra() + doiTra);
+            row.setTongCong(row.getTongCong() + dh.getTongCong());
+        }
+
+        List<TongHopBanHangTheoNgayReportRow> rows = new ArrayList<>(rowMap.values());
+        for (int i = 0; i < rows.size(); i++) {
+            rows.get(i).setStt(i + 1);
+        }
+
+        JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(rows);
+
+        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+        Map<String, Object> parameters = new HashMap<>();
+        parameters.put("p_companyName", sysConfig.getTenCongTy() != null && !sysConfig.getTenCongTy().isEmpty() ? sysConfig.getTenCongTy() : "Công ty TNHH Ngọc Châu Âu");
+        parameters.put("p_companyAddress", sysConfig.getDiaChi() != null ? sysConfig.getDiaChi() : "");
+        parameters.put("p_companyPhone", sysConfig.getSoDienThoai() != null ? sysConfig.getSoDienThoai() : "");
+        parameters.put("p_companyEmail", sysConfig.getEmail() != null ? sysConfig.getEmail() : "");
+        parameters.put("p_logoImage", getCompanyLogo(sysConfig));
+        parameters.put("p_reportTitle", "TỔNG HỢP BÁN HÀNG THEO NGÀY");
+        parameters.put("p_tuNgay", tuNgay != null ? sdf.format(tuNgay) : "");
+        parameters.put("p_denNgay", denNgay != null ? sdf.format(denNgay) : "");
+
+        return JasperFillManager.fillReport(jasperReport, parameters, dataSource);
+    }
+
+    public JasperPrint generateTongHopBanTheoKhachHang(Date tuNgay, Date denNgay, String khachHangId, String khoXuatId, String nhanVienXuatId) throws JRException {
+        JasperReport jasperReport = getCompiledReportTongHopBanTheoKhachHang();
+        SystemConfig sysConfig = configDAO.loadConfig();
+
+        List<DonHang> allHoaDon = hoaDonDAO.getDanhSachHoaDon(tuNgay, denNgay, khoXuatId, null);
+        Map<String, TongHopBanTheoKhachHangReportRow> rowMap = new LinkedHashMap<>();
+
+        for (DonHang dh : allHoaDon) {
+            if (dh.getStatus() < 0) continue;
+            if (khachHangId != null && !khachHangId.trim().isEmpty() && !khachHangId.equals(dh.getKhachHangId())) {
+                continue;
+            }
+            if (nhanVienXuatId != null && !nhanVienXuatId.trim().isEmpty() && !nhanVienXuatId.equals(dh.getNhanVienXuatId())) {
+                continue;
+            }
+
+            String maKhach = dh.getKhachHangId() != null ? dh.getKhachHangId() : "";
+            String tenKhach = dh.getTenKhach() != null && !dh.getTenKhach().isEmpty() ? dh.getTenKhach() : "Khách lẻ";
+            String diaChi = dh.getDiaChiKhach() != null ? dh.getDiaChiKhach() : "";
+            String key = maKhach.isEmpty() ? tenKhach : maKhach;
+
+            double doiTra = 0.0;
+            if (dh.getChiTietTraHang() != null) {
+                for (DonHangChiTiet ct : dh.getChiTietTraHang()) {
+                    doiTra += ct.getThanhTien();
+                }
+            }
+
+            TongHopBanTheoKhachHangReportRow row = rowMap.get(key);
+            if (row == null) {
+                row = new TongHopBanTheoKhachHangReportRow(0, maKhach, tenKhach, diaChi, 0.0, 0.0, 0.0, 0.0, 0.0);
+                rowMap.put(key, row);
+            }
+            row.setTienHang(row.getTienHang() + dh.getTienHang());
+            row.setTienGiamGia(row.getTienGiamGia() + dh.getTienGiamGia());
+            row.setDoiTra(row.getDoiTra() + doiTra);
+            row.setTongCong(row.getTongCong() + dh.getTongCong());
+        }
+
+        List<TongHopBanTheoKhachHangReportRow> rows = new ArrayList<>(rowMap.values());
+        rows.sort((r1, r2) -> r1.getTenKhachHang().compareToIgnoreCase(r2.getTenKhachHang()));
+
+        for (int i = 0; i < rows.size(); i++) {
+            rows.get(i).setStt(i + 1);
+        }
+
+        JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(rows);
+
+        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+        Map<String, Object> parameters = new HashMap<>();
+        parameters.put("p_companyName", sysConfig.getTenCongTy() != null && !sysConfig.getTenCongTy().isEmpty() ? sysConfig.getTenCongTy() : "Công ty TNHH Ngọc Châu Âu");
+        parameters.put("p_companyAddress", sysConfig.getDiaChi() != null ? sysConfig.getDiaChi() : "");
+        parameters.put("p_companyPhone", sysConfig.getSoDienThoai() != null ? sysConfig.getSoDienThoai() : "");
+        parameters.put("p_companyEmail", sysConfig.getEmail() != null ? sysConfig.getEmail() : "");
+        parameters.put("p_logoImage", getCompanyLogo(sysConfig));
+        parameters.put("p_reportTitle", "TỔNG HỢP BÁN THEO KHÁCH HÀNG");
         parameters.put("p_tuNgay", tuNgay != null ? sdf.format(tuNgay) : "");
         parameters.put("p_denNgay", denNgay != null ? sdf.format(denNgay) : "");
 
