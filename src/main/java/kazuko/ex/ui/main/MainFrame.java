@@ -61,6 +61,11 @@ import kazuko.ex.ui.baocao.BaoCaoDanhSachPhieuXuatTheoNhanVienPanel;
 import kazuko.ex.ui.baocao.TongHopXuatKhacTheoNgayPanel;
 import kazuko.ex.ui.baocao.TongHopXuatKhacTheoNhanVienPanel;
 import kazuko.ex.ui.baocao.BaoCaoDanhSachPhieuXuatTheoNgayPanel;
+import kazuko.ex.ui.baocao.BaoCaoDanhSachPhieuNhapTheoNgayPanel;
+import kazuko.ex.ui.baocao.BaoCaoDanhSachPhieuNhapTheoNhaCungCapPanel;
+import kazuko.ex.ui.baocao.BaoCaoDanhSachPhieuNhapTheoNhanVienPanel;
+import kazuko.ex.ui.baocao.TongHopMatHangNhapTheoNhaCungCapPanel;
+import kazuko.ex.ui.baocao.TongHopMatHangNhapTheoNhanVienPanel;
 import kazuko.ex.ui.baogia.BaoGiaBanHangPanel;
 
 
@@ -1294,10 +1299,25 @@ public class MainFrame extends JFrame {
                 openTab("Khách đặt hàng", new KhachDatHangPanel());
                 break;
             case "DANH SÁCH PHIẾU NHẬP KHO THEO NGÀY":
+            case "DANH SÁCH PHIẾU NHẬP THEO NGÀY":
+                openTab("Danh sách phiếu nhập kho theo ngày", new BaoCaoDanhSachPhieuNhapTheoNgayPanel());
+                break;
             case "DANH SÁCH PHIẾU NHẬP KHO THEO NHÀ CUNG CẤP":
+            case "DANH SÁCH PHIẾU NHẬP THEO NHÀ CUNG CẤP":
+                openTab("Danh sách phiếu nhập kho theo nhà cung cấp", new BaoCaoDanhSachPhieuNhapTheoNhaCungCapPanel());
+                break;
             case "DANH SÁCH PHIẾU NHẬP KHO THEO NHÂN VIÊN NHẬP":
+            case "DANH SÁCH PHIẾU NHẬP THEO NHÂN VIÊN":
+                openTab("Danh sách phiếu nhập kho theo nhân viên", new BaoCaoDanhSachPhieuNhapTheoNhanVienPanel());
+                break;
             case "TỔNG HỢP MẶT HÀNG PHIẾU NHẬP THEO NHÀ CUNG CẤP":
+            case "TỔNG HỢP MẶT HÀNG NHẬP THEO NHÀ CUNG CẤP":
+                openTab("Tổng hợp mặt hàng phiếu nhập theo NCC", new TongHopMatHangNhapTheoNhaCungCapPanel());
+                break;
             case "TỔNG HỢP MẶT HÀNG PHIẾU NHẬP THEO NHÂN VIÊN NHẬP":
+            case "TỔNG HỢP MẶT HÀNG NHẬP THEO NHÂN VIÊN":
+                openTab("Tổng hợp mặt hàng phiếu nhập theo NV", new TongHopMatHangNhapTheoNhanVienPanel());
+                break;
             case "TỔNG HỢP NHẬP THEO NGÀY":
             case "TỔNG HỢP NHẬP THEO NHÀ CUNG CẤP":
             case "TỔNG HỢP NHẬP THEO NHÂN VIÊN NHẬP":
