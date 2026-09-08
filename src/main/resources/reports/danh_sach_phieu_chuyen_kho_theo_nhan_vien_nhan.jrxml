@@ -1,0 +1,311 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport whenNoDataType="AllSectionsNoDetail"
+              xmlns="http://jasperreports.sourceforge.net/jasperreports"
+              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+              xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd"
+              name="danh_sach_phieu_chuyen_kho_theo_nhan_vien_nhan"
+              pageWidth="595" pageHeight="842"
+              columnWidth="535" leftMargin="30" rightMargin="30" topMargin="20" bottomMargin="20">
+
+    <parameter name="p_companyName" class="java.lang.String"/>
+    <parameter name="p_companyAddress" class="java.lang.String"/>
+    <parameter name="p_companyPhone" class="java.lang.String"/>
+    <parameter name="p_companyEmail" class="java.lang.String"/>
+    <parameter name="p_logoImage" class="java.lang.Object"/>
+    <parameter name="p_reportTitle" class="java.lang.String"/>
+    <parameter name="p_tuNgay" class="java.lang.String"/>
+    <parameter name="p_denNgay" class="java.lang.String"/>
+
+    <field name="stt" class="java.lang.Integer"/>
+    <field name="groupKey" class="java.lang.String"/>
+    <field name="soPhieu" class="java.lang.String"/>
+    <field name="ngay" class="java.lang.String"/>
+    <field name="khoXuat" class="java.lang.String"/>
+    <field name="dienGiai" class="java.lang.String"/>
+    <field name="tongCong" class="java.lang.Double"/>
+    <field name="ghiChu" class="java.lang.String"/>
+
+    <variable name="v_sub_tongCong" class="java.lang.Double" resetType="Group" resetGroup="GroupCategory" calculation="Sum">
+        <variableExpression><![CDATA[$F{tongCong} != null ? $F{tongCong} : Double.valueOf(0.0)]]></variableExpression>
+        <initialValueExpression><![CDATA[Double.valueOf(0.0)]]></initialValueExpression>
+    </variable>
+
+    <variable name="v_tot_tongCong" class="java.lang.Double" calculation="Sum">
+        <variableExpression><![CDATA[$F{tongCong} != null ? $F{tongCong} : Double.valueOf(0.0)]]></variableExpression>
+        <initialValueExpression><![CDATA[Double.valueOf(0.0)]]></initialValueExpression>
+    </variable>
+
+    <group name="GroupCategory">
+        <groupExpression><![CDATA[$F{groupKey}]]></groupExpression>
+        <groupHeader>
+            <band height="20">
+                <textField isBlankWhenNull="true">
+                    <reportElement x="0" y="0" width="535" height="20"/>
+                    <box leftPadding="5">
+                        <topPen lineWidth="0.5" lineColor="#808080"/>
+                        <leftPen lineWidth="0.5" lineColor="#808080"/>
+                        <bottomPen lineWidth="0.5" lineColor="#808080"/>
+                        <rightPen lineWidth="0.5" lineColor="#808080"/>
+                    </box>
+                    <textElement verticalAlignment="Middle">
+                        <font fontName="SansSerif" size="9" isBold="true"/>
+                    </textElement>
+                    <textFieldExpression><![CDATA[$F{groupKey}]]></textFieldExpression>
+                </textField>
+            </band>
+        </groupHeader>
+        <groupFooter>
+            <band height="20">
+                <staticText>
+                    <reportElement mode="Opaque" x="0" y="0" width="375" height="20" backcolor="#FFFFFF"/>
+                    <box rightPadding="5">
+                        <topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/>
+                    </box>
+                    <textElement textAlignment="Right" verticalAlignment="Middle">
+                        <font fontName="SansSerif" size="8" isBold="true"/>
+                    </textElement>
+                    <text><![CDATA[Tổng cộng]]></text>
+                </staticText>
+                <textField pattern="#,##0.00" isBlankWhenNull="true">
+                    <reportElement mode="Opaque" x="375" y="0" width="80" height="20" backcolor="#FFFFFF"/>
+                    <box rightPadding="4"><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box>
+                    <textElement textAlignment="Right" verticalAlignment="Middle"><font fontName="SansSerif" size="8" isBold="true"/></textElement>
+                    <textFieldExpression><![CDATA[$V{v_sub_tongCong}]]></textFieldExpression>
+                </textField>
+                <staticText>
+                    <reportElement mode="Opaque" x="455" y="0" width="80" height="20" backcolor="#FFFFFF"/>
+                    <box><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box>
+                    <textElement textAlignment="Right" verticalAlignment="Middle"><font fontName="SansSerif" size="8" isBold="true"/></textElement>
+                    <text><![CDATA[]]></text>
+                </staticText>
+            </band>
+        </groupFooter>
+    </group>
+
+    <title>
+        <band height="105">
+            <image scaleImage="RetainShape" onErrorType="Blank">
+                <reportElement x="10" y="0" width="120" height="45"/>
+                <imageExpression><![CDATA[$P{p_logoImage}]]></imageExpression>
+            </image>
+            <textField isBlankWhenNull="true">
+                <reportElement x="140" y="0" width="395" height="15"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
+                    <font fontName="SansSerif" size="10" isBold="true"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$P{p_companyName}]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement x="140" y="15" width="395" height="14"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
+                    <font fontName="SansSerif" size="8"/>
+                </textElement>
+                <textFieldExpression><![CDATA["Địa chỉ: " + ($P{p_companyAddress} != null ? $P{p_companyAddress} : "")]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement x="140" y="29" width="395" height="14"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
+                    <font fontName="SansSerif" size="8"/>
+                </textElement>
+                <textFieldExpression><![CDATA["Điện thoại: " + ($P{p_companyPhone} != null ? $P{p_companyPhone} : "") + ($P{p_companyEmail} != null && !$P{p_companyEmail}.isEmpty() ? ", Email: " + $P{p_companyEmail} : "")]]></textFieldExpression>
+            </textField>
+
+            <textField isBlankWhenNull="true">
+                <reportElement x="170" y="55" width="365" height="22"/>
+                <textElement textAlignment="Right" verticalAlignment="Middle">
+                    <font fontName="SansSerif" size="13" isBold="true"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$P{p_reportTitle} != null ? $P{p_reportTitle} : "DANH SÁCH PHIẾU CHUYỂN KHO THEO NHÂN VIÊN NHẬP"]]></textFieldExpression>
+            </textField>
+
+            <textField isBlankWhenNull="true">
+                <reportElement x="0" y="60" width="250" height="16"/>
+                <textElement textAlignment="Left" verticalAlignment="Middle">
+                    <font fontName="SansSerif" size="8" isItalic="false"/>
+                </textElement>
+                <textFieldExpression><![CDATA[($P{p_tuNgay} != null && !$P{p_tuNgay}.isEmpty() && $P{p_denNgay} != null && !$P{p_denNgay}.isEmpty()) ?
+                    ($P{p_tuNgay}.equals($P{p_denNgay}) ? ("Ngày: " + $P{p_tuNgay}) : ("Ngày từ " + $P{p_tuNgay} + " đến " + $P{p_denNgay})) : ""]]></textFieldExpression>
+            </textField>
+        </band>
+    </title>
+
+    <columnHeader>
+        <band height="22">
+            <staticText>
+                <reportElement mode="Opaque" x="0" y="0" width="25" height="22" backcolor="#FFFFFF"/>
+                <box><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
+                    <font fontName="SansSerif" size="8" isBold="true"/>
+                </textElement>
+                <text><![CDATA[STT]]></text>
+            </staticText>
+            <staticText>
+                <reportElement mode="Opaque" x="25" y="0" width="75" height="22" backcolor="#FFFFFF"/>
+                <box><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
+                    <font fontName="SansSerif" size="8" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Số phiếu]]></text>
+            </staticText>
+            <staticText>
+                <reportElement mode="Opaque" x="100" y="0" width="60" height="22" backcolor="#FFFFFF"/>
+                <box><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
+                    <font fontName="SansSerif" size="8" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Ngày]]></text>
+            </staticText>
+            <staticText>
+                <reportElement mode="Opaque" x="160" y="0" width="85" height="22" backcolor="#FFFFFF"/>
+                <box><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
+                    <font fontName="SansSerif" size="8" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Kho xuất]]></text>
+            </staticText>
+            <staticText>
+                <reportElement mode="Opaque" x="245" y="0" width="130" height="22" backcolor="#FFFFFF"/>
+                <box><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
+                    <font fontName="SansSerif" size="8" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Diễn giải]]></text>
+            </staticText>
+            <staticText>
+                <reportElement mode="Opaque" x="375" y="0" width="80" height="22" backcolor="#FFFFFF"/>
+                <box><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
+                    <font fontName="SansSerif" size="8" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Tổng cộng]]></text>
+            </staticText>
+            <staticText>
+                <reportElement mode="Opaque" x="455" y="0" width="80" height="22" backcolor="#FFFFFF"/>
+                <box><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
+                    <font fontName="SansSerif" size="8" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Ghi chú]]></text>
+            </staticText>
+        </band>
+    </columnHeader>
+
+    <detail>
+        <band height="20">
+            <textField isBlankWhenNull="true">
+                <reportElement x="0" y="0" width="25" height="20"/>
+                <box><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
+                    <font fontName="SansSerif" size="8"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$F{stt}]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement x="25" y="0" width="75" height="20"/>
+                <box leftPadding="3"><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box>
+                <textElement textAlignment="Left" verticalAlignment="Middle">
+                    <font fontName="SansSerif" size="8"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$F{soPhieu}]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement x="100" y="0" width="60" height="20"/>
+                <box><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
+                    <font fontName="SansSerif" size="8"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$F{ngay}]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement x="160" y="0" width="85" height="20"/>
+                <box leftPadding="3"><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box>
+                <textElement textAlignment="Left" verticalAlignment="Middle">
+                    <font fontName="SansSerif" size="8"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$F{khoXuat}]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement x="245" y="0" width="130" height="20"/>
+                <box leftPadding="3"><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box>
+                <textElement textAlignment="Left" verticalAlignment="Middle">
+                    <font fontName="SansSerif" size="8"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$F{dienGiai}]]></textFieldExpression>
+            </textField>
+            <textField pattern="#,##0.00" isBlankWhenNull="true">
+                <reportElement x="375" y="0" width="80" height="20"/>
+                <box rightPadding="4"><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box>
+                <textElement textAlignment="Right" verticalAlignment="Middle">
+                    <font fontName="SansSerif" size="8"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$F{tongCong}]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement x="455" y="0" width="80" height="20"/>
+                <box leftPadding="3"><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box>
+                <textElement textAlignment="Left" verticalAlignment="Middle">
+                    <font fontName="SansSerif" size="8"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$F{ghiChu}]]></textFieldExpression>
+            </textField>
+        </band>
+    </detail>
+
+    <summary>
+        <band height="120">
+            <staticText>
+                <reportElement mode="Opaque" x="0" y="0" width="375" height="20" backcolor="#E0E0E0"/>
+                <box rightPadding="5">
+                    <topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/>
+                </box>
+                <textElement textAlignment="Right" verticalAlignment="Middle">
+                    <font fontName="SansSerif" size="8" isBold="true"/>
+                </textElement>
+                <text><![CDATA[TỔNG CỘNG]]></text>
+            </staticText>
+            <textField pattern="#,##0.00" isBlankWhenNull="true">
+                <reportElement mode="Opaque" x="375" y="0" width="80" height="20" backcolor="#E0E0E0"/>
+                <box rightPadding="4"><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box>
+                <textElement textAlignment="Right" verticalAlignment="Middle"><font fontName="SansSerif" size="8" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA[$V{v_tot_tongCong}]]></textFieldExpression>
+            </textField>
+            <staticText>
+                <reportElement mode="Opaque" x="455" y="0" width="80" height="20" backcolor="#E0E0E0"/>
+                <box><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box>
+                <textElement textAlignment="Right" verticalAlignment="Middle"><font fontName="SansSerif" size="8" isBold="true"/></textElement>
+                <text><![CDATA[]]></text>
+            </staticText>
+
+            <staticText>
+                <reportElement x="30" y="35" width="150" height="15"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
+                    <font fontName="SansSerif" size="9" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Trưởng phòng]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="30" y="50" width="150" height="15"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
+                    <font fontName="SansSerif" size="8" isItalic="true"/>
+                </textElement>
+                <text><![CDATA[(Ký, họ tên)]]></text>
+            </staticText>
+
+            <staticText>
+                <reportElement x="355" y="35" width="150" height="15"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
+                    <font fontName="SansSerif" size="9" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Người lập]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="355" y="50" width="150" height="15"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
+                    <font fontName="SansSerif" size="8" isItalic="true"/>
+                </textElement>
+                <text><![CDATA[(Ký, họ tên)]]></text>
+            </staticText>
+        </band>
+    </summary>
+
+</jasperReport>

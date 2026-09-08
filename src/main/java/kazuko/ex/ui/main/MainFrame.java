@@ -70,6 +70,12 @@ import kazuko.ex.ui.baocao.TongHopNhapTheoNgayPanel;
 import kazuko.ex.ui.baocao.TongHopNhapTheoNhaCungCapPanel;
 import kazuko.ex.ui.baocao.TongHopNhapTheoNhanVienPanel;
 import kazuko.ex.ui.baocao.TongHopMatHangNhapTheoNgayPanel;
+import kazuko.ex.ui.baocao.TongHopMatHangChuyenKhoTheoNhanVienNhanPanel;
+import kazuko.ex.ui.baocao.TongHopMatHangChuyenKhoTheoNhanVienChuyenPanel;
+import kazuko.ex.ui.baocao.TongHopMatHangChuyenKhoTheoNgayPanel;
+import kazuko.ex.ui.baocao.DanhSachPhieuChuyenKhoTheoNhanVienXuatPanel;
+import kazuko.ex.ui.baocao.DanhSachPhieuChuyenKhoTheoNhanVienNhanPanel;
+import kazuko.ex.ui.baocao.DanhSachPhieuChuyenKhoTheoNgayPanel;
 import kazuko.ex.ui.baogia.BaoGiaBanHangPanel;
 
 
@@ -1367,11 +1373,29 @@ public class MainFrame extends JFrame {
                 openTab("Quản lý xuất kho", new QuanLyXuatKhoPanel());
                 break;
             case "DANH SÁCH PHIẾU CHUYỂN KHO THEO NGÀY":
+            case "DANH SÁCH PHIẾU CHUYỂN THEO NGÀY":
+                openTab("Danh sách phiếu chuyển kho theo ngày", new DanhSachPhieuChuyenKhoTheoNgayPanel());
+                break;
             case "DANH SÁCH PHIẾU CHUYỂN KHO THEO NHÂN VIÊN XUẤT":
+            case "DANH SÁCH PHIẾU CHUYỂN THEO NHÂN VIÊN XUẤT":
+                openTab("Danh sách phiếu chuyển kho theo NV xuất", new DanhSachPhieuChuyenKhoTheoNhanVienXuatPanel());
+                break;
             case "DANH SÁCH PHIẾU CHUYỂN KHO THEO NHÂN VIÊN NHẬP":
+            case "DANH SÁCH PHIẾU CHUYỂN THEO NHÂN VIÊN NHẬP":
+                openTab("Danh sách phiếu chuyển kho theo NV nhập", new DanhSachPhieuChuyenKhoTheoNhanVienNhanPanel());
+                break;
             case "TỔNG HỢP MẶT HÀNG CHUYỂN KHO THEO NHÂN VIÊN NHẬN":
+            case "TỔNG HỢP MẶT HÀNG CHUYỂN THEO NHÂN VIÊN NHẬN":
+                openTab("Tổng hợp mặt hàng chuyển kho theo NV nhận", new TongHopMatHangChuyenKhoTheoNhanVienNhanPanel());
+                break;
             case "TỔNG HỢP MẶT HÀNG CHUYỂN KHO THEO NHÂN VIÊN CHUYỂN":
+            case "TỔNG HỢP MẶT HÀNG CHUYỂN THEO NHÂN VIÊN CHUYỂN":
+                openTab("Tổng hợp mặt hàng chuyển kho theo NV chuyển", new TongHopMatHangChuyenKhoTheoNhanVienChuyenPanel());
+                break;
             case "TỔNG HỢP MẶT HÀNG CHUYỂN KHO THEO NGÀY":
+            case "TỔNG HỢP MẶT HÀNG CHUYỂN THEO NGÀY":
+                openTab("Tổng hợp mặt hàng chuyển kho theo ngày", new TongHopMatHangChuyenKhoTheoNgayPanel());
+                break;
             case "BÁO CÁO TỔNG HỢP CHUYỂN KHO":
             case "QUẢN LÝ CHUYỂN KHO":
                 openTab("Quản lý chuyển kho", new QuanLyChuyenKhoPanel());
