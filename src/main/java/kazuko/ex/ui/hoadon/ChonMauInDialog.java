@@ -1,6 +1,7 @@
 package kazuko.ex.ui.hoadon;
 
 import kazuko.ex.model.banhang.DonHang;
+import kazuko.ex.report.bill.BillPrintService;
 import kazuko.ex.util.IconHelper;
 
 import javax.print.PrintService;
@@ -43,6 +44,7 @@ public class ChonMauInDialog extends JDialog {
     private PrintAction selectedAction = PrintAction.PREVIEW_SCREEN;
     private String selectedTemplateName = "Mẫu in bill A4";
     private String selectedPrinterName = "";
+    private final BillPrintService billPrintService = new BillPrintService();
 
     public static class PrintTemplateItem {
         public String name;
@@ -244,6 +246,31 @@ public class ChonMauInDialog extends JDialog {
 
         confirmed = true;
         dispose();
+        executeSelectedAction();
+    }
+
+    private void executeSelectedAction() {
+        Window owner = getOwner();
+        try {
+            switch (selectedAction) {
+                case PREVIEW_SCREEN -> billPrintService.preview(owner, donHang, selectedTemplateName);
+                case PRINT_PRINTER -> billPrintService.print(donHang, selectedTemplateName, selectedPrinterName);
+                case EXPORT_PDF -> billPrintService.exportPdf(owner, donHang, selectedTemplateName);
+                case DESIGN_TEMPLATE -> billPrintService.design(owner, selectedTemplateName);
+                case EXPORT_EXCEL -> JOptionPane.showMessageDialog(owner,
+                        "Mẫu bill Java hiện hỗ trợ Preview, In và PDF. Xuất Excel sẽ được bổ sung sau.",
+                        "Chưa hỗ trợ", JOptionPane.INFORMATION_MESSAGE);
+            }
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(owner, "Không thể xử lý mẫu in:\n" + rootMessage(ex),
+                    "Lỗi", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private static String rootMessage(Throwable error) {
+        Throwable current = error;
+        while (current.getCause() != null) current = current.getCause();
+        return current.getMessage() != null ? current.getMessage() : current.toString();
     }
 
     public boolean isConfirmed() { return confirmed; }

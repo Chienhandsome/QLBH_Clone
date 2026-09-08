@@ -1,0 +1,9 @@
+html, body {
+  height: 100%;
+  margin: 0;
+  background: #eef1f6;
+}
+
+button, input {
+  font-family: "Segoe UI", Arial, sans-serif;
+}

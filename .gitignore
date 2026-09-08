@@ -1,4 +1,6 @@
 target/
+jrxml-editor-poc/node_modules/
+jrxml-editor-poc/.angular/
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/

@@ -2,8 +2,11 @@ package kazuko.ex.ui.system;
 
 import kazuko.ex.dao.STemplateDAO;
 import kazuko.ex.dao.SystemConfigDAO;
+import kazuko.ex.dao.BillTemplateDAO;
+import kazuko.ex.model.bill.BillTemplate;
 import kazuko.ex.model.system.STemplate;
 import kazuko.ex.model.system.SystemConfig;
+import kazuko.ex.ui.report.BillTemplateEditorDialog;
 import kazuko.ex.util.IconHelper;
 
 import javax.print.PrintService;
@@ -22,6 +25,7 @@ import java.util.List;
 public class CauHinhToanHeThongDialog extends JDialog {
     private final SystemConfigDAO configDAO = new SystemConfigDAO();
     private final STemplateDAO templateDAO = new STemplateDAO();
+    private final BillTemplateDAO billTemplateDAO = new BillTemplateDAO();
     private SystemConfig currentConfig;
 
     // State mở khóa Tab Mẫu hóa đơn (lưu trong phiên làm việc)
@@ -571,10 +575,7 @@ public class CauHinhToanHeThongDialog extends JDialog {
             public void mouseClicked(java.awt.event.MouseEvent e) {
                 STemplate selected = listTemplateMauHD != null ? listTemplateMauHD.getSelectedValue() : null;
                 if (selected != null) {
-                    JOptionPane.showMessageDialog(CauHinhToanHeThongDialog.this,
-                            "Mở trình thiết kế mẫu in FastReport cho mẫu:\n" + selected.getName() +
-                            (selected.getId() != null ? " (ID: " + selected.getId() + ")" : ""),
-                            "FastReport Designer", JOptionPane.INFORMATION_MESSAGE);
+                    openBillTemplateEditor(selected);
                 } else {
                     JOptionPane.showMessageDialog(CauHinhToanHeThongDialog.this,
                             "Vui lòng chọn một mẫu in từ danh sách bên phải để sửa!",
@@ -645,9 +646,7 @@ public class CauHinhToanHeThongDialog extends JDialog {
                 if (e.getClickCount() == 2) {
                     STemplate selected = listTemplateMauHD.getSelectedValue();
                     if (selected != null) {
-                        JOptionPane.showMessageDialog(CauHinhToanHeThongDialog.this,
-                                "Mở trình thiết kế mẫu in FastReport cho mẫu:\n" + selected.getName(),
-                                "FastReport Designer", JOptionPane.INFORMATION_MESSAGE);
+                        openBillTemplateEditor(selected);
                     }
                 }
             }
@@ -707,6 +706,25 @@ public class CauHinhToanHeThongDialog extends JDialog {
         }
 
         return container;
+    }
+
+    private void openBillTemplateEditor(STemplate selected) {
+        if (selected == null || selected.getId() == null || selected.getId().isBlank()) {
+            JOptionPane.showMessageDialog(this, "Mẫu được chọn không có ID hợp lệ.",
+                    "Không thể mở mẫu", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+        try {
+            BillTemplate javaTemplate = billTemplateDAO.findOrCreateDraft(selected.getId(), selected.getName());
+            BillTemplateEditorDialog.open(this, javaTemplate, billTemplateDAO);
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this,
+                    "Không thể mở trình thiết kế bill Java:\n" + ex.getMessage(),
+                    "Lỗi", JOptionPane.ERROR_MESSAGE);
+        } finally {
+            setCursor(Cursor.getDefaultCursor());
+        }
     }
 
     private void loadFolderData() {

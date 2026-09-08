@@ -166,7 +166,7 @@ public class BaoCaoTonKhoReportService {
     private String getKhoName(String khoId) {
         if (khoId == null || khoId.trim().isEmpty()) return "Kho: Tất cả";
         try {
-            KhoHang k = khoHangDAO.getById(khoId);
+            KhoHang k = khoHangDAO.findById(khoId);
             if (k != null && k.getName() != null) return "Kho: " + k.getName();
         } catch (Exception ignored) {}
         return "Kho: Tất cả";
