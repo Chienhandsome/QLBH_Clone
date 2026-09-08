@@ -76,6 +76,15 @@ import kazuko.ex.ui.baocao.TongHopMatHangChuyenKhoTheoNgayPanel;
 import kazuko.ex.ui.baocao.DanhSachPhieuChuyenKhoTheoNhanVienXuatPanel;
 import kazuko.ex.ui.baocao.DanhSachPhieuChuyenKhoTheoNhanVienNhanPanel;
 import kazuko.ex.ui.baocao.DanhSachPhieuChuyenKhoTheoNgayPanel;
+import kazuko.ex.ui.baocao.BaoCaoHangTheoHanDungPanel;
+import kazuko.ex.ui.baocao.BaoCaoHangDaHetHanPanel;
+import kazuko.ex.ui.baocao.BaoCaoHangTonKhoHanDungPanel;
+import kazuko.ex.ui.baocao.BaoCaoHangTonKhoPanel;
+import kazuko.ex.ui.baocao.BaoCaoTongHopXuatNhapTonPanel;
+import kazuko.ex.ui.baocao.TongHopLaiGopTheoMatHangGiaVonPanel;
+import kazuko.ex.ui.baocao.TongHopLaiGopTheoMatHangGiaNhapPanel;
+import kazuko.ex.ui.baocao.ChiTietLaiTheoHoaDonGiaVonPanel;
+import kazuko.ex.ui.baocao.ChiTietLaiTheoHoaDonGiaNhapPanel;
 import kazuko.ex.ui.baogia.BaoGiaBanHangPanel;
 
 
@@ -1234,8 +1243,50 @@ public class MainFrame extends JFrame {
             case "TỒN KHO THEO KÍCH THƯỚC":
                 openTab("Báo cáo tồn kho theo kích thước", new BaoCaoTonKhoTheoKichThuocPanel());
                 break;
+            case "BÁO CÁO HÀNG THEO HẠN DÙNG":
+            case "HÀNG THEO HẠN DÙNG":
+                openTab("Báo cáo hàng theo hạn dùng", new BaoCaoHangTheoHanDungPanel());
+                break;
+            case "BÁO CÁO HÀNG ĐÃ HẾT HẠN":
+            case "HÀNG ĐÃ HẾT HẠN":
+                openTab("Báo cáo hàng đã hết hạn", new BaoCaoHangDaHetHanPanel());
+                break;
+            case "BÁO CÁO HÀNG TỒN KHO CÓ HẠN DÙNG":
+            case "HÀNG TỒN KHO CÓ HẠN DÙNG":
+                openTab("Báo cáo hàng tồn kho có hạn dùng", new BaoCaoHangTonKhoHanDungPanel());
+                break;
             case "BÁO CÁO HÀNG TỒN KHO":
+            case "HÀNG TỒN KHO":
+                openTab("Báo cáo hàng tồn kho", new BaoCaoHangTonKhoPanel());
+                break;
             case "BÁO CÁO TỔNG HỢP XUẤT NHẬP TỒN":
+            case "TỔNG HỢP XUẤT NHẬP TỒN":
+                openTab("Báo cáo tổng hợp xuất nhập tồn", new BaoCaoTongHopXuatNhapTonPanel());
+                break;
+            case "TỔNG HỢP LÃI GỘP THEO MẶT HÀNG (GIÁ VỐN)":
+            case "TỔNG HỢP LÃI GỘP THEO MẶT HÀNG GIÁ VỐN":
+            case "LÃI GỘP THEO MẶT HÀNG (GIÁ VỐN)":
+            case "LÃI GỘP MẶT HÀNG GIÁ VỐN":
+                openTab("Lãi gộp theo mặt hàng (giá vốn)", new TongHopLaiGopTheoMatHangGiaVonPanel());
+                break;
+            case "TỔNG HỢP LÃI GỘP THEO MẶT HÀNG (GIÁ NHẬP)":
+            case "TỔNG HỢP LÃI GỘP THEO MẶT HÀNG GIÁ NHẬP":
+            case "LÃI GỘP THEO MẶT HÀNG (GIÁ NHẬP)":
+            case "LÃI GỘP MẶT HÀNG GIÁ NHẬP":
+                openTab("Lãi gộp theo mặt hàng (giá nhập)", new TongHopLaiGopTheoMatHangGiaNhapPanel());
+                break;
+            case "CHI TIẾT LÃI THEO HÓA ĐƠN (GIÁ VỐN)":
+            case "CHI TIẾT LÃI THEO HÓA ĐƠN GIÁ VỐN":
+            case "CHI TIẾT LÃI HÓA ĐƠN (GIÁ VỐN)":
+            case "CHI TIẾT LÃI HÓA ĐƠN GIÁ VỐN":
+                openTab("Chi tiết lãi theo hóa đơn (giá vốn)", new ChiTietLaiTheoHoaDonGiaVonPanel());
+                break;
+            case "CHI TIẾT LÃI THEO HÓA ĐƠN (GIÁ NHẬP)":
+            case "CHI TIẾT LÃI THEO HÓA ĐƠN GIÁ NHẬP":
+            case "CHI TIẾT LÃI HÓA ĐƠN (GIÁ NHẬP)":
+            case "CHI TIẾT LÃI HÓA ĐƠN GIÁ NHẬP":
+                openTab("Chi tiết lãi theo hóa đơn (giá nhập)", new ChiTietLaiTheoHoaDonGiaNhapPanel());
+                break;
             case "BÁO CÁO NHẬP XUẤT TỒN THEO KHO":
             case "BÁO CÁO TỒN KHO THEO MẶT HÀNG":
             case "TỒN KHO":
