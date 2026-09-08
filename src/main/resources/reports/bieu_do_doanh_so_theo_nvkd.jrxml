@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.21.3.final using JasperReports Library version 6.21.3-4a3078d20785ebe464f18037d738d12fc98c13cf  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="bieu_do_doanh_so_theo_nvkd" pageWidth="842" pageHeight="595" orientation="Landscape" columnWidth="782" leftMargin="30" rightMargin="30" topMargin="25" bottomMargin="25" uuid="1c841fae-b2d9-43c2-bdce-6bf2995e8e81">
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="One Empty Record"/>
+	<style name="DefaultStyle" isDefault="true" fontName="SansSerif" fontSize="9"/>
+	<style name="CardStyle" mode="Opaque" backcolor="#FFFFFF">
+		<box>
+			<topPen lineWidth="1.0" lineColor="#C0D0E5"/>
+			<leftPen lineWidth="1.0" lineColor="#C0D0E5"/>
+			<bottomPen lineWidth="1.0" lineColor="#C0D0E5"/>
+			<rightPen lineWidth="1.0" lineColor="#C0D0E5"/>
+		</box>
+	</style>
+	<parameter name="p_companyName" class="java.lang.String"/>
+	<parameter name="p_companyAddress" class="java.lang.String"/>
+	<parameter name="p_companyPhone" class="java.lang.String"/>
+	<parameter name="p_companyEmail" class="java.lang.String"/>
+	<parameter name="p_logoImage" class="java.lang.Object"/>
+	<parameter name="p_thoiGian" class="java.lang.String"/>
+	<parameter name="ngayIn" class="java.lang.String"/>
+	<field name="nhanVien" class="java.lang.String"/>
+	<field name="doanhSo" class="java.lang.Double"/>
+	<field name="tyLe" class="java.lang.Double"/>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="75" splitType="Stretch">
+			<image scaleImage="RetainShape" onErrorType="Blank">
+				<reportElement x="10" y="0" width="100" height="40" uuid="e618e76c-38d4-4bb8-9580-c11c472851f8"/>
+				<imageExpression><![CDATA[$P{p_logoImage}]]></imageExpression>
+			</image>
+			<textField isBlankWhenNull="true">
+				<reportElement x="200" y="0" width="382" height="15" uuid="55998188-7570-4f51-a9c1-5b74681604a5"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="10" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{p_companyName} != null ? $P{p_companyName} : "Công ty TNHH Ngọc Châu Âu"]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement x="200" y="15" width="382" height="13" uuid="e6d1947b-fb33-4f9e-9988-cb9716eef888"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Địa chỉ: " + ($P{p_companyAddress} != null ? $P{p_companyAddress} : "455 Sư Vạn Hạnh, P.12, Q.10, TPHCM")]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement x="200" y="28" width="382" height="13" uuid="abfcd402-d9e2-45e0-8fa8-04f76269229f"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Điện thoại: " + ($P{p_companyPhone} != null ? $P{p_companyPhone} : "(08) 6264 5788") + "     Email: " + ($P{p_companyEmail} != null ? $P{p_companyEmail} : "info@ngocchauau.vn")]]></textFieldExpression>
+			</textField>
+			<line>
+				<reportElement x="0" y="44" width="782" height="1" forecolor="#000000" uuid="0901eec9-c70e-4ea7-9a4f-a7bb506ec6df"/>
+				<graphicElement>
+					<pen lineWidth="1.5" lineStyle="Solid"/>
+				</graphicElement>
+			</line>
+			<line>
+				<reportElement x="0" y="46" width="782" height="1" forecolor="#000000" uuid="0901eec9-c70e-4ea7-9a4f-a7bb506ec6e0"/>
+				<graphicElement>
+					<pen lineWidth="0.5" lineStyle="Solid"/>
+				</graphicElement>
+			</line>
+			<staticText>
+				<reportElement x="190" y="50" width="400" height="16" forecolor="#000000" uuid="7cfeb486-d2fb-4648-8df0-f9468e27cfa4"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="12" isBold="true"/>
+				</textElement>
+				<text><![CDATA[BIỂU ĐỒ DOANH SỐ THEO NHÂN VIÊN KINH DOANH]]></text>
+			</staticText>
+			<textField isBlankWhenNull="true">
+				<reportElement x="190" y="64" width="400" height="11" uuid="8a6d68b9-e131-4c1d-8526-f77e2311494e"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="8" isItalic="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{p_thoiGian} != null ? $P{p_thoiGian} : "Từ ngày ... đến ngày ..."]]></textFieldExpression>
+			</textField>
+		</band>
+	</title>
+	<summary>
+		<band height="440" splitType="Stretch">
+			<!-- Frame 1: Bar Chart -->
+			<frame>
+				<reportElement style="CardStyle" x="0" y="10" width="380" height="350" uuid="ffffffff-1111-1111-1111-111111111111"/>
+				<barChart>
+					<chart isShowLegend="true" evaluationTime="Report">
+						<reportElement x="5" y="5" width="370" height="335" uuid="11111111-2222-3333-4444-555555555555"/>
+						<chartTitle/>
+						<chartSubtitle/>
+						<chartLegend position="Top"/>
+					</chart>
+					<categoryDataset>
+						<dataset resetType="Report"/>
+						<categorySeries>
+							<seriesExpression><![CDATA["Doanh số"]]></seriesExpression>
+							<categoryExpression><![CDATA[$F{nhanVien}]]></categoryExpression>
+							<valueExpression><![CDATA[$F{doanhSo}]]></valueExpression>
+							<labelExpression><![CDATA[String.format("%,.0f", $F{doanhSo})]]></labelExpression>
+						</categorySeries>
+					</categoryDataset>
+					<barPlot isShowLabels="true" isShowTickLabels="true" isShowTickMarks="true">
+						<plot>
+							<seriesColor seriesOrder="0" color="#3B82F6"/>
+						</plot>
+						<itemLabel>
+							<font size="8"/>
+						</itemLabel>
+						<categoryAxisFormat>
+							<axisFormat labelColor="#000000" tickLabelColor="#000000">
+								<labelFont>
+									<font size="8"/>
+								</labelFont>
+								<tickLabelFont>
+									<font size="8"/>
+								</tickLabelFont>
+							</axisFormat>
+						</categoryAxisFormat>
+						<valueAxisFormat>
+							<axisFormat labelColor="#000000" tickLabelColor="#000000">
+								<labelFont>
+									<font size="8"/>
+								</labelFont>
+								<tickLabelFont>
+									<font size="8"/>
+								</tickLabelFont>
+							</axisFormat>
+						</valueAxisFormat>
+					</barPlot>
+				</barChart>
+			</frame>
+
+			<!-- Frame 2: Pie Chart -->
+			<frame>
+				<reportElement style="CardStyle" x="402" y="10" width="380" height="350" uuid="ffffffff-2222-2222-2222-222222222222"/>
+				<pieChart>
+					<chart isShowLegend="true" evaluationTime="Report">
+						<reportElement x="5" y="5" width="370" height="335" uuid="66666666-7777-8888-9999-000000000000"/>
+						<chartTitle/>
+						<chartSubtitle/>
+						<chartLegend position="Top"/>
+					</chart>
+					<pieDataset>
+						<dataset resetType="Report"/>
+						<keyExpression><![CDATA[$F{nhanVien} + ":" + String.format("%.2f %%", $F{tyLe})]]></keyExpression>
+						<valueExpression><![CDATA[$F{doanhSo}]]></valueExpression>
+						<labelExpression><![CDATA[String.format("%.2f %%", $F{tyLe})]]></labelExpression>
+					</pieDataset>
+					<piePlot isShowLabels="true" isCircular="true">
+						<plot>
+							<seriesColor seriesOrder="0" color="#3B82F6"/>
+							<seriesColor seriesOrder="1" color="#F59E0B"/>
+							<seriesColor seriesOrder="2" color="#10B981"/>
+							<seriesColor seriesOrder="3" color="#EF4444"/>
+							<seriesColor seriesOrder="4" color="#8B5CF6"/>
+							<seriesColor seriesOrder="5" color="#EC4899"/>
+						</plot>
+						<itemLabel>
+							<font size="8"/>
+						</itemLabel>
+					</piePlot>
+				</pieChart>
+			</frame>
+
+			<textField isBlankWhenNull="true">
+				<reportElement x="560" y="365" width="222" height="15" uuid="3d236087-fc0d-4ce4-82a8-a53bcbfb8e90"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="8" isItalic="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{ngayIn} != null ? $P{ngayIn} : "Ngày " + java.time.LocalDate.now().getDayOfMonth() + " tháng " + java.time.LocalDate.now().getMonthValue() + " năm " + java.time.LocalDate.now().getYear()]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="560" y="380" width="222" height="15" uuid="4f65c197-0f81-4475-b3eb-468ae396a84d"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="9" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Người lập]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="560" y="395" width="222" height="13" uuid="fc5dc6d5-455b-42fa-9eb9-4ba3ebc83eb3"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="8" isItalic="true"/>
+				</textElement>
+				<text><![CDATA[(Ký, họ tên)]]></text>
+			</staticText>
+		</band>
+	</summary>
+</jasperReport>

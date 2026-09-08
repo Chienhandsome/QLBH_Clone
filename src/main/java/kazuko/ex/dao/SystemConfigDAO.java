@@ -7,8 +7,66 @@ import java.nio.charset.StandardCharsets;
 import java.util.Properties;
 
 public class SystemConfigDAO {
-    private static final String CONFIG_FILE = "system_config.properties";
+    private static final String CONFIG_FILE_NAME = "system_config.properties";
     private static SystemConfig cachedConfig = null;
+
+    public static void clearCache() {
+        cachedConfig = null;
+    }
+
+    public static File getConfigFile() {
+        // 1. Current working directory
+        File f1 = new File(CONFIG_FILE_NAME);
+        if (f1.exists()) {
+            return f1;
+        }
+        // 2. QLBH_Clone subfolder
+        File f2 = new File("QLBH_Clone", CONFIG_FILE_NAME);
+        if (f2.exists()) {
+            return f2;
+        }
+        // 3. Parent directory
+        File f3 = new File("..", CONFIG_FILE_NAME);
+        if (f3.exists()) {
+            return f3;
+        }
+        // Fallback: If QLBH_Clone directory exists, use QLBH_Clone/system_config.properties
+        if (new File("QLBH_Clone").isDirectory()) {
+            return f2;
+        }
+        return f1;
+    }
+
+    public static String resolveLogoPath(String rawPath) {
+        if (rawPath == null || rawPath.trim().isEmpty() || "null".equalsIgnoreCase(rawPath.trim())) {
+            return null;
+        }
+        String clean = rawPath.trim();
+        // 1. Direct file check
+        File f1 = new File(clean);
+        if (f1.exists() && f1.isFile()) {
+            return f1.getAbsolutePath();
+        }
+        // 2. Relative to config file directory
+        File cfgDir = getConfigFile().getParentFile();
+        if (cfgDir != null) {
+            File f2 = new File(cfgDir, clean);
+            if (f2.exists() && f2.isFile()) {
+                return f2.getAbsolutePath();
+            }
+        }
+        // 3. Relative to QLBH_Clone
+        File f3 = new File("QLBH_Clone", clean);
+        if (f3.exists() && f3.isFile()) {
+            return f3.getAbsolutePath();
+        }
+        // 4. Relative to current dir
+        File f4 = new File(clean);
+        if (f4.exists() && f4.isFile()) {
+            return f4.getAbsolutePath();
+        }
+        return clean;
+    }
 
     public SystemConfig getConfig() {
         return loadConfig();
@@ -20,7 +78,7 @@ public class SystemConfigDAO {
         }
 
         SystemConfig config = new SystemConfig();
-        File file = new File(CONFIG_FILE);
+        File file = getConfigFile();
         if (file.exists()) {
             Properties props = new Properties();
             try (InputStreamReader reader = new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8)) {
@@ -28,7 +86,13 @@ public class SystemConfigDAO {
 
                 config.setTenCongTy(props.getProperty("company.name", config.getTenCongTy()));
                 config.setDiaChi(props.getProperty("company.address", config.getDiaChi()));
-                config.setLogoPath(props.getProperty("company.logo", config.getLogoPath()));
+
+                String logoVal = props.getProperty("company.logo");
+                if (logoVal != null && !logoVal.trim().isEmpty() && !"null".equalsIgnoreCase(logoVal.trim())) {
+                    config.setLogoPath(resolveLogoPath(logoVal.trim()));
+                } else {
+                    config.setLogoPath(null);
+                }
                 config.setSoDienThoai(props.getProperty("company.phone", config.getSoDienThoai()));
                 config.setEmail(props.getProperty("company.email", config.getEmail()));
                 config.setLoiCamOn(props.getProperty("company.thanks", config.getLoiCamOn()));
@@ -181,6 +245,32 @@ public class SystemConfigDAO {
 
     public synchronized boolean saveConfig(SystemConfig config) {
         if (config == null) return false;
+
+        // Persist logo file to data/ directory if a custom logo is specified
+        if (config.getLogoPath() != null && !config.getLogoPath().trim().isEmpty()) {
+            File srcLogo = new File(config.getLogoPath().trim());
+            if (srcLogo.exists() && srcLogo.isFile()) {
+                try {
+                    File cfgFile = getConfigFile();
+                    File baseDir = cfgFile.getParentFile();
+                    File targetDir = baseDir != null ? new File(baseDir, "data") : new File("data");
+                    if (!targetDir.exists()) {
+                        targetDir.mkdirs();
+                    }
+                    String ext = "png";
+                    int dotIdx = srcLogo.getName().lastIndexOf('.');
+                    if (dotIdx > 0) {
+                        ext = srcLogo.getName().substring(dotIdx + 1).toLowerCase();
+                    }
+                    File destLogo = new File(targetDir, "company_logo." + ext);
+                    if (!destLogo.getCanonicalPath().equalsIgnoreCase(srcLogo.getCanonicalPath())) {
+                        java.nio.file.Files.copy(srcLogo.toPath(), destLogo.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                        config.setLogoPath(destLogo.getAbsolutePath());
+                    }
+                } catch (Exception ignored) {}
+            }
+        }
+
         cachedConfig = config;
 
         Properties props = new Properties();
@@ -324,8 +414,28 @@ public class SystemConfigDAO {
         props.setProperty("scale.autoDetect", String.valueOf(config.isTuDongNhanDangCanDienTu()));
         props.setProperty("scale.unit", config.getDonViTrenCan() != null ? config.getDonViTrenCan() : "Gram");
 
-        try (OutputStreamWriter writer = new OutputStreamWriter(new FileOutputStream(CONFIG_FILE), StandardCharsets.UTF_8)) {
-            props.store(writer, "Cấu hình hệ thống QLBH");
+        File primaryFile = getConfigFile();
+        try {
+            if (primaryFile.getParentFile() != null && !primaryFile.getParentFile().exists()) {
+                primaryFile.getParentFile().mkdirs();
+            }
+            try (OutputStreamWriter writer = new OutputStreamWriter(new FileOutputStream(primaryFile), StandardCharsets.UTF_8)) {
+                props.store(writer, "Cấu hình hệ thống QLBH");
+            }
+
+            // Also synchronize to alternative location if existing
+            File altFile = new File("QLBH_Clone", CONFIG_FILE_NAME);
+            if (!primaryFile.getCanonicalPath().equalsIgnoreCase(altFile.getCanonicalPath()) && altFile.exists()) {
+                try (OutputStreamWriter writer = new OutputStreamWriter(new FileOutputStream(altFile), StandardCharsets.UTF_8)) {
+                    props.store(writer, "Cấu hình hệ thống QLBH");
+                } catch (Exception ignored) {}
+            }
+            File rootFile = new File(CONFIG_FILE_NAME);
+            if (!primaryFile.getCanonicalPath().equalsIgnoreCase(rootFile.getCanonicalPath()) && rootFile.exists()) {
+                try (OutputStreamWriter writer = new OutputStreamWriter(new FileOutputStream(rootFile), StandardCharsets.UTF_8)) {
+                    props.store(writer, "Cấu hình hệ thống QLBH");
+                } catch (Exception ignored) {}
+            }
             return true;
         } catch (Exception e) {
             return false;

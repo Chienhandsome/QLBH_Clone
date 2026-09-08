@@ -71,4 +71,28 @@ public class BaoCaoLogoConfigTest {
         Assertions.assertNotNull(printKhachHang, "Báo cáo khách hàng theo nhóm phải tạo thành công");
         Assertions.assertTrue(printKhachHang.getPages().size() >= 1);
     }
+
+    @Test
+    public void testLogoPersistenceAcrossRestarts() throws Exception {
+        // 1. Cập nhật tên công ty và logoPath
+        SystemConfig config = configDAO.loadConfig();
+        config.setTenCongTy("Công ty Kiểm Tra Persistence");
+        config.setLogoPath(tempLogoFile.getAbsolutePath());
+        boolean saved = configDAO.saveConfig(config);
+        Assertions.assertTrue(saved, "Lưu cấu hình phải thành công");
+
+        // 2. Giả lập khởi động lại ứng dụng: Xóa toàn bộ bộ nhớ cache static
+        SystemConfigDAO.clearCache();
+
+        // 3. Khởi tạo một DAO mới và tải lại cấu hình từ file trên đĩa
+        SystemConfigDAO freshDAO = new SystemConfigDAO();
+        SystemConfig reloadedConfig = freshDAO.loadConfig();
+
+        // 4. Xác minh thông tin cấu hình và logo vẫn tồn tại chính xác
+        Assertions.assertNotNull(reloadedConfig, "Cấu hình tải lại không được null");
+        Assertions.assertEquals("Công ty Kiểm Tra Persistence", reloadedConfig.getTenCongTy());
+        Assertions.assertNotNull(reloadedConfig.getLogoPath(), "Đường dẫn logo sau khi khởi động lại không được null");
+        File persistedLogo = new File(reloadedConfig.getLogoPath());
+        Assertions.assertTrue(persistedLogo.exists(), "File logo được lưu phải tồn tại trên đĩa: " + reloadedConfig.getLogoPath());
+    }
 }

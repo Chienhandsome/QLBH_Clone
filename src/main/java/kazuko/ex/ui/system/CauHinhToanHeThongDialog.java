@@ -447,10 +447,21 @@ public class CauHinhToanHeThongDialog extends JDialog {
 
         JButton btnChooseLogo = new JButton("Chọn");
         btnChooseLogo.setFont(new Font("Segoe UI", Font.PLAIN, 11));
-        btnChooseLogo.setBounds(510, startY + 80, 100, 22);
+        btnChooseLogo.setBounds(495, startY + 80, 58, 22);
         btnChooseLogo.setBackground(Color.WHITE);
         btnChooseLogo.addActionListener(e -> chooseLogo());
         panel.add(btnChooseLogo);
+
+        JButton btnClearLogo = new JButton("Xóa");
+        btnClearLogo.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        btnClearLogo.setBounds(557, startY + 80, 55, 22);
+        btnClearLogo.setBackground(Color.WHITE);
+        btnClearLogo.addActionListener(e -> {
+            selectedLogoPath = null;
+            lblLogoPreview.setIcon(null);
+            lblLogoPreview.setText("Chưa có");
+        });
+        panel.add(btnClearLogo);
 
         // Row 3: Số điện thoại
         startY += 85;
@@ -2063,19 +2074,42 @@ public class CauHinhToanHeThongDialog extends JDialog {
 
     private void chooseLogo() {
         JFileChooser chooser = new JFileChooser();
+        chooser.setDialogTitle("Chọn hình ảnh logo công ty");
+        chooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter(
+                "Hình ảnh (*.png, *.jpg, *.jpeg, *.gif, *.bmp)", "png", "jpg", "jpeg", "gif", "bmp"));
         if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
             File f = chooser.getSelectedFile();
-            selectedLogoPath = f.getAbsolutePath();
-            displayLogo(selectedLogoPath);
+            if (f != null && f.exists()) {
+                selectedLogoPath = f.getAbsolutePath();
+                displayLogo(selectedLogoPath);
+            }
         }
     }
 
     private void displayLogo(String path) {
+        if (path == null || path.trim().isEmpty()) {
+            lblLogoPreview.setIcon(null);
+            lblLogoPreview.setText("Chưa có");
+            return;
+        }
         try {
-            ImageIcon icon = new ImageIcon(path);
-            Image scaled = icon.getImage().getScaledInstance(90, 65, Image.SCALE_SMOOTH);
-            lblLogoPreview.setIcon(new ImageIcon(scaled));
-        } catch (Exception ignored) {}
+            String resolved = SystemConfigDAO.resolveLogoPath(path);
+            File f = (resolved != null) ? new File(resolved) : new File(path);
+            if (f.exists() && f.isFile()) {
+                java.awt.image.BufferedImage img = javax.imageio.ImageIO.read(f);
+                if (img != null) {
+                    Image scaled = img.getScaledInstance(90, 65, Image.SCALE_SMOOTH);
+                    lblLogoPreview.setIcon(new ImageIcon(scaled));
+                    lblLogoPreview.setText("");
+                    return;
+                }
+            }
+            lblLogoPreview.setIcon(null);
+            lblLogoPreview.setText("Chưa có");
+        } catch (Exception ignored) {
+            lblLogoPreview.setIcon(null);
+            lblLogoPreview.setText("Chưa có");
+        }
     }
 
     private void loadTemplatesToComboBoxes() {
@@ -2178,8 +2212,11 @@ public class CauHinhToanHeThongDialog extends JDialog {
         txtTenCongTy.setText(currentConfig.getTenCongTy());
         txtDiaChi.setText(currentConfig.getDiaChi());
         selectedLogoPath = currentConfig.getLogoPath();
-        if (selectedLogoPath != null && !selectedLogoPath.isEmpty()) {
+        if (selectedLogoPath != null && !selectedLogoPath.trim().isEmpty()) {
             displayLogo(selectedLogoPath);
+        } else {
+            lblLogoPreview.setIcon(null);
+            lblLogoPreview.setText("Chưa có");
         }
         txtSoDienThoai.setText(currentConfig.getSoDienThoai());
         txtEmail.setText(currentConfig.getEmail());
@@ -2331,7 +2368,7 @@ public class CauHinhToanHeThongDialog extends JDialog {
         // Tab 1
         currentConfig.setTenCongTy(txtTenCongTy.getText().trim());
         currentConfig.setDiaChi(txtDiaChi.getText().trim());
-        currentConfig.setLogoPath(selectedLogoPath);
+        currentConfig.setLogoPath(selectedLogoPath != null && !selectedLogoPath.trim().isEmpty() ? selectedLogoPath.trim() : null);
         currentConfig.setSoDienThoai(txtSoDienThoai.getText().trim());
         currentConfig.setEmail(txtEmail.getText().trim());
         currentConfig.setLoiCamOn(txtLoiCamOn.getText().trim());

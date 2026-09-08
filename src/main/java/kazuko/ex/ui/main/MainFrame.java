@@ -85,6 +85,19 @@ import kazuko.ex.ui.baocao.TongHopLaiGopTheoMatHangGiaVonPanel;
 import kazuko.ex.ui.baocao.TongHopLaiGopTheoMatHangGiaNhapPanel;
 import kazuko.ex.ui.baocao.ChiTietLaiTheoHoaDonGiaVonPanel;
 import kazuko.ex.ui.baocao.ChiTietLaiTheoHoaDonGiaNhapPanel;
+import kazuko.ex.ui.baocao.BaoCaoKetQuaKinhDoanhPanel;
+import kazuko.ex.ui.baocao.ChiTietHoatDongTrongNgayPanel;
+import kazuko.ex.ui.baocao.BaoCao20MatHangBanChayNhatPanel;
+import kazuko.ex.ui.baocao.BangTongHopThiPhanPanel;
+import kazuko.ex.ui.baocao.BaoCaoPhanTichTinhHinhBanHangPanel;
+import kazuko.ex.ui.baocao.BieuDoDoanhSoTheoNhomPanel;
+import kazuko.ex.ui.baocao.BieuDoDoanhThuNgayTrongThangPanel;
+import kazuko.ex.ui.baocao.BieuDoDoanhThuThangTrongNamPanel;
+import kazuko.ex.ui.baocao.BieuDoTheoNhanVienKinhDoanhPanel;
+import kazuko.ex.ui.baocao.BaoCaoCongNoNhaCungCapPanel;
+import kazuko.ex.ui.baocao.TongHopCongNoNhaCungCapPanel;
+import kazuko.ex.ui.baocao.BaoCaoCongNoKhachHangPanel;
+import kazuko.ex.ui.baocao.TongHopCongNoKhachHangPanel;
 import kazuko.ex.ui.baogia.BaoGiaBanHangPanel;
 
 
@@ -1227,16 +1240,26 @@ public class MainFrame extends JFrame {
                 break;
             case "ĐỐI CHIẾU CÔNG NỢ KHÁCH HÀNG":
             case "BÁO CÁO CÔNG NỢ KHÁCH HÀNG":
+                openTab("Báo cáo công nợ khách hàng", new BaoCaoCongNoKhachHangPanel());
+                break;
             case "TỔNG HỢP CÔNG NỢ KHÁCH HÀNG":
+                openTab("Tổng hợp công nợ khách hàng", new TongHopCongNoKhachHangPanel());
+                break;
             case "CÔNG NỢ KHÁCH HÀNG":
             case "CÔNG NỢ KHÁCH":
+            case "QUẢN LÝ CÔNG NỢ KHÁCH HÀNG":
                 openTab("Công nợ khách hàng", new QuanLyCongNoKhachHangPanel());
                 break;
             case "ĐỐI CHIẾU CÔNG NỢ NHÀ CUNG CẤP":
             case "BÁO CÁO CÔNG NỢ NHÀ CUNG CẤP":
+                openTab("Báo cáo công nợ NCC", new BaoCaoCongNoNhaCungCapPanel());
+                break;
             case "TỔNG HỢP CÔNG NỢ NHÀ CUNG CẤP":
+                openTab("Tổng hợp công nợ NCC", new TongHopCongNoNhaCungCapPanel());
+                break;
             case "CÔNG NỢ NHÀ CUNG CẤP":
             case "CÔNG NỢ NCC":
+            case "QUẢN LÝ CÔNG NỢ NHÀ CUNG CẤP":
                 openTab("Công nợ nhà cung cấp", new QuanLyCongNoNhaCungCapPanel());
                 break;
             case "BÁO CÁO TỒN KHO THEO KÍCH THƯỚC":
@@ -1286,6 +1309,45 @@ public class MainFrame extends JFrame {
             case "CHI TIẾT LÃI HÓA ĐƠN (GIÁ NHẬP)":
             case "CHI TIẾT LÃI HÓA ĐƠN GIÁ NHẬP":
                 openTab("Chi tiết lãi theo hóa đơn (giá nhập)", new ChiTietLaiTheoHoaDonGiaNhapPanel());
+                break;
+            case "BÁO CÁO KẾT QUẢ KINH DOANH":
+            case "KẾT QUẢ KINH DOANH":
+                openTab("Báo cáo kết quả kinh doanh", new BaoCaoKetQuaKinhDoanhPanel());
+                break;
+            case "CHI TIẾT HOẠT ĐỘNG TRONG NGÀY":
+            case "HOẠT ĐỘNG TRONG NGÀY":
+                openTab("Chi tiết hoạt động trong ngày", new ChiTietHoatDongTrongNgayPanel());
+                break;
+            case "BÁO CÁO 20 MẶT HÀNG BÁN CHẠY NHẤT":
+            case "20 MẶT HÀNG BÁN CHẠY NHẤT":
+            case "TOP 20 MẶT HÀNG BÁN CHẠY":
+                openTab("Top 20 mặt hàng bán chạy nhất", new BaoCao20MatHangBanChayNhatPanel());
+                break;
+            case "BẢNG TỔNG HỢP THỊ PHẦN":
+            case "TỔNG HỢP THỊ PHẦN":
+                openTab("Bảng tổng hợp thị phần", new BangTongHopThiPhanPanel());
+                break;
+            case "BÁO CÁO PHÂN TÍCH TÌNH HÌNH BÁN HÀNG":
+            case "PHÂN TÍCH TÌNH HÌNH BÁN HÀNG":
+                openTab("Phân tích tình hình bán hàng", new BaoCaoPhanTichTinhHinhBanHangPanel());
+                break;
+            case "BIỂU ĐỒ DOANH SỐ THEO NHÓM":
+            case "BIỂU ĐỒ DOANH SỐ THEO NHÓM HÀNG HÓA":
+            case "DOANH SỐ THEO NHÓM":
+                openTab("Biểu đồ doanh số theo nhóm", new BieuDoDoanhSoTheoNhomPanel());
+                break;
+            case "BIỂU ĐỒ DOANH THU NGÀY TRONG THÁNG":
+            case "DOANH THU NGÀY TRONG THÁNG":
+                openTab("Biểu đồ doanh thu ngày trong tháng", new BieuDoDoanhThuNgayTrongThangPanel());
+                break;
+            case "BIỂU ĐỒ DOANH THU THÁNG TRONG NĂM":
+            case "DOANH THU THÁNG TRONG NĂM":
+                openTab("Biểu đồ doanh thu tháng trong năm", new BieuDoDoanhThuThangTrongNamPanel());
+                break;
+            case "BIỂU ĐỒ THEO NHÂN VIÊN KINH DOANH":
+            case "BIỂU ĐỒ DOANH SỐ THEO NHÂN VIÊN KINH DOANH":
+            case "DOANH SỐ THEO NHÂN VIÊN KINH DOANH":
+                openTab("Biểu đồ theo NVKD", new BieuDoTheoNhanVienKinhDoanhPanel());
                 break;
             case "BÁO CÁO NHẬP XUẤT TỒN THEO KHO":
             case "BÁO CÁO TỒN KHO THEO MẶT HÀNG":
