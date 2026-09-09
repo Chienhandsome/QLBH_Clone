@@ -193,18 +193,26 @@ public class BaoCaoPhanTichKinhDoanhReportService {
         return JasperFillManager.fillReport(cachedReportKetQuaKinhDoanh, params, new JRBeanCollectionDataSource(data));
     }
 
-    // =========================================================================
-    // 2. CHI TIẾT HOẠT ĐỘNG TRONG NGÀY
-    // =========================================================================
     public List<ChiTietHoatDongTrongNgayReportRow> fetchChiTietHoatDongTrongNgay(Date tuNgay, Date denNgay, String thuNganId, String cuaHangId, Map<String, Object> summaryOut) {
         List<ChiTietHoatDongTrongNgayReportRow> rows = new ArrayList<>();
-        List<DonHang> donHangs = hoaDonDAO.getDanhSachHoaDon(tuNgay, denNgay, null, null);
+        String effectiveStoreId = (cuaHangId != null && !cuaHangId.trim().isEmpty() && !"ALL".equalsIgnoreCase(cuaHangId)) ? cuaHangId.trim() : null;
+        List<DonHang> donHangs = hoaDonDAO.getDanhSachHoaDon(tuNgay, denNgay, effectiveStoreId, null);
         Map<String, MatHang> matHangMap = getMatHangMap();
 
-        SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss");
+        SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm");
+
+        // Cashier filter if specified
+        if (thuNganId != null && !thuNganId.trim().isEmpty() && !"ALL".equalsIgnoreCase(thuNganId) && !"Tất cả".equalsIgnoreCase(thuNganId.trim())) {
+            String tnFilter = thuNganId.trim();
+            donHangs = donHangs.stream().filter(dh ->
+                    (dh.getNguoiThanhToan() != null && tnFilter.equalsIgnoreCase(dh.getNguoiThanhToan())) ||
+                    (dh.getTenNhanVien() != null && tnFilter.equalsIgnoreCase(dh.getTenNhanVien())) ||
+                    (dh.getNhanVienXuatId() != null && tnFilter.equalsIgnoreCase(dh.getNhanVienXuatId()))
+            ).toList();
+        }
 
         double sumTongCong = 0, sumTienMat = 0, sumChuyenKhoan = 0, sumTheAtm = 0, sumConNo = 0;
-        double sumTienHangChuaGiam = 0, sumGiamGiaMatHang = 0, sumGiamGiaBill = 0;
+        double sumTienHangChuaGiam = 0, sumGiamGiaMatHang = 0, sumGiamGiaBill = 0, sumSoLuongMatHang = 0;
 
         int sttBanHang = 1;
         int sttMatHang = 1;
@@ -213,13 +221,18 @@ public class BaoCaoPhanTichKinhDoanhReportService {
             // Phần 1: Bán Hàng
             for (DonHang dh : donHangs) {
                 if (dh.getStatus() < 0) continue;
-                String gio = dh.getGioThanhToan() != null ? dh.getGioThanhToan() : (dh.getNgay() != null ? timeFormat.format(dh.getNgay()) : "");
-                String kh = dh.getTenKhach() != null ? dh.getTenKhach() : "Khách lẻ";
+                String gio = dh.getGioThanhToan() != null && !dh.getGioThanhToan().isEmpty() ? dh.getGioThanhToan() : (dh.getNgay() != null ? timeFormat.format(dh.getNgay()) : "");
+                String kh = dh.getTenKhach() != null ? dh.getTenKhach() : "";
                 double tong = dh.getTongCong();
                 double mat = dh.getTienMat();
                 double ck = dh.getTienChuyenKhoan();
                 double atm = dh.getTienTheATM();
                 double no = dh.getConLai();
+
+                // If tienMat, ck, atm are all 0 and tong > 0 and no == 0, default to tienMat
+                if (mat == 0 && ck == 0 && atm == 0 && no == 0 && tong > 0) {
+                    mat = tong;
+                }
 
                 rows.add(ChiTietHoatDongTrongNgayReportRow.createBanHangRow(
                         sttBanHang++, dh.getName() != null ? dh.getName() : String.valueOf(dh.getId()),
@@ -243,16 +256,17 @@ public class BaoCaoPhanTichKinhDoanhReportService {
                         if (mh == null && ct.getMaHang() != null) mh = matHangMap.get(ct.getMaHang());
 
                         String ten = ct.getTenHang() != null ? ct.getTenHang() : (mh != null ? mh.getName() : "");
-                        String dvt = ct.getTenDonViTinh() != null ? ct.getTenDonViTinh() : (mh != null ? mh.getTenDonViTinh() : "Cái");
-                        double sl = ct.getSoLuong();
+                        String dvt = ct.getTenDonViTinh() != null ? ct.getTenDonViTinh() : (mh != null ? mh.getTenDonViTinh() : "");
+                        double sl = ct.getSoLuong() > 0 ? ct.getSoLuong() : 1.0;
                         double donGia = ct.getDonGia();
                         double giam = ct.getTienGiam();
-                        double tt = ct.getThanhTien();
+                        double tt = ct.getThanhTien() > 0 ? ct.getThanhTien() : (sl * donGia);
 
                         rows.add(ChiTietHoatDongTrongNgayReportRow.createMatHangRow(
                                 sttMatHang++, ct.getMaHang() != null ? ct.getMaHang() : "", ten, dvt, sl, donGia, ct.getTiLeGiamGia(), tt
                         ));
 
+                        sumSoLuongMatHang += sl;
                         sumTienHangChuaGiam += (sl * donGia);
                         sumGiamGiaMatHang += giam;
                     }
@@ -261,10 +275,10 @@ public class BaoCaoPhanTichKinhDoanhReportService {
         }
 
         // Summary Rows for Mat Hang
-        rows.add(ChiTietHoatDongTrongNgayReportRow.createSummaryRow("Tiền hàng chưa giảm giá:", null, sumTienHangChuaGiam));
-        rows.add(ChiTietHoatDongTrongNgayReportRow.createSummaryRow("Giảm giá mặt hàng:", null, sumGiamGiaMatHang));
-        rows.add(ChiTietHoatDongTrongNgayReportRow.createSummaryRow("Giảm giá bill:", null, sumGiamGiaBill));
-        rows.add(ChiTietHoatDongTrongNgayReportRow.createSummaryRow("Tổng cộng tiền hàng:", null, sumTongCong));
+        rows.add(ChiTietHoatDongTrongNgayReportRow.createSummaryRow("TIỀN HÀNG CHƯA GIẢM GIÁ", sumSoLuongMatHang, sumTienHangChuaGiam));
+        rows.add(ChiTietHoatDongTrongNgayReportRow.createSummaryRow("GIẢM GIÁ TRÊN MẶT HÀNG", null, sumGiamGiaMatHang));
+        rows.add(ChiTietHoatDongTrongNgayReportRow.createSummaryRow("GIẢM GIÁ TỔNG BILL", null, sumGiamGiaBill));
+        rows.add(ChiTietHoatDongTrongNgayReportRow.createSummaryRow("TỔNG CỘNG", null, sumTongCong));
 
         if (summaryOut != null) {
             summaryOut.put("sumTienMat", sumTienMat);
@@ -282,18 +296,30 @@ public class BaoCaoPhanTichKinhDoanhReportService {
         Map<String, Object> params = new HashMap<>();
         fillCompanyHeader(params);
 
-        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm");
-        params.put("p_thoiGian", "Từ: " + (tuNgay != null ? sdf.format(tuNgay) : "") + " Đến: " + (denNgay != null ? sdf.format(denNgay) : ""));
-        params.put("p_thuNgan", thuNganId != null && !thuNganId.isEmpty() ? thuNganId : "Tất cả");
+        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+        SimpleDateFormat sdfDay = new SimpleDateFormat("dd");
+        SimpleDateFormat sdfMonth = new SimpleDateFormat("MM");
+        SimpleDateFormat sdfYear = new SimpleDateFormat("yyyy");
+
+        Date now = denNgay != null ? denNgay : new Date();
+        String currentDateStr = "Ngày " + sdfDay.format(now) + " tháng " + sdfMonth.format(now) + " năm " + sdfYear.format(now);
+
+        params.put("p_reportTitle", "CHI TIẾT HOẠT ĐỘNG TRONG NGÀY");
+        params.put("p_subTitleDate", "Từ ngày " + (tuNgay != null ? sdf.format(tuNgay) : "") + " Đến ngày " + (denNgay != null ? sdf.format(denNgay) : ""));
+        params.put("p_thuNgan", thuNganId != null && !thuNganId.trim().isEmpty() && !"ALL".equalsIgnoreCase(thuNganId) ? thuNganId : "Tất cả");
+        params.put("p_currentDateStr", currentDateStr);
 
         Map<String, Object> summary = new HashMap<>();
         List<ChiTietHoatDongTrongNgayReportRow> data = fetchChiTietHoatDongTrongNgay(tuNgay, denNgay, thuNganId, cuaHangId, summary);
 
-        params.put("p_tongTienMat", summary.get("sumTienMat"));
-        params.put("p_tongChuyenKhoan", summary.get("sumChuyenKhoan"));
-        params.put("p_tongTheAtm", summary.get("sumTheAtm"));
-        params.put("p_tongKhachNo", summary.get("sumConNo"));
-        params.put("p_tongTatCa", summary.get("sumTongCong"));
+        params.put("p_sumTienMat", summary.get("sumTienMat") != null ? summary.get("sumTienMat") : 0.0);
+        params.put("p_sumChuyenKhoan", summary.get("sumChuyenKhoan") != null ? summary.get("sumChuyenKhoan") : 0.0);
+        params.put("p_sumTienThe", summary.get("sumTheAtm") != null ? summary.get("sumTheAtm") : 0.0);
+        params.put("p_sumVoucher", 0.0);
+        params.put("p_sumTheTraTruoc", 0.0);
+        params.put("p_sumTruTichLuy", 0.0);
+        params.put("p_sumKhachHangNo", summary.get("sumConNo") != null ? summary.get("sumConNo") : 0.0);
+        params.put("p_sumNoNhaCungCap", 0.0);
 
         return JasperFillManager.fillReport(cachedReportChiTietHoatDongTrongNgay, params, new JRBeanCollectionDataSource(data));
     }

@@ -89,6 +89,7 @@ import kazuko.ex.ui.baocao.BaoCaoKetQuaKinhDoanhPanel;
 import kazuko.ex.ui.baocao.ChiTietHoatDongTrongNgayPanel;
 import kazuko.ex.ui.baocao.BaoCao20MatHangBanChayNhatPanel;
 import kazuko.ex.ui.hoadon.ThongKeDoanhThuPanel;
+import kazuko.ex.ui.hoadon.ThongKeMatHangBanPanel;
 import kazuko.ex.ui.baocao.BangTongHopThiPhanPanel;
 import kazuko.ex.ui.baocao.BaoCaoPhanTichTinhHinhBanHangPanel;
 import kazuko.ex.ui.baocao.BieuDoDoanhSoTheoNhomPanel;
@@ -447,9 +448,9 @@ public class MainFrame extends JFrame {
 
         // Group 5: Thống kê & Báo cáo
         JMenuItem miTKDoanhThu = createFunctionMenuItem("Thống kê doanh thu", "Statistic16.png", KeyStroke.getKeyStroke(KeyEvent.VK_T, InputEvent.CTRL_DOWN_MASK), e -> openTab("Thống kê doanh thu", new ThongKeDoanhThuPanel()));
-        JMenuItem miTKMatHang = createFunctionMenuItem("Thống kê mặt hàng bán", "Tree.png", KeyStroke.getKeyStroke(KeyEvent.VK_L, InputEvent.CTRL_DOWN_MASK), e -> openTab("Thống kê mặt hàng bán", createPlaceholderPanel("Thống kê mặt hàng bán")));
+        JMenuItem miTKMatHang = createFunctionMenuItem("Thống kê mặt hàng bán", "Tree.png", KeyStroke.getKeyStroke(KeyEvent.VK_L, InputEvent.CTRL_DOWN_MASK), e -> openTab("Thống kê mặt hàng bán", new ThongKeMatHangBanPanel()));
         JMenuItem miTongHopKQKD = createFunctionMenuItem("Tổng hợp kết quả kinh doanh", "Report.png", e -> openTab("Tổng hợp KQKD", createPlaceholderPanel("Tổng hợp kết quả kinh doanh")));
-        JMenuItem miChiTietHD = createFunctionMenuItem("Chi tiết hoạt động ngày", "arrow-000-medium.png", e -> openTab("Chi tiết hoạt động", createPlaceholderPanel("Chi tiết hoạt động")));
+        JMenuItem miChiTietHD = createFunctionMenuItem("Chi tiết hoạt động ngày", "arrow-000-medium.png", e -> openTab("Chi tiết hoạt động", new ChiTietHoatDongTrongNgayPanel()));
 
         mHoatDong.add(miTKDoanhThu);
         mHoatDong.add(miTKMatHang);
@@ -858,8 +859,8 @@ public class MainFrame extends JFrame {
         JButton btnHoaDon = createRibbonToolButton("Hóa đơn", "Hóa đơn bán hàng", "btnNew.Image.png", e -> openTab("Hóa đơn bán hàng", new HoaDonBanHangPanel()));
         JButton btnQLBanHang = createRibbonToolButton("Quản lý bán hàng", "Quản lý bán hàng", "btnOpen.Image.png", e -> openTab("Quản lý bán hàng", new QuanLyBanHangPanel()));
         JButton btnTKDoanhThu = createRibbonToolButton("Thống kê doanh thu", "Thống kê doanh thu", "Statistic16.png", e -> openTab("Thống kê doanh thu", new ThongKeDoanhThuPanel()));
-        JButton btnTKMatHang = createRibbonToolButton("Thống kê mặt hàng bán", "Thống kê mặt hàng bán", "1282529873_objects.png", e -> openTab("Danh mục mặt hàng", new DanhMucMatHangPanel()));
-        JButton btnChiTietHD = createRibbonToolButton("Chi tiết hoạt động", "Chi tiết hoạt động ngày", "Report.png", e -> openTab("Chi tiết hoạt động", createPlaceholderPanel("Chi tiết hoạt động")));
+        JButton btnTKMatHang = createRibbonToolButton("Thống kê mặt hàng bán", "Thống kê mặt hàng bán", "1282529873_objects.png", e -> openTab("Thống kê mặt hàng bán", new ThongKeMatHangBanPanel()));
+        JButton btnChiTietHD = createRibbonToolButton("Chi tiết hoạt động", "Chi tiết hoạt động ngày", "Report.png", e -> openTab("Chi tiết hoạt động", new ChiTietHoatDongTrongNgayPanel()));
         JButton btnTongHopKQKD = createRibbonToolButton("Tổng hợp KQKD", "Tổng hợp kết quả kinh doanh", "Tree.png", e -> openTab("Tổng hợp KQKD", createPlaceholderPanel("Tổng hợp kết quả kinh doanh")));
         JButton btnTonKho = createRibbonToolButton("Tồn kho", "Tồn kho", "Folder2.png", e -> openTab("Tồn kho", new QuanLyTonKhoPanel()));
         JButton btnGhiChu = createRibbonToolButton("Ghi chú", null, "FilterEdit.png", e -> openQuickNoteDialog());
@@ -1098,6 +1099,18 @@ public class MainFrame extends JFrame {
                 break;
             case "CHẤM CÔNG":
                 openTab("Chấm công", new ChamCongPanel());
+                break;
+            case "THỐNG KÊ DOANH THU":
+                openTab("Thống kê doanh thu", new ThongKeDoanhThuPanel());
+                break;
+            case "THỐNG KÊ MẶT HÀNG BÁN":
+            case "THỐNG KÊ MẶT HÀNG":
+                openTab("Thống kê mặt hàng bán", new ThongKeMatHangBanPanel());
+                break;
+            case "CHI TIẾT HOẠT ĐỘNG NGÀY":
+            case "CHI TIẾT HOẠT ĐỘNG":
+            case "CHI TIẾT HOẠT ĐỘNG TRONG NGÀY":
+                openTab("Chi tiết hoạt động", new ChiTietHoatDongTrongNgayPanel());
                 break;
             case "GỬI TIN NHẮN KHÁCH HÀNG":
                 openTab("Gửi tin nhắn tới khách hàng", createPlaceholderPanel("Gửi tin nhắn tới khách hàng"));
