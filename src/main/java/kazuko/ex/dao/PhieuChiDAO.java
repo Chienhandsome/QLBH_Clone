@@ -268,6 +268,8 @@ public class PhieuChiDAO extends BaseDAO {
         // Memory cache
         MEMORY_PHIEU_CHI.removeIf(p -> p.getId().equals(pc.getId()));
         MEMORY_PHIEU_CHI.add(pc);
+        audit("Phiếu chi", "THÊM", pc.getSoPhieu(),
+                "Lập phiếu chi; đối tượng: " + pc.getTenDoiTuong() + "; số tiền: " + Math.round(pc.getSoTien()));
         return true;
     }
 
@@ -311,10 +313,14 @@ public class PhieuChiDAO extends BaseDAO {
         for (int i = 0; i < MEMORY_PHIEU_CHI.size(); i++) {
             if (MEMORY_PHIEU_CHI.get(i).getId().equals(pc.getId())) {
                 MEMORY_PHIEU_CHI.set(i, pc);
+                audit("Phiếu chi", "SỬA", pc.getSoPhieu(),
+                        "Cập nhật phiếu chi; số tiền: " + Math.round(pc.getSoTien()));
                 return true;
             }
         }
         MEMORY_PHIEU_CHI.add(pc);
+        audit("Phiếu chi", "SỬA", pc.getSoPhieu(),
+                "Cập nhật phiếu chi; số tiền: " + Math.round(pc.getSoTien()));
         return true;
     }
 
@@ -386,9 +392,11 @@ public class PhieuChiDAO extends BaseDAO {
         for (PhieuChi pc : MEMORY_PHIEU_CHI) {
             if (id.equals(pc.getId())) {
                 pc.setStatus(-1);
+                audit("Phiếu chi", "XÓA", pc.getSoPhieu(), "Xóa phiếu chi: " + pc.getSoPhieu());
                 return true;
             }
         }
+        audit("Phiếu chi", "XÓA", id, "Xóa phiếu chi ID: " + id);
         return true;
     }
 
@@ -407,9 +415,11 @@ public class PhieuChiDAO extends BaseDAO {
         for (PhieuChi pc : MEMORY_PHIEU_CHI) {
             if (id.equals(pc.getId())) {
                 pc.setStatus(1);
+                audit("Phiếu chi", "KHÔI PHỤC", pc.getSoPhieu(), "Khôi phục phiếu chi: " + pc.getSoPhieu());
                 return true;
             }
         }
+        audit("Phiếu chi", "KHÔI PHỤC", id, "Khôi phục phiếu chi ID: " + id);
         return true;
     }
 

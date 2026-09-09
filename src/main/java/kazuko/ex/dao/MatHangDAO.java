@@ -458,7 +458,9 @@ public class MatHangDAO extends BaseDAO {
         mh.setTimeCreated(new Timestamp(System.currentTimeMillis()));
         mh.setUserCreatedName(AuthService.getCurrentUser() != null ? AuthService.getCurrentUser().getName() : "Administrator");
         MEMORY_PRODUCTS.add(0, mh);
-        return tryInsertToDb(mh);
+        boolean success = tryInsertToDb(mh);
+        if (success) audit("Mặt hàng", "THÊM", mh.getCode(), "Thêm mặt hàng: " + mh.getName());
+        return success;
     }
 
     public static char calculateChecksumChar(String numStr) {
@@ -568,6 +570,7 @@ public class MatHangDAO extends BaseDAO {
             }
         }
         boolean dbOk = tryUpdateToDb(mh);
+        if (dbOk || memFound) audit("Mặt hàng", "SỬA", mh.getCode(), "Cập nhật mặt hàng: " + mh.getName());
         return dbOk || memFound;
     }
 
@@ -589,6 +592,8 @@ public class MatHangDAO extends BaseDAO {
             ps.executeUpdate();
             if (!conn.getAutoCommit()) conn.commit();
         } catch (Exception ignored) {}
+        audit("Mặt hàng", "XÓA", found != null ? found.getCode() : id,
+                "Chuyển mặt hàng vào thùng rác: " + (found != null ? found.getName() : id));
         return true;
     }
 
@@ -610,6 +615,8 @@ public class MatHangDAO extends BaseDAO {
             ps.executeUpdate();
             if (!conn.getAutoCommit()) conn.commit();
         } catch (Exception ignored) {}
+        audit("Mặt hàng", "KHÔI PHỤC", restored != null ? restored.getCode() : id,
+                "Khôi phục mặt hàng: " + (restored != null ? restored.getName() : id));
         return true;
     }
 
@@ -624,6 +631,7 @@ public class MatHangDAO extends BaseDAO {
             ps.setString(1, id);
             int rows = ps.executeUpdate();
             if (!conn.getAutoCommit()) conn.commit();
+            if (rows > 0) audit("Mặt hàng", "XÓA VĨNH VIỄN", id, "Xóa vĩnh viễn mặt hàng ID: " + id);
             return rows > 0;
         } catch (Exception ignored) {
             return false;
@@ -1070,4 +1078,3 @@ public class MatHangDAO extends BaseDAO {
         return updatedCount;
     }
 }
-

@@ -115,6 +115,7 @@ public class HoaDonDAO extends BaseDAO {
 
             conn.commit();
             MEMORY_HOA_DON.add(dh);
+            auditInvoice("THANH TOÁN", dh, "Lập hóa đơn bán hàng");
             return true;
         } catch (SQLException e) {
             System.err.println("Lỗi insert TDONHANG: " + e.getMessage());
@@ -122,6 +123,7 @@ public class HoaDonDAO extends BaseDAO {
                 try { conn.rollback(); } catch (SQLException ignored) {}
             }
             MEMORY_HOA_DON.add(dh);
+            auditInvoice("THANH TOÁN", dh, "Lập hóa đơn bán hàng (bộ nhớ tạm)");
             return true;
         } finally {
             if (conn != null) {
@@ -287,6 +289,7 @@ public class HoaDonDAO extends BaseDAO {
             dh.setId(UUID.randomUUID().toString());
         }
         MEMORY_TAM_HOA_DON.put(dh.getId(), dh);
+        auditInvoice("LƯU TẠM", dh, "Lưu tạm hóa đơn bán hàng");
     }
 
     public List<DonHang> getDanhSachTam() {
@@ -303,10 +306,13 @@ public class HoaDonDAO extends BaseDAO {
         List<DonHang> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
                 "SELECT d.*, k.NAME AS TENKHACH, k.MAKHACH AS MAKHACH, k.DIACHI AS DIACHIKHACH, k.DIENTHOAI AS DIENTHOAIKHACH, " +
-                "nv.NAME AS TENNHANVIEN " +
+                "nv.NAME AS TENNHANVIEN, dhang.NAME AS SOPHIEUDATHANG, " +
+                "COALESCE(ut.NAME, ut.USERNAME) AS TENTHANHTOAN " +
                 "FROM TDONHANG d " +
                 "LEFT JOIN DKHACHHANG k ON d.DKHACHHANGID = k.ID " +
                 "LEFT JOIN DNHANVIEN nv ON d.DNHANVIENXUATID = nv.ID " +
+                "LEFT JOIN TDATHANG dhang ON d.TDATHANGID = dhang.ID " +
+                "LEFT JOIN SUSER ut ON COALESCE(d.USERTHANHTOANID, d.USERCREATEDID) = ut.ID " +
                 "WHERE d.LOAI = 0 AND (d.STATUS = 1 OR d.STATUS = 0 OR d.STATUS IS NULL) "
         );
 
@@ -362,7 +368,7 @@ public class HoaDonDAO extends BaseDAO {
 
         if (list.isEmpty()) {
             for (DonHang dh : MEMORY_HOA_DON) {
-                if (dh.getStatus() >= 0) {
+                if (matchesInvoiceFilter(dh, tuNgay, denNgay, cuaHangId, keyword)) {
                     list.add(dh);
                 }
             }
@@ -454,6 +460,8 @@ public class HoaDonDAO extends BaseDAO {
                     dh.setNgayHuy(new Date());
                 }
             }
+            audit("Hóa đơn bán hàng", "HỦY", id,
+                    "Hủy hóa đơn. Lý do: " + (lyDoHuy != null ? lyDoHuy : "Không ghi"));
             return true;
         } catch (Exception e) {
             System.err.println("Lỗi cancelHoaDon: " + e.getMessage());
@@ -465,6 +473,8 @@ public class HoaDonDAO extends BaseDAO {
                     dh.setNgayHuy(new Date());
                 }
             }
+            audit("Hóa đơn bán hàng", "HỦY", id,
+                    "Hủy hóa đơn trong bộ nhớ. Lý do: " + (lyDoHuy != null ? lyDoHuy : "Không ghi"));
             return true;
         }
     }
@@ -550,12 +560,14 @@ public class HoaDonDAO extends BaseDAO {
             }
 
             conn.commit();
+            auditInvoice("SỬA", dh, "Cập nhật hóa đơn bán hàng");
             return true;
         } catch (Exception e) {
             System.err.println("Lỗi updateHoaDon: " + e.getMessage());
             if (conn != null) {
                 try { conn.rollback(); } catch (Exception ignored) {}
             }
+            auditInvoice("SỬA", dh, "Cập nhật hóa đơn bán hàng trong bộ nhớ");
             return true;
         } finally {
             if (conn != null) {
@@ -591,6 +603,13 @@ public class HoaDonDAO extends BaseDAO {
         try { dh.setUserCreatedId(rs.getString("USERCREATEDID")); } catch (Exception ignored) {}
         try { dh.setPhiVanChuyen(rs.getDouble("PHIVANCHUYEN")); } catch (Exception ignored) {}
         try { dh.setTienDoiTra(rs.getDouble("DOITRA")); } catch (Exception ignored) {}
+        try { dh.setKhachDua(rs.getDouble("KHACHDUA")); } catch (Exception ignored) {}
+        try { dh.setTraLai(rs.getDouble("TRALAI")); } catch (Exception ignored) {}
+        try { dh.setDiaChiGiaoHang(rs.getString("GIAOHANG")); } catch (Exception ignored) {}
+        try { dh.setTienTheATM(rs.getDouble("THE")); } catch (Exception ignored) {}
+        try { dh.setMaTheTraTruoc(rs.getString("DTHETRATRUOCID")); } catch (Exception ignored) {}
+        try { dh.setTienTruTichLuy(rs.getDouble("TRUTICHLUY")); } catch (Exception ignored) {}
+        try { dh.setSoPhieuDatHang(rs.getString("SOPHIEUDATHANG")); } catch (Exception ignored) {}
         try {
             Timestamp tc = rs.getTimestamp("TIMECREATED");
             if (tc != null) {
@@ -607,8 +626,44 @@ public class HoaDonDAO extends BaseDAO {
                 dh.setNgayHuy(new Date(tm.getTime()));
             }
         } catch (Exception ignored) {}
-        try { dh.setNguoiThanhToan("Administrator"); } catch (Exception ignored) {}
+        try {
+            String tenThanhToan = rs.getString("TENTHANHTOAN");
+            dh.setNguoiThanhToan(tenThanhToan != null && !tenThanhToan.trim().isEmpty()
+                    ? tenThanhToan : "Administrator");
+        } catch (Exception ignored) {}
         try { dh.setThuNganHuy("Administrator"); } catch (Exception ignored) {}
         return dh;
+    }
+
+    private boolean matchesInvoiceFilter(DonHang invoice, Date fromDate, Date toDate,
+                                         String storeId, String keyword) {
+        if (invoice == null || invoice.getStatus() < 0) return false;
+        Date invoiceDate = invoice.getNgay();
+        if (fromDate != null && (invoiceDate == null || invoiceDate.before(fromDate))) return false;
+        if (toDate != null) {
+            long endOfDay = toDate.getTime() + 86399999L;
+            if (invoiceDate == null || invoiceDate.getTime() > endOfDay) return false;
+        }
+        if (storeId != null && !storeId.trim().isEmpty()
+                && !storeId.trim().equals(invoice.getCuaHangId())) return false;
+        if (keyword == null || keyword.trim().isEmpty()) return true;
+        String needle = keyword.trim().toLowerCase();
+        return containsIgnoreCase(invoice.getName(), needle)
+                || containsIgnoreCase(invoice.getTenKhach(), needle)
+                || containsIgnoreCase(invoice.getDienThoaiKhach(), needle)
+                || containsIgnoreCase(invoice.getDienGiai(), needle);
+    }
+
+    private boolean containsIgnoreCase(String value, String needle) {
+        return value != null && value.toLowerCase().contains(needle);
+    }
+
+    private void auditInvoice(String action, DonHang invoice, String prefix) {
+        int soldItems = invoice.getChiTietLayHang() != null ? invoice.getChiTietLayHang().size() : 0;
+        int returnedItems = invoice.getChiTietTraHang() != null ? invoice.getChiTietTraHang().size() : 0;
+        audit("Hóa đơn bán hàng", action, invoice.getName(),
+                prefix + "; khách: " + (invoice.getTenKhach() != null ? invoice.getTenKhach() : "Khách lẻ")
+                        + "; mặt hàng bán: " + soldItems + "; mặt hàng trả: " + returnedItems
+                        + "; tổng cộng: " + Math.round(invoice.getTongCong()));
     }
 }

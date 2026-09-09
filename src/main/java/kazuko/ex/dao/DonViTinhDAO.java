@@ -84,8 +84,10 @@ public class DonViTinhDAO extends BaseDAO {
             ps.setString(4, dv.getGhiChu() != null ? dv.getGhiChu() : "");
             int rows = ps.executeUpdate();
             if (!conn.getAutoCommit()) conn.commit();
+            if (rows > 0) audit("Đơn vị tính", "THÊM", dv.getName(), "Thêm đơn vị tính");
             return rows > 0;
         } catch (Exception ignored) {
+            audit("Đơn vị tính", "THÊM", dv.getName(), "Thêm đơn vị tính (bộ nhớ tạm)");
             return true;
         }
     }
@@ -108,8 +110,10 @@ public class DonViTinhDAO extends BaseDAO {
             ps.setString(3, dv.getId());
             int rows = ps.executeUpdate();
             if (!conn.getAutoCommit()) conn.commit();
+            if (rows > 0) audit("Đơn vị tính", "SỬA", dv.getName(), "Cập nhật đơn vị tính");
             return rows > 0;
         } catch (Exception ignored) {
+            audit("Đơn vị tính", "SỬA", dv.getName(), "Cập nhật đơn vị tính (bộ nhớ tạm)");
             return true;
         }
     }
@@ -124,8 +128,10 @@ public class DonViTinhDAO extends BaseDAO {
             ps.setString(2, idOrName);
             int rows = ps.executeUpdate();
             if (!conn.getAutoCommit()) conn.commit();
+            if (rows > 0) audit("Đơn vị tính", "XÓA", idOrName, "Xóa đơn vị tính");
             return rows > 0;
         } catch (Exception ignored) {
+            audit("Đơn vị tính", "XÓA", idOrName, "Xóa đơn vị tính (bộ nhớ tạm)");
             return true;
         }
     }

@@ -490,6 +490,7 @@ public class NhanVienDAO extends BaseDAO {
 
         MEMORY_EMPLOYEES.removeIf(item -> item.getId().equals(nv.getId()));
         MEMORY_EMPLOYEES.add(nv);
+        auditEmployee("THÊM", nv);
         return true;
     }
 
@@ -500,10 +501,12 @@ public class NhanVienDAO extends BaseDAO {
         for (int i = 0; i < MEMORY_EMPLOYEES.size(); i++) {
             if (nv.getId().equals(MEMORY_EMPLOYEES.get(i).getId())) {
                 MEMORY_EMPLOYEES.set(i, nv);
+                auditEmployee("SỬA", nv);
                 return true;
             }
         }
         MEMORY_EMPLOYEES.add(nv);
+        auditEmployee("SỬA", nv);
         return true;
     }
 
@@ -512,6 +515,7 @@ public class NhanVienDAO extends BaseDAO {
         NhanVien nv = findById(id);
         if (nv != null) {
             nv.setStatus(-1);
+            auditEmployee("XÓA", nv);
             return true;
         }
         return false;
@@ -522,6 +526,7 @@ public class NhanVienDAO extends BaseDAO {
         NhanVien nv = findById(id);
         if (nv != null) {
             nv.setStatus(1);
+            auditEmployee("KHÔI PHỤC", nv);
             return true;
         }
         return false;
@@ -529,7 +534,15 @@ public class NhanVienDAO extends BaseDAO {
 
     public boolean deletePermanently(String id) {
         tryDeleteFromDb(id);
-        return MEMORY_EMPLOYEES.removeIf(nv -> id != null && id.equals(nv.getId()));
+        boolean removed = MEMORY_EMPLOYEES.removeIf(nv -> id != null && id.equals(nv.getId()));
+        if (removed) audit("Nhân viên", "XÓA VĨNH VIỄN", id, "Xóa vĩnh viễn nhân viên");
+        return removed;
+    }
+
+    private void auditEmployee(String action, NhanVien employee) {
+        String reference = employee.getName() != null && !employee.getName().trim().isEmpty()
+                ? employee.getName() : employee.getId();
+        audit("Nhân viên", action, reference, action + " nhân viên");
     }
 
     public boolean updateParentId(String id, String newParentId) {

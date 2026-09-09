@@ -25,6 +25,7 @@ public class XacNhanThanhToanDialog extends JDialog {
 
     private final DonHang donHang;
     private final double tongTien;
+    private final boolean choPhepInTamTinh;
     private boolean isUpdatingNumbers = false;
 
     private JTextField txtTongTien;
@@ -36,9 +37,14 @@ public class XacNhanThanhToanDialog extends JDialog {
     private ResultAction resultAction = ResultAction.CANCEL;
 
     public XacNhanThanhToanDialog(Window parent, DonHang donHang) {
+        this(parent, donHang, true);
+    }
+
+    public XacNhanThanhToanDialog(Window parent, DonHang donHang, boolean choPhepInTamTinh) {
         super(parent, "XÁC NHẬN THANH TOÁN", ModalityType.APPLICATION_MODAL);
         this.donHang = donHang;
         this.tongTien = donHang != null ? donHang.getTongCong() : 0.0;
+        this.choPhepInTamTinh = choPhepInTamTinh;
 
         initComponents();
         recalculateChange();
@@ -69,6 +75,7 @@ public class XacNhanThanhToanDialog extends JDialog {
             resultAction = ResultAction.PRINT_TEMP;
             dispose();
         });
+        btnInTamTinh.setVisible(choPhepInTamTinh);
         pnlMain.add(btnInTamTinh);
 
         // 2. Leather Wallet Graphic on Left
@@ -141,7 +148,7 @@ public class XacNhanThanhToanDialog extends JDialog {
         lblKhachDua.setBounds(125, 92, 150, 28);
         pnlMain.add(lblKhachDua);
 
-        txtKhachDua = new JTextField(CurrencyUtil.format(tongTien));
+        txtKhachDua = new JTextField(0);
         txtKhachDua.setFont(new Font("Segoe UI", Font.BOLD, 16));
         txtKhachDua.setForeground(new Color(0, 45, 150));
         txtKhachDua.setHorizontalAlignment(SwingConstants.RIGHT);
@@ -243,11 +250,13 @@ public class XacNhanThanhToanDialog extends JDialog {
         KeyStroke esc = KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0);
         getRootPane().registerKeyboardAction(e -> dispose(), esc, JComponent.WHEN_IN_FOCUSED_WINDOW);
 
-        KeyStroke f8 = KeyStroke.getKeyStroke(KeyEvent.VK_F8, 0);
-        getRootPane().registerKeyboardAction(e -> {
-            resultAction = ResultAction.PRINT_TEMP;
-            dispose();
-        }, f8, JComponent.WHEN_IN_FOCUSED_WINDOW);
+        if (choPhepInTamTinh) {
+            KeyStroke f8 = KeyStroke.getKeyStroke(KeyEvent.VK_F8, 0);
+            getRootPane().registerKeyboardAction(e -> {
+                resultAction = ResultAction.PRINT_TEMP;
+                dispose();
+            }, f8, JComponent.WHEN_IN_FOCUSED_WINDOW);
+        }
 
         KeyStroke f9 = KeyStroke.getKeyStroke(KeyEvent.VK_F9, 0);
         getRootPane().registerKeyboardAction(e -> onConfirmNoPrint(), f9, JComponent.WHEN_IN_FOCUSED_WINDOW);

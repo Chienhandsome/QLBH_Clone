@@ -1,6 +1,7 @@
 package kazuko.ex.dao;
 
 import kazuko.ex.model.danhmuc.LyDoThuChi;
+import kazuko.ex.service.ActivityLogService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -8,6 +9,9 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 public class LyDoThuChiDAO {
+    private void audit(String action, String reference, String content) {
+        ActivityLogService.log("Lý do thu chi", action, reference, content);
+    }
     private static final List<LyDoThuChi> inMemoryList = new ArrayList<>();
     private static String defaultReasonId = "tc-7";
 
@@ -77,6 +81,7 @@ public class LyDoThuChiDAO {
         }
         tc.setStatus(1);
         inMemoryList.add(tc);
+        audit("THÊM", tc.getName(), "Thêm lý do thu chi");
         return true;
     }
 
@@ -85,6 +90,7 @@ public class LyDoThuChiDAO {
         for (int i = 0; i < inMemoryList.size(); i++) {
             if (tc.getId().equals(inMemoryList.get(i).getId())) {
                 inMemoryList.set(i, tc);
+                audit("SỬA", tc.getName(), "Cập nhật lý do thu chi");
                 return true;
             }
         }
@@ -95,6 +101,7 @@ public class LyDoThuChiDAO {
         LyDoThuChi tc = findById(id);
         if (tc != null) {
             tc.setStatus(-1);
+            audit("XÓA", tc.getName(), "Chuyển lý do thu chi vào thùng rác");
             return true;
         }
         return false;
@@ -104,13 +111,16 @@ public class LyDoThuChiDAO {
         LyDoThuChi tc = findById(id);
         if (tc != null) {
             tc.setStatus(1);
+            audit("KHÔI PHỤC", tc.getName(), "Khôi phục lý do thu chi");
             return true;
         }
         return false;
     }
 
     public boolean deletePermanently(String id) {
-        return inMemoryList.removeIf(tc -> id != null && id.equals(tc.getId()));
+        boolean removed = inMemoryList.removeIf(tc -> id != null && id.equals(tc.getId()));
+        if (removed) audit("XÓA VĨNH VIỄN", id, "Xóa vĩnh viễn lý do thu chi");
+        return removed;
     }
 
     public boolean updateParentId(String id, String newParentId) {

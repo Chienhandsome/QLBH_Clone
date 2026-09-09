@@ -211,6 +211,8 @@ public class PhieuThuDAO extends BaseDAO {
         // Memory cache
         MEMORY_PHIEU_THU.removeIf(p -> p.getId().equals(pt.getId()));
         MEMORY_PHIEU_THU.add(pt);
+        audit("Phiếu thu", "THÊM", pt.getSoPhieu(),
+                "Lập phiếu thu; đối tượng: " + pt.getTenDoiTuong() + "; số tiền: " + Math.round(pt.getSoTien()));
         return true;
     }
 
@@ -254,10 +256,14 @@ public class PhieuThuDAO extends BaseDAO {
         for (int i = 0; i < MEMORY_PHIEU_THU.size(); i++) {
             if (MEMORY_PHIEU_THU.get(i).getId().equals(pt.getId())) {
                 MEMORY_PHIEU_THU.set(i, pt);
+                audit("Phiếu thu", "SỬA", pt.getSoPhieu(),
+                        "Cập nhật phiếu thu; số tiền: " + Math.round(pt.getSoTien()));
                 return true;
             }
         }
         MEMORY_PHIEU_THU.add(pt);
+        audit("Phiếu thu", "SỬA", pt.getSoPhieu(),
+                "Cập nhật phiếu thu; số tiền: " + Math.round(pt.getSoTien()));
         return true;
     }
 
@@ -276,9 +282,11 @@ public class PhieuThuDAO extends BaseDAO {
         for (PhieuThu pt : MEMORY_PHIEU_THU) {
             if (id.equals(pt.getId())) {
                 pt.setStatus(-1);
+                audit("Phiếu thu", "XÓA", pt.getSoPhieu(), "Xóa phiếu thu: " + pt.getSoPhieu());
                 return true;
             }
         }
+        audit("Phiếu thu", "XÓA", id, "Xóa phiếu thu ID: " + id);
         return true;
     }
 
@@ -297,9 +305,11 @@ public class PhieuThuDAO extends BaseDAO {
         for (PhieuThu pt : MEMORY_PHIEU_THU) {
             if (id.equals(pt.getId())) {
                 pt.setStatus(1);
+                audit("Phiếu thu", "KHÔI PHỤC", pt.getSoPhieu(), "Khôi phục phiếu thu: " + pt.getSoPhieu());
                 return true;
             }
         }
+        audit("Phiếu thu", "KHÔI PHỤC", id, "Khôi phục phiếu thu ID: " + id);
         return true;
     }
 

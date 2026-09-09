@@ -792,6 +792,7 @@ public class HoaDonBanHangPanel extends JPanel {
         try {
             systemConfig = systemConfigDAO.loadConfig();
         } catch (Exception ignored) {}
+        if (systemConfig == null) systemConfig = new SystemConfig();
 
         loadCategoryTree();
 
@@ -1091,7 +1092,8 @@ public class HoaDonBanHangPanel extends JPanel {
         }
 
         Window parentWin = SwingUtilities.getWindowAncestor(this);
-        NhapSoLuongDialog dlg = new NhapSoLuongDialog(parentWin, m, price, m.getTenDonViTinh(), defaultQty, discount);
+        NhapSoLuongDialog dlg = new NhapSoLuongDialog(parentWin, m, price, m.getTenDonViTinh(),
+                defaultQty, discount, isDiscountInputAllowed());
         dlg.setVisible(true);
 
         if (dlg.isConfirmed()) {
@@ -1132,6 +1134,11 @@ public class HoaDonBanHangPanel extends JPanel {
     }
 
     private void onChonMatHangTra() {
+        if (systemConfig != null && systemConfig.isBatBuocDoiTraHangTheoDon()) {
+            onChonMatHangTraTheoHoaDon();
+            return;
+        }
+
         int row = tableCatalog.getSelectedRow();
         if (row < 0 || row >= filteredCatalogList.size()) {
             JOptionPane.showMessageDialog(this, "Vui lòng chọn một mặt hàng trong danh mục bên trái để trả hàng!", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
@@ -1141,7 +1148,8 @@ public class HoaDonBanHangPanel extends JPanel {
         double price = getPriceForMatHang(m);
 
         Window parentWin = SwingUtilities.getWindowAncestor(this);
-        NhapSoLuongDialog dlg = new NhapSoLuongDialog(parentWin, m, price, m.getTenDonViTinh(), 1.0, 0.0);
+        NhapSoLuongDialog dlg = new NhapSoLuongDialog(parentWin, m, price, m.getTenDonViTinh(),
+                1.0, 0.0, isDiscountInputAllowed());
         dlg.setVisible(true);
 
         if (dlg.isConfirmed()) {
@@ -1162,6 +1170,88 @@ public class HoaDonBanHangPanel extends JPanel {
             refreshTraHangTable();
             recalculateFinancials();
         }
+    }
+
+    private void onChonMatHangTraTheoHoaDon() {
+        // Thời hạn đổi trả luôn tính theo ngày thực tế, không theo ngày hóa đơn đang nhập
+        // để tránh việc đổi ngày chứng từ làm vượt qua chính sách đổi trả.
+        Date returnDate = new Date();
+        int allowedDays = Math.max(0, systemConfig.getSoNgayChoPhepDoiTra());
+
+        Calendar fromCalendar = Calendar.getInstance();
+        fromCalendar.setTime(SalesConfigSupport.startOfDay(returnDate));
+        fromCalendar.add(Calendar.DAY_OF_MONTH, -allowedDays);
+
+        List<DonHang> eligibleInvoices = new ArrayList<>();
+        for (DonHang invoice : hoaDonDAO.getDanhSachHoaDon(fromCalendar.getTime(), returnDate, null, null)) {
+            if (invoice.getChiTietLayHang() != null
+                    && !invoice.getChiTietLayHang().isEmpty()
+                    && SalesConfigSupport.isReturnAllowed(invoice.getNgay(), returnDate, allowedDays)) {
+                eligibleInvoices.add(invoice);
+            }
+        }
+
+        if (eligibleInvoices.isEmpty()) {
+            JOptionPane.showMessageDialog(this,
+                    "Không có hóa đơn đủ điều kiện đổi trả trong " + allowedDays + " ngày gần đây.",
+                    "Đổi trả theo hóa đơn", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
+        ReturnInvoiceOption[] invoiceOptions = eligibleInvoices.stream()
+                .map(ReturnInvoiceOption::new)
+                .toArray(ReturnInvoiceOption[]::new);
+        ReturnInvoiceOption selectedInvoice = (ReturnInvoiceOption) JOptionPane.showInputDialog(
+                this, "Chọn hóa đơn gốc:", "Đổi trả theo hóa đơn",
+                JOptionPane.PLAIN_MESSAGE, null, invoiceOptions, invoiceOptions[0]);
+        if (selectedInvoice == null) return;
+
+        ReturnItemOption[] itemOptions = selectedInvoice.invoice.getChiTietLayHang().stream()
+                .map(ReturnItemOption::new)
+                .toArray(ReturnItemOption[]::new);
+        ReturnItemOption selectedItem = (ReturnItemOption) JOptionPane.showInputDialog(
+                this, "Chọn mặt hàng cần trả:", "Hóa đơn " + selectedInvoice.invoice.getName(),
+                JOptionPane.PLAIN_MESSAGE, null, itemOptions, itemOptions[0]);
+        if (selectedItem == null) return;
+
+        DonHangChiTiet source = selectedItem.item;
+        MatHang matHang = matHangDAO.findById(source.getMatHangId());
+        if (matHang == null) {
+            matHang = new MatHang(source.getMatHangId(), source.getMaHang(), source.getTenHang(), source.getDonGia(), 0);
+            matHang.setTenDonViTinh(source.getTenDonViTinh());
+        }
+
+        Window parentWin = SwingUtilities.getWindowAncestor(this);
+        NhapSoLuongDialog quantityDialog = new NhapSoLuongDialog(parentWin, matHang, source.getDonGia(),
+                source.getTenDonViTinh(), 1.0, source.getTiLeGiamGia(), isDiscountInputAllowed());
+        quantityDialog.setVisible(true);
+        if (!quantityDialog.isConfirmed()) return;
+
+        if (quantityDialog.getResultSoLuong() > source.getSoLuong()) {
+            JOptionPane.showMessageDialog(this,
+                    "Số lượng trả không được vượt quá số lượng đã bán (" + source.getSoLuong() + ").",
+                    "Số lượng không hợp lệ", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        DonHangChiTiet returnedItem = new DonHangChiTiet();
+        returnedItem.setId(UUID.randomUUID().toString());
+        returnedItem.setMatHangId(source.getMatHangId());
+        returnedItem.setMaHang(source.getMaHang());
+        returnedItem.setTenHang(source.getTenHang());
+        returnedItem.setDonViTinhId(source.getDonViTinhId());
+        returnedItem.setTenDonViTinh(source.getTenDonViTinh());
+        returnedItem.setDonGia(source.getDonGia());
+        returnedItem.setTraHang(true);
+        returnedItem.setSoLuong(quantityDialog.getResultSoLuong());
+        returnedItem.setTiLeGiamGia(quantityDialog.getResultChietKhau());
+        returnedItem.setGhiChu("Trả theo HĐ: " + selectedInvoice.invoice.getName());
+        returnedItem.tinhThanhTien();
+        currentTraHangList.add(returnedItem);
+
+        selectCustomerById(selectedInvoice.invoice.getKhachHangId());
+        refreshTraHangTable();
+        recalculateFinancials();
     }
 
     private void rebuildLayHangTableColumns() {
@@ -1351,10 +1441,12 @@ public class HoaDonBanHangPanel extends JPanel {
                 String str = txtTiLeGiamGia.getText().replace("%", "").trim().replace(",", ".");
                 if (!str.isEmpty()) tileGiam = Double.parseDouble(str);
             } catch (Exception ignored) {}
+            tileGiam = Math.max(0, Math.min(100, tileGiam));
 
             double tienGiam = tienHang * (tileGiam / 100.0);
-            double tongCong = tienHang - tienGiam - tienTra;
-            if (tongCong < 0) tongCong = 0;
+            double tongCong = SalesConfigSupport.roundMoney(
+                    Math.max(0, tienHang - tienGiam - tienTra),
+                    systemConfig != null ? systemConfig.getLamTronTien() : null);
 
             txtTienHang.setText(CurrencyUtil.format(tienHang));
             txtTienGiamGia.setText(CurrencyUtil.format(tienGiam));
@@ -1497,7 +1589,8 @@ public class HoaDonBanHangPanel extends JPanel {
                 }
 
                 Window parentWin = SwingUtilities.getWindowAncestor(this);
-                NhapSoLuongDialog dlg = new NhapSoLuongDialog(parentWin, m, ct.getDonGia(), ct.getTenDonViTinh(), ct.getSoLuong(), ct.getTiLeGiamGia());
+                NhapSoLuongDialog dlg = new NhapSoLuongDialog(parentWin, m, ct.getDonGia(), ct.getTenDonViTinh(),
+                        ct.getSoLuong(), ct.getTiLeGiamGia(), isDiscountInputAllowed());
                 dlg.setVisible(true);
 
                 if (dlg.isConfirmed()) {
@@ -1521,7 +1614,8 @@ public class HoaDonBanHangPanel extends JPanel {
                 }
 
                 Window parentWin = SwingUtilities.getWindowAncestor(this);
-                NhapSoLuongDialog dlg = new NhapSoLuongDialog(parentWin, m, ct.getDonGia(), ct.getTenDonViTinh(), ct.getSoLuong(), ct.getTiLeGiamGia());
+                NhapSoLuongDialog dlg = new NhapSoLuongDialog(parentWin, m, ct.getDonGia(), ct.getTenDonViTinh(),
+                        ct.getSoLuong(), ct.getTiLeGiamGia(), isDiscountInputAllowed());
                 dlg.setVisible(true);
 
                 if (dlg.isConfirmed()) {
@@ -1540,6 +1634,7 @@ public class HoaDonBanHangPanel extends JPanel {
             JOptionPane.showMessageDialog(this, "Không có mặt hàng nào để lưu tạm!", "Thông báo", JOptionPane.WARNING_MESSAGE);
             return;
         }
+        if (!validateRequiredSalesFields()) return;
 
         buildCurrentHoaDonObject();
         hoaDonDAO.saveTam(currentHoaDon);
@@ -1610,11 +1705,13 @@ public class HoaDonBanHangPanel extends JPanel {
             JOptionPane.showMessageDialog(this, "Hóa đơn chưa có mặt hàng nào!", "Thông báo", JOptionPane.WARNING_MESSAGE);
             return;
         }
+        if (!validateRequiredSalesFields()) return;
 
         buildCurrentHoaDonObject();
 
         Window parentWin = SwingUtilities.getWindowAncestor(this);
-        XacNhanThanhToanDialog dlg = new XacNhanThanhToanDialog(parentWin, currentHoaDon);
+        XacNhanThanhToanDialog dlg = new XacNhanThanhToanDialog(parentWin, currentHoaDon,
+                systemConfig == null || systemConfig.isChoPhepInTamTinh());
         dlg.setVisible(true);
 
         XacNhanThanhToanDialog.ResultAction action = dlg.getResultAction();
@@ -1677,6 +1774,7 @@ public class HoaDonBanHangPanel extends JPanel {
     }
 
     private void resetForNewInvoice() {
+        applySalesConfig();
         currentHoaDon = new DonHang();
         currentHoaDon.setId(UUID.randomUUID().toString());
         currentHoaDon.setName(hoaDonDAO.generateNextSoHoaDon(new Date()));
@@ -1687,7 +1785,9 @@ public class HoaDonBanHangPanel extends JPanel {
         txtDienGiai.setText("Xuất bán hàng");
         txtDiaChiGiaoHang.setText("");
         txtGhiChu = new JTextField();
-        txtTiLeGiamGia.setText("0 %");
+        int defaultDiscount = systemConfig != null ? systemConfig.getMacDinhGiamGiaPt() : 0;
+        defaultDiscount = Math.max(0, Math.min(100, defaultDiscount));
+        txtTiLeGiamGia.setText(defaultDiscount + " %");
 
         currentLayHangList.clear();
         currentTraHangList.clear();
@@ -1765,8 +1865,98 @@ public class HoaDonBanHangPanel extends JPanel {
         try {
             tile = Double.parseDouble(txtTiLeGiamGia.getText().replace("%", "").trim().replace(",", "."));
         } catch (Exception ignored) {}
+        tile = Math.max(0, Math.min(100, tile));
         currentHoaDon.setTiLeGiamGia(tile);
         currentHoaDon.setTienGiamGia(th * (tile / 100.0));
-        currentHoaDon.setTongCong(Math.max(0, th - currentHoaDon.getTienGiamGia() - tt));
+        currentHoaDon.setTongCong(SalesConfigSupport.roundMoney(
+                Math.max(0, th - currentHoaDon.getTienGiamGia() - tt),
+                systemConfig != null ? systemConfig.getLamTronTien() : null));
+    }
+
+    private void applySalesConfig() {
+        if (systemConfig == null) systemConfig = systemConfigDAO.loadConfig();
+        boolean allowDiscount = isDiscountInputAllowed();
+        txtTiLeGiamGia.setEditable(allowDiscount);
+        txtTiLeGiamGia.setEnabled(allowDiscount);
+        txtTiLeGiamGia.setToolTipText(allowDiscount
+                ? "Nhập giảm giá cho toàn hóa đơn"
+                : "Đã tắt nhập giảm giá trong Cấu hình toàn bộ hệ thống");
+
+        boolean allowDateChange = systemConfig == null || systemConfig.isChoPhepThayDoiNgayTrenHoaDon();
+        dpkNgay.setEnabled(allowDateChange);
+        dpkNgay.setToolTipText(allowDateChange
+                ? "Ngày hóa đơn"
+                : "Đã khóa thay đổi ngày trong Cấu hình toàn bộ hệ thống");
+    }
+
+    public void refreshSalesConfiguration() {
+        systemConfig = systemConfigDAO.loadConfig();
+        applySalesConfig();
+    }
+
+    private boolean isDiscountInputAllowed() {
+        return systemConfig == null || systemConfig.isChoPhepNhapGiamGia();
+    }
+
+    private boolean validateRequiredSalesFields() {
+        if (systemConfig == null) return true;
+
+        KhachHang customer = (KhachHang) cbKhachHang.getSelectedItem();
+        if (systemConfig.isBatBuocNhapKhachHang()
+                && (customer == null || customer.getId() == null || customer.getId().trim().isEmpty())) {
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn khách hàng trước khi lưu hóa đơn!",
+                    "Thiếu khách hàng", JOptionPane.WARNING_MESSAGE);
+            cbKhachHang.requestFocusInWindow();
+            return false;
+        }
+
+        NhanVien employee = (NhanVien) cbNhanVien.getSelectedItem();
+        if (systemConfig.isBatBuocNhapNhanVienBanHang()
+                && (employee == null || employee.getId() == null || employee.getId().trim().isEmpty())) {
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn nhân viên bán hàng trước khi lưu hóa đơn!",
+                    "Thiếu nhân viên bán hàng", JOptionPane.WARNING_MESSAGE);
+            cbNhanVien.requestFocusInWindow();
+            return false;
+        }
+        return true;
+    }
+
+    private void selectCustomerById(String customerId) {
+        if (customerId == null || customerId.trim().isEmpty()) return;
+        for (int i = 0; i < cbKhachHang.getItemCount(); i++) {
+            KhachHang customer = cbKhachHang.getItemAt(i);
+            if (customer != null && customerId.equals(customer.getId())) {
+                cbKhachHang.setSelectedIndex(i);
+                return;
+            }
+        }
+    }
+
+    private static final class ReturnInvoiceOption {
+        private final DonHang invoice;
+
+        private ReturnInvoiceOption(DonHang invoice) {
+            this.invoice = invoice;
+        }
+
+        @Override
+        public String toString() {
+            String customer = invoice.getTenKhach() != null ? invoice.getTenKhach() : "Khách lẻ";
+            return invoice.getName() + " - " + DateUtil.formatDate(invoice.getNgay()) + " - " + customer;
+        }
+    }
+
+    private static final class ReturnItemOption {
+        private final DonHangChiTiet item;
+
+        private ReturnItemOption(DonHangChiTiet item) {
+            this.item = item;
+        }
+
+        @Override
+        public String toString() {
+            return item.getMaHang() + " - " + item.getTenHang()
+                    + " (SL đã bán: " + item.getSoLuong() + ")";
+        }
     }
 }

@@ -3,6 +3,7 @@ package kazuko.ex.dao;
 import kazuko.ex.config.DatabaseConnection;
 import kazuko.ex.model.danhmuc.NhaCungCap;
 import kazuko.ex.service.AuthService;
+import kazuko.ex.service.ActivityLogService;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -10,6 +11,10 @@ import java.util.List;
 import java.util.UUID;
 
 public class NhaCungCapDAO {
+
+    private void audit(String module, String action, String referenceNo, String content) {
+        ActivityLogService.log(module, action, referenceNo, content);
+    }
 
     private Connection getConnection() throws SQLException {
         return DatabaseConnection.getConnection();
@@ -128,7 +133,9 @@ public class NhaCungCapDAO {
             ps.setString(8, ncc.getNhomNhaCungCapId());
             ps.setString(9, ncc.getNote());
             ps.setString(10, getEffectiveUserId());
-            return ps.executeUpdate() > 0;
+            boolean success = ps.executeUpdate() > 0;
+            if (success) audit("Nhà cung cấp", "THÊM", ncc.getMaNhaCungCap(), "Thêm nhà cung cấp: " + ncc.getName());
+            return success;
         } catch (SQLException e) {
             System.err.println("Lỗi insert NhaCungCap: " + e.getMessage());
             return false;
@@ -154,7 +161,9 @@ public class NhaCungCapDAO {
             ps.setString(8, ncc.getNote());
             ps.setString(9, getEffectiveUserId());
             ps.setString(10, ncc.getId());
-            return ps.executeUpdate() > 0;
+            boolean success = ps.executeUpdate() > 0;
+            if (success) audit("Nhà cung cấp", "SỬA", ncc.getMaNhaCungCap(), "Cập nhật nhà cung cấp: " + ncc.getName());
+            return success;
         } catch (SQLException e) {
             System.err.println("Lỗi update NhaCungCap: " + e.getMessage());
             return false;
@@ -167,7 +176,9 @@ public class NhaCungCapDAO {
         try (Connection conn = getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, id.trim());
-            return ps.executeUpdate() > 0;
+            boolean success = ps.executeUpdate() > 0;
+            if (success) audit("Nhà cung cấp", "XÓA", id, "Xóa nhà cung cấp ID: " + id);
+            return success;
         } catch (SQLException e) {
             System.err.println("Lỗi delete NhaCungCap: " + e.getMessage());
             return false;

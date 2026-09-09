@@ -1,6 +1,7 @@
 package kazuko.ex.dao;
 
 import kazuko.ex.model.danhmuc.TaiKhoanNganHang;
+import kazuko.ex.service.ActivityLogService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -8,6 +9,9 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 public class TaiKhoanNganHangDAO {
+    private void audit(String action, String reference, String content) {
+        ActivityLogService.log("Tài khoản ngân hàng", action, reference, content);
+    }
     private static final List<TaiKhoanNganHang> inMemoryList = new ArrayList<>();
     private static String defaultAccountId = "tk-1";
 
@@ -62,6 +66,7 @@ public class TaiKhoanNganHangDAO {
         }
         tk.setStatus(1);
         inMemoryList.add(tk);
+        audit("THÊM", tk.getName(), "Thêm tài khoản ngân hàng");
         return true;
     }
 
@@ -70,6 +75,7 @@ public class TaiKhoanNganHangDAO {
         for (int i = 0; i < inMemoryList.size(); i++) {
             if (tk.getId().equals(inMemoryList.get(i).getId())) {
                 inMemoryList.set(i, tk);
+                audit("SỬA", tk.getName(), "Cập nhật tài khoản ngân hàng");
                 return true;
             }
         }
@@ -80,6 +86,7 @@ public class TaiKhoanNganHangDAO {
         TaiKhoanNganHang tk = findById(id);
         if (tk != null) {
             tk.setStatus(-1);
+            audit("XÓA", tk.getName(), "Chuyển tài khoản ngân hàng vào thùng rác");
             return true;
         }
         return false;
@@ -89,13 +96,16 @@ public class TaiKhoanNganHangDAO {
         TaiKhoanNganHang tk = findById(id);
         if (tk != null) {
             tk.setStatus(1);
+            audit("KHÔI PHỤC", tk.getName(), "Khôi phục tài khoản ngân hàng");
             return true;
         }
         return false;
     }
 
     public boolean deletePermanently(String id) {
-        return inMemoryList.removeIf(tk -> id != null && id.equals(tk.getId()));
+        boolean removed = inMemoryList.removeIf(tk -> id != null && id.equals(tk.getId()));
+        if (removed) audit("XÓA VĨNH VIỄN", id, "Xóa vĩnh viễn tài khoản ngân hàng");
+        return removed;
     }
 
     public boolean updateParentId(String id, String newParentId) {

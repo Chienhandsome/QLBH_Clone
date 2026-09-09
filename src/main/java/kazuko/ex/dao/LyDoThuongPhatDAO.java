@@ -113,6 +113,7 @@ public class LyDoThuongPhatDAO extends BaseDAO {
         } catch (Exception ignored) {}
 
         inMemoryList.add(ld);
+        audit("Lý do thưởng phạt", "THÊM", ld.getName(), "Thêm lý do thưởng phạt");
         return true;
     }
 
@@ -131,9 +132,11 @@ public class LyDoThuongPhatDAO extends BaseDAO {
         for (int i = 0; i < inMemoryList.size(); i++) {
             if (ld.getId().equals(inMemoryList.get(i).getId())) {
                 inMemoryList.set(i, ld);
+                audit("Lý do thưởng phạt", "SỬA", ld.getName(), "Cập nhật lý do thưởng phạt");
                 return true;
             }
         }
+        audit("Lý do thưởng phạt", "SỬA", ld.getName(), "Cập nhật lý do thưởng phạt");
         return true;
     }
 
@@ -148,6 +151,7 @@ public class LyDoThuongPhatDAO extends BaseDAO {
         LyDoThuongPhat ld = findById(id);
         if (ld != null) {
             ld.setStatus(-1);
+            audit("Lý do thưởng phạt", "XÓA", ld.getName(), "Chuyển lý do thưởng phạt vào thùng rác");
             return true;
         }
         return false;
@@ -164,6 +168,7 @@ public class LyDoThuongPhatDAO extends BaseDAO {
         LyDoThuongPhat ld = findById(id);
         if (ld != null) {
             ld.setStatus(1);
+            audit("Lý do thưởng phạt", "KHÔI PHỤC", ld.getName(), "Khôi phục lý do thưởng phạt");
             return true;
         }
         return false;
@@ -177,6 +182,8 @@ public class LyDoThuongPhatDAO extends BaseDAO {
             if (!conn.getAutoCommit()) conn.commit();
         } catch (Exception ignored) {}
 
-        return inMemoryList.removeIf(ld -> id != null && id.equals(ld.getId()));
+        boolean removed = inMemoryList.removeIf(ld -> id != null && id.equals(ld.getId()));
+        if (removed) audit("Lý do thưởng phạt", "XÓA VĨNH VIỄN", id, "Xóa vĩnh viễn lý do thưởng phạt");
+        return removed;
     }
 }

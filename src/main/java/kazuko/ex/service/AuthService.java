@@ -41,6 +41,8 @@ public class AuthService {
                 if (dbPass.isEmpty() || dbPass.equals(inputPass)) {
                     currentUser = user;
                     PermissionService.getInstance().initPermissions(user);
+                    ActivityLogService.log("Hệ thống", "ĐĂNG NHẬP", trimmedUser,
+                            "Đăng nhập hệ thống thành công");
                     return new AuthResult(true, user, "Đăng nhập thành công!");
                 } else {
                     return new AuthResult(false, null, "Mật khẩu không chính xác!");
@@ -57,6 +59,8 @@ public class AuthService {
                         defaultAdmin.setIsAdmin(1);
                         currentUser = defaultAdmin;
                         PermissionService.getInstance().initPermissions(defaultAdmin);
+                        ActivityLogService.log("Hệ thống", "ĐĂNG NHẬP", trimmedUser,
+                                "Đăng nhập bằng tài khoản quản trị mặc định");
                         return new AuthResult(true, defaultAdmin, "Đăng nhập với tài khoản Admin mặc định!");
                     }
                 }
@@ -87,6 +91,8 @@ public class AuthService {
         boolean ok = userDAO.updatePassword(user.getId(), newPassword != null ? newPassword.trim() : "");
         if (ok) {
             user.setPassword(newPassword != null ? newPassword.trim() : "");
+            ActivityLogService.log("Tài khoản", "ĐỔI MẬT KHẨU", user.getUsername(),
+                    "Đổi mật khẩu tài khoản");
         }
         return ok;
     }
@@ -96,6 +102,11 @@ public class AuthService {
     }
 
     public static void logout() {
+        SUser user = currentUser;
+        if (user != null) {
+            ActivityLogService.log("Hệ thống", "ĐĂNG XUẤT", user.getUsername(),
+                    "Đăng xuất hệ thống");
+        }
         currentUser = null;
         PermissionService.getInstance().initPermissions(null);
     }

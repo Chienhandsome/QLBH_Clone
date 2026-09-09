@@ -249,6 +249,7 @@ public class KhachDatHangDAO extends BaseDAO {
             }
 
             conn.commit();
+            auditOrder("THÊM", dh, chiTietList);
             return true;
         } catch (SQLException e) {
             System.err.println("Lỗi thêm mới phiếu đặt hàng: " + e.getMessage());
@@ -350,6 +351,7 @@ public class KhachDatHangDAO extends BaseDAO {
             }
 
             conn.commit();
+            auditOrder("SỬA", dh, chiTietList);
             return true;
         } catch (SQLException e) {
             System.err.println("Lỗi cập nhật phiếu đặt hàng: " + e.getMessage());
@@ -387,6 +389,7 @@ public class KhachDatHangDAO extends BaseDAO {
                 int rows = ps.executeUpdate();
                 if (rows > 0) {
                     conn.commit();
+                    audit("Đặt hàng của khách", "XÓA", id, "Xóa phiếu đặt hàng của khách");
                     return true;
                 }
             }
@@ -403,6 +406,20 @@ public class KhachDatHangDAO extends BaseDAO {
                 try { conn.setAutoCommit(true); } catch (SQLException ignored) {}
             }
         }
+    }
+
+    private void auditOrder(String action, KhachDatHang order, List<KhachDatHangChiTiet> details) {
+        int itemCount = details == null ? 0 : details.size();
+        String reference = order.getName() != null && !order.getName().trim().isEmpty()
+                ? order.getName() : order.getId();
+        audit("Đặt hàng của khách", action, reference,
+                action + " phiếu đặt hàng; khách: " + valueOrEmpty(order.getTenKhach())
+                        + "; số mặt hàng: " + itemCount
+                        + "; tổng cộng: " + Math.round(order.getTongCong()));
+    }
+
+    private String valueOrEmpty(String value) {
+        return value == null ? "" : value;
     }
 
     /**

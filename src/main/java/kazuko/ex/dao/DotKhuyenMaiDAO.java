@@ -148,6 +148,7 @@ public class DotKhuyenMaiDAO extends BaseDAO {
                 saveMuaTangDetails(km.getId(), km.getListMuaTangChiTiet());
             }
         }
+        auditPromotion("THÊM", km);
         return dbSuccess || true;
     }
 
@@ -188,6 +189,7 @@ public class DotKhuyenMaiDAO extends BaseDAO {
                 saveMuaTangDetails(km.getId(), km.getListMuaTangChiTiet());
             }
         }
+        auditPromotion("SỬA", km);
         return dbSuccess || true;
     }
 
@@ -227,6 +229,7 @@ public class DotKhuyenMaiDAO extends BaseDAO {
             found.setStatus(-1);
             TRASH_PROMOTIONS.put(id, found);
         }
+        if (dbSuccess) audit("Khuyến mãi", "XÓA", id, "Chuyển đợt khuyến mãi vào thùng rác");
         return dbSuccess;
     }
 
@@ -238,6 +241,7 @@ public class DotKhuyenMaiDAO extends BaseDAO {
             found.setStatus(30);
             TRASH_PROMOTIONS.remove(id);
         }
+        if (dbSuccess) audit("Khuyến mãi", "KHÔI PHỤC", id, "Khôi phục đợt khuyến mãi");
         return dbSuccess;
     }
 
@@ -263,7 +267,14 @@ public class DotKhuyenMaiDAO extends BaseDAO {
         PROMOTION_PRODUCT_DISCOUNTS.remove(id);
         PROMOTION_DONG_GIA_PRICES.remove(id);
         PROMOTION_MUA_TANG_DETAILS.remove(id);
+        if (dbSuccess) audit("Khuyến mãi", "XÓA VĨNH VIỄN", id, "Xóa vĩnh viễn đợt khuyến mãi");
         return dbSuccess;
+    }
+
+    private void auditPromotion(String action, DotKhuyenMai promotion) {
+        String reference = promotion.getName() != null && !promotion.getName().trim().isEmpty()
+                ? promotion.getName() : promotion.getId();
+        audit("Khuyến mãi", action, reference, action + " đợt khuyến mãi");
     }
 
     public List<String> getStoresForPromotion(String dotKmId) {

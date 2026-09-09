@@ -1,6 +1,7 @@
 package kazuko.ex.dao;
 
 import kazuko.ex.model.system.SystemConfig;
+import kazuko.ex.service.ActivityLogService;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -436,6 +437,8 @@ public class SystemConfigDAO {
                     props.store(writer, "Cấu hình hệ thống QLBH");
                 } catch (Exception ignored) {}
             }
+            ActivityLogService.log("Cấu hình hệ thống", "SỬA", "",
+                    "Cập nhật cấu hình toàn bộ hệ thống");
             return true;
         } catch (Exception e) {
             return false;

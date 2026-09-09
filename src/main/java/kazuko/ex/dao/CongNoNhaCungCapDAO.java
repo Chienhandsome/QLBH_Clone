@@ -320,6 +320,9 @@ public class CongNoNhaCungCapDAO extends BaseDAO {
             }
 
             conn.commit();
+            audit("Công nợ nhà cung cấp", "TRẢ NỢ", soPhieu,
+                    "Trả nợ nhà cung cấp: " + (tenNCC == null ? "" : tenNCC)
+                            + "; số tiền: " + Math.round(soTien));
             return true;
         } catch (SQLException e) {
             System.err.println("Lỗi insertPhieuChi: " + e.getMessage());
@@ -438,6 +441,8 @@ public class CongNoNhaCungCapDAO extends BaseDAO {
             }
 
             conn.commit();
+            audit("Công nợ nhà cung cấp", "CẬP NHẬT", "Công nợ ban đầu",
+                    "Cập nhật công nợ ban đầu cho " + mapCongNo.size() + " nhà cung cấp");
             return true;
         } catch (SQLException e) {
             System.err.println("Lỗi saveCongNoBanDau cho NCC: " + e.getMessage());

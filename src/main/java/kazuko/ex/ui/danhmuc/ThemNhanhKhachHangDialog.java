@@ -2,8 +2,10 @@ package kazuko.ex.ui.danhmuc;
 
 import kazuko.ex.dao.KhachHangDAO;
 import kazuko.ex.dao.NhomKhachHangDAO;
+import kazuko.ex.dao.SystemConfigDAO;
 import kazuko.ex.model.danhmuc.KhachHang;
 import kazuko.ex.model.danhmuc.NhomKhachHang;
+import kazuko.ex.model.system.SystemConfig;
 import kazuko.ex.util.IconHelper;
 import kazuko.ex.util.KhachHangExcelUtil;
 
@@ -843,6 +845,26 @@ public class ThemNhanhKhachHangDialog extends JDialog {
         if (toSaveList.isEmpty()) {
             JOptionPane.showMessageDialog(this, "Không có dòng dữ liệu hợp lệ (tất cả các dòng đều thiếu Tên khách hàng)!", "Cảnh báo", JOptionPane.WARNING_MESSAGE);
             return;
+        }
+
+        SystemConfig systemConfig = new SystemConfigDAO().loadConfig();
+        if (!systemConfig.isChoPhepTrungTenKhachHang()) {
+            Set<String> namesInBatch = new HashSet<>();
+            for (KhachHang item : toSaveList) {
+                KhachHang existing = item.getMaKhach() != null && !item.getMaKhach().trim().isEmpty()
+                        ? khachHangDAO.findByMaKhach(item.getMaKhach()) : null;
+                String normalizedName = item.getName().trim().toLowerCase(Locale.ROOT);
+                boolean duplicatedInBatch = !namesInBatch.add(normalizedName);
+                boolean duplicatedInDatabase = khachHangDAO.existsByName(
+                        item.getName(), existing != null ? existing.getId() : null);
+                if (duplicatedInBatch || duplicatedInDatabase) {
+                    JOptionPane.showMessageDialog(this,
+                            "Tên khách hàng '" + item.getName() + "' bị trùng!\n"
+                                    + "Hệ thống đang cấu hình không cho phép trùng tên khách hàng.",
+                            "Trùng tên khách hàng", JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+            }
         }
 
         int inserted = 0;

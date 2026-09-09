@@ -281,6 +281,7 @@ public class DonHangDAO extends BaseDAO {
             }
 
             conn.commit();
+            auditWarehouse("Phiếu xuất kho", "THÊM", dh);
             return true;
         } catch (SQLException e) {
             System.err.println("Lỗi insert phiếu xuất kho: " + e.getMessage());
@@ -360,6 +361,7 @@ public class DonHangDAO extends BaseDAO {
             }
 
             conn.commit();
+            auditWarehouse("Phiếu xuất kho", "SỬA", dh);
             return true;
         } catch (SQLException e) {
             System.err.println("Lỗi update phiếu xuất kho: " + e.getMessage());
@@ -375,15 +377,21 @@ public class DonHangDAO extends BaseDAO {
     }
 
     public boolean deletePhieuXuatKho(String id) {
+        return softDeleteDocument(id, "Phiếu xuất kho");
+    }
+
+    private boolean softDeleteDocument(String id, String module) {
         if (id == null || id.trim().isEmpty()) return false;
         String sql = "UPDATE TDONHANG SET STATUS = -1, TIMEMODIFIED = CURRENT_TIMESTAMP, USERMODIFIEDID = ? WHERE ID = ?";
         try (Connection conn = getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, getEffectiveUserId());
             ps.setString(2, id);
-            return ps.executeUpdate() > 0;
+            boolean deleted = ps.executeUpdate() > 0;
+            if (deleted) audit(module, "XÓA", id, "Xóa " + module.toLowerCase());
+            return deleted;
         } catch (SQLException e) {
-            System.err.println("Lỗi delete phiếu xuất kho: " + e.getMessage());
+            System.err.println("Lỗi delete " + module + ": " + e.getMessage());
             return false;
         }
     }
@@ -393,7 +401,7 @@ public class DonHangDAO extends BaseDAO {
     }
 
     public boolean deletePhieuChuyenKho(String id) {
-        return deletePhieuXuatKho(id);
+        return softDeleteDocument(id, "Phiếu chuyển kho");
     }
 
     public DonHang getPhieuChuyenKhoOffset(String currentId, int offset) {
@@ -779,6 +787,7 @@ public class DonHangDAO extends BaseDAO {
             }
 
             conn.commit();
+            auditWarehouse("Phiếu nhập kho", "THÊM", dh);
             return true;
         } catch (SQLException e) {
             System.err.println("Lỗi insert phiếu nhập kho: " + e.getMessage());
@@ -868,6 +877,7 @@ public class DonHangDAO extends BaseDAO {
             }
 
             conn.commit();
+            auditWarehouse("Phiếu nhập kho", "SỬA", dh);
             return true;
         } catch (SQLException e) {
             System.err.println("Lỗi update phiếu nhập kho: " + e.getMessage());
@@ -886,7 +896,7 @@ public class DonHangDAO extends BaseDAO {
     }
 
     public boolean deletePhieuNhapKho(String id) {
-        return deletePhieuXuatKho(id);
+        return softDeleteDocument(id, "Phiếu nhập kho");
     }
 
     public DonHang getPhieuNhapOffset(String currentId, int offset) {
@@ -1086,6 +1096,7 @@ public class DonHangDAO extends BaseDAO {
             }
 
             conn.commit();
+            auditWarehouse("Phiếu chuyển kho", "THÊM", dh);
             return true;
         } catch (SQLException e) {
             System.err.println("Lỗi insertPhieuChuyenKho: " + e.getMessage());
@@ -1174,6 +1185,7 @@ public class DonHangDAO extends BaseDAO {
             }
 
             conn.commit();
+            auditWarehouse("Phiếu chuyển kho", "SỬA", dh);
             return true;
         } catch (SQLException e) {
             System.err.println("Lỗi updatePhieuChuyenKho: " + e.getMessage());
@@ -1501,6 +1513,7 @@ public class DonHangDAO extends BaseDAO {
             }
 
             conn.commit();
+            auditWarehouse("Phiếu kiểm kê", "THÊM", dh);
             return true;
         } catch (SQLException e) {
             System.err.println("Lỗi insertPhieuKiemKe: " + e.getMessage());
@@ -1580,6 +1593,7 @@ public class DonHangDAO extends BaseDAO {
             }
 
             conn.commit();
+            auditWarehouse("Phiếu kiểm kê", "SỬA", dh);
             return true;
         } catch (SQLException e) {
             System.err.println("Lỗi updatePhieuKiemKe: " + e.getMessage());
@@ -1595,7 +1609,7 @@ public class DonHangDAO extends BaseDAO {
     }
 
     public boolean deletePhieuKiemKe(String id) {
-        return deletePhieuXuatKho(id);
+        return softDeleteDocument(id, "Phiếu kiểm kê");
     }
 
     public List<DonHang> getAllPhieuKiemKe(Date tuNgay, Date denNgay, String khoId, String nhanVienId, String keyword) {
@@ -2336,5 +2350,15 @@ public class DonHangDAO extends BaseDAO {
             System.err.println("Lỗi getPhieuSanXuatByKhachHang: " + e.getMessage());
         }
         return list;
+    }
+
+    private void auditWarehouse(String module, String action, DonHang order) {
+        int itemCount = order.getChiTietLayHang() == null ? 0 : order.getChiTietLayHang().size();
+        String reference = order.getName() != null && !order.getName().trim().isEmpty()
+                ? order.getName() : order.getId();
+        String detail = action + " " + module.toLowerCase()
+                + "; số mặt hàng: " + itemCount
+                + "; tổng cộng: " + Math.round(order.getTongCong());
+        audit(module, action, reference, detail);
     }
 }

@@ -4,6 +4,7 @@ import kazuko.ex.config.DatabaseConnection;
 import kazuko.ex.model.dathang.DatHangNCC;
 import kazuko.ex.model.dathang.DatHangNCCChiTiet;
 import kazuko.ex.service.AuthService;
+import kazuko.ex.service.ActivityLogService;
 
 import java.sql.*;
 import java.text.SimpleDateFormat;
@@ -14,6 +15,10 @@ import java.util.List;
 import java.util.UUID;
 
 public class DatHangNCCDAO {
+
+    private void audit(String module, String action, String referenceNo, String content) {
+        ActivityLogService.log(module, action, referenceNo, content);
+    }
 
     private Connection getConnection() throws SQLException {
         return DatabaseConnection.getConnection();
@@ -308,6 +313,7 @@ public class DatHangNCCDAO {
             }
 
             conn.commit();
+            auditOrder("THÊM", order);
             return true;
         } catch (SQLException e) {
             System.err.println("Lỗi insert DatHangNCC: " + e.getMessage());
@@ -390,6 +396,7 @@ public class DatHangNCCDAO {
             }
 
             conn.commit();
+            auditOrder("SỬA", order);
             return true;
         } catch (SQLException e) {
             System.err.println("Lỗi update DatHangNCC: " + e.getMessage());
@@ -411,11 +418,22 @@ public class DatHangNCCDAO {
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, getEffectiveUserId());
             ps.setString(2, id.trim());
-            return ps.executeUpdate() > 0;
+            boolean deleted = ps.executeUpdate() > 0;
+            if (deleted) audit("Đặt hàng nhà cung cấp", "XÓA", id, "Xóa phiếu đặt hàng nhà cung cấp");
+            return deleted;
         } catch (SQLException e) {
             System.err.println("Lỗi delete DatHangNCC: " + e.getMessage());
             return false;
         }
+    }
+
+    private void auditOrder(String action, DatHangNCC order) {
+        int itemCount = order.getChiTiet() == null ? 0 : order.getChiTiet().size();
+        String reference = order.getName() != null && !order.getName().trim().isEmpty()
+                ? order.getName() : order.getId();
+        audit("Đặt hàng nhà cung cấp", action, reference,
+                action + " phiếu đặt hàng nhà cung cấp; số mặt hàng: " + itemCount
+                        + "; tổng cộng: " + Math.round(order.getTongCong()));
     }
 
     public DatHangNCC getOffset(String currentId, int offset) {

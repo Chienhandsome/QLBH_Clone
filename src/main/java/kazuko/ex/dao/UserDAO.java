@@ -194,6 +194,8 @@ public class UserDAO extends BaseDAO {
                 saveUserStoreAccessInternal(conn, user.getId(), storeIds, currentUserId, now);
 
                 conn.commit();
+                audit("Tài khoản", "THÊM", user.getUsername(),
+                        "Thêm tài khoản: " + (user.getName() == null ? "" : user.getName()));
                 return true;
             } catch (Exception ex) {
                 conn.rollback();
@@ -238,6 +240,8 @@ public class UserDAO extends BaseDAO {
                 saveUserStoreAccessInternal(conn, user.getId(), storeIds, currentUserId, now);
 
                 conn.commit();
+                audit("Tài khoản", "SỬA", user.getUsername(),
+                        "Cập nhật tài khoản: " + (user.getName() == null ? "" : user.getName()));
                 return true;
             } catch (Exception ex) {
                 conn.rollback();
@@ -270,6 +274,7 @@ public class UserDAO extends BaseDAO {
                 }
 
                 conn.commit();
+                audit("Tài khoản", "XÓA", userId, "Xóa tài khoản người dùng");
                 return true;
             } catch (Exception ex) {
                 conn.rollback();

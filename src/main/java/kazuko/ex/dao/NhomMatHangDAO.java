@@ -194,6 +194,7 @@ public class NhomMatHangDAO extends BaseDAO {
                 nh.setStatus(-1);
             }
         }
+        audit("Nhóm mặt hàng", "XÓA", id, "Chuyển nhóm mặt hàng và các nhóm con vào thùng rác");
         return true;
     }
 
@@ -224,6 +225,7 @@ public class NhomMatHangDAO extends BaseDAO {
                 nh.setStatus(1);
             }
         }
+        audit("Nhóm mặt hàng", "KHÔI PHỤC", id, "Khôi phục nhóm mặt hàng và các nhóm liên quan");
         return true;
     }
 
@@ -242,6 +244,7 @@ public class NhomMatHangDAO extends BaseDAO {
             }
         }
         MEMORY_CATEGORIES.removeIf(nh -> idsToDelete.contains(nh.getId()));
+        audit("Nhóm mặt hàng", "XÓA VĨNH VIỄN", id, "Xóa vĩnh viễn nhóm mặt hàng và các nhóm con");
         return true;
     }
 
@@ -308,6 +311,7 @@ public class NhomMatHangDAO extends BaseDAO {
         }
 
         tryInsertToDb(nh);
+        audit("Nhóm mặt hàng", "THÊM", nh.getName(), "Thêm nhóm mặt hàng");
         return true;
     }
 
@@ -320,6 +324,7 @@ public class NhomMatHangDAO extends BaseDAO {
             }
         }
         tryUpdateToDb(nh);
+        audit("Nhóm mặt hàng", "SỬA", nh.getName(), "Cập nhật nhóm mặt hàng");
         return true;
     }
 

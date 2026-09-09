@@ -112,6 +112,7 @@ public class NhomKhachHangDAO extends BaseDAO {
         boolean dbSuccess = tryInsertToDb(nh);
         MEMORY_CATEGORIES.add(nh);
         TRASH_CATEGORIES.remove(nh.getId());
+        if (dbSuccess) audit("Nhóm khách hàng", "THÊM", nh.getName(), "Thêm nhóm khách hàng");
         return dbSuccess;
     }
 
@@ -125,6 +126,7 @@ public class NhomKhachHangDAO extends BaseDAO {
                 break;
             }
         }
+        audit("Nhóm khách hàng", "SỬA", nh.getName(), "Cập nhật nhóm khách hàng");
         return dbSuccess || true;
     }
 
@@ -164,6 +166,7 @@ public class NhomKhachHangDAO extends BaseDAO {
             found.setStatus(-1);
             TRASH_CATEGORIES.put(id, found);
         }
+        if (dbSuccess) audit("Nhóm khách hàng", "XÓA", id, "Chuyển nhóm khách hàng vào thùng rác");
         return dbSuccess;
     }
 
@@ -175,6 +178,7 @@ public class NhomKhachHangDAO extends BaseDAO {
             found.setStatus(30);
             TRASH_CATEGORIES.remove(id);
         }
+        if (dbSuccess) audit("Nhóm khách hàng", "KHÔI PHỤC", id, "Khôi phục nhóm khách hàng");
         return dbSuccess;
     }
 
@@ -183,6 +187,7 @@ public class NhomKhachHangDAO extends BaseDAO {
         boolean dbSuccess = tryDeleteFromDb(id);
         TRASH_CATEGORIES.remove(id);
         MEMORY_CATEGORIES.removeIf(n -> id.equals(n.getId()));
+        if (dbSuccess) audit("Nhóm khách hàng", "XÓA VĨNH VIỄN", id, "Xóa vĩnh viễn nhóm khách hàng");
         return dbSuccess;
     }
 
@@ -395,4 +400,3 @@ public class NhomKhachHangDAO extends BaseDAO {
         }
     }
 }
-

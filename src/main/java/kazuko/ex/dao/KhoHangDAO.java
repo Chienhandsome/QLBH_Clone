@@ -1,6 +1,7 @@
 package kazuko.ex.dao;
 
 import kazuko.ex.model.danhmuc.KhoHang;
+import kazuko.ex.service.ActivityLogService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -8,6 +9,9 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 public class KhoHangDAO {
+    private void audit(String action, String reference, String content) {
+        ActivityLogService.log("Kho hàng", action, reference, content);
+    }
     private static final List<KhoHang> inMemoryList = new ArrayList<>();
     private static String defaultWarehouseId = "k-1";
 
@@ -72,6 +76,7 @@ public class KhoHangDAO {
         }
         k.setStatus(1);
         inMemoryList.add(k);
+        audit("THÊM", k.getName(), "Thêm kho hàng");
         return true;
     }
 
@@ -80,6 +85,7 @@ public class KhoHangDAO {
         for (int i = 0; i < inMemoryList.size(); i++) {
             if (k.getId().equals(inMemoryList.get(i).getId())) {
                 inMemoryList.set(i, k);
+                audit("SỬA", k.getName(), "Cập nhật kho hàng");
                 return true;
             }
         }
@@ -90,6 +96,7 @@ public class KhoHangDAO {
         KhoHang k = findById(id);
         if (k != null) {
             k.setStatus(-1);
+            audit("XÓA", k.getName(), "Chuyển kho hàng vào thùng rác");
             return true;
         }
         return false;
@@ -99,13 +106,16 @@ public class KhoHangDAO {
         KhoHang k = findById(id);
         if (k != null) {
             k.setStatus(1);
+            audit("KHÔI PHỤC", k.getName(), "Khôi phục kho hàng");
             return true;
         }
         return false;
     }
 
     public boolean deletePermanently(String id) {
-        return inMemoryList.removeIf(k -> id != null && id.equals(k.getId()));
+        boolean removed = inMemoryList.removeIf(k -> id != null && id.equals(k.getId()));
+        if (removed) audit("XÓA VĨNH VIỄN", id, "Xóa vĩnh viễn kho hàng");
+        return removed;
     }
 
     public boolean updateParentId(String id, String newParentId) {

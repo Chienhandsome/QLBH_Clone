@@ -146,6 +146,7 @@ public class BangLuongDAO extends BaseDAO {
         }
 
         MEMORY_LIST.add(0, bl);
+        audit("Bảng lương", "THÊM", bl.getSoPhieu(), "Lập bảng lương");
         return true;
     }
 
@@ -172,9 +173,11 @@ public class BangLuongDAO extends BaseDAO {
         for (int i = 0; i < MEMORY_LIST.size(); i++) {
             if (bl.getId().equals(MEMORY_LIST.get(i).getId())) {
                 MEMORY_LIST.set(i, bl);
+                audit("Bảng lương", "SỬA", bl.getSoPhieu(), "Cập nhật bảng lương");
                 return true;
             }
         }
+        audit("Bảng lương", "SỬA", bl.getSoPhieu(), "Cập nhật bảng lương");
         return true;
     }
 
@@ -196,7 +199,9 @@ public class BangLuongDAO extends BaseDAO {
         }
 
         LOADED_BANGLUONG_IDS.remove(id);
-        return MEMORY_LIST.removeIf(bl -> id.equals(bl.getId()));
+        boolean removed = MEMORY_LIST.removeIf(bl -> id.equals(bl.getId()));
+        audit("Bảng lương", "XÓA", id, "Xóa bảng lương");
+        return removed;
     }
 
     public synchronized void loadAttendanceForBangLuong(String bangLuongId) {

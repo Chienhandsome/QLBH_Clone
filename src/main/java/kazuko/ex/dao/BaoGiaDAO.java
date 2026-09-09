@@ -243,6 +243,7 @@ public class BaoGiaDAO extends BaseDAO {
             }
 
             conn.commit();
+            auditQuote("THÊM", bg, chiTietList);
             return true;
         } catch (SQLException e) {
             System.err.println("Lỗi thêm mới phiếu báo giá: " + e.getMessage());
@@ -335,6 +336,7 @@ public class BaoGiaDAO extends BaseDAO {
             }
 
             conn.commit();
+            auditQuote("SỬA", bg, chiTietList);
             return true;
         } catch (SQLException e) {
             System.err.println("Lỗi cập nhật phiếu báo giá: " + e.getMessage());
@@ -370,6 +372,7 @@ public class BaoGiaDAO extends BaseDAO {
             }
 
             conn.commit();
+            audit("Báo giá", "XÓA", id, "Xóa phiếu báo giá");
             return true;
         } catch (SQLException e) {
             System.err.println("Lỗi xóa phiếu báo giá: " + e.getMessage());
@@ -382,6 +385,16 @@ public class BaoGiaDAO extends BaseDAO {
                 try { conn.setAutoCommit(true); } catch (SQLException ignored) {}
             }
         }
+    }
+
+    private void auditQuote(String action, BaoGia quote, List<BaoGiaChiTiet> details) {
+        int itemCount = details == null ? 0 : details.size();
+        String reference = quote.getName() != null && !quote.getName().trim().isEmpty()
+                ? quote.getName() : quote.getId();
+        audit("Báo giá", action, reference,
+                action + " báo giá; khách: " + (quote.getTenKhach() == null ? "" : quote.getTenKhach())
+                        + "; số mặt hàng: " + itemCount
+                        + "; tổng cộng: " + Math.round(quote.getTongCong()));
     }
 
     /**

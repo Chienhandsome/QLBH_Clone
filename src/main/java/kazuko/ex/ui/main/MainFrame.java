@@ -88,6 +88,7 @@ import kazuko.ex.ui.baocao.ChiTietLaiTheoHoaDonGiaNhapPanel;
 import kazuko.ex.ui.baocao.BaoCaoKetQuaKinhDoanhPanel;
 import kazuko.ex.ui.baocao.ChiTietHoatDongTrongNgayPanel;
 import kazuko.ex.ui.baocao.BaoCao20MatHangBanChayNhatPanel;
+import kazuko.ex.ui.hoadon.ThongKeDoanhThuPanel;
 import kazuko.ex.ui.baocao.BangTongHopThiPhanPanel;
 import kazuko.ex.ui.baocao.BaoCaoPhanTichTinhHinhBanHangPanel;
 import kazuko.ex.ui.baocao.BieuDoDoanhSoTheoNhomPanel;
@@ -143,6 +144,7 @@ import kazuko.ex.ui.quy.TaoPhieuThuDialog;
 import kazuko.ex.ui.system.CauHinhToanHeThongDialog;
 import kazuko.ex.ui.system.GhiChuNhanhDialog;
 import kazuko.ex.ui.system.KhoiPhucCSDLDialog;
+import kazuko.ex.ui.system.LuuVetHoatDongPanel;
 import kazuko.ex.ui.system.QuanLyNguoiDungDialog;
 import kazuko.ex.ui.system.SaoLuuCSDLDialog;
 import kazuko.ex.ui.system.TaoMoiCSDLDialog;
@@ -197,6 +199,13 @@ public class MainFrame extends JFrame {
                 JComponent.WHEN_IN_FOCUSED_WINDOW
         );
 
+        // Phím nóng Ctrl + Shift + W đóng tất cả tab
+        getRootPane().registerKeyboardAction(
+                e -> closeAllTabs(),
+                KeyStroke.getKeyStroke(KeyEvent.VK_W, InputEvent.CTRL_DOWN_MASK | InputEvent.SHIFT_DOWN_MASK),
+                JComponent.WHEN_IN_FOCUSED_WINDOW
+        );
+
         setSize(1280, 760);
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
@@ -221,19 +230,26 @@ public class MainFrame extends JFrame {
         mainTabbedPane = new JTabbedPane(JTabbedPane.TOP, JTabbedPane.SCROLL_TAB_LAYOUT);
         mainTabbedPane.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         mainTabbedPane.setUI(new CustomModernTabbedPaneUI());
+        mainTabbedPane.addChangeListener(e -> updateTabHeaderStyles());
 
-        // Cụm nút góc phải thanh Tab: [▾] (Danh sách tab) và [✕] (Đóng tab)
+        // Cụm nút góc phải thanh Tab: danh sách, đóng tab hiện tại và đóng tất cả
         JPanel pnlTabControls = new JPanel(new FlowLayout(FlowLayout.RIGHT, 2, 1));
         pnlTabControls.setOpaque(false);
 
         JButton btnTabList = createTabControlButton(ARROW_DOWN_ICON, "Danh sách các tab đang mở");
         JButton btnTabClose = createTabControlButton(CLOSE_CROSS_ICON, "Đóng tab hiện tại (Ctrl + W)");
+        JButton btnCloseAllTabs = createTabControlButton(null, "Đóng tất cả tab (Ctrl + Shift + W)");
+        btnCloseAllTabs.setText("Tắt tất cả");
+        btnCloseAllTabs.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        btnCloseAllTabs.setPreferredSize(new Dimension(62, 20));
 
         btnTabList.addActionListener(e -> showTabListPopup(btnTabList));
         btnTabClose.addActionListener(e -> closeCurrentTab());
+        btnCloseAllTabs.addActionListener(e -> closeAllTabs());
 
         pnlTabControls.add(btnTabList);
         pnlTabControls.add(btnTabClose);
+        pnlTabControls.add(btnCloseAllTabs);
 
         JPanel container = new JPanel(null) {
             @Override
@@ -241,7 +257,7 @@ public class MainFrame extends JFrame {
                 int w = getWidth();
                 int h = getHeight();
                 mainTabbedPane.setBounds(0, 0, w, h);
-                pnlTabControls.setBounds(w - 52, 4, 48, 22);
+                pnlTabControls.setBounds(w - 118, 4, 114, 22);
             }
         };
         container.add(pnlTabControls);
@@ -254,10 +270,10 @@ public class MainFrame extends JFrame {
     }
 
     private void openDefaultPermittedTab() {
-        if (PermissionService.getInstance().isFunctionAllowed("Danh mục mặt hàng")) {
-            openTab("Danh mục mặt hàng", new DanhMucMatHangPanel());
-        } else if (PermissionService.getInstance().isFunctionAllowed("Hóa đơn bán hàng")) {
+        if (PermissionService.getInstance().isFunctionAllowed("Hóa đơn bán hàng")) {
             openTab("Hóa đơn bán hàng", new HoaDonBanHangPanel());
+        } else if (PermissionService.getInstance().isFunctionAllowed("Danh mục mặt hàng")) {
+            openTab("Danh mục mặt hàng", new DanhMucMatHangPanel());
         } else if (PermissionService.getInstance().isFunctionAllowed("Quản lý bán hàng")) {
             openTab("Quản lý bán hàng", new QuanLyBanHangPanel());
         } else if (PermissionService.getInstance().isFunctionAllowed("Tồn kho")) {
@@ -327,8 +343,18 @@ public class MainFrame extends JFrame {
         int selected = mainTabbedPane.getSelectedIndex();
         if (selected >= 0) {
             mainTabbedPane.remove(selected);
-            if (mainTabbedPane.getTabCount() == 0) {
-                openDefaultPermittedTab();
+        }
+    }
+
+    private void closeAllTabs() {
+        mainTabbedPane.removeAll();
+    }
+
+    private void updateTabHeaderStyles() {
+        for (int i = 0; i < mainTabbedPane.getTabCount(); i++) {
+            Component header = mainTabbedPane.getTabComponentAt(i);
+            if (header instanceof CloseableTabComponent) {
+                ((CloseableTabComponent) header).updateSelectionStyle();
             }
         }
     }
@@ -412,7 +438,7 @@ public class MainFrame extends JFrame {
         mHoatDong.addSeparator();
 
         // Group 4: Nhật ký
-        JMenuItem miLuuVet = createFunctionMenuItem("Lưu vết hoạt động", "tsbLog.Image.png", e -> openTab("Lưu vết hoạt động", createPlaceholderPanel("Lưu vết hoạt động")));
+        JMenuItem miLuuVet = createFunctionMenuItem("Lưu vết hoạt động", "tsbLog.Image.png", e -> openTab("Lưu vết hoạt động", new LuuVetHoatDongPanel()));
 
         mHoatDong.add(miLuuVet);
 
@@ -420,7 +446,7 @@ public class MainFrame extends JFrame {
         mHoatDong.addSeparator();
 
         // Group 5: Thống kê & Báo cáo
-        JMenuItem miTKDoanhThu = createFunctionMenuItem("Thống kê doanh thu", "Statistic16.png", KeyStroke.getKeyStroke(KeyEvent.VK_T, InputEvent.CTRL_DOWN_MASK), e -> openTab("Thống kê doanh thu", createPlaceholderPanel("Thống kê doanh thu")));
+        JMenuItem miTKDoanhThu = createFunctionMenuItem("Thống kê doanh thu", "Statistic16.png", KeyStroke.getKeyStroke(KeyEvent.VK_T, InputEvent.CTRL_DOWN_MASK), e -> openTab("Thống kê doanh thu", new ThongKeDoanhThuPanel()));
         JMenuItem miTKMatHang = createFunctionMenuItem("Thống kê mặt hàng bán", "Tree.png", KeyStroke.getKeyStroke(KeyEvent.VK_L, InputEvent.CTRL_DOWN_MASK), e -> openTab("Thống kê mặt hàng bán", createPlaceholderPanel("Thống kê mặt hàng bán")));
         JMenuItem miTongHopKQKD = createFunctionMenuItem("Tổng hợp kết quả kinh doanh", "Report.png", e -> openTab("Tổng hợp KQKD", createPlaceholderPanel("Tổng hợp kết quả kinh doanh")));
         JMenuItem miChiTietHD = createFunctionMenuItem("Chi tiết hoạt động ngày", "arrow-000-medium.png", e -> openTab("Chi tiết hoạt động", createPlaceholderPanel("Chi tiết hoạt động")));
@@ -555,7 +581,7 @@ public class MainFrame extends JFrame {
 
         mQuanTri.addSeparator();
 
-        JMenuItem miCauHinh = createFunctionMenuItem("Cấu hình toàn hệ thống", "wrench-screwdriver.png", e -> new CauHinhToanHeThongDialog(this).setVisible(true));
+        JMenuItem miCauHinh = createFunctionMenuItem("Cấu hình toàn hệ thống", "wrench-screwdriver.png", e -> openSystemConfiguration());
         if (miCauHinh != null) {
             miCauHinh.setFont(miCauHinh.getFont().deriveFont(Font.BOLD));
             mQuanTri.add(miCauHinh);
@@ -831,7 +857,7 @@ public class MainFrame extends JFrame {
 
         JButton btnHoaDon = createRibbonToolButton("Hóa đơn", "Hóa đơn bán hàng", "btnNew.Image.png", e -> openTab("Hóa đơn bán hàng", new HoaDonBanHangPanel()));
         JButton btnQLBanHang = createRibbonToolButton("Quản lý bán hàng", "Quản lý bán hàng", "btnOpen.Image.png", e -> openTab("Quản lý bán hàng", new QuanLyBanHangPanel()));
-        JButton btnTKDoanhThu = createRibbonToolButton("Thống kê doanh thu", "Thống kê doanh thu", "Statistic16.png", e -> openTab("Thống kê doanh thu", createPlaceholderPanel("Thống kê doanh thu")));
+        JButton btnTKDoanhThu = createRibbonToolButton("Thống kê doanh thu", "Thống kê doanh thu", "Statistic16.png", e -> openTab("Thống kê doanh thu", new ThongKeDoanhThuPanel()));
         JButton btnTKMatHang = createRibbonToolButton("Thống kê mặt hàng bán", "Thống kê mặt hàng bán", "1282529873_objects.png", e -> openTab("Danh mục mặt hàng", new DanhMucMatHangPanel()));
         JButton btnChiTietHD = createRibbonToolButton("Chi tiết hoạt động", "Chi tiết hoạt động ngày", "Report.png", e -> openTab("Chi tiết hoạt động", createPlaceholderPanel("Chi tiết hoạt động")));
         JButton btnTongHopKQKD = createRibbonToolButton("Tổng hợp KQKD", "Tổng hợp kết quả kinh doanh", "Tree.png", e -> openTab("Tổng hợp KQKD", createPlaceholderPanel("Tổng hợp kết quả kinh doanh")));
@@ -894,7 +920,9 @@ public class MainFrame extends JFrame {
             mainTabbedPane.setSelectedIndex(index);
         } else {
             mainTabbedPane.addTab(title, panel);
-            mainTabbedPane.setSelectedIndex(mainTabbedPane.getTabCount() - 1);
+            int newIndex = mainTabbedPane.getTabCount() - 1;
+            mainTabbedPane.setTabComponentAt(newIndex, new CloseableTabComponent(mainTabbedPane, panel, title));
+            mainTabbedPane.setSelectedIndex(newIndex);
         }
     }
 
@@ -933,6 +961,18 @@ public class MainFrame extends JFrame {
     private void openQuickSearchDialog() {
         QuickSearchDialog dialog = new QuickSearchDialog(this, this::handleQuickAction);
         dialog.setVisible(true);
+    }
+
+    private void openSystemConfiguration() {
+        new CauHinhToanHeThongDialog(this).setVisible(true);
+        for (int i = 0; i < mainTabbedPane.getTabCount(); i++) {
+            Component content = mainTabbedPane.getComponentAt(i);
+            if (content instanceof HoaDonBanHangPanel) {
+                ((HoaDonBanHangPanel) content).refreshSalesConfiguration();
+            } else if (content instanceof QuanLyBanHangPanel) {
+                ((QuanLyBanHangPanel) content).refreshSalesConfiguration();
+            }
+        }
     }
 
     private void handleQuickAction(String action) {
@@ -1064,7 +1104,7 @@ public class MainFrame extends JFrame {
                 break;
             case "CẤU HÌNH TOÀN HỆ THỐNG":
             case "CẤU HÌNH HỆ THỐNG":
-                new CauHinhToanHeThongDialog(this).setVisible(true);
+                openSystemConfiguration();
                 break;
             case "CÔNG NỢ KHÁCH HÀNG BAN ĐẦU":
                 new CongNoKhachHangBanDauDialog(this).setVisible(true);
@@ -1669,7 +1709,7 @@ public class MainFrame extends JFrame {
             super.installDefaults();
             tabInsets = new Insets(4, 14, 4, 14);
             selectedTabPadInsets = new Insets(0, 0, 0, 0);
-            tabAreaInsets = new Insets(2, 4, 0, 56); // Chừa 56px bên phải cho 2 nút dropdown và close
+            tabAreaInsets = new Insets(2, 4, 0, 122); // Chừa chỗ cho cụm điều khiển tab bên phải
         }
 
         @Override
@@ -1720,6 +1760,65 @@ public class MainFrame extends JFrame {
             g2.setColor(new Color(185, 205, 230));
             g2.drawRect(0, 0, tabPane.getWidth() - 1, tabPane.getHeight() - 1);
             g2.dispose();
+        }
+    }
+
+    /** Tiêu đề tab có nút đóng riêng, luôn đóng đúng nội dung kể cả khi tab đổi vị trí. */
+    static class CloseableTabComponent extends JPanel {
+        private final JTabbedPane tabbedPane;
+        private final Component tabContent;
+        private final JLabel titleLabel;
+
+        CloseableTabComponent(JTabbedPane tabbedPane, Component tabContent, String title) {
+            super(new FlowLayout(FlowLayout.LEFT, 4, 0));
+            this.tabbedPane = tabbedPane;
+            this.tabContent = tabContent;
+            setOpaque(false);
+
+            titleLabel = new JLabel(title);
+            titleLabel.setBorder(new EmptyBorder(0, 0, 0, 1));
+
+            JButton closeButton = new JButton(CLOSE_CROSS_ICON);
+            closeButton.setPreferredSize(new Dimension(16, 16));
+            closeButton.setMargin(new Insets(0, 0, 0, 0));
+            closeButton.setFocusable(false);
+            closeButton.setContentAreaFilled(false);
+            closeButton.setBorderPainted(false);
+            closeButton.setToolTipText("Đóng tab " + title);
+            closeButton.getAccessibleContext().setAccessibleName("Đóng tab " + title);
+            closeButton.addActionListener(e -> tabbedPane.remove(tabContent));
+            closeButton.addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseEntered(MouseEvent e) {
+                    closeButton.setContentAreaFilled(true);
+                    closeButton.setBackground(new Color(255, 220, 215));
+                }
+
+                @Override
+                public void mouseExited(MouseEvent e) {
+                    closeButton.setContentAreaFilled(false);
+                }
+            });
+
+            MouseAdapter selectTab = new MouseAdapter() {
+                @Override
+                public void mousePressed(MouseEvent e) {
+                    int index = tabbedPane.indexOfComponent(tabContent);
+                    if (index >= 0) tabbedPane.setSelectedIndex(index);
+                }
+            };
+            addMouseListener(selectTab);
+            titleLabel.addMouseListener(selectTab);
+
+            add(titleLabel);
+            add(closeButton);
+            updateSelectionStyle();
+        }
+
+        void updateSelectionStyle() {
+            boolean selected = tabbedPane.getSelectedComponent() == tabContent;
+            titleLabel.setFont(new Font("Segoe UI", selected ? Font.BOLD : Font.PLAIN, 12));
+            titleLabel.setForeground(selected ? new Color(20, 20, 20) : new Color(60, 70, 85));
         }
     }
 

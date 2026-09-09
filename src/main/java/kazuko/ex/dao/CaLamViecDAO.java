@@ -129,6 +129,7 @@ public class CaLamViecDAO extends BaseDAO {
         } catch (Exception ignored) {}
 
         inMemoryList.add(ca);
+        audit("Ca làm việc", "THÊM", ca.getName(), "Thêm ca làm việc");
         return true;
     }
 
@@ -148,9 +149,11 @@ public class CaLamViecDAO extends BaseDAO {
         for (int i = 0; i < inMemoryList.size(); i++) {
             if (ca.getId().equals(inMemoryList.get(i).getId())) {
                 inMemoryList.set(i, ca);
+                audit("Ca làm việc", "SỬA", ca.getName(), "Cập nhật ca làm việc");
                 return true;
             }
         }
+        audit("Ca làm việc", "SỬA", ca.getName(), "Cập nhật ca làm việc");
         return true;
     }
 
@@ -165,6 +168,7 @@ public class CaLamViecDAO extends BaseDAO {
         CaLamViec ca = findById(id);
         if (ca != null) {
             ca.setStatus(-1);
+            audit("Ca làm việc", "XÓA", ca.getName(), "Chuyển ca làm việc vào thùng rác");
             return true;
         }
         return false;
@@ -181,6 +185,7 @@ public class CaLamViecDAO extends BaseDAO {
         CaLamViec ca = findById(id);
         if (ca != null) {
             ca.setStatus(1);
+            audit("Ca làm việc", "KHÔI PHỤC", ca.getName(), "Khôi phục ca làm việc");
             return true;
         }
         return false;
@@ -194,7 +199,9 @@ public class CaLamViecDAO extends BaseDAO {
             if (!conn.getAutoCommit()) conn.commit();
         } catch (Exception ignored) {}
 
-        return inMemoryList.removeIf(ca -> id != null && id.equals(ca.getId()));
+        boolean removed = inMemoryList.removeIf(ca -> id != null && id.equals(ca.getId()));
+        if (removed) audit("Ca làm việc", "XÓA VĨNH VIỄN", id, "Xóa vĩnh viễn ca làm việc");
+        return removed;
     }
 
     public boolean updateParentId(String id, String newParentId) {

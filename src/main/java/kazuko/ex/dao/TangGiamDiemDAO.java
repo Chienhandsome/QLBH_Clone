@@ -5,6 +5,7 @@ import kazuko.ex.model.danhmuc.DiemHoaDon;
 import kazuko.ex.model.danhmuc.KhachHang;
 import kazuko.ex.model.danhmuc.KhachHangLoyaltySummary;
 import kazuko.ex.model.danhmuc.TangGiamDiem;
+import kazuko.ex.service.ActivityLogService;
 
 import java.sql.*;
 import java.text.SimpleDateFormat;
@@ -14,6 +15,10 @@ import java.util.Date;
 public class TangGiamDiemDAO {
     private static final String DEFAULT_USER_ID = "4f1466a0-0756-4ba9-afa8-053b96ca7569";
     private final KhachHangDAO khachHangDAO = new KhachHangDAO();
+
+    private void audit(String action, String reference, String content) {
+        ActivityLogService.log("Tăng giảm điểm", action, reference, content);
+    }
 
     // In-memory cache fallback
     private static final List<TangGiamDiem> MEMORY_TANG_GIAM_DIEM = new ArrayList<>();
@@ -138,6 +143,8 @@ public class TangGiamDiemDAO {
             System.err.println("Lỗi insert TTANGGIAMDIEM: " + e.getMessage());
         }
         MEMORY_TANG_GIAM_DIEM.add(0, tg);
+        audit("THÊM", tg.getSoPhieu(),
+                "Lập phiếu tăng/giảm điểm; tăng: " + tg.getDiemTang() + "; giảm: " + tg.getDiemGiam());
         return true;
     }
 
@@ -159,12 +166,14 @@ public class TangGiamDiemDAO {
             int rows = ps.executeUpdate();
             if (rows > 0) {
                 updateMemory(tg);
+                audit("SỬA", tg.getSoPhieu(), "Cập nhật phiếu tăng/giảm điểm");
                 return true;
             }
         } catch (Exception e) {
             System.err.println("Lỗi update TTANGGIAMDIEM: " + e.getMessage());
         }
         updateMemory(tg);
+        audit("SỬA", tg.getSoPhieu(), "Cập nhật phiếu tăng/giảm điểm (bộ nhớ tạm)");
         return true;
     }
 
@@ -179,6 +188,7 @@ public class TangGiamDiemDAO {
             System.err.println("Lỗi delete TTANGGIAMDIEM: " + e.getMessage());
         }
         MEMORY_TANG_GIAM_DIEM.removeIf(item -> id.equals(item.getId()));
+        audit("XÓA", id, "Xóa phiếu tăng/giảm điểm");
         return true;
     }
 

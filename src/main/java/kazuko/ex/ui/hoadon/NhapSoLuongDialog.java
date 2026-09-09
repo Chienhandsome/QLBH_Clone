@@ -19,6 +19,7 @@ public class NhapSoLuongDialog extends JDialog {
     private final String donViTinh;
     private final double chietKhauMacDinh;
     private final double soLuongMacDinh;
+    private final boolean choPhepNhapChietKhau;
 
     private JTextField txtSoLuong;
     private JTextField txtChietKhau;
@@ -27,12 +28,18 @@ public class NhapSoLuongDialog extends JDialog {
     private double resultChietKhau = 0.0;
 
     public NhapSoLuongDialog(Window parent, MatHang matHang, double donGia, String donViTinh, double soLuongMacDinh, double chietKhauMacDinh) {
+        this(parent, matHang, donGia, donViTinh, soLuongMacDinh, chietKhauMacDinh, true);
+    }
+
+    public NhapSoLuongDialog(Window parent, MatHang matHang, double donGia, String donViTinh,
+                             double soLuongMacDinh, double chietKhauMacDinh, boolean choPhepNhapChietKhau) {
         super(parent, "Nhập số lượng", ModalityType.APPLICATION_MODAL);
         this.matHang = matHang;
         this.donGia = donGia;
         this.donViTinh = donViTinh != null ? donViTinh : (matHang.getTenDonViTinh() != null ? matHang.getTenDonViTinh() : "");
         this.soLuongMacDinh = soLuongMacDinh > 0 ? soLuongMacDinh : 1.0;
         this.chietKhauMacDinh = chietKhauMacDinh >= 0 ? chietKhauMacDinh : 0.0;
+        this.choPhepNhapChietKhau = choPhepNhapChietKhau;
 
         initComponents();
     }
@@ -100,6 +107,11 @@ public class NhapSoLuongDialog extends JDialog {
         txtChietKhau = new JTextField(String.valueOf(chietKhauMacDinh == (long) chietKhauMacDinh ? String.format("%d", (long) chietKhauMacDinh) : String.valueOf(chietKhauMacDinh)));
         txtChietKhau.setFont(new Font("Segoe UI", Font.PLAIN, 13));
         txtChietKhau.setBounds(110, 120, 80, 25);
+        txtChietKhau.setEditable(choPhepNhapChietKhau);
+        txtChietKhau.setEnabled(choPhepNhapChietKhau);
+        txtChietKhau.setToolTipText(choPhepNhapChietKhau
+                ? "Nhập chiết khấu cho mặt hàng"
+                : "Đã tắt nhập giảm giá trong Cấu hình toàn bộ hệ thống");
         pnlBody.add(txtChietKhau);
 
         // Buttons in body (Ghi dữ liệu, Thoát)
@@ -148,15 +160,24 @@ public class NhapSoLuongDialog extends JDialog {
             return;
         }
 
-        try {
+        if (!choPhepNhapChietKhau) {
+            resultChietKhau = chietKhauMacDinh;
+        } else try {
             String ckStr = txtChietKhau.getText().trim().replace(",", ".");
             if (!ckStr.isEmpty()) {
                 resultChietKhau = Double.parseDouble(ckStr);
             } else {
                 resultChietKhau = 0.0;
             }
+            if (resultChietKhau < 0 || resultChietKhau > 100) {
+                JOptionPane.showMessageDialog(this, "Chiết khấu phải nằm trong khoảng từ 0 đến 100%!", "Cảnh báo", JOptionPane.WARNING_MESSAGE);
+                txtChietKhau.requestFocusInWindow();
+                return;
+            }
         } catch (Exception e) {
-            resultChietKhau = 0.0;
+            JOptionPane.showMessageDialog(this, "Chiết khấu không hợp lệ!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+            txtChietKhau.requestFocusInWindow();
+            return;
         }
 
         confirmed = true;

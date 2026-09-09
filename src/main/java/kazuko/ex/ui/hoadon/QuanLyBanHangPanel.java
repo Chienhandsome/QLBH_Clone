@@ -5,6 +5,7 @@ import kazuko.ex.dao.HoaDonDAO;
 import kazuko.ex.dao.KhachHangDAO;
 import kazuko.ex.dao.KhoHangDAO;
 import kazuko.ex.dao.NhanVienDAO;
+import kazuko.ex.dao.SystemConfigDAO;
 import kazuko.ex.model.banhang.DonHang;
 import kazuko.ex.model.banhang.DonHangChiTiet;
 import kazuko.ex.model.danhmuc.CuaHang;
@@ -12,6 +13,7 @@ import kazuko.ex.model.danhmuc.KhachHang;
 import kazuko.ex.model.danhmuc.KhoHang;
 import kazuko.ex.model.danhmuc.MatHang;
 import kazuko.ex.model.danhmuc.NhanVien;
+import kazuko.ex.model.system.SystemConfig;
 import kazuko.ex.ui.common.DatePickerField;
 import kazuko.ex.util.CurrencyUtil;
 import kazuko.ex.util.DateUtil;
@@ -38,6 +40,8 @@ public class QuanLyBanHangPanel extends JPanel {
     private final KhachHangDAO khachHangDAO = new KhachHangDAO();
     private final KhoHangDAO khoHangDAO = new KhoHangDAO();
     private final NhanVienDAO nhanVienDAO = new NhanVienDAO();
+    private final SystemConfigDAO systemConfigDAO = new SystemConfigDAO();
+    private SystemConfig systemConfig = systemConfigDAO.loadConfig();
 
     // Top Filter Toolbar
     private DatePickerField dpkTuNgay;
@@ -112,6 +116,7 @@ public class QuanLyBanHangPanel extends JPanel {
         setBackground(new Color(230, 240, 252));
 
         initComponents();
+        applySalesConfig();
         loadDropdownData();
         loadInvoices();
     }
@@ -730,6 +735,11 @@ public class QuanLyBanHangPanel extends JPanel {
         gbc.gridx = 1;
         txtTiLeGiamGia = new JTextField("0 %", 4);
         txtTiLeGiamGia.setHorizontalAlignment(SwingConstants.RIGHT);
+        txtTiLeGiamGia.getDocument().addDocumentListener(new DocumentListener() {
+            @Override public void insertUpdate(DocumentEvent e) { recalculateFinancials(); }
+            @Override public void removeUpdate(DocumentEvent e) { recalculateFinancials(); }
+            @Override public void changedUpdate(DocumentEvent e) { recalculateFinancials(); }
+        });
         pnlFields.add(txtTiLeGiamGia, gbc);
 
         gbc.gridx = 2;
@@ -1445,6 +1455,9 @@ public class QuanLyBanHangPanel extends JPanel {
             JOptionPane.showMessageDialog(this, "Vui lòng chọn một hóa đơn để lưu!", "Thông báo", JOptionPane.WARNING_MESSAGE);
             return;
         }
+        if (!validateRequiredSalesFields()) return;
+
+        recalculateFinancials();
 
         currentSelectedInvoice.setNgay(dpkNgay.getDate());
         currentSelectedInvoice.setDienGiai(txtDienGiai.getText().trim());
@@ -1481,6 +1494,14 @@ public class QuanLyBanHangPanel extends JPanel {
             return;
         }
 
+        if (tabbedDetails.getSelectedIndex() == 1 && systemConfig.isBatBuocDoiTraHangTheoDon()) {
+            JOptionPane.showMessageDialog(this,
+                    "Cấu hình đang bắt buộc đổi trả theo hóa đơn.\n"
+                            + "Vui lòng thực hiện trả hàng từ màn hình Hóa đơn bán hàng để chọn hóa đơn gốc.",
+                    "Đổi trả theo hóa đơn", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
         Window parentWin = SwingUtilities.getWindowAncestor(this);
         TimKiemMatHangDialog dlg = new TimKiemMatHangDialog(parentWin);
         dlg.setVisible(true);
@@ -1489,7 +1510,8 @@ public class QuanLyBanHangPanel extends JPanel {
             MatHang m = dlg.getSelectedMatHang();
             double price = m.getGiaBan() > 0 ? m.getGiaBan() : (m.getGiaBan2() > 0 ? m.getGiaBan2() : 0.0);
 
-            NhapSoLuongDialog qtyDlg = new NhapSoLuongDialog(parentWin, m, price, m.getTenDonViTinh(), 1.0, 0.0);
+            NhapSoLuongDialog qtyDlg = new NhapSoLuongDialog(parentWin, m, price, m.getTenDonViTinh(),
+                    1.0, 0.0, systemConfig.isChoPhepNhapGiamGia());
             qtyDlg.setVisible(true);
 
             if (qtyDlg.isConfirmed()) {
@@ -1548,22 +1570,30 @@ public class QuanLyBanHangPanel extends JPanel {
         if (currentSelectedInvoice == null) return;
 
         double tienHang = 0.0;
-        double tienGiamGia = 0.0;
         for (DonHangChiTiet ct : currentLayHangList) {
-            tienHang += ct.getSoLuong() * ct.getDonGia();
-            tienGiamGia += ct.getTienGiam();
+            tienHang += ct.getThanhTien();
         }
+
+        double discountPercent = 0.0;
+        try {
+            discountPercent = Double.parseDouble(
+                    txtTiLeGiamGia.getText().replace("%", "").trim().replace(",", "."));
+        } catch (Exception ignored) {}
+        discountPercent = Math.max(0, Math.min(100, discountPercent));
+        double tienGiamGia = tienHang * (discountPercent / 100.0);
 
         double tienDoiTra = 0.0;
         for (DonHangChiTiet ct : currentTraHangList) {
             tienDoiTra += ct.getThanhTien();
         }
 
-        double tongCong = Math.max(0, (tienHang - tienGiamGia) - tienDoiTra);
+        double tongCong = SalesConfigSupport.roundMoney(
+                Math.max(0, (tienHang - tienGiamGia) - tienDoiTra), systemConfig.getLamTronTien());
 
         currentSelectedInvoice.setChiTietLayHang(new ArrayList<>(currentLayHangList));
         currentSelectedInvoice.setChiTietTraHang(new ArrayList<>(currentTraHangList));
         currentSelectedInvoice.setTienHang(tienHang);
+        currentSelectedInvoice.setTiLeGiamGia(discountPercent);
         currentSelectedInvoice.setTienGiamGia(tienGiamGia);
         currentSelectedInvoice.setTienDoiTra(tienDoiTra);
         currentSelectedInvoice.setTongCong(tongCong);
@@ -1577,7 +1607,40 @@ public class QuanLyBanHangPanel extends JPanel {
         txtTienMat.setText(CurrencyUtil.format(tongCong));
     }
 
+    private void applySalesConfig() {
+        dpkNgay.setEnabled(systemConfig.isChoPhepThayDoiNgayTrenHoaDon());
+        txtTiLeGiamGia.setEditable(systemConfig.isChoPhepNhapGiamGia());
+        txtTiLeGiamGia.setEnabled(systemConfig.isChoPhepNhapGiamGia());
+    }
+
+    public void refreshSalesConfiguration() {
+        systemConfig = systemConfigDAO.loadConfig();
+        applySalesConfig();
+    }
+
+    private boolean validateRequiredSalesFields() {
+        KhachHang customer = (KhachHang) cbKhachHang.getSelectedItem();
+        if (systemConfig.isBatBuocNhapKhachHang()
+                && (customer == null || customer.getId() == null || customer.getId().trim().isEmpty())) {
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn khách hàng trước khi lưu hóa đơn!",
+                    "Thiếu khách hàng", JOptionPane.WARNING_MESSAGE);
+            cbKhachHang.requestFocusInWindow();
+            return false;
+        }
+
+        NhanVien employee = (NhanVien) cbNhanVien.getSelectedItem();
+        if (systemConfig.isBatBuocNhapNhanVienBanHang()
+                && (employee == null || employee.getId() == null || employee.getId().trim().isEmpty())) {
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn nhân viên bán hàng trước khi lưu hóa đơn!",
+                    "Thiếu nhân viên bán hàng", JOptionPane.WARNING_MESSAGE);
+            cbNhanVien.requestFocusInWindow();
+            return false;
+        }
+        return true;
+    }
+
     private void onLuuVaInLaiBill() {
+        if (currentSelectedInvoice == null || !validateRequiredSalesFields()) return;
         onLuuDuLieu();
         if (currentSelectedInvoice != null) {
             Window parentWin = SwingUtilities.getWindowAncestor(this);

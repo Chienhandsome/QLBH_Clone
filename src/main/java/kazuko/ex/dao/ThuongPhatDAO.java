@@ -150,6 +150,8 @@ public class ThuongPhatDAO extends BaseDAO {
         } catch (Exception ignored) {}
 
         MEMORY_LIST.add(0, tp);
+        audit("Thưởng phạt", "THÊM", tp.getSoPhieu(),
+                "Lập phiếu thưởng/phạt; nhân viên: " + (tp.getTenNhanVien() == null ? "" : tp.getTenNhanVien()));
         return true;
     }
 
@@ -174,9 +176,11 @@ public class ThuongPhatDAO extends BaseDAO {
         for (int i = 0; i < MEMORY_LIST.size(); i++) {
             if (tp.getId().equals(MEMORY_LIST.get(i).getId())) {
                 MEMORY_LIST.set(i, tp);
+                audit("Thưởng phạt", "SỬA", tp.getSoPhieu(), "Cập nhật phiếu thưởng/phạt");
                 return true;
             }
         }
+        audit("Thưởng phạt", "SỬA", tp.getSoPhieu(), "Cập nhật phiếu thưởng/phạt");
         return true;
     }
 
@@ -191,6 +195,7 @@ public class ThuongPhatDAO extends BaseDAO {
         ThuongPhat tp = findById(id);
         if (tp != null) {
             tp.setStatus(-1);
+            audit("Thưởng phạt", "XÓA", tp.getSoPhieu(), "Chuyển phiếu thưởng/phạt vào thùng rác");
             return true;
         }
         return false;
@@ -207,6 +212,7 @@ public class ThuongPhatDAO extends BaseDAO {
         ThuongPhat tp = findById(id);
         if (tp != null) {
             tp.setStatus(1);
+            audit("Thưởng phạt", "KHÔI PHỤC", tp.getSoPhieu(), "Khôi phục phiếu thưởng/phạt");
             return true;
         }
         return false;
@@ -224,7 +230,9 @@ public class ThuongPhatDAO extends BaseDAO {
             if (!conn.getAutoCommit()) conn.commit();
         } catch (Exception ignored) {}
 
-        return MEMORY_LIST.removeIf(tp -> id != null && id.equals(tp.getId()));
+        boolean removed = MEMORY_LIST.removeIf(tp -> id != null && id.equals(tp.getId()));
+        if (removed) audit("Thưởng phạt", "XÓA VĨNH VIỄN", id, "Xóa vĩnh viễn phiếu thưởng/phạt");
+        return removed;
     }
 
     public String generateNextSoPhieu() {

@@ -126,7 +126,9 @@ public class QuickNoteDAO extends BaseDAO {
                 ps.setNull(8, Types.BLOB);
             }
 
-            return ps.executeUpdate() > 0;
+            boolean success = ps.executeUpdate() > 0;
+            if (success) audit("Ghi chú", "THÊM", note.getId(), "Thêm ghi chú nhanh");
+            return success;
         } catch (SQLException e) {
             System.err.println("Lỗi thêm ghi chú: " + e.getMessage());
             return false;
@@ -166,7 +168,9 @@ public class QuickNoteDAO extends BaseDAO {
             ps.setTimestamp(4, note.getTimeModified());
             ps.setString(5, note.getId());
 
-            return ps.executeUpdate() > 0;
+            boolean success = ps.executeUpdate() > 0;
+            if (success) audit("Ghi chú", "SỬA", note.getId(), "Cập nhật ghi chú nhanh");
+            return success;
         } catch (SQLException e) {
             System.err.println("Lỗi cập nhật ghi chú: " + e.getMessage());
             return false;
@@ -177,9 +181,11 @@ public class QuickNoteDAO extends BaseDAO {
         if (id == null) return false;
         String sql = "DELETE FROM SQUICKNOTE WHERE ID = ?";
         try (Connection conn = getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+            PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, id);
-            return ps.executeUpdate() > 0;
+            boolean success = ps.executeUpdate() > 0;
+            if (success) audit("Ghi chú", "XÓA", id, "Xóa ghi chú nhanh");
+            return success;
         } catch (SQLException e) {
             System.err.println("Lỗi xóa ghi chú: " + e.getMessage());
             return false;

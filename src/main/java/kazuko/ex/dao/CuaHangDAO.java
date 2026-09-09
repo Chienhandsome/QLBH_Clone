@@ -132,7 +132,9 @@ public class CuaHangDAO extends BaseDAO {
         }
         ch.setStatus(30);
         MEMORY_STORES.add(ch);
-        return tryInsertToDb(ch);
+        boolean success = tryInsertToDb(ch);
+        if (success) audit("Cửa hàng", "THÊM", ch.getName(), "Thêm cửa hàng");
+        return success;
     }
 
     public boolean update(CuaHang ch) {
@@ -149,7 +151,9 @@ public class CuaHangDAO extends BaseDAO {
         if (!memFound) {
             MEMORY_STORES.add(ch);
         }
-        return dbSuccess || memFound;
+        boolean success = dbSuccess || memFound;
+        if (success) audit("Cửa hàng", "SỬA", ch.getName(), "Cập nhật cửa hàng");
+        return success;
     }
 
     public Set<String> getAllDescendantIds(String rootId) {
@@ -234,6 +238,7 @@ public class CuaHangDAO extends BaseDAO {
                 ch.setStatus(-1);
             }
         }
+        audit("Cửa hàng", "XÓA", id, "Chuyển cửa hàng và các chi nhánh con vào thùng rác");
         return true;
     }
 
@@ -254,6 +259,7 @@ public class CuaHangDAO extends BaseDAO {
                 ch.setStatus(1);
             }
         }
+        audit("Cửa hàng", "KHÔI PHỤC", id, "Khôi phục cửa hàng và các mục liên quan");
         return true;
     }
 
@@ -266,6 +272,7 @@ public class CuaHangDAO extends BaseDAO {
 
         // Xóa khỏi bộ nhớ cache
         MEMORY_STORES.removeIf(ch -> idsToDelete.contains(ch.getId()));
+        audit("Cửa hàng", "XÓA VĨNH VIỄN", id, "Xóa vĩnh viễn cửa hàng và các chi nhánh con");
         return true;
     }
 

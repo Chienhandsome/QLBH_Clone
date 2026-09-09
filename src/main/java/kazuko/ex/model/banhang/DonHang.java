@@ -55,6 +55,9 @@ public class DonHang {
     private String maKhach;
     private String diaChiKhach;
     private String dienThoaiKhach;
+    private double khachDua = 0.0;
+    private double traLai = 0.0;
+    private String soPhieuDatHang;
     private Date ngayHuy;
     private String gioHuy;
     private String thuNganHuy;
@@ -250,6 +253,15 @@ public class DonHang {
 
     public String getDienThoaiKhach() { return dienThoaiKhach; }
     public void setDienThoaiKhach(String dienThoaiKhach) { this.dienThoaiKhach = dienThoaiKhach; }
+
+    public double getKhachDua() { return khachDua; }
+    public void setKhachDua(double khachDua) { this.khachDua = khachDua; }
+
+    public double getTraLai() { return traLai; }
+    public void setTraLai(double traLai) { this.traLai = traLai; }
+
+    public String getSoPhieuDatHang() { return soPhieuDatHang; }
+    public void setSoPhieuDatHang(String soPhieuDatHang) { this.soPhieuDatHang = soPhieuDatHang; }
 
     public Date getNgayHuy() { return ngayHuy; }
     public void setNgayHuy(Date ngayHuy) { this.ngayHuy = ngayHuy; }

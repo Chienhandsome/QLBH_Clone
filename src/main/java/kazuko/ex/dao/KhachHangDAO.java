@@ -92,6 +92,7 @@ public class KhachHangDAO extends BaseDAO {
         boolean dbSuccess = tryInsertToDb(kh);
         MEMORY_CUSTOMERS.add(kh);
         TRASH_CUSTOMERS.remove(kh.getId());
+        if (dbSuccess) audit("Khách hàng", "THÊM", kh.getMaKhach(), "Thêm khách hàng: " + kh.getName());
         return dbSuccess;
     }
 
@@ -107,6 +108,7 @@ public class KhachHangDAO extends BaseDAO {
                 break;
             }
         }
+        if (dbSuccess) audit("Khách hàng", "SỬA", kh.getMaKhach(), "Cập nhật khách hàng: " + kh.getName());
         return dbSuccess;
     }
 
@@ -118,6 +120,8 @@ public class KhachHangDAO extends BaseDAO {
             kh.setStatus(-1);
             TRASH_CUSTOMERS.put(id, kh);
         }
+        if (dbSuccess) audit("Khách hàng", "XÓA", kh != null ? kh.getMaKhach() : id,
+                "Chuyển khách hàng vào thùng rác: " + (kh != null ? kh.getName() : id));
         return dbSuccess;
     }
 
@@ -129,14 +133,20 @@ public class KhachHangDAO extends BaseDAO {
             kh.setStatus(30);
             TRASH_CUSTOMERS.remove(id);
         }
+        if (dbSuccess) audit("Khách hàng", "KHÔI PHỤC", kh != null ? kh.getMaKhach() : id,
+                "Khôi phục khách hàng: " + (kh != null ? kh.getName() : id));
         return dbSuccess;
     }
 
     public boolean deletePermanently(String id) {
         if (id == null) return false;
+        KhachHang customer = findById(id);
         boolean dbSuccess = tryDeleteFromDb(id);
         TRASH_CUSTOMERS.remove(id);
         MEMORY_CUSTOMERS.removeIf(k -> id.equals(k.getId()));
+        if (dbSuccess) audit("Khách hàng", "XÓA VĨNH VIỄN",
+                customer != null ? customer.getMaKhach() : id,
+                "Xóa vĩnh viễn khách hàng: " + (customer != null ? customer.getName() : id));
         return dbSuccess;
     }
 
@@ -228,6 +238,18 @@ public class KhachHangDAO extends BaseDAO {
         for (KhachHang kh : getAll()) {
             if (excludeId != null && excludeId.equals(kh.getId())) continue;
             if (kh.getMaKhach() != null && kh.getMaKhach().trim().equalsIgnoreCase(check)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean existsByName(String name, String excludeId) {
+        if (name == null || name.trim().isEmpty()) return false;
+        String normalizedName = name.trim();
+        for (KhachHang customer : getAll()) {
+            if (excludeId != null && excludeId.equals(customer.getId())) continue;
+            if (customer.getName() != null && customer.getName().trim().equalsIgnoreCase(normalizedName)) {
                 return true;
             }
         }

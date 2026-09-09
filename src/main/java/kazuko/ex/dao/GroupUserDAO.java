@@ -81,7 +81,9 @@ public class GroupUserDAO extends BaseDAO {
             ps.setInt(8, group.getStatus() != null ? group.getStatus() : 30);
             ps.setTimestamp(9, now);
             ps.setString(10, currentUserId);
-            return ps.executeUpdate() > 0;
+            boolean success = ps.executeUpdate() > 0;
+            if (success) audit("Nhóm người dùng", "THÊM", group.getName(), "Thêm nhóm người dùng");
+            return success;
         } catch (SQLException e) {
             System.err.println("Lỗi thêm nhóm người dùng: " + e.getMessage());
             return false;
@@ -102,7 +104,9 @@ public class GroupUserDAO extends BaseDAO {
             ps.setTimestamp(5, now);
             ps.setString(6, currentUserId);
             ps.setString(7, group.getId());
-            return ps.executeUpdate() > 0;
+            boolean success = ps.executeUpdate() > 0;
+            if (success) audit("Nhóm người dùng", "SỬA", group.getName(), "Cập nhật nhóm người dùng");
+            return success;
         } catch (SQLException e) {
             System.err.println("Lỗi cập nhật nhóm người dùng: " + e.getMessage());
             return false;
@@ -166,6 +170,7 @@ public class GroupUserDAO extends BaseDAO {
                 }
 
                 conn.commit();
+                audit("Nhóm người dùng", "XÓA", groupId, "Xóa nhóm người dùng và quyền liên quan");
                 return true;
             } catch (Exception ex) {
                 conn.rollback();

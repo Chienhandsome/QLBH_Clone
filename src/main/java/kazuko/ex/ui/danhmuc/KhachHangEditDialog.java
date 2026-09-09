@@ -3,11 +3,13 @@ package kazuko.ex.ui.danhmuc;
 import kazuko.ex.dao.KhachHangDAO;
 import kazuko.ex.dao.NhanVienDAO;
 import kazuko.ex.dao.NhomKhachHangDAO;
+import kazuko.ex.dao.SystemConfigDAO;
 import kazuko.ex.dao.UserDAO;
 import kazuko.ex.model.danhmuc.KhachHang;
 import kazuko.ex.model.danhmuc.NhanVien;
 import kazuko.ex.model.danhmuc.NhomKhachHang;
 import kazuko.ex.model.system.SUser;
+import kazuko.ex.model.system.SystemConfig;
 import kazuko.ex.ui.common.DatePickerField;
 import kazuko.ex.util.IconHelper;
 
@@ -554,6 +556,17 @@ public class KhachHangEditDialog extends JDialog {
         if (khachHangDAO.existsByMaKhach(maKhach, currentKhachHang.getId())) {
             JOptionPane.showMessageDialog(this, "Mã khách '" + maKhach + "' đã tồn tại! Vui lòng chọn mã khác.", "Cảnh báo", JOptionPane.WARNING_MESSAGE);
             txtMaKhach.requestFocus();
+            return;
+        }
+
+        SystemConfig systemConfig = new SystemConfigDAO().loadConfig();
+        if (!systemConfig.isChoPhepTrungTenKhachHang()
+                && khachHangDAO.existsByName(name, currentKhachHang.getId())) {
+            JOptionPane.showMessageDialog(this,
+                    "Tên khách hàng '" + name + "' đã tồn tại!\nHệ thống đang cấu hình không cho phép trùng tên khách hàng.",
+                    "Trùng tên khách hàng", JOptionPane.WARNING_MESSAGE);
+            txtName.requestFocusInWindow();
+            txtName.selectAll();
             return;
         }
 
