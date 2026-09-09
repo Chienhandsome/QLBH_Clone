@@ -246,14 +246,10 @@ public class TangGiamDiemDAO {
                     hd.setId(rs.getString("ID"));
                     hd.setSoHoaDon(rs.getString("NAME"));
                     hd.setNgay(rs.getTimestamp("NGAY"));
-                    double tt = rs.getDouble("THANHTOAN");
-                    if (tt <= 0) tt = rs.getDouble("TONGCONG");
+                    double tt = resolveInvoiceSales(rs.getDouble("THANHTOAN"), rs.getDouble("TONGCONG"));
                     hd.setDoanhSo(tt);
 
-                    double diem = rs.getDouble("DIEM");
-                    if (diem <= 0 && doanhSo1Diem > 0 && tt > 0) {
-                        diem = Math.floor(tt / doanhSo1Diem);
-                    }
+                    double diem = resolveInvoicePoints(rs.getDouble("DIEM"), tt, doanhSo1Diem);
                     hd.setDiemTichLuy(diem);
                     hd.setGhiChu(rs.getString("NOTE"));
                     list.add(hd);
@@ -274,24 +270,25 @@ public class TangGiamDiemDAO {
         Map<String, Integer> orderCountMap = new HashMap<>();
         Map<String, Double> orderPointsMap = new HashMap<>();
 
-        String sqlOrders = "SELECT DKHACHHANGID, COUNT(ID) as SO_HD, SUM(COALESCE(THANHTOAN, TONGCONG, 0)) as TONG_DOANH_SO, SUM(COALESCE(DIEM, 0)) as TONG_DIEM " +
+        // Aggregate invoice-by-invoice so this summary uses exactly the same fallback
+        // rules as the invoice detail table. In this database THANHTOAN and DIEM can
+        // be stored as 0, so COALESCE alone cannot fall back to TONGCONG or calculated
+        // points. Calculating from an already-summed sales value is also incorrect
+        // because each invoice's points are rounded down separately.
+        String sqlOrders = "SELECT DKHACHHANGID, THANHTOAN, TONGCONG, DIEM " +
                            "FROM TDONHANG " +
-                           "WHERE (STATUS IS NULL OR STATUS >= 0) AND DKHACHHANGID IS NOT NULL " +
-                           "GROUP BY DKHACHHANGID";
+                           "WHERE (STATUS IS NULL OR STATUS >= 0) AND DKHACHHANGID IS NOT NULL";
         try (Connection conn = getConnection();
              PreparedStatement ps = conn.prepareStatement(sqlOrders);
              ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 String kId = rs.getString("DKHACHHANGID");
-                int count = rs.getInt("SO_HD");
-                double sales = rs.getDouble("TONG_DOANH_SO");
-                double points = rs.getDouble("TONG_DIEM");
-                if (points <= 0 && doanhSo1Diem > 0 && sales > 0) {
-                    points = Math.floor(sales / doanhSo1Diem);
-                }
-                orderSalesMap.put(kId, sales);
-                orderCountMap.put(kId, count);
-                orderPointsMap.put(kId, points);
+                double sales = resolveInvoiceSales(rs.getDouble("THANHTOAN"), rs.getDouble("TONGCONG"));
+                double points = resolveInvoicePoints(rs.getDouble("DIEM"), sales, doanhSo1Diem);
+
+                orderSalesMap.merge(kId, sales, Double::sum);
+                orderCountMap.merge(kId, 1, Integer::sum);
+                orderPointsMap.merge(kId, points, Double::sum);
             }
         } catch (Exception e) {
             System.err.println("Lỗi getLoyaltySummaryList orders: " + e.getMessage());
@@ -338,6 +335,15 @@ public class TangGiamDiemDAO {
         }
 
         return result;
+    }
+
+    static double resolveInvoiceSales(double thanhToan, double tongCong) {
+        return thanhToan > 0 ? thanhToan : tongCong;
+    }
+
+    static double resolveInvoicePoints(double storedPoints, double sales, double doanhSo1Diem) {
+        if (storedPoints > 0) return storedPoints;
+        return doanhSo1Diem > 0 && sales > 0 ? Math.floor(sales / doanhSo1Diem) : 0;
     }
 
     public boolean resetDiem(String khachHangId, double diemHienTai) {

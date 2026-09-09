@@ -33,6 +33,24 @@ public class TangGiamDiemDAOTest {
     }
 
     @Test
+    public void testInvoiceFallbackMatchesLoyaltyDetailCalculation() {
+        double doanhSo1Diem = 20000.0;
+        double[] tongCong = {1500000.0, 2550000.0, 270000.0};
+        double totalSales = 0;
+        double totalPoints = 0;
+
+        for (double invoiceTotal : tongCong) {
+            double sales = TangGiamDiemDAO.resolveInvoiceSales(0, invoiceTotal);
+            totalSales += sales;
+            totalPoints += TangGiamDiemDAO.resolveInvoicePoints(0, sales, doanhSo1Diem);
+        }
+
+        Assertions.assertEquals(4320000.0, totalSales);
+        Assertions.assertEquals(215.0, totalPoints,
+                "Summary must total the points rounded down on each invoice");
+    }
+
+    @Test
     public void testTangGiamDiemCRUD() {
         // 1. Get or create a test customer
         List<KhachHang> khList = khachHangDAO.getAll();
