@@ -19,8 +19,14 @@ import java.util.*;
 public class BillReportRenderer {
     public static final List<String> SUPPORTED_BINDINGS = List.of(
             "companyName", "companyAddress", "companyPhone",
-            "invoiceNumber", "invoiceDate", "customerName",
-            "subtotal", "discount", "tax", "total", "paid"
+            "invoiceNumber", "invoiceDate", "customerName", "customerAddress", "customerPhone",
+            "cashier", "note", "subtotal", "discountRate", "discount", "taxRate", "tax",
+            "shipping", "returnAmount", "total", "paid", "change", "debt",
+            "cash", "bankTransfer", "card", "voucher"
+    );
+    public static final List<String> SUPPORTED_ITEM_FIELDS = List.of(
+            "itemCode", "itemName", "unit", "quantity", "unitPrice",
+            "discountRate", "discountAmount", "amount", "note"
     );
 
     public JasperPrint render(BillTemplate template, Map<String, Object> parameters,
@@ -42,11 +48,25 @@ public class BillReportRenderer {
         params.put("invoiceNumber", "HD26/000123");
         params.put("invoiceDate", "08/09/2026 11:30");
         params.put("customerName", "Khách lẻ");
+        params.put("customerAddress", "");
+        params.put("customerPhone", "");
+        params.put("cashier", "Thu ngân");
+        params.put("note", "");
         params.put("subtotal", "32.000");
+        params.put("discountRate", "0");
         params.put("discount", "0");
+        params.put("taxRate", "0");
         params.put("tax", "0");
+        params.put("shipping", "0");
+        params.put("returnAmount", "0");
         params.put("total", "32.000");
         params.put("paid", "32.000");
+        params.put("change", "0");
+        params.put("debt", "0");
+        params.put("cash", "32.000");
+        params.put("bankTransfer", "0");
+        params.put("card", "0");
+        params.put("voucher", "0");
         List<BillItemRow> items = List.of(
                 new BillItemRow("Coca Cola", 2, 10_000, 20_000),
                 new BillItemRow("Pepsi", 1, 12_000, 12_000)
@@ -111,10 +131,15 @@ public class BillReportRenderer {
     }
 
     private static void addItemFields(JasperDesign design) throws JRException {
+        addField(design, "itemCode", String.class);
         addField(design, "itemName", String.class);
+        addField(design, "unit", String.class);
         addField(design, "quantity", Double.class);
         addField(design, "unitPrice", Double.class);
+        addField(design, "discountRate", Double.class);
+        addField(design, "discountAmount", Double.class);
         addField(design, "amount", Double.class);
+        addField(design, "note", String.class);
     }
 
     private static void addField(JasperDesign design, String name, Class<?> type) throws JRException {

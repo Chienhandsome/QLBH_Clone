@@ -7,3 +7,21 @@ html, body {
 button, input {
   font-family: "Segoe UI", Arial, sans-serif;
 }
+
+/* JasperReports 6 adapter chỉ hỗ trợ tám loại component đầu tiên. */
+lib-jasper-palette li:nth-child(n + 9) {
+  display: none !important;
+}
+
+/* Dictionary của bill là contract runtime: cho kéo-thả nhưng không cho đổi schema. */
+lib-jasper-datasource h3 button,
+lib-jasper-datasource .ds-del {
+  display: none !important;
+}
+
+lib-jasper-datasource input,
+lib-jasper-datasource select {
+  pointer-events: none;
+  background: #f1f5f9 !important;
+  color: #475569;
+}

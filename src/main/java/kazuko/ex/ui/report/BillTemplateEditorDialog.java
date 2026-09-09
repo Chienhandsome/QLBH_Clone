@@ -1,6 +1,7 @@
 package kazuko.ex.ui.report;
 
 import kazuko.ex.dao.BillTemplateDAO;
+import kazuko.ex.model.banhang.DonHang;
 import kazuko.ex.model.bill.BillTemplate;
 import kazuko.ex.model.bill.BillTemplateDefinition;
 import kazuko.ex.model.bill.BillTemplateDefinition.Block;
@@ -25,6 +26,7 @@ public class BillTemplateEditorDialog extends JDialog {
     private final BillTemplateDAO dao;
     private final BillTemplate workingTemplate;
     private final BillReportRenderer renderer = new BillReportRenderer();
+    private final DonHang previewOrder;
 
     private final DefaultListModel<Block> blockModel = new DefaultListModel<>();
     private final JList<Block> blockList = new JList<>(blockModel);
@@ -46,8 +48,13 @@ public class BillTemplateEditorDialog extends JDialog {
     private int previewGeneration;
 
     public BillTemplateEditorDialog(Window owner, BillTemplate template, BillTemplateDAO dao) {
+        this(owner, template, dao, null);
+    }
+
+    public BillTemplateEditorDialog(Window owner, BillTemplate template, BillTemplateDAO dao, DonHang previewOrder) {
         super(owner, "THIẾT KẾ MẪU BILL - " + template.getName(), ModalityType.APPLICATION_MODAL);
         this.dao = dao;
+        this.previewOrder = previewOrder;
         this.workingTemplate = copyTemplate(template);
         initializeUi();
         loadTemplate();
@@ -55,7 +62,11 @@ public class BillTemplateEditorDialog extends JDialog {
     }
 
     public static void open(Window owner, BillTemplate template, BillTemplateDAO dao) {
-        BillTemplateEditorDialog dialog = new BillTemplateEditorDialog(owner, template, dao);
+        open(owner, template, dao, null);
+    }
+
+    public static void open(Window owner, BillTemplate template, BillTemplateDAO dao, DonHang previewOrder) {
+        BillTemplateEditorDialog dialog = new BillTemplateEditorDialog(owner, template, dao, previewOrder);
         dialog.setVisible(true);
     }
 
@@ -95,8 +106,8 @@ public class BillTemplateEditorDialog extends JDialog {
             refreshPreview();
         });
         panel.add(btnRefresh);
-        JButton btnCanvas = new JButton("Thử canvas JRXML");
-        btnCanvas.setToolTipText("Mở ngx-jrxml-editor trong trình duyệt mặc định (PoC)");
+        JButton btnCanvas = new JButton("Mở canvas JRXML");
+        btnCanvas.setToolTipText("Mở trình thiết kế kéo-thả trong trình duyệt mặc định");
         btnCanvas.addActionListener(e -> openJrxmlCanvas());
         panel.add(btnCanvas);
         return panel;
@@ -106,11 +117,11 @@ public class BillTemplateEditorDialog extends JDialog {
         applyCurrentProperties();
         applyTemplateProperties();
         try {
-            JrxmlEditorServer.open(workingTemplate);
+            JrxmlEditorServer.open(workingTemplate, previewOrder);
             JOptionPane.showMessageDialog(this,
                     "Canvas JRXML đã mở trong trình duyệt.\n" +
                             "Bấm 'Lưu và kiểm tra' tại đó để JasperReports compile rồi lưu vào Firebird.",
-                    "JRXML Canvas (PoC)", JOptionPane.INFORMATION_MESSAGE);
+                    "JRXML Canvas", JOptionPane.INFORMATION_MESSAGE);
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this, "Không thể mở canvas JRXML:\n" + rootMessage(ex),
                     "Lỗi", JOptionPane.ERROR_MESSAGE);

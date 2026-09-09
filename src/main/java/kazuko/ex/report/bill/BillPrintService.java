@@ -9,7 +9,6 @@ import kazuko.ex.model.banhang.DonHangChiTiet;
 import kazuko.ex.model.bill.BillTemplate;
 import kazuko.ex.model.system.STemplate;
 import kazuko.ex.model.system.SystemConfig;
-import kazuko.ex.ui.report.BillTemplateEditorDialog;
 import kazuko.ex.util.CurrencyUtil;
 import net.sf.jasperreports.engine.*;
 import net.sf.jasperreports.engine.export.JRPrintServiceExporter;
@@ -87,25 +86,34 @@ public class BillPrintService {
     }
 
     public void design(Window owner, String templateName) throws Exception {
+        design(owner, templateName, null);
+    }
+
+    public void design(Window owner, String templateName, DonHang previewOrder) throws Exception {
         STemplate legacy = legacyTemplateDAO.findByName(templateName);
         if (legacy == null) throw new IllegalArgumentException("Không tìm thấy mẫu '" + templateName + "' trong STEMPLATE");
         BillTemplate template = billTemplateDAO.findOrCreateDraft(legacy.getId(), legacy.getName());
-        BillTemplateEditorDialog.open(owner, template, billTemplateDAO);
+        JrxmlEditorServer.open(template, previewOrder);
     }
 
     public JasperPrint createPrint(DonHang order, String templateName) throws Exception {
         BillTemplate template = loadTemplate(templateName);
         String jrxml = template.getLegacyTemplateId() == null ? null
-                : jrxmlTemplateDAO.findByLegacyTemplateId(template.getLegacyTemplateId());
+                : jrxmlTemplateDAO.findPublishedByLegacyTemplateId(template.getLegacyTemplateId());
         if (jrxml == null || jrxml.isBlank()) {
             return renderer.render(template, buildParameters(order), buildItems(order));
         }
+        return createPrintFromJrxml(order, jrxml);
+    }
+
+    public JasperPrint createPrintFromJrxml(DonHang order, String jrxml) throws Exception {
         JasperReport report = JasperCompileManager.compileReport(
                 new ByteArrayInputStream(jrxml.getBytes(StandardCharsets.UTF_8)));
-        Map<String, Object> parameters = buildParameters(order);
+        DonHang effectiveOrder = order != null ? order : createSampleOrder();
+        Map<String, Object> parameters = buildParameters(effectiveOrder);
         for (String binding : BillReportRenderer.SUPPORTED_BINDINGS) parameters.putIfAbsent(binding, "");
         return JasperFillManager.fillReport(report, parameters,
-                new JRBeanCollectionDataSource(buildItems(order)));
+                new JRBeanCollectionDataSource(buildItems(effectiveOrder)));
     }
 
     private BillTemplate loadTemplate(String templateName) throws Exception {
@@ -127,11 +135,25 @@ public class BillPrintService {
         params.put("invoiceDate", safe.getNgay() != null
                 ? new SimpleDateFormat("dd/MM/yyyy HH:mm").format(safe.getNgay()) : "");
         params.put("customerName", value(safe.getTenKhach(), "Khách lẻ"));
+        params.put("customerAddress", value(safe.getDiaChiKhach(), value(safe.getDiaChiGiaoHang(), "")));
+        params.put("customerPhone", value(safe.getDienThoaiKhach(), ""));
+        params.put("cashier", value(safe.getNguoiThanhToan(), value(safe.getTenNhanVien(), "")));
+        params.put("note", value(safe.getGhiChu(), ""));
         params.put("subtotal", CurrencyUtil.format(safe.getTienHang()));
+        params.put("discountRate", formatNumber(safe.getTiLeGiamGia()));
         params.put("discount", CurrencyUtil.format(safe.getTienGiamGia()));
+        params.put("taxRate", formatNumber(safe.getTiLeThue()));
         params.put("tax", CurrencyUtil.format(safe.getTienThue()));
+        params.put("shipping", CurrencyUtil.format(safe.getPhiVanChuyen()));
+        params.put("returnAmount", CurrencyUtil.format(safe.getTienDoiTra()));
         params.put("total", CurrencyUtil.format(safe.getTongCong()));
         params.put("paid", CurrencyUtil.format(safe.getTienThanhToan()));
+        params.put("change", CurrencyUtil.format(Math.max(0, safe.getTienThanhToan() - safe.getTongCong())));
+        params.put("debt", CurrencyUtil.format(Math.max(0, safe.getTongCong() - safe.getTienThanhToan())));
+        params.put("cash", CurrencyUtil.format(safe.getTienMat()));
+        params.put("bankTransfer", CurrencyUtil.format(safe.getTienChuyenKhoan()));
+        params.put("card", CurrencyUtil.format(safe.getTienTheATM()));
+        params.put("voucher", CurrencyUtil.format(safe.getTienVoucher()));
         return params;
     }
 
@@ -139,14 +161,47 @@ public class BillPrintService {
         List<BillItemRow> rows = new ArrayList<>();
         if (order == null || order.getChiTietLayHang() == null) return rows;
         for (DonHangChiTiet item : order.getChiTietLayHang()) {
-            rows.add(new BillItemRow(value(item.getTenHang(), value(item.getMaHang(), "Mặt hàng")),
-                    item.getSoLuong(), item.getDonGia(), item.getThanhTien()));
+            rows.add(new BillItemRow(item.getMaHang(),
+                    value(item.getTenHang(), value(item.getMaHang(), "Mặt hàng")),
+                    item.getTenDonViTinh(), item.getSoLuong(), item.getDonGia(),
+                    item.getTiLeGiamGia(), item.getTienGiam(), item.getThanhTien(), item.getGhiChu()));
         }
         return rows;
     }
 
+    private static DonHang createSampleOrder() {
+        DonHang order = new DonHang();
+        order.setName("HD26/000123");
+        order.setNgay(new java.util.Date());
+        order.setTenKhach("Khách lẻ");
+        order.setNguoiThanhToan("Thu ngân");
+        order.setTienHang(32_000);
+        order.setTongCong(32_000);
+        order.setTienThanhToan(32_000);
+        order.setTienMat(32_000);
+        DonHangChiTiet cola = new DonHangChiTiet();
+        cola.setMaHang("COCA");
+        cola.setTenHang("Coca Cola");
+        cola.setTenDonViTinh("Lon");
+        cola.setSoLuong(2);
+        cola.setDonGia(10_000);
+        DonHangChiTiet pepsi = new DonHangChiTiet();
+        pepsi.setMaHang("PEPSI");
+        pepsi.setTenHang("Pepsi");
+        pepsi.setTenDonViTinh("Lon");
+        pepsi.setSoLuong(1);
+        pepsi.setDonGia(12_000);
+        order.setChiTietLayHang(List.of(cola, pepsi));
+        return order;
+    }
+
     private static String value(String value, String fallback) {
         return value == null || value.isBlank() ? fallback : value;
+    }
+
+    private static String formatNumber(double value) {
+        if (value == Math.rint(value)) return Long.toString(Math.round(value));
+        return Double.toString(value);
     }
 
     private static String safeFileName(String value) {

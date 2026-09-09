@@ -256,7 +256,7 @@ public class ChonMauInDialog extends JDialog {
                 case PREVIEW_SCREEN -> billPrintService.preview(owner, donHang, selectedTemplateName);
                 case PRINT_PRINTER -> billPrintService.print(donHang, selectedTemplateName, selectedPrinterName);
                 case EXPORT_PDF -> billPrintService.exportPdf(owner, donHang, selectedTemplateName);
-                case DESIGN_TEMPLATE -> billPrintService.design(owner, selectedTemplateName);
+                case DESIGN_TEMPLATE -> billPrintService.design(owner, selectedTemplateName, donHang);
                 case EXPORT_EXCEL -> JOptionPane.showMessageDialog(owner,
                         "Mẫu bill Java hiện hỗ trợ Preview, In và PDF. Xuất Excel sẽ được bổ sung sau.",
                         "Chưa hỗ trợ", JOptionPane.INFORMATION_MESSAGE);

@@ -6,7 +6,7 @@ import kazuko.ex.dao.BillTemplateDAO;
 import kazuko.ex.model.bill.BillTemplate;
 import kazuko.ex.model.system.STemplate;
 import kazuko.ex.model.system.SystemConfig;
-import kazuko.ex.ui.report.BillTemplateEditorDialog;
+import kazuko.ex.report.bill.JrxmlEditorServer;
 import kazuko.ex.util.IconHelper;
 
 import javax.print.PrintService;
@@ -728,7 +728,11 @@ public class CauHinhToanHeThongDialog extends JDialog {
         setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
         try {
             BillTemplate javaTemplate = billTemplateDAO.findOrCreateDraft(selected.getId(), selected.getName());
-            BillTemplateEditorDialog.open(this, javaTemplate, billTemplateDAO);
+            JrxmlEditorServer.open(javaTemplate);
+            JOptionPane.showMessageDialog(this,
+                    "Trình thiết kế đã mở trong trình duyệt mặc định.\n" +
+                            "Lưu nháp không ảnh hưởng mẫu đang in; chọn Xuất bản khi muốn áp dụng.",
+                    "Thiết kế mẫu bill", JOptionPane.INFORMATION_MESSAGE);
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this,
                     "Không thể mở trình thiết kế bill Java:\n" + ex.getMessage(),

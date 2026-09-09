@@ -20,6 +20,9 @@ class JrxmlEditorCompatibilityTest {
         String jrxml = JrxmlEditorServer.createInitialJrxml(template);
 
         assertTrue(jrxml.contains("<jasperReport"));
+        jrxml = JrxmlEditorServer.ensureDataDictionary(jrxml);
+        assertTrue(jrxml.contains("name=\"customerPhone\""));
+        assertTrue(jrxml.contains("name=\"discountAmount\""));
         JasperDesign design = JRXmlLoader.load(
                 new ByteArrayInputStream(jrxml.getBytes(StandardCharsets.UTF_8)));
         assertNotNull(JasperCompileManager.compileReport(design));
