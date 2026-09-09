@@ -107,8 +107,11 @@ public class BillPrintService {
     }
 
     public JasperPrint createPrintFromJrxml(DonHang order, String jrxml) throws Exception {
+        // Chuẩn hóa cả mẫu đã xuất bản từ các phiên bản editor cũ. Nếu text chứa
+        // xuống dòng định dạng XML ở đầu, Jasper sẽ in dòng trắng và cắt mất title.
+        String normalizedJrxml = Jrxml7To6Converter.convert(jrxml);
         JasperReport report = JasperCompileManager.compileReport(
-                new ByteArrayInputStream(jrxml.getBytes(StandardCharsets.UTF_8)));
+                new ByteArrayInputStream(normalizedJrxml.getBytes(StandardCharsets.UTF_8)));
         DonHang effectiveOrder = order != null ? order : createSampleOrder();
         Map<String, Object> parameters = buildParameters(effectiveOrder);
         for (String binding : BillReportRenderer.SUPPORTED_BINDINGS) parameters.putIfAbsent(binding, "");

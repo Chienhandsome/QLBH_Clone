@@ -44,7 +44,28 @@ public final class Jrxml7To6Converter {
             Element compact = compactElements.get(i);
             compact.getParentNode().replaceChild(convertElement(document, compact), compact);
         }
+        normalizeContentElements(document);
         return write(document);
+    }
+
+    /**
+     * Editor có thể đặt xuống dòng và khoảng trắng định dạng XML ở ngoài CDATA.
+     * Jasper xem chúng là một phần nội dung; với text cao một dòng, dòng trắng
+     * đầu tiên sẽ chiếm hết vùng in và làm phần chữ thực tế bị cắt mất.
+     */
+    private static void normalizeContentElements(Document document) {
+        for (String name : List.of("text", "textFieldExpression", "imageExpression")) {
+            NodeList nodes = document.getElementsByTagNameNS("*", name);
+            for (int i = 0; i < nodes.getLength(); i++) {
+                Element element = (Element) nodes.item(i);
+                String content = element.getTextContent();
+                if (content == null) continue;
+                String normalized = content.strip();
+                if (content.equals(normalized)) continue;
+                while (element.hasChildNodes()) element.removeChild(element.getFirstChild());
+                element.appendChild(document.createCDATASection(normalized));
+            }
+        }
     }
 
     private static Document parseSecurely(String source) throws Exception {

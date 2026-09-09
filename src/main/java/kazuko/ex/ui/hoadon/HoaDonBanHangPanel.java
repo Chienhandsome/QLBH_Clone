@@ -47,7 +47,6 @@ public class HoaDonBanHangPanel extends JPanel {
     private SystemConfig systemConfig;
     private DonHang currentHoaDon;
     private String currentLoaiGiaName = "Giá bán";
-    private int currentLoaiGiaIndex = 0;
 
     // Top barcode & quick add bar
     private JTextField txtBarcode;
@@ -66,7 +65,6 @@ public class HoaDonBanHangPanel extends JPanel {
     // Master Info Controls
     private DatePickerField dpkNgay;
     private JTextField txtSoHD;
-    private JButton btnLoaiGia;
     private JComboBox<KhachHang> cbKhachHang;
     private JComboBox<KhoHang> cbKhoXuat;
     private JComboBox<NhanVien> cbNhanVien;
@@ -346,7 +344,7 @@ public class HoaDonBanHangPanel extends JPanel {
         btnNext.addActionListener(e -> onNavigateInvoice(1));
         panel.add(btnNext);
 
-        // Row 1: Ngày, Số HĐ, Loại giá (F7)
+        // Row 1: Ngày, Số HĐ
         JLabel lblNgay = new JLabel("Ngày");
         lblNgay.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         lblNgay.setBounds(10, 8, 50, 22);
@@ -366,18 +364,6 @@ public class HoaDonBanHangPanel extends JPanel {
         txtSoHD.setBackground(new Color(255, 254, 200));
         txtSoHD.setBounds(230, 8, 110, 24);
         panel.add(txtSoHD);
-
-        btnLoaiGia = new JButton("Giá bán");
-        btnLoaiGia.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        btnLoaiGia.setBackground(Color.WHITE);
-        btnLoaiGia.setBounds(860, 8, 120, 24);
-        btnLoaiGia.addActionListener(e -> onOpenChonLoaiGia());
-        panel.add(btnLoaiGia);
-
-        JLabel lblLoaiGia = new JLabel("Loại giá (F7):");
-        lblLoaiGia.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        lblLoaiGia.setBounds(775, 8, 80, 22);
-        panel.add(lblLoaiGia);
 
         // Row 2: K. hàng (F6)
         JLabel lblKhach = new JLabel("K. hàng (F6)");
@@ -769,9 +755,6 @@ public class HoaDonBanHangPanel extends JPanel {
         KeyStroke f6 = KeyStroke.getKeyStroke(KeyEvent.VK_F6, 0);
         registerKeyboardAction(e -> cbKhachHang.requestFocusInWindow(), f6, JComponent.WHEN_IN_FOCUSED_WINDOW);
 
-        KeyStroke f7 = KeyStroke.getKeyStroke(KeyEvent.VK_F7, 0);
-        registerKeyboardAction(e -> onOpenChonLoaiGia(), f7, JComponent.WHEN_IN_FOCUSED_WINDOW);
-
         KeyStroke f9 = KeyStroke.getKeyStroke(KeyEvent.VK_F9, 0);
         registerKeyboardAction(e -> onLuuTam(), f9, JComponent.WHEN_IN_FOCUSED_WINDOW);
 
@@ -981,7 +964,7 @@ public class HoaDonBanHangPanel extends JPanel {
                         row[i + 1] = m.getTenDonViTinhChan() != null ? m.getTenDonViTinhChan() : "";
                         break;
                     case "Giá bán":
-                        row[i + 1] = CurrencyUtil.format(getPriceForMatHang(m));
+                        row[i + 1] = CurrencyUtil.format(m.getGiaBan());
                         break;
                     case "Bảo hành":
                         row[i + 1] = m.getBaoHanh() != null ? m.getBaoHanh() : "";
@@ -1020,8 +1003,12 @@ public class HoaDonBanHangPanel extends JPanel {
     }
 
     private double getPriceForMatHang(MatHang m) {
+        return getPriceForMatHang(m, 0);
+    }
+
+    private double getPriceForMatHang(MatHang m, int priceIndex) {
         if (m == null) return 0.0;
-        switch (currentLoaiGiaIndex) {
+        switch (priceIndex) {
             case 1: return m.getGiaBan2() > 0 ? m.getGiaBan2() : m.getGiaBan();
             case 2: return m.getGiaBan3() > 0 ? m.getGiaBan3() : m.getGiaBan();
             case 3: return m.getGiaBan4() > 0 ? m.getGiaBan4() : m.getGiaBan();
@@ -1080,7 +1067,15 @@ public class HoaDonBanHangPanel extends JPanel {
     }
 
     private void openNhapSoLuongForProduct(MatHang m) {
-        double price = getPriceForMatHang(m);
+        Window parentWin = SwingUtilities.getWindowAncestor(this);
+        ChonLoaiGiaDialog priceDlg = new ChonLoaiGiaDialog(parentWin, systemConfig,
+                m.getGiaBan(), m.getGiaBan2(), m.getGiaBan3(), m.getGiaBan4());
+        priceDlg.setVisible(true);
+
+        int selectedPriceIndex = priceDlg.getSelectedPriceIndex();
+        if (selectedPriceIndex < 0) return;
+
+        double price = getPriceForMatHang(m, selectedPriceIndex);
         double defaultQty = 1.0;
         try {
             defaultQty = Double.parseDouble(txtSoLuongBarcode.getText().trim().replace(",", "."));
@@ -1091,12 +1086,17 @@ public class HoaDonBanHangPanel extends JPanel {
             discount = m.getGiamGiaPt();
         }
 
-        Window parentWin = SwingUtilities.getWindowAncestor(this);
         NhapSoLuongDialog dlg = new NhapSoLuongDialog(parentWin, m, price, m.getTenDonViTinh(),
                 defaultQty, discount, isDiscountInputAllowed());
         dlg.setVisible(true);
 
         if (dlg.isConfirmed()) {
+            currentLoaiGiaName = priceDlg.getSelectedPriceName();
+
+            if (priceDlg.isApplyToAll()) {
+                applyPriceToAllInvoiceItems(selectedPriceIndex);
+            }
+
             double finalQty = dlg.getResultSoLuong();
             double finalDiscount = dlg.getResultChietKhau();
 
@@ -1130,6 +1130,16 @@ public class HoaDonBanHangPanel extends JPanel {
 
             refreshLayHangTable();
             recalculateFinancials();
+        }
+    }
+
+    private void applyPriceToAllInvoiceItems(int priceIndex) {
+        for (DonHangChiTiet ct : currentLayHangList) {
+            MatHang mh = matHangDAO.findById(ct.getMatHangId());
+            if (mh != null) {
+                ct.setDonGia(getPriceForMatHang(mh, priceIndex));
+                ct.tinhThanhTien();
+            }
         }
     }
 
@@ -1454,42 +1464,6 @@ public class HoaDonBanHangPanel extends JPanel {
             txtTongCong.setText(CurrencyUtil.format(tongCong));
         } finally {
             isUpdatingFinancials = false;
-        }
-    }
-
-    private void onOpenChonLoaiGia() {
-        Window parentWin = SwingUtilities.getWindowAncestor(this);
-        MatHang selectedItem = null;
-        int row = tableCatalog.getSelectedRow();
-        if (row >= 0 && row < filteredCatalogList.size()) {
-            selectedItem = filteredCatalogList.get(row);
-        }
-
-        boolean hasGia1 = true;
-        boolean hasGia2 = selectedItem == null || selectedItem.getGiaBan2() > 0;
-        boolean hasGia3 = selectedItem == null || selectedItem.getGiaBan3() > 0;
-        boolean hasGia4 = selectedItem == null || selectedItem.getGiaBan4() > 0;
-
-        ChonLoaiGiaDialog dlg = new ChonLoaiGiaDialog(parentWin, systemConfig, hasGia1, hasGia2, hasGia3, hasGia4);
-        dlg.setVisible(true);
-
-        if (dlg.getSelectedPriceIndex() >= 0) {
-            currentLoaiGiaIndex = dlg.getSelectedPriceIndex();
-            currentLoaiGiaName = dlg.getSelectedPriceName();
-            btnLoaiGia.setText(currentLoaiGiaName);
-            refreshCatalogTable();
-
-            if (dlg.isApplyToAll()) {
-                for (DonHangChiTiet ct : currentLayHangList) {
-                    MatHang mh = matHangDAO.findById(ct.getMatHangId());
-                    if (mh != null) {
-                        ct.setDonGia(getPriceForMatHang(mh));
-                        ct.tinhThanhTien();
-                    }
-                }
-                refreshLayHangTable();
-                recalculateFinancials();
-            }
         }
     }
 

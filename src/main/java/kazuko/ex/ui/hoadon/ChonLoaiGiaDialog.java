@@ -8,27 +8,30 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 import java.awt.*;
 import java.awt.event.KeyEvent;
+import java.text.DecimalFormat;
 
 public class ChonLoaiGiaDialog extends JDialog {
 
     private final SystemConfig config;
-    private final boolean hasGia1;
-    private final boolean hasGia2;
-    private final boolean hasGia3;
-    private final boolean hasGia4;
+    private final double gia1;
+    private final double gia2;
+    private final double gia3;
+    private final double gia4;
+
+    private static final DecimalFormat PRICE_FORMAT = new DecimalFormat("#,##0.00");
 
     private int selectedPriceIndex = -1; // 0: Giá 1, 1: Giá 2, 2: Giá 3, 3: Giá 4
     private String selectedPriceName = null;
     private boolean applyToAll = false;
     private JCheckBox chkApplyToAll;
 
-    public ChonLoaiGiaDialog(Window parent, SystemConfig config, boolean hasGia1, boolean hasGia2, boolean hasGia3, boolean hasGia4) {
+    public ChonLoaiGiaDialog(Window parent, SystemConfig config, double gia1, double gia2, double gia3, double gia4) {
         super(parent, "Chọn loại giá bán", ModalityType.APPLICATION_MODAL);
         this.config = config;
-        this.hasGia1 = hasGia1;
-        this.hasGia2 = hasGia2;
-        this.hasGia3 = hasGia3;
-        this.hasGia4 = hasGia4;
+        this.gia1 = gia1;
+        this.gia2 = gia2;
+        this.gia3 = gia3;
+        this.gia4 = gia4;
 
         initComponents();
     }
@@ -49,14 +52,14 @@ public class ChonLoaiGiaDialog extends JDialog {
         String nameGia3 = (config != null && config.getDienGiaiGia3() != null && !config.getDienGiaiGia3().trim().isEmpty()) ? config.getDienGiaiGia3().trim() : "Giá bán 3";
         String nameGia4 = (config != null && config.getDienGiaiGia4() != null && !config.getDienGiaiGia4().trim().isEmpty()) ? config.getDienGiaiGia4().trim() : "Giá bán 4";
 
-        boolean enableGia2 = (config == null || config.isSuDungGia2()) && hasGia2;
-        boolean enableGia3 = (config == null || config.isSuDungGia3()) && hasGia3;
-        boolean enableGia4 = (config == null || config.isSuDungGia4()) && hasGia4;
+        boolean enableGia2 = (config == null || config.isSuDungGia2()) && gia2 > 0;
+        boolean enableGia3 = (config == null || config.isSuDungGia3()) && gia3 > 0;
+        boolean enableGia4 = (config == null || config.isSuDungGia4()) && gia4 > 0;
 
-        JButton btnGia1 = createPriceButton(nameGia1, true, 0);
-        JButton btnGia2 = createPriceButton(nameGia2, enableGia2, 1);
-        JButton btnGia3 = createPriceButton(nameGia3, enableGia3, 2);
-        JButton btnGia4 = createPriceButton(nameGia4, enableGia4, 3);
+        JButton btnGia1 = createPriceButton(nameGia1, gia1, true, 0);
+        JButton btnGia2 = createPriceButton(nameGia2, gia2, enableGia2, 1);
+        JButton btnGia3 = createPriceButton(nameGia3, gia3, enableGia3, 2);
+        JButton btnGia4 = createPriceButton(nameGia4, gia4, enableGia4, 3);
         JButton btnHuy = createCancelButton("Hủy bỏ");
 
         pnlMain.add(btnGia1);
@@ -91,8 +94,8 @@ public class ChonLoaiGiaDialog extends JDialog {
         getRootPane().registerKeyboardAction(e -> dispose(), escapeKey, JComponent.WHEN_IN_FOCUSED_WINDOW);
     }
 
-    private JButton createPriceButton(String text, boolean enabled, int priceIndex) {
-        JButton btn = new JButton(text);
+    private JButton createPriceButton(String name, double price, boolean enabled, int priceIndex) {
+        JButton btn = new JButton(name + ": " + PRICE_FORMAT.format(price));
         btn.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         btn.setMaximumSize(new Dimension(310, 30));
         btn.setPreferredSize(new Dimension(310, 30));
@@ -103,7 +106,7 @@ public class ChonLoaiGiaDialog extends JDialog {
         if (enabled) {
             btn.addActionListener(e -> {
                 selectedPriceIndex = priceIndex;
-                selectedPriceName = text;
+                selectedPriceName = name;
                 applyToAll = chkApplyToAll.isSelected();
                 dispose();
             });
