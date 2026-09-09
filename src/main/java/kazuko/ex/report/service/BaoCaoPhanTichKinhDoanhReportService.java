@@ -7,6 +7,7 @@ import kazuko.ex.dao.SystemConfigDAO;
 import kazuko.ex.model.banhang.DonHang;
 import kazuko.ex.model.banhang.DonHangChiTiet;
 import kazuko.ex.model.danhmuc.MatHang;
+import kazuko.ex.model.danhmuc.NhomMatHang;
 import kazuko.ex.model.system.SystemConfig;
 import kazuko.ex.report.model.*;
 import net.sf.jasperreports.engine.*;
@@ -117,13 +118,31 @@ public class BaoCaoPhanTichKinhDoanhReportService {
         return map;
     }
 
+    private Map<String, String> getNhomHangMap() {
+        Map<String, String> map = new HashMap<>();
+        try {
+            List<NhomMatHang> list = nhomMatHangDAO.getAll();
+            if (list != null) {
+                for (NhomMatHang n : list) {
+                    if (n.getId() != null) map.put(n.getId(), n.getName());
+                }
+            }
+        } catch (Exception ignored) {}
+        return map;
+    }
+
     // =========================================================================
     // 1. BÁO CÁO KẾT QUẢ KINH DOANH
     // =========================================================================
     public List<BaoCaoKetQuaKinhDoanhReportRow> fetchKetQuaKinhDoanh(Date tuNgay, Date denNgay, String cuaHangId) {
         List<BaoCaoKetQuaKinhDoanhReportRow> rows = new ArrayList<>();
-        List<DonHang> donHangs = hoaDonDAO.getDanhSachHoaDon(tuNgay, denNgay, null, null);
+        String effectiveStoreId = (cuaHangId != null && !cuaHangId.trim().isEmpty() && !"ALL".equalsIgnoreCase(cuaHangId)) ? cuaHangId.trim() : null;
+        List<DonHang> donHangs = hoaDonDAO.getDanhSachHoaDon(tuNgay, denNgay, effectiveStoreId, null);
         Map<String, MatHang> matHangMap = getMatHangMap();
+        Map<String, String> nhomHangMap = getNhomHangMap();
+
+        Map<String, Double> nhomDoanhThu = new LinkedHashMap<>();
+        Map<String, Double> nhomGiaVon = new LinkedHashMap<>();
 
         double doanhThuBanHang = 0;
         double giamGia = 0;
@@ -139,43 +158,71 @@ public class BaoCaoPhanTichKinhDoanhReportService {
                     for (DonHangChiTiet ct : dh.getChiTietLayHang()) {
                         MatHang mh = matHangMap.get(ct.getMatHangId());
                         if (mh == null && ct.getMaHang() != null) mh = matHangMap.get(ct.getMaHang());
-                        double giaVon = (mh != null && mh.getGiaVon() > 0) ? mh.getGiaVon() : (mh != null ? mh.getGiaNhap() : 0.0);
-                        giaVonBanHang += ct.getSoLuong() * giaVon;
+
+                        String nId = mh != null ? mh.getNhomMatHangId() : null;
+                        String tenNhom = mh != null && mh.getTenNhom() != null && !mh.getTenNhom().isEmpty()
+                                ? mh.getTenNhom() : (nId != null ? nhomHangMap.get(nId) : "Kiềm");
+                        if (tenNhom == null || tenNhom.isEmpty()) tenNhom = "Kiềm";
+
+                        double sl = ct.getSoLuong() > 0 ? ct.getSoLuong() : 1.0;
+                        double tt = ct.getThanhTien() > 0 ? ct.getThanhTien() : (sl * ct.getDonGia());
+                        double gv = (mh != null && mh.getGiaVon() > 0) ? mh.getGiaVon() : (mh != null ? mh.getGiaNhap() : 0.0);
+                        double cost = sl * gv;
+
+                        nhomDoanhThu.put(tenNhom, nhomDoanhThu.getOrDefault(tenNhom, 0.0) + tt);
+                        nhomGiaVon.put(tenNhom, nhomGiaVon.getOrDefault(tenNhom, 0.0) + cost);
+                        giaVonBanHang += cost;
                     }
                 }
             }
         }
 
-        double doanhThuThuan = doanhThuBanHang - giamGia;
-        double loiNhuanGop = doanhThuThuan - giaVonBanHang;
-        double chiPhiDinhPhi = doanhThuThuan * 0.08;
-        double chiPhiBienPhi = doanhThuThuan * 0.05;
-        double chiPhiKhac = doanhThuThuan * 0.02;
-        double tongChiPhi = chiPhiDinhPhi + chiPhiBienPhi + chiPhiKhac;
-        double loiNhuanRong = loiNhuanGop - tongChiPhi;
-
         // I. DOANH THU
-        rows.add(new BaoCaoKetQuaKinhDoanhReportRow("I", "DOANH THU", 100.0, doanhThuBanHang, 100.0, null, 0.0, doanhThuBanHang * 0.95, true, false, 0));
-        rows.add(new BaoCaoKetQuaKinhDoanhReportRow("1", "Doanh thu bán hàng và cung cấp dịch vụ", 100.0, doanhThuBanHang, 100.0, null, 0.0, doanhThuBanHang * 0.95, false, false, 1));
-        rows.add(new BaoCaoKetQuaKinhDoanhReportRow("2", "Các khoản giảm trừ doanh thu (Chiết khấu, giảm giá)", doanhThuBanHang > 0 ? (giamGia / doanhThuBanHang * 100.0) : 0.0, giamGia, doanhThuBanHang > 0 ? (giamGia / doanhThuBanHang * 100.0) : 0.0, null, 0.0, giamGia * 0.9, false, false, 1));
-        rows.add(new BaoCaoKetQuaKinhDoanhReportRow("3", "Doanh thu thuần về bán hàng và CCDV", 100.0, doanhThuThuan, 100.0, null, 0.0, doanhThuThuan * 0.95, true, false, 1));
-        rows.add(new BaoCaoKetQuaKinhDoanhReportRow("4", "Giá vốn hàng bán", doanhThuThuan > 0 ? (giaVonBanHang / doanhThuThuan * 100.0) : 0.0, giaVonBanHang, doanhThuThuan > 0 ? (giaVonBanHang / doanhThuThuan * 100.0) : 0.0, null, 0.0, giaVonBanHang * 0.95, false, false, 1));
-        rows.add(new BaoCaoKetQuaKinhDoanhReportRow("5", "LỢI NHUẬN GỘP VỀ BÁN HÀNG VÀ CCDV", doanhThuThuan > 0 ? (loiNhuanGop / doanhThuThuan * 100.0) : 0.0, loiNhuanGop, doanhThuThuan > 0 ? (loiNhuanGop / doanhThuThuan * 100.0) : 0.0, null, 0.0, loiNhuanGop * 0.95, true, false, 1));
+        rows.add(new BaoCaoKetQuaKinhDoanhReportRow("I.", "DOANH THU", null, doanhThuBanHang, 100.0, null, doanhThuBanHang, 0.0, true, false, 0));
+        int dtIdx = 1;
+        if (nhomDoanhThu.isEmpty()) {
+            rows.add(new BaoCaoKetQuaKinhDoanhReportRow(String.valueOf(dtIdx++), "Kiềm", null, doanhThuBanHang, 100.0, null, doanhThuBanHang, 0.0, false, false, 1));
+        } else {
+            for (Map.Entry<String, Double> entry : nhomDoanhThu.entrySet()) {
+                double val = entry.getValue();
+                double pct = doanhThuBanHang > 0 ? (val / doanhThuBanHang * 100.0) : 0.0;
+                rows.add(new BaoCaoKetQuaKinhDoanhReportRow(String.valueOf(dtIdx++), entry.getKey(), null, val, pct, null, val, 0.0, false, false, 1));
+            }
+        }
 
         // II. CHI PHÍ
-        rows.add(new BaoCaoKetQuaKinhDoanhReportRow("II", "CHI PHÍ", doanhThuThuan > 0 ? (tongChiPhi / doanhThuThuan * 100.0) : 0.0, tongChiPhi, 100.0, 100.0, 0.0, tongChiPhi * 0.95, true, false, 0));
-        rows.add(new BaoCaoKetQuaKinhDoanhReportRow("A", "ĐỊNH PHÍ (Chi phí cố định)", doanhThuThuan > 0 ? (chiPhiDinhPhi / doanhThuThuan * 100.0) : 0.0, chiPhiDinhPhi, tongChiPhi > 0 ? (chiPhiDinhPhi / tongChiPhi * 100.0) : 0.0, tongChiPhi > 0 ? (chiPhiDinhPhi / tongChiPhi * 100.0) : 0.0, 0.0, chiPhiDinhPhi * 0.98, true, false, 1));
-        rows.add(new BaoCaoKetQuaKinhDoanhReportRow("1", "Chi phí thuê mặt bằng, cửa hàng", doanhThuThuan > 0 ? (chiPhiDinhPhi * 0.5 / doanhThuThuan * 100.0) : 0.0, chiPhiDinhPhi * 0.5, tongChiPhi > 0 ? (chiPhiDinhPhi * 0.5 / tongChiPhi * 100.0) : 0.0, null, 0.0, chiPhiDinhPhi * 0.5, false, false, 2));
-        rows.add(new BaoCaoKetQuaKinhDoanhReportRow("2", "Chi phí lương nhân viên quản lý & cố định", doanhThuThuan > 0 ? (chiPhiDinhPhi * 0.5 / doanhThuThuan * 100.0) : 0.0, chiPhiDinhPhi * 0.5, tongChiPhi > 0 ? (chiPhiDinhPhi * 0.5 / tongChiPhi * 100.0) : 0.0, null, 0.0, chiPhiDinhPhi * 0.5, false, false, 2));
+        double tongChiPhi = giaVonBanHang;
+        rows.add(new BaoCaoKetQuaKinhDoanhReportRow("II.", "CHI PHÍ", 0.0, tongChiPhi, null, 100.0, tongChiPhi, 0.0, true, false, 0));
 
-        rows.add(new BaoCaoKetQuaKinhDoanhReportRow("B", "BIẾN PHÍ (Chi phí biến đổi)", doanhThuThuan > 0 ? (chiPhiBienPhi / doanhThuThuan * 100.0) : 0.0, chiPhiBienPhi, tongChiPhi > 0 ? (chiPhiBienPhi / tongChiPhi * 100.0) : 0.0, tongChiPhi > 0 ? (chiPhiBienPhi / tongChiPhi * 100.0) : 0.0, 0.0, chiPhiBienPhi * 0.95, true, false, 1));
-        rows.add(new BaoCaoKetQuaKinhDoanhReportRow("1", "Chi phí bao bì, đóng gói & vận chuyển", doanhThuThuan > 0 ? (chiPhiBienPhi * 0.6 / doanhThuThuan * 100.0) : 0.0, chiPhiBienPhi * 0.6, tongChiPhi > 0 ? (chiPhiBienPhi * 0.6 / tongChiPhi * 100.0) : 0.0, null, 0.0, chiPhiBienPhi * 0.6 * 0.95, false, false, 2));
-        rows.add(new BaoCaoKetQuaKinhDoanhReportRow("2", "Chi phí điện, nước, internet cửa hàng", doanhThuThuan > 0 ? (chiPhiBienPhi * 0.4 / doanhThuThuan * 100.0) : 0.0, chiPhiBienPhi * 0.4, tongChiPhi > 0 ? (chiPhiBienPhi * 0.4 / tongChiPhi * 100.0) : 0.0, null, 0.0, chiPhiBienPhi * 0.4 * 0.95, false, false, 2));
+        // A. Định phí
+        rows.add(new BaoCaoKetQuaKinhDoanhReportRow("A.", "Định phí", 0.0, 0.0, null, 100.0, 0.0, 0.0, true, true, 1));
+        String[] dinhPhiItems = {"Tiền nhà", "Tiền điện thoại", "Tiền nước", "Tiền điện", "Lương nhân viên", "Lương vệ sỹ", "Thưởng nhân viên"};
+        for (int i = 0; i < dinhPhiItems.length; i++) {
+            rows.add(new BaoCaoKetQuaKinhDoanhReportRow(String.valueOf(i + 1), dinhPhiItems[i], 0.0, 0.0, null, 0.0, 0.0, 0.0, false, false, 2));
+        }
 
-        rows.add(new BaoCaoKetQuaKinhDoanhReportRow("C", "CHI PHÍ KHÁC & MARKETING", doanhThuThuan > 0 ? (chiPhiKhac / doanhThuThuan * 100.0) : 0.0, chiPhiKhac, tongChiPhi > 0 ? (chiPhiKhac / tongChiPhi * 100.0) : 0.0, tongChiPhi > 0 ? (chiPhiKhac / tongChiPhi * 100.0) : 0.0, 0.0, chiPhiKhac * 0.9, true, false, 1));
+        // B. Biến phí
+        rows.add(new BaoCaoKetQuaKinhDoanhReportRow("B.", "Biến phí", 0.0, giaVonBanHang, null, 100.0, giaVonBanHang, 0.0, true, true, 1));
+        int bpIdx = 1;
+        if (nhomGiaVon.isEmpty()) {
+            rows.add(new BaoCaoKetQuaKinhDoanhReportRow(String.valueOf(bpIdx++), "Kiềm", 0.0, 0.0, null, 0.0, 0.0, 0.0, false, false, 2));
+        } else {
+            for (Map.Entry<String, Double> entry : nhomGiaVon.entrySet()) {
+                rows.add(new BaoCaoKetQuaKinhDoanhReportRow(String.valueOf(bpIdx++), entry.getKey(), 0.0, entry.getValue(), null, 0.0, entry.getValue(), 0.0, false, false, 2));
+            }
+        }
 
-        // III. LỢI NHUẬN THUẦN
-        rows.add(new BaoCaoKetQuaKinhDoanhReportRow("III", "LỢI NHUẬN THUẦN TỪ HĐKD (EBIT)", doanhThuThuan > 0 ? (loiNhuanRong / doanhThuThuan * 100.0) : 0.0, loiNhuanRong, doanhThuThuan > 0 ? (loiNhuanRong / doanhThuThuan * 100.0) : 0.0, null, 0.0, loiNhuanRong * 0.95, true, false, 0));
+        // C. Chi khác
+        rows.add(new BaoCaoKetQuaKinhDoanhReportRow("C.", "Chi khác", 0.0, 0.0, null, 100.0, 0.0, 0.0, true, true, 1));
+        String[] chiKhacItems = {"Văn phòng phẩm, in ấn", "Xây dựng, sửa chữa, thiết kế", "Đồ dùng, dụng cụ", "Vận chuyển", "Ngoại giao", "Chi khác", "Đặt trước"};
+        for (int i = 0; i < chiKhacItems.length; i++) {
+            rows.add(new BaoCaoKetQuaKinhDoanhReportRow(String.valueOf(i + 1), chiKhacItems[i], 0.0, 0.0, null, 0.0, 0.0, 0.0, false, false, 2));
+        }
+
+        // III. LÃI/LỖ
+        double laiLo = doanhThuBanHang - tongChiPhi;
+        double laiLoPct = doanhThuBanHang > 0 ? (laiLo / doanhThuBanHang * 100.0) : 100.0;
+        rows.add(new BaoCaoKetQuaKinhDoanhReportRow("III.", "LÃI/LỖ", null, laiLo, laiLoPct, null, laiLo, 0.0, true, false, 0));
 
         return rows;
     }
@@ -186,8 +233,16 @@ public class BaoCaoPhanTichKinhDoanhReportService {
         fillCompanyHeader(params);
 
         SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+        SimpleDateFormat sdfDay = new SimpleDateFormat("dd");
+        SimpleDateFormat sdfMonth = new SimpleDateFormat("MM");
+        SimpleDateFormat sdfYear = new SimpleDateFormat("yyyy");
+
+        Date now = denNgay != null ? denNgay : new Date();
+        String currentDateStr = "Ngày " + sdfDay.format(now) + " tháng " + sdfMonth.format(now) + " năm " + sdfYear.format(now);
+
         params.put("p_reportTitle", "BÁO CÁO KẾT QUẢ KINH DOANH");
         params.put("p_subTitleDate", "Từ ngày " + (tuNgay != null ? sdf.format(tuNgay) : "") + " Đến ngày " + (denNgay != null ? sdf.format(denNgay) : ""));
+        params.put("p_currentDateStr", currentDateStr);
 
         List<BaoCaoKetQuaKinhDoanhReportRow> data = fetchKetQuaKinhDoanh(tuNgay, denNgay, cuaHangId);
         return JasperFillManager.fillReport(cachedReportKetQuaKinhDoanh, params, new JRBeanCollectionDataSource(data));

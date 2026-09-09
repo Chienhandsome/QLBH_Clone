@@ -14,6 +14,7 @@
     <parameter name="p_logoImage" class="java.lang.Object"/>
     <parameter name="p_reportTitle" class="java.lang.String"/>
     <parameter name="p_subTitleDate" class="java.lang.String"/>
+    <parameter name="p_currentDateStr" class="java.lang.String"/>
 
     <field name="stt" class="java.lang.String"/>
     <field name="tenMuc" class="java.lang.String"/>
@@ -76,60 +77,61 @@
     <columnHeader>
         <band height="28">
             <staticText>
-                <reportElement mode="Opaque" x="0" y="0" width="230" height="28" backcolor="#FFFFFF"/>
+                <reportElement mode="Opaque" x="0" y="0" width="200" height="28" backcolor="#FFFFFF"/>
                 <box><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box>
                 <textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="SansSerif" size="8" isBold="true"/></textElement>
                 <text><![CDATA[]]></text>
             </staticText>
+
             <staticText>
-                <reportElement mode="Opaque" x="230" y="0" width="40" height="14" backcolor="#FFFFFF"/>
+                <reportElement mode="Opaque" x="200" y="0" width="40" height="14" backcolor="#FFFFFF"/>
                 <box><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box>
                 <textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="SansSerif" size="7" isBold="true"/></textElement>
                 <text><![CDATA[]]></text>
             </staticText>
             <staticText>
-                <reportElement mode="Opaque" x="230" y="14" width="40" height="14" backcolor="#FFFFFF"/>
+                <reportElement mode="Opaque" x="200" y="14" width="40" height="14" backcolor="#FFFFFF"/>
                 <box><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box>
                 <textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="SansSerif" size="7" isBold="true"/></textElement>
                 <text><![CDATA[%/DT]]></text>
             </staticText>
 
             <staticText>
-                <reportElement mode="Opaque" x="270" y="0" width="65" height="28" backcolor="#FFFFFF"/>
+                <reportElement mode="Opaque" x="240" y="0" width="75" height="28" backcolor="#FFFFFF"/>
                 <box><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box>
                 <textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="SansSerif" size="7" isBold="true"/></textElement>
                 <text><![CDATA[Giá trị]]></text>
             </staticText>
 
             <staticText>
-                <reportElement mode="Opaque" x="335" y="0" width="40" height="14" backcolor="#FFFFFF"/>
+                <reportElement mode="Opaque" x="315" y="0" width="40" height="14" backcolor="#FFFFFF"/>
                 <box><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box>
                 <textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="SansSerif" size="7" isBold="true"/></textElement>
                 <text><![CDATA[%]]></text>
             </staticText>
             <staticText>
-                <reportElement mode="Opaque" x="335" y="14" width="40" height="14" backcolor="#FFFFFF"/>
+                <reportElement mode="Opaque" x="315" y="14" width="40" height="14" backcolor="#FFFFFF"/>
                 <box><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box>
                 <textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="SansSerif" size="7" isBold="true"/></textElement>
                 <text><![CDATA[%/CP]]></text>
             </staticText>
 
             <staticText>
-                <reportElement mode="Opaque" x="375" y="0" width="40" height="28" backcolor="#FFFFFF"/>
+                <reportElement mode="Opaque" x="355" y="0" width="40" height="28" backcolor="#FFFFFF"/>
                 <box><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box>
                 <textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="SansSerif" size="7" isBold="true"/></textElement>
                 <text><![CDATA[]]></text>
             </staticText>
 
             <staticText>
-                <reportElement mode="Opaque" x="415" y="0" width="60" height="28" backcolor="#FFFFFF"/>
+                <reportElement mode="Opaque" x="395" y="0" width="70" height="28" backcolor="#FFFFFF"/>
                 <box><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box>
                 <textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="SansSerif" size="7" isBold="true"/></textElement>
                 <text><![CDATA[Tăng giảm so với tháng trước]]></text>
             </staticText>
 
             <staticText>
-                <reportElement mode="Opaque" x="475" y="0" width="60" height="28" backcolor="#FFFFFF"/>
+                <reportElement mode="Opaque" x="465" y="0" width="70" height="28" backcolor="#FFFFFF"/>
                 <box><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box>
                 <textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="SansSerif" size="7" isBold="true"/></textElement>
                 <text><![CDATA[KQKD tháng trước]]></text>
@@ -141,7 +143,7 @@
         <band height="18">
             <!-- STT -->
             <textField isBlankWhenNull="true">
-                <reportElement x="0" y="0" width="25" height="18"/>
+                <reportElement x="0" y="0" width="20" height="18"/>
                 <box><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box>
                 <textElement textAlignment="Center" verticalAlignment="Middle">
                     <font fontName="SansSerif" size="8" isBold="true"/>
@@ -150,7 +152,7 @@
             </textField>
             <!-- Diễn giải / Tên mục -->
             <textField isBlankWhenNull="true">
-                <reportElement x="25" y="0" width="205" height="18"/>
+                <reportElement x="20" y="0" width="180" height="18"/>
                 <box leftPadding="5"><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box>
                 <textElement verticalAlignment="Middle">
                     <font fontName="SansSerif" size="8" isBold="true"/>
@@ -158,15 +160,15 @@
                 <textFieldExpression><![CDATA[$F{tenMuc}]]></textFieldExpression>
             </textField>
             <!-- %/DT -->
-            <textField pattern="#,##0.##" isBlankWhenNull="true">
-                <reportElement x="230" y="0" width="40" height="18"/>
-                <box rightPadding="3"><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box>
-                <textElement textAlignment="Right" verticalAlignment="Middle"><font fontName="SansSerif" size="8"/></textElement>
+            <textField isBlankWhenNull="true">
+                <reportElement x="200" y="0" width="40" height="18"/>
+                <box><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box>
+                <textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="SansSerif" size="8"/></textElement>
                 <textFieldExpression><![CDATA[$F{tyLeDT} != null ? ($F{tyLeDT} == 0.0 ? "-" : String.format("%.0f%%", $F{tyLeDT})) : "-"]]></textFieldExpression>
             </textField>
             <!-- Giá trị -->
             <textField pattern="#,##0.##" isBlankWhenNull="true">
-                <reportElement x="270" y="0" width="65" height="18"/>
+                <reportElement x="240" y="0" width="75" height="18"/>
                 <box rightPadding="3"><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box>
                 <textElement textAlignment="Right" verticalAlignment="Middle">
                     <font fontName="SansSerif" size="8" isBold="true"/>
@@ -175,33 +177,53 @@
             </textField>
             <!-- % -->
             <textField isBlankWhenNull="true">
-                <reportElement x="335" y="0" width="40" height="18"/>
-                <box rightPadding="3"><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box>
-                <textElement textAlignment="Right" verticalAlignment="Middle"><font fontName="SansSerif" size="8"/></textElement>
+                <reportElement x="315" y="0" width="40" height="18"/>
+                <box><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box>
+                <textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="SansSerif" size="8"/></textElement>
                 <textFieldExpression><![CDATA[$F{tyLe} != null ? ($F{tyLe} == 0.0 ? "-" : String.format("%.0f%%", $F{tyLe})) : ($F{tyLeCP} != null ? ($F{tyLeCP} == 0.0 ? "-" : String.format("%.0f%%", $F{tyLeCP})) : "-")]]></textFieldExpression>
             </textField>
-            <!-- %/CP (empty column holder) -->
+            <!-- %/CP -->
             <staticText>
-                <reportElement x="375" y="0" width="40" height="18"/>
+                <reportElement x="355" y="0" width="40" height="18"/>
                 <box><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box>
                 <textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="SansSerif" size="8"/></textElement>
                 <text><![CDATA[-]]></text>
             </staticText>
             <!-- Tăng giảm so với tháng trước -->
             <textField pattern="#,##0.##" isBlankWhenNull="true">
-                <reportElement x="415" y="0" width="60" height="18"/>
+                <reportElement x="395" y="0" width="70" height="18"/>
                 <box rightPadding="3"><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box>
                 <textElement textAlignment="Right" verticalAlignment="Middle"><font fontName="SansSerif" size="8"/></textElement>
                 <textFieldExpression><![CDATA[$F{tangGiam} != null ? $F{tangGiam} : Double.valueOf(0.0)]]></textFieldExpression>
             </textField>
             <!-- KQKD tháng trước -->
             <textField pattern="#,##0.##" isBlankWhenNull="true">
-                <reportElement x="475" y="0" width="60" height="18"/>
+                <reportElement x="465" y="0" width="70" height="18"/>
                 <box rightPadding="3"><topPen lineWidth="0.5"/><leftPen lineWidth="0.5"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.5"/></box>
                 <textElement textAlignment="Right" verticalAlignment="Middle"><font fontName="SansSerif" size="8"/></textElement>
                 <textFieldExpression><![CDATA[$F{kqkdThangTruoc} != null ? $F{kqkdThangTruoc} : Double.valueOf(0.0)]]></textFieldExpression>
             </textField>
         </band>
     </detail>
+
+    <summary>
+        <band height="90">
+            <textField isBlankWhenNull="true">
+                <reportElement x="320" y="15" width="215" height="14"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="SansSerif" size="8" isItalic="true"/></textElement>
+                <textFieldExpression><![CDATA[$P{p_currentDateStr}]]></textFieldExpression>
+            </textField>
+            <staticText>
+                <reportElement x="320" y="29" width="215" height="15"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="SansSerif" size="8" isBold="true"/></textElement>
+                <text><![CDATA[Người lập]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="320" y="44" width="215" height="13"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="SansSerif" size="7" isItalic="true"/></textElement>
+                <text><![CDATA[(Ký, họ tên)]]></text>
+            </staticText>
+        </band>
+    </summary>
 
 </jasperReport>

@@ -45,6 +45,8 @@ public class DatePickerField extends JPanel {
             @Override public void changedUpdate(DocumentEvent e) { notifyChange(); }
         });
 
+        txtDate.addActionListener(e -> firePropertyChange("date", null, getDate()));
+
         btnCalendar = new JButton();
         btnCalendar.setPreferredSize(new Dimension(24, 24));
         btnCalendar.setFocusPainted(false);
@@ -156,6 +158,10 @@ public class DatePickerField extends JPanel {
     public Timestamp getTimestamp() {
         Date d = getDate();
         return d != null ? new Timestamp(d.getTime()) : null;
+    }
+
+    public void addActionListener(java.awt.event.ActionListener l) {
+        addPropertyChangeListener("date", evt -> l.actionPerformed(new java.awt.event.ActionEvent(this, java.awt.event.ActionEvent.ACTION_PERFORMED, "dateChanged")));
     }
 
     public String getText() {

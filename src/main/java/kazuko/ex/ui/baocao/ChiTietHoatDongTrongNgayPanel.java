@@ -113,7 +113,7 @@ public class ChiTietHoatDongTrongNgayPanel extends JPanel {
         debounceTimer = new javax.swing.Timer(300, e -> loadReport());
         debounceTimer.setRepeats(false);
 
-        fromDate.addActionListener(e -> onFilterChanged());
+        fromDate    .addActionListener(e -> onFilterChanged());
         toDate.addActionListener(e -> onFilterChanged());
         cbThuNgan.addActionListener(e -> onFilterChanged());
         cbCuaHang.addActionListener(e -> onFilterChanged());
