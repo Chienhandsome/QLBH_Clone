@@ -21,6 +21,7 @@ import javax.swing.border.LineBorder;
 import javax.swing.border.MatteBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.event.TableModelEvent;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
@@ -85,6 +86,7 @@ public class HoaDonBanHangPanel extends JPanel {
 
     // Details Panel & Tabs
     private JTabbedPane tabbedPaneDetails;
+    private JPanel recentPriceButtonsPanel;
     private JTable tableLayHang;
     private DefaultTableModel layHangModel;
     private JTable tableTraHang;
@@ -97,10 +99,17 @@ public class HoaDonBanHangPanel extends JPanel {
     // Financial Summary Controls
     private JTextField txtTiLeGiamGia;
     private JTextField txtTienHang;
+    private JTextField txtTongChietKhauMatHang;
     private JTextField txtTienGiamGia;
+    private JTextField txtTiLeThue;
+    private JTextField txtTienThue;
+    private JTextField txtPhiVanChuyen;
     private JTextField txtTienDoiTra;
     private JTextField txtTongCong;
+    private final List<Component> taxSummaryComponents = new ArrayList<>();
+    private final List<Component> shippingSummaryComponents = new ArrayList<>();
     private boolean isUpdatingFinancials = false;
+    private boolean isRefreshingLayHangTable = false;
 
     // Bottom Action Buttons
     private JButton btnTaoHoaDonMoi;
@@ -499,6 +508,9 @@ public class HoaDonBanHangPanel extends JPanel {
         tableLayHang.setRowHeight(22);
         tableLayHang.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 12));
         tableLayHang.getTableHeader().setBackground(new Color(235, 242, 252));
+        tableLayHang.getSelectionModel().addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting()) updateRecentPriceButtons();
+        });
 
         rebuildLayHangTableColumns();
 
@@ -553,6 +565,14 @@ public class HoaDonBanHangPanel extends JPanel {
         tableLayHang.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
+                int row = tableLayHang.rowAtPoint(e.getPoint());
+                int viewColumn = tableLayHang.columnAtPoint(e.getPoint());
+                if (SwingUtilities.isLeftMouseButton(e) && e.getClickCount() == 1
+                        && row >= 0 && isLayHangPriceColumn(viewColumn)) {
+                    tableLayHang.setRowSelectionInterval(row, row);
+                    showPriceDropdown(row, viewColumn);
+                    return;
+                }
                 if (e.getClickCount() == 2) {
                     onEditQuantityDialog();
                 }
@@ -609,8 +629,33 @@ public class HoaDonBanHangPanel extends JPanel {
         JScrollPane spTraHang = new JScrollPane(tableTraHang);
         pnlTraHang.add(spTraHang, BorderLayout.CENTER);
         tabbedPaneDetails.addTab("KHÁCH TRẢ HÀNG", pnlTraHang);
+        installRecentPriceButtonsBesideTabs();
 
         return tabbedPaneDetails;
+    }
+
+    private void installRecentPriceButtonsBesideTabs() {
+        JPanel secondTabHeader = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
+        secondTabHeader.setOpaque(false);
+
+        JLabel returnTabTitle = new JLabel("KHÁCH TRẢ HÀNG");
+        returnTabTitle.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        returnTabTitle.setBorder(new EmptyBorder(4, 5, 4, 5));
+        MouseAdapter selectReturnTab = new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                tabbedPaneDetails.setSelectedIndex(1);
+            }
+        };
+        returnTabTitle.addMouseListener(selectReturnTab);
+        secondTabHeader.add(returnTabTitle);
+
+        recentPriceButtonsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 0));
+        recentPriceButtonsPanel.setOpaque(false);
+        recentPriceButtonsPanel.setVisible(false);
+        secondTabHeader.add(recentPriceButtonsPanel);
+
+        tabbedPaneDetails.setTabComponentAt(1, secondTabHeader);
     }
 
     private JPanel createBottomActionButtons() {
@@ -681,7 +726,7 @@ public class HoaDonBanHangPanel extends JPanel {
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.insets = new Insets(2, 4, 2, 4);
 
-        // Tiền hàng
+        // Tiền hàng gốc (trước chiết khấu từng mặt hàng)
         gbc.gridx = 0; gbc.gridy = 0;
         JLabel lblTh = new JLabel("Tiền hàng");
         lblTh.setFont(new Font("Segoe UI", Font.PLAIN, 12));
@@ -691,9 +736,19 @@ public class HoaDonBanHangPanel extends JPanel {
         txtTienHang = createCyanNumberField();
         pnlForm.add(txtTienHang, gbc);
 
-        // Giảm giá
+        // Tổng chiết khấu của các dòng mặt hàng
         gbc.gridx = 0; gbc.gridy = 1; gbc.gridwidth = 1;
-        JLabel lblGg = new JLabel("Giảm giá");
+        JLabel lblCkMatHang = new JLabel("CK mặt hàng");
+        lblCkMatHang.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        pnlForm.add(lblCkMatHang, gbc);
+
+        gbc.gridx = 1; gbc.gridwidth = 2;
+        txtTongChietKhauMatHang = createCyanNumberField();
+        pnlForm.add(txtTongChietKhauMatHang, gbc);
+
+        // Giảm giá toàn hóa đơn
+        gbc.gridx = 0; gbc.gridy = 2; gbc.gridwidth = 1;
+        JLabel lblGg = new JLabel("Giảm giá (hóa đơn)");
         lblGg.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         pnlForm.add(lblGg, gbc);
 
@@ -707,8 +762,41 @@ public class HoaDonBanHangPanel extends JPanel {
         txtTienGiamGia = createCyanNumberField();
         pnlForm.add(txtTienGiamGia, gbc);
 
+        // Thuế suất (chỉ hiện khi bật trong cấu hình bán hàng)
+        gbc.gridx = 0; gbc.gridy = 3; gbc.gridwidth = 1;
+        JLabel lblThue = new JLabel("Tỉ lệ thuế");
+        lblThue.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        pnlForm.add(lblThue, gbc);
+        taxSummaryComponents.add(lblThue);
+
+        gbc.gridx = 1;
+        txtTiLeThue = new JTextField("0", 4);
+        txtTiLeThue.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        txtTiLeThue.setHorizontalAlignment(SwingConstants.RIGHT);
+        pnlForm.add(txtTiLeThue, gbc);
+        taxSummaryComponents.add(txtTiLeThue);
+
+        gbc.gridx = 2;
+        txtTienThue = createCyanNumberField();
+        pnlForm.add(txtTienThue, gbc);
+        taxSummaryComponents.add(txtTienThue);
+
+        // Phí vận chuyển (chỉ hiện khi bật trong cấu hình bán hàng)
+        gbc.gridx = 0; gbc.gridy = 4; gbc.gridwidth = 1;
+        JLabel lblVanChuyen = new JLabel("Phí vận chuyển");
+        lblVanChuyen.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        pnlForm.add(lblVanChuyen, gbc);
+        shippingSummaryComponents.add(lblVanChuyen);
+
+        gbc.gridx = 1; gbc.gridwidth = 2;
+        txtPhiVanChuyen = new JTextField("0");
+        txtPhiVanChuyen.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        txtPhiVanChuyen.setHorizontalAlignment(SwingConstants.RIGHT);
+        pnlForm.add(txtPhiVanChuyen, gbc);
+        shippingSummaryComponents.add(txtPhiVanChuyen);
+
         // Đổi trả
-        gbc.gridx = 0; gbc.gridy = 2; gbc.gridwidth = 1;
+        gbc.gridx = 0; gbc.gridy = 5; gbc.gridwidth = 1;
         JLabel lblDt = new JLabel("Đổi trả");
         lblDt.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         pnlForm.add(lblDt, gbc);
@@ -718,7 +806,7 @@ public class HoaDonBanHangPanel extends JPanel {
         pnlForm.add(txtTienDoiTra, gbc);
 
         // Tổng cộng
-        gbc.gridx = 0; gbc.gridy = 3; gbc.gridwidth = 1;
+        gbc.gridx = 0; gbc.gridy = 6; gbc.gridwidth = 1;
         JLabel lblTc = new JLabel("Tổng cộng");
         lblTc.setFont(new Font("Segoe UI", Font.BOLD, 13));
         pnlForm.add(lblTc, gbc);
@@ -735,6 +823,8 @@ public class HoaDonBanHangPanel extends JPanel {
             @Override public void changedUpdate(DocumentEvent e) { recalculateFinancials(); }
         };
         txtTiLeGiamGia.getDocument().addDocumentListener(dl);
+        txtTiLeThue.getDocument().addDocumentListener(dl);
+        txtPhiVanChuyen.getDocument().addDocumentListener(dl);
 
         panel.add(pnlForm, BorderLayout.CENTER);
         return panel;
@@ -1283,10 +1373,14 @@ public class HoaDonBanHangPanel extends JPanel {
             public boolean isCellEditable(int row, int col) {
                 if (col <= 0 || col > visibleLayHangColumns.size()) return false;
                 String colName = visibleLayHangColumns.get(col - 1);
-                return "Ghi chú".equals(colName) || "S.lượng".equals(colName) || "CK%".equals(colName);
+                return "Ghi chú".equals(colName)
+                        || "S.lượng".equals(colName)
+                        || ("CK%".equals(colName) && isDiscountInputAllowed());
             }
         };
+        layHangModel.addTableModelListener(this::onLayHangCellEdited);
         tableLayHang.setModel(layHangModel);
+        tableLayHang.putClientProperty("terminateEditOnFocusLost", Boolean.TRUE);
 
         DefaultTableCellRenderer rightRenderer = new DefaultTableCellRenderer();
         rightRenderer.setHorizontalAlignment(SwingConstants.RIGHT);
@@ -1311,7 +1405,15 @@ public class HoaDonBanHangPanel extends JPanel {
                     break;
                 case "Đơn giá":
                     tc.setPreferredWidth(80);
-                    tc.setCellRenderer(rightRenderer);
+                    DefaultTableCellRenderer priceRenderer = new DefaultTableCellRenderer() {
+                        @Override
+                        protected void setValue(Object value) {
+                            setText((value != null ? value.toString() : "") + "  ▼");
+                        }
+                    };
+                    priceRenderer.setHorizontalAlignment(SwingConstants.RIGHT);
+                    priceRenderer.setToolTipText("Nhấn để chọn giá bán");
+                    tc.setCellRenderer(priceRenderer);
                     break;
                 case "ĐVT":
                     tc.setPreferredWidth(50);
@@ -1354,14 +1456,58 @@ public class HoaDonBanHangPanel extends JPanel {
         }
     }
 
+    private void onLayHangCellEdited(TableModelEvent event) {
+        if (isRefreshingLayHangTable || event.getType() != TableModelEvent.UPDATE) return;
+        int row = event.getFirstRow();
+        int column = event.getColumn();
+        if (row < 0 || row >= currentLayHangList.size()
+                || column < 0 || column >= layHangModel.getColumnCount()
+                || !"CK%".equals(layHangModel.getColumnName(column))) {
+            return;
+        }
+
+        Object editedValue = layHangModel.getValueAt(row, column);
+        Double discountRate = parseDiscountRate(editedValue);
+        if (discountRate == null || discountRate < 0 || discountRate > 100) {
+            SwingUtilities.invokeLater(() -> {
+                JOptionPane.showMessageDialog(this,
+                        "Chiết khấu mặt hàng phải là số từ 0 đến 100%.",
+                        "Chiết khấu không hợp lệ", JOptionPane.WARNING_MESSAGE);
+                refreshLayHangTable(row);
+            });
+            return;
+        }
+
+        DonHangChiTiet detail = currentLayHangList.get(row);
+        detail.setTiLeGiamGia(discountRate);
+        SwingUtilities.invokeLater(() -> {
+            refreshLayHangTable(row);
+            recalculateFinancials();
+        });
+    }
+
+    private Double parseDiscountRate(Object value) {
+        if (value == null) return null;
+        String text = value.toString().trim().replace("%", "").replace(',', '.');
+        if (text.isEmpty()) return null;
+        try {
+            double rate = Double.parseDouble(text);
+            return Double.isFinite(rate) ? rate : null;
+        } catch (NumberFormatException ex) {
+            return null;
+        }
+    }
+
     private void refreshLayHangTable(int selectRow) {
-        layHangModel.setRowCount(0);
-        int stt = 1;
-        for (DonHangChiTiet ct : currentLayHangList) {
-            Vector<Object> rowData = new Vector<>();
-            rowData.add(String.format("%04d", stt++));
-            for (String colName : visibleLayHangColumns) {
-                switch (colName) {
+        isRefreshingLayHangTable = true;
+        try {
+            layHangModel.setRowCount(0);
+            int stt = 1;
+            for (DonHangChiTiet ct : currentLayHangList) {
+                Vector<Object> rowData = new Vector<>();
+                rowData.add(String.format("%04d", stt++));
+                for (String colName : visibleLayHangColumns) {
+                    switch (colName) {
                     case "Tên mặt hàng":
                         rowData.add(ct.getTenHang() != null ? ct.getTenHang() : "");
                         break;
@@ -1401,18 +1547,185 @@ public class HoaDonBanHangPanel extends JPanel {
                     default:
                         rowData.add("");
                         break;
+                    }
                 }
+                layHangModel.addRow(rowData);
             }
-            layHangModel.addRow(rowData);
+            int rowCount = tableLayHang.getRowCount();
+            int targetRow = selectRow;
+            if (targetRow < 0 && rowCount > 0) targetRow = rowCount - 1;
+            if (targetRow >= 0 && targetRow < rowCount) {
+                tableLayHang.setRowSelectionInterval(targetRow, targetRow);
+            }
+        } finally {
+            isRefreshingLayHangTable = false;
         }
-        if (selectRow >= 0 && selectRow < tableLayHang.getRowCount()) {
-            tableLayHang.setRowSelectionInterval(selectRow, selectRow);
-        }
+        updateRecentPriceButtons();
     }
 
     private void refreshLayHangTable() {
         int curSel = tableLayHang != null ? tableLayHang.getSelectedRow() : -1;
         refreshLayHangTable(curSel);
+    }
+
+    private boolean isLayHangPriceColumn(int viewColumn) {
+        if (viewColumn < 0 || tableLayHang == null || layHangModel == null) return false;
+        int modelColumn = tableLayHang.convertColumnIndexToModel(viewColumn);
+        return "Đơn giá".equals(layHangModel.getColumnName(modelColumn));
+    }
+
+    /**
+     * Flow du phong khi nhan vien them hang truoc roi moi chon khach:
+     * nhan vao o Don gia de chon lai gia mac dinh hoac 3 gia khach da mua gan nhat.
+     */
+    private void showPriceDropdown(int row, int viewColumn) {
+        if (row < 0 || row >= currentLayHangList.size()) return;
+        DonHangChiTiet detail = currentLayHangList.get(row);
+        MatHang matHang = matHangDAO.findById(detail.getMatHangId());
+        if (matHang == null) return;
+
+        JPopupMenu priceMenu = new JPopupMenu();
+        addPriceSectionTitle(priceMenu, "Giá mặc định");
+        addPriceMenuItem(priceMenu, "Giá bán", matHang.getGiaBan(), row);
+
+        String nameGia2 = getConfiguredPriceName(
+                systemConfig != null ? systemConfig.getDienGiaiGia2() : null, "Đơn giá 2");
+        String nameGia3 = getConfiguredPriceName(
+                systemConfig != null ? systemConfig.getDienGiaiGia3() : null, "Giá bán 3");
+        String nameGia4 = getConfiguredPriceName(
+                systemConfig != null ? systemConfig.getDienGiaiGia4() : null, "Giá bán 4");
+        if ((systemConfig == null || systemConfig.isSuDungGia2()) && matHang.getGiaBan2() > 0) {
+            addPriceMenuItem(priceMenu, nameGia2, matHang.getGiaBan2(), row);
+        }
+        if ((systemConfig == null || systemConfig.isSuDungGia3()) && matHang.getGiaBan3() > 0) {
+            addPriceMenuItem(priceMenu, nameGia3, matHang.getGiaBan3(), row);
+        }
+        if ((systemConfig == null || systemConfig.isSuDungGia4()) && matHang.getGiaBan4() > 0) {
+            addPriceMenuItem(priceMenu, nameGia4, matHang.getGiaBan4(), row);
+        }
+
+        KhachHang customer = (KhachHang) cbKhachHang.getSelectedItem();
+        if (customer != null && customer.getId() != null && !customer.getId().trim().isEmpty()) {
+            List<GiaBanGanDayKhachHang> recentPrices = ChonLoaiGiaDialog.filterRecentPrices(
+                    hoaDonDAO.getGiaBanGanDayCuaKhachHang(
+                            customer.getId(), detail.getMatHangId(), detail.getDonViTinhId()));
+            if (!recentPrices.isEmpty()) {
+                priceMenu.addSeparator();
+                addPriceSectionTitle(priceMenu, "Giá khách đã mua gần đây");
+                for (GiaBanGanDayKhachHang recent : recentPrices) {
+                    String invoice = recent.getSoHoaDon() != null && !recent.getSoHoaDon().trim().isEmpty()
+                            ? " · HĐ " + recent.getSoHoaDon().trim() : "";
+                    String date = recent.getNgayHoaDon() != null
+                            ? " · " + DateUtil.formatDate(recent.getNgayHoaDon()) : "";
+                    addPriceMenuItem(priceMenu,
+                            CurrencyUtil.format(Math.round(recent.getDonGia())) + invoice + date,
+                            recent.getDonGia(), row, true);
+                }
+            }
+        }
+
+        Rectangle cell = tableLayHang.getCellRect(row, viewColumn, true);
+        priceMenu.show(tableLayHang, cell.x, cell.y + cell.height);
+    }
+
+    private void addPriceSectionTitle(JPopupMenu menu, String title) {
+        JMenuItem item = new JMenuItem(title);
+        item.setEnabled(false);
+        item.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        menu.add(item);
+    }
+
+    private void addPriceMenuItem(JPopupMenu menu, String name, double price, int row) {
+        addPriceMenuItem(menu, name + ": " + CurrencyUtil.format(Math.round(price)), price, row, false);
+    }
+
+    private void addPriceMenuItem(JPopupMenu menu, String label, double price, int row,
+                                  boolean recentPrice) {
+        JMenuItem item = new JMenuItem(label);
+        item.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        if (recentPrice) item.setBackground(new Color(245, 252, 240));
+        item.addActionListener(e -> applySelectedRowPrice(row, price));
+        menu.add(item);
+    }
+
+    private void applySelectedRowPrice(int row, double price) {
+        if (row < 0 || row >= currentLayHangList.size() || price <= 0) return;
+        DonHangChiTiet detail = currentLayHangList.get(row);
+        detail.setDonGia(Math.round(price));
+        detail.tinhThanhTien();
+        refreshLayHangTable(row);
+        recalculateFinancials();
+    }
+
+    private void updateRecentPriceButtons() {
+        if (recentPriceButtonsPanel == null || cbKhachHang == null || tableLayHang == null) return;
+        if (isRefreshingLayHangTable) return;
+        recentPriceButtonsPanel.removeAll();
+        recentPriceButtonsPanel.setVisible(false);
+
+        KhachHang customer = (KhachHang) cbKhachHang.getSelectedItem();
+        if (customer == null || customer.getId() == null || customer.getId().trim().isEmpty()) {
+            refreshRecentPriceButtonsLayout();
+            return;
+        }
+
+        int row = tableLayHang.getSelectedRow();
+        int tableRowCount = tableLayHang.getRowCount();
+        if (row < 0 && tableRowCount > 0 && !currentLayHangList.isEmpty()) {
+            row = Math.min(tableRowCount, currentLayHangList.size()) - 1;
+            tableLayHang.setRowSelectionInterval(row, row);
+            // Selection listener se goi lai ham voi chi so dong da hop le.
+            return;
+        }
+        if (row < 0 || row >= currentLayHangList.size()) {
+            refreshRecentPriceButtonsLayout();
+            return;
+        }
+
+        DonHangChiTiet detail = currentLayHangList.get(row);
+        List<GiaBanGanDayKhachHang> recentPrices = ChonLoaiGiaDialog.filterRecentPrices(
+                hoaDonDAO.getGiaBanGanDayCuaKhachHang(
+                        customer.getId(), detail.getMatHangId(), detail.getDonViTinhId()));
+        if (!recentPrices.isEmpty()) {
+            GiaBanGanDayKhachHang recent = recentPrices.get(0);
+            JButton button = new JButton("Giá gần nhất: "
+                    + CurrencyUtil.format(Math.round(recent.getDonGia())));
+            button.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+            button.setMargin(new Insets(2, 6, 2, 6));
+            button.setFocusable(false);
+            button.setBackground(new Color(236, 248, 228));
+            button.setToolTipText(buildRecentPriceTooltip(recent));
+            final int selectedRow = row;
+            button.addActionListener(e -> applySelectedRowPrice(selectedRow, recent.getDonGia()));
+            recentPriceButtonsPanel.add(button);
+        }
+        recentPriceButtonsPanel.setVisible(!recentPrices.isEmpty());
+        refreshRecentPriceButtonsLayout();
+    }
+
+    private String buildRecentPriceTooltip(GiaBanGanDayKhachHang recent) {
+        List<String> parts = new ArrayList<>();
+        if (recent.getSoHoaDon() != null && !recent.getSoHoaDon().trim().isEmpty()) {
+            parts.add("Hóa đơn: " + recent.getSoHoaDon().trim());
+        }
+        if (recent.getNgayHoaDon() != null) {
+            parts.add("Ngày mua: " + DateUtil.formatDate(recent.getNgayHoaDon()));
+        }
+        return parts.isEmpty() ? "Áp dụng giá khách đã mua" : String.join(" - ", parts);
+    }
+
+    private void refreshRecentPriceButtonsLayout() {
+        recentPriceButtonsPanel.revalidate();
+        recentPriceButtonsPanel.repaint();
+        if (tabbedPaneDetails != null) {
+            tabbedPaneDetails.revalidate();
+            tabbedPaneDetails.repaint();
+        }
+    }
+
+    private String getConfiguredPriceName(String configuredName, String fallback) {
+        return configuredName != null && !configuredName.trim().isEmpty()
+                ? configuredName.trim() : fallback;
     }
 
     private void refreshTraHangTable(int selectRow) {
@@ -1445,34 +1758,59 @@ public class HoaDonBanHangPanel extends JPanel {
         if (isUpdatingFinancials) return;
         isUpdatingFinancials = true;
         try {
-            double tienHang = 0.0;
+            double tienHangGoc = 0.0;
+            double chietKhauMatHang = 0.0;
             for (DonHangChiTiet ct : currentLayHangList) {
-                tienHang += ct.getThanhTien();
+                tienHangGoc += ct.getSoLuong() * ct.getDonGia();
+                chietKhauMatHang += ct.getTienGiam();
             }
+            double tienSauChietKhauMatHang = Math.max(0, tienHangGoc - chietKhauMatHang);
 
             double tienTra = 0.0;
             for (DonHangChiTiet ct : currentTraHangList) {
                 tienTra += ct.getThanhTien();
             }
 
-            double tileGiam = 0.0;
-            try {
-                String str = txtTiLeGiamGia.getText().replace("%", "").trim().replace(",", ".");
-                if (!str.isEmpty()) tileGiam = Double.parseDouble(str);
-            } catch (Exception ignored) {}
-            tileGiam = Math.max(0, Math.min(100, tileGiam));
-
-            double tienGiam = tienHang * (tileGiam / 100.0);
-            double tongCong = SalesConfigSupport.roundMoney(
-                    Math.max(0, tienHang - tienGiam - tienTra),
+            double tileGiam = parsePercentField(txtTiLeGiamGia);
+            double tienGiam = tienSauChietKhauMatHang * (tileGiam / 100.0);
+            double taxableAmount = Math.max(0, tienSauChietKhauMatHang - tienGiam);
+            boolean hasTax = systemConfig != null && systemConfig.isCoThueSuat();
+            boolean hasShipping = systemConfig != null && systemConfig.isCoPhiVanChuyen();
+            double tileThue = hasTax ? parsePercentField(txtTiLeThue) : 0.0;
+            double tienThue = SalesConfigSupport.calculateTax(taxableAmount, tileThue);
+            double phiVanChuyen = hasShipping ? parseMoneyField(txtPhiVanChuyen) : 0.0;
+            double tongCong = SalesConfigSupport.calculateInvoiceTotal(
+                    taxableAmount, tienThue, phiVanChuyen, tienTra,
                     systemConfig != null ? systemConfig.getLamTronTien() : null);
 
-            txtTienHang.setText(CurrencyUtil.format(tienHang));
+            txtTienHang.setText(CurrencyUtil.format(tienHangGoc));
+            txtTongChietKhauMatHang.setText(CurrencyUtil.format(chietKhauMatHang));
             txtTienGiamGia.setText(CurrencyUtil.format(tienGiam));
+            txtTienThue.setText(CurrencyUtil.format(tienThue));
             txtTienDoiTra.setText(CurrencyUtil.format(tienTra));
             txtTongCong.setText(CurrencyUtil.format(tongCong));
         } finally {
             isUpdatingFinancials = false;
+        }
+    }
+
+    private double parsePercentField(JTextField field) {
+        if (field == null) return 0.0;
+        try {
+            String value = field.getText().replace("%", "").trim().replace(",", ".");
+            return Math.max(0, Math.min(100, value.isEmpty() ? 0 : Double.parseDouble(value)));
+        } catch (Exception ignored) {
+            return 0.0;
+        }
+    }
+
+    private double parseMoneyField(JTextField field) {
+        if (field == null) return 0.0;
+        try {
+            String value = field.getText().trim().replaceAll("[^0-9-]", "");
+            return Math.max(0, value.isEmpty() ? 0 : Double.parseDouble(value));
+        } catch (Exception ignored) {
+            return 0.0;
         }
     }
 
@@ -1481,6 +1819,7 @@ public class HoaDonBanHangPanel extends JPanel {
         if (kh != null) {
             txtDiaChiGiaoHang.setText(kh.getDiaChi() != null ? kh.getDiaChi() : "");
         }
+        updateRecentPriceButtons();
     }
 
     private void updateTonKhoDisplay() {
@@ -1757,11 +2096,11 @@ public class HoaDonBanHangPanel extends JPanel {
     }
 
     private void resetForNewInvoice() {
-        applySalesConfig();
         currentHoaDon = new DonHang();
         currentHoaDon.setId(UUID.randomUUID().toString());
         currentHoaDon.setName(hoaDonDAO.generateNextSoHoaDon(new Date()));
         currentHoaDon.setNgay(new Date());
+        applySalesConfig();
 
         dpkNgay.setDate(new Date());
         txtSoHD.setText(currentHoaDon.getName());
@@ -1771,6 +2110,10 @@ public class HoaDonBanHangPanel extends JPanel {
         int defaultDiscount = systemConfig != null ? systemConfig.getMacDinhGiamGiaPt() : 0;
         defaultDiscount = Math.max(0, Math.min(100, defaultDiscount));
         txtTiLeGiamGia.setText(defaultDiscount + " %");
+        int defaultTax = systemConfig != null && systemConfig.isCoThueSuat()
+                ? systemConfig.getMacDinhThueSuat() : 0;
+        txtTiLeThue.setText(Math.max(0, Math.min(100, defaultTax)) + " %");
+        txtPhiVanChuyen.setText("0");
 
         currentLayHangList.clear();
         currentTraHangList.clear();
@@ -1785,11 +2128,14 @@ public class HoaDonBanHangPanel extends JPanel {
 
     private void loadHoaDonIntoUI(DonHang dh) {
         this.currentHoaDon = dh;
+        applySalesConfig();
         dpkNgay.setDate(dh.getNgay() != null ? dh.getNgay() : new Date());
         txtSoHD.setText(dh.getName() != null ? dh.getName() : "");
         txtDienGiai.setText(dh.getDienGiai() != null ? dh.getDienGiai() : "Xuất bán hàng");
         txtDiaChiGiaoHang.setText(dh.getDiaChiGiaoHang() != null ? dh.getDiaChiGiaoHang() : "");
         txtTiLeGiamGia.setText(String.format("%.0f %%", dh.getTiLeGiamGia()));
+        txtTiLeThue.setText(String.format("%.0f %%", dh.getTiLeThue()));
+        txtPhiVanChuyen.setText(CurrencyUtil.format(dh.getPhiVanChuyen()));
 
         currentLayHangList.clear();
         if (dh.getChiTietLayHang() != null) {
@@ -1836,23 +2182,35 @@ public class HoaDonBanHangPanel extends JPanel {
         currentHoaDon.setChiTietLayHang(new ArrayList<>(currentLayHangList));
         currentHoaDon.setChiTietTraHang(new ArrayList<>(currentTraHangList));
 
-        double th = 0.0;
-        for (DonHangChiTiet ct : currentLayHangList) th += ct.getThanhTien();
-        currentHoaDon.setTienHang(th);
+        double tienHangGoc = 0.0;
+        double chietKhauMatHang = 0.0;
+        for (DonHangChiTiet ct : currentLayHangList) {
+            tienHangGoc += ct.getSoLuong() * ct.getDonGia();
+            chietKhauMatHang += ct.getTienGiam();
+        }
+        double tienSauChietKhauMatHang = Math.max(0, tienHangGoc - chietKhauMatHang);
+        currentHoaDon.setTienHang(tienHangGoc);
 
         double tt = 0.0;
         for (DonHangChiTiet ct : currentTraHangList) tt += ct.getThanhTien();
         currentHoaDon.setTienDoiTra(tt);
 
-        double tile = 0.0;
-        try {
-            tile = Double.parseDouble(txtTiLeGiamGia.getText().replace("%", "").trim().replace(",", "."));
-        } catch (Exception ignored) {}
-        tile = Math.max(0, Math.min(100, tile));
+        double tile = parsePercentField(txtTiLeGiamGia);
         currentHoaDon.setTiLeGiamGia(tile);
-        currentHoaDon.setTienGiamGia(th * (tile / 100.0));
-        currentHoaDon.setTongCong(SalesConfigSupport.roundMoney(
-                Math.max(0, th - currentHoaDon.getTienGiamGia() - tt),
+        currentHoaDon.setTienGiamGia(tienSauChietKhauMatHang * (tile / 100.0));
+
+        boolean hasTax = systemConfig != null && systemConfig.isCoThueSuat();
+        boolean hasShipping = systemConfig != null && systemConfig.isCoPhiVanChuyen();
+        double taxableAmount = Math.max(0,
+                tienSauChietKhauMatHang - currentHoaDon.getTienGiamGia());
+        double taxRate = hasTax ? parsePercentField(txtTiLeThue) : 0.0;
+        double taxAmount = SalesConfigSupport.calculateTax(taxableAmount, taxRate);
+        double shippingFee = hasShipping ? parseMoneyField(txtPhiVanChuyen) : 0.0;
+        currentHoaDon.setTiLeThue(taxRate);
+        currentHoaDon.setTienThue(taxAmount);
+        currentHoaDon.setPhiVanChuyen(shippingFee);
+        currentHoaDon.setTongCong(SalesConfigSupport.calculateInvoiceTotal(
+                taxableAmount, taxAmount, shippingFee, tt,
                 systemConfig != null ? systemConfig.getLamTronTien() : null));
     }
 
@@ -1867,6 +2225,15 @@ public class HoaDonBanHangPanel extends JPanel {
 
         boolean allowDateChange = systemConfig == null || systemConfig.isChoPhepThayDoiNgayTrenHoaDon();
         dpkNgay.setEnabled(allowDateChange);
+
+        boolean hasTax = systemConfig != null && systemConfig.isCoThueSuat();
+        for (Component component : taxSummaryComponents) component.setVisible(hasTax);
+        boolean hasShipping = systemConfig != null && systemConfig.isCoPhiVanChuyen();
+        for (Component component : shippingSummaryComponents) component.setVisible(hasShipping);
+        txtTiLeThue.setEnabled(hasTax);
+        txtPhiVanChuyen.setEnabled(hasShipping);
+        revalidate();
+        repaint();
         dpkNgay.setToolTipText(allowDateChange
                 ? "Ngày hóa đơn"
                 : "Đã khóa thay đổi ngày trong Cấu hình toàn bộ hệ thống");
@@ -1874,7 +2241,16 @@ public class HoaDonBanHangPanel extends JPanel {
 
     public void refreshSalesConfiguration() {
         systemConfig = systemConfigDAO.loadConfig();
+        if (currentLayHangList.isEmpty() && currentTraHangList.isEmpty()) {
+            int defaultTax = systemConfig != null && systemConfig.isCoThueSuat()
+                    ? systemConfig.getMacDinhThueSuat() : 0;
+            txtTiLeThue.setText(Math.max(0, Math.min(100, defaultTax)) + " %");
+            if (systemConfig == null || !systemConfig.isCoPhiVanChuyen()) {
+                txtPhiVanChuyen.setText("0");
+            }
+        }
         applySalesConfig();
+        recalculateFinancials();
     }
 
     private boolean isDiscountInputAllowed() {

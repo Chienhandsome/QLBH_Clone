@@ -380,10 +380,20 @@ public class BaoCaoCongNoReportService extends BaseDAO {
                     (start != null ? "AND d.NGAY >= ? " : "") +
                     (end != null ? "AND d.NGAY <= ? " : "") +
                     "ORDER BY d.NGAY, d.TIMECREATED, c.TIMECREATED, c.ID";
+            String sqlReceipts = "SELECT pt.SOPHIEU, pt.NGAY, pt.TIMECREATED, pt.LYDOTHU AS DIENGIAI, " +
+                    "pt.SOTIEN AS THU, 0 AS CHI, pt.NOTE FROM TPHIEUTHU pt " +
+                    "WHERE pt.DKHACHHANGID = ? AND (pt.STATUS IS NULL OR pt.STATUS >= 0) " +
+                    "AND (pt.KHONGTHAYDOICONGNO IS NULL OR pt.KHONGTHAYDOICONGNO = 0) " +
+                    (start != null ? "AND pt.NGAY >= ? " : "") +
+                    (end != null ? "AND pt.NGAY <= ? " : "") +
+                    "ORDER BY pt.NGAY, pt.TIMECREATED, pt.SOPHIEU";
             String sqlCash = "SELECT tc.NAME AS SOPHIEU, tc.NGAY, tc.TIMECREATED, tc.DIENGIAI, " +
                     "tc.THU, tc.CHI, tc.NOTE FROM TTHUCHI tc WHERE tc.DKHACHHANGID = ? " +
                     "AND (tc.STATUS IS NULL OR tc.STATUS >= 0) " +
                     "AND (tc.KHONGTHAYDOICONGNO IS NULL OR tc.KHONGTHAYDOICONGNO = 0) " +
+                    "AND NOT EXISTS (SELECT 1 FROM TPHIEUTHU pt " +
+                    "WHERE pt.DKHACHHANGID = tc.DKHACHHANGID " +
+                    "AND TRIM(pt.SOPHIEU) = TRIM(tc.NAME)) " +
                     (start != null ? "AND tc.NGAY >= ? " : "") +
                     (end != null ? "AND tc.NGAY <= ? " : "") +
                     "ORDER BY tc.NGAY, tc.TIMECREATED, tc.NAME";
@@ -449,24 +459,23 @@ public class BaoCaoCongNoReportService extends BaseDAO {
                     }
                 }
 
+                try (PreparedStatement ps = conn.prepareStatement(sqlReceipts)) {
+                    int idx = 1;
+                    ps.setString(idx++, khachHang.getId());
+                    if (start != null) ps.setTimestamp(idx++, new Timestamp(start.getTime()));
+                    if (end != null) ps.setTimestamp(idx++, new Timestamp(end.getTime()));
+                    try (ResultSet rs = ps.executeQuery()) {
+                        addCustomerCashEvents(events, rs);
+                    }
+                }
+
                 try (PreparedStatement ps = conn.prepareStatement(sqlCash)) {
                     int idx = 1;
                     ps.setString(idx++, khachHang.getId());
                     if (start != null) ps.setTimestamp(idx++, new Timestamp(start.getTime()));
                     if (end != null) ps.setTimestamp(idx++, new Timestamp(end.getTime()));
                     try (ResultSet rs = ps.executeQuery()) {
-                        while (rs.next()) {
-                            CustomerDebtEvent event = new CustomerDebtEvent();
-                            event.type = "PHIEUTHU";
-                            event.documentNo = rs.getString("SOPHIEU");
-                            event.date = rs.getTimestamp("NGAY");
-                            event.createdAt = rs.getTimestamp("TIMECREATED");
-                            event.payment = Math.max(0.0, rs.getDouble("THU"));
-                            event.orderTotal = Math.max(0.0, rs.getDouble("CHI"));
-                            event.description = firstNonBlank(rs.getString("DIENGIAI"), "Thanh toán công nợ");
-                            event.note = rs.getString("NOTE");
-                            events.add(event);
-                        }
+                        addCustomerCashEvents(events, rs);
                     }
                 }
             } catch (Exception e) {
@@ -593,6 +602,22 @@ public class BaoCaoCongNoReportService extends BaseDAO {
         return date != null ? sdf.format(date) : "";
     }
 
+    private static void addCustomerCashEvents(List<CustomerDebtEvent> events,
+                                              ResultSet rs) throws Exception {
+        while (rs.next()) {
+            CustomerDebtEvent event = new CustomerDebtEvent();
+            event.type = "PHIEUTHU";
+            event.documentNo = rs.getString("SOPHIEU");
+            event.date = rs.getTimestamp("NGAY");
+            event.createdAt = rs.getTimestamp("TIMECREATED");
+            event.payment = Math.max(0.0, rs.getDouble("THU"));
+            event.orderTotal = Math.max(0.0, rs.getDouble("CHI"));
+            event.description = firstNonBlank(rs.getString("DIENGIAI"), "Thanh toán công nợ");
+            event.note = rs.getString("NOTE");
+            events.add(event);
+        }
+    }
+
     private static Double nullableAmount(double amount) {
         return Math.abs(amount) >= 0.0001 ? amount : null;
     }
@@ -679,10 +704,20 @@ public class BaoCaoCongNoReportService extends BaseDAO {
                 "AND COALESCE(c.XUATVATTU, 0) = 0 " + dateCondition;
         String cashDateCondition = boundary != null
                 ? "AND tc.NGAY " + (inclusive ? "<= ? " : "< ? ") : "";
+        String receiptDateCondition = boundary != null
+                ? "AND pt.NGAY " + (inclusive ? "<= ? " : "< ? ") : "";
+        String receiptSql = "SELECT COALESCE(SUM(COALESCE(pt.SOTIEN, 0)), 0) AS THANHTOAN " +
+                "FROM TPHIEUTHU pt WHERE pt.DKHACHHANGID = ? " +
+                "AND (pt.STATUS IS NULL OR pt.STATUS >= 0) " +
+                "AND (pt.KHONGTHAYDOICONGNO IS NULL OR pt.KHONGTHAYDOICONGNO = 0) " +
+                receiptDateCondition;
         String cashSql = "SELECT COALESCE(SUM(COALESCE(tc.THU, 0) - COALESCE(tc.CHI, 0)), 0) AS THANHTOAN " +
                 "FROM TTHUCHI tc WHERE tc.DKHACHHANGID = ? " +
                 "AND (tc.STATUS IS NULL OR tc.STATUS >= 0) " +
                 "AND (tc.KHONGTHAYDOICONGNO IS NULL OR tc.KHONGTHAYDOICONGNO = 0) " +
+                "AND NOT EXISTS (SELECT 1 FROM TPHIEUTHU pt " +
+                "WHERE pt.DKHACHHANGID = tc.DKHACHHANGID " +
+                "AND TRIM(pt.SOPHIEU) = TRIM(tc.NAME)) " +
                 cashDateCondition;
 
         Map<String, DebtOrderTotals> orderTotals = new HashMap<>();
@@ -733,6 +768,14 @@ public class BaoCaoCongNoReportService extends BaseDAO {
             totals.payment += calculateAppliedInvoicePayment(
                     orderIncrease, order.returnCredit, order.immediatePayment)
                     + order.returnCredit;
+        }
+
+        try (PreparedStatement ps = conn.prepareStatement(receiptSql)) {
+            ps.setString(1, customerId);
+            if (boundary != null) ps.setTimestamp(2, new Timestamp(boundary.getTime()));
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) totals.payment += rs.getDouble("THANHTOAN");
+            }
         }
 
         try (PreparedStatement ps = conn.prepareStatement(cashSql)) {

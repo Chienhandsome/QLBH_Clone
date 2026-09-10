@@ -18,6 +18,8 @@ public class ThanhToanCongNoKhachDialog extends JDialog {
 
     private final CongNoKhachHangDAO congNoDAO = new CongNoKhachHangDAO();
     private final CongNoKhachHangItem customer;
+    private final Double initialAmount;
+    private final String sourceDocumentNo;
     private final DecimalFormat df = new DecimalFormat("#,##0.##");
 
     private DatePickerField dpkNgayThu;
@@ -31,8 +33,15 @@ public class ThanhToanCongNoKhachDialog extends JDialog {
     private boolean isSuccess = false;
 
     public ThanhToanCongNoKhachDialog(Window parent, CongNoKhachHangItem customer) {
+        this(parent, customer, null, null);
+    }
+
+    public ThanhToanCongNoKhachDialog(Window parent, CongNoKhachHangItem customer,
+                                      Double initialAmount, String sourceDocumentNo) {
         super(parent, "PHIẾU THU TIỀN NỢ KHÁCH HÀNG", ModalityType.APPLICATION_MODAL);
         this.customer = customer;
+        this.initialAmount = initialAmount;
+        this.sourceDocumentNo = sourceDocumentNo;
 
         initComponents();
         setupEvents();
@@ -116,7 +125,8 @@ public class ThanhToanCongNoKhachDialog extends JDialog {
         pnlCenter.add(lblTien, gbc);
 
         gbc.gridx = 1;
-        double defaultAmount = Math.max(0, customer.getConNo());
+        double defaultAmount = initialAmount != null && initialAmount > 0
+                ? initialAmount : Math.max(0, customer.getConNo());
         txtSoTien = new JTextField(String.format("%.0f", defaultAmount));
         txtSoTien.setFont(new Font("Segoe UI", Font.BOLD, 13));
         txtSoTien.setForeground(new Color(0, 100, 40));
@@ -144,7 +154,10 @@ public class ThanhToanCongNoKhachDialog extends JDialog {
         pnlCenter.add(lblLyDo, gbc);
 
         gbc.gridx = 1;
-        txtLyDoThu = new JTextField("Thu nợ khách hàng " + customer.getTenKhach());
+        String defaultReason = sourceDocumentNo != null && !sourceDocumentNo.trim().isEmpty()
+                ? "Thu nợ theo phiếu " + sourceDocumentNo.trim() + " - " + customer.getTenKhach()
+                : "Thu nợ khách hàng " + customer.getTenKhach();
+        txtLyDoThu = new JTextField(defaultReason);
         txtLyDoThu.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         txtLyDoThu.setBorder(BorderFactory.createCompoundBorder(
                 new LineBorder(new Color(160, 190, 225), 1),

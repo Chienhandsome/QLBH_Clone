@@ -67,6 +67,7 @@ public class QuanLyCongNoKhachHangPanel extends JPanel {
     // Lower Table: Sổ chi tiết công nợ
     private JTable tableChiTiet;
     private DefaultTableModel modelChiTiet;
+    private final List<ChiTietCongNoKhachHangEntry> listChiTiet = new ArrayList<>();
 
     public QuanLyCongNoKhachHangPanel() {
         setLayout(new BorderLayout());
@@ -335,6 +336,7 @@ public class QuanLyCongNoKhachHangPanel extends JPanel {
                     loadChiTietData();
                 } else {
                     currentSelectedKhach = null;
+                    listChiTiet.clear();
                     modelChiTiet.setRowCount(0);
                 }
             }
@@ -346,6 +348,48 @@ public class QuanLyCongNoKhachHangPanel extends JPanel {
                 if (e.getClickCount() == 2) {
                     openThanhToanDialog();
                 }
+            }
+        });
+
+        JMenuItem miThanhToanDong = new JMenuItem(
+                "Thanh toán dòng này", IconHelper.getIcon("coins.png", 14, 14));
+        miThanhToanDong.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        miThanhToanDong.addActionListener(e -> openThanhToanSelectedDetail());
+        JPopupMenu quickPaymentMenu = new JPopupMenu();
+        quickPaymentMenu.add(miThanhToanDong);
+
+        tableChiTiet.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (SwingUtilities.isLeftMouseButton(e) && e.getClickCount() == 2) {
+                    int row = tableChiTiet.rowAtPoint(e.getPoint());
+                    if (row >= 0) {
+                        tableChiTiet.setRowSelectionInterval(row, row);
+                        openThanhToanSelectedDetail();
+                    }
+                }
+            }
+
+            @Override
+            public void mousePressed(MouseEvent e) {
+                maybeShowQuickPaymentMenu(e);
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                maybeShowQuickPaymentMenu(e);
+            }
+
+            private void maybeShowQuickPaymentMenu(MouseEvent e) {
+                if (!e.isPopupTrigger()) return;
+                int row = tableChiTiet.rowAtPoint(e.getPoint());
+                if (row >= 0 && row < tableChiTiet.getRowCount()) {
+                    tableChiTiet.setRowSelectionInterval(row, row);
+                } else {
+                    tableChiTiet.clearSelection();
+                }
+                miThanhToanDong.setEnabled(isSelectedDetailPayable());
+                quickPaymentMenu.show(tableChiTiet, e.getX(), e.getY());
             }
         });
     }
@@ -426,17 +470,21 @@ public class QuanLyCongNoKhachHangPanel extends JPanel {
             tableKhachHang.setRowSelectionInterval(0, 0);
         } else {
             currentSelectedKhach = null;
+            listChiTiet.clear();
             modelChiTiet.setRowCount(0);
         }
     }
 
     private void loadChiTietData() {
         if (currentSelectedKhach == null) {
+            listChiTiet.clear();
             modelChiTiet.setRowCount(0);
             return;
         }
 
         List<ChiTietCongNoKhachHangEntry> entries = congNoDAO.getChiTietCongNo(currentSelectedKhach.getKhachHangId(), null, null);
+        listChiTiet.clear();
+        listChiTiet.addAll(entries);
         modelChiTiet.setRowCount(0);
 
         for (ChiTietCongNoKhachHangEntry e : entries) {
@@ -463,6 +511,58 @@ public class QuanLyCongNoKhachHangPanel extends JPanel {
 
         if (dlg.isSuccess()) {
             loadDataCongNo();
+        }
+    }
+
+    private boolean isSelectedDetailPayable() {
+        int row = tableChiTiet != null ? tableChiTiet.getSelectedRow() : -1;
+        if (row < 0 || row >= listChiTiet.size()) return false;
+        ChiTietCongNoKhachHangEntry entry = listChiTiet.get(row);
+        return "DONHANG".equals(entry.getLoaiChungTu()) && entry.getTongCong() > 0.0001;
+    }
+
+    private void openThanhToanSelectedDetail() {
+        if (currentSelectedKhach == null) {
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn khách hàng cần thu nợ!",
+                    "Thông báo", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        int row = tableChiTiet.getSelectedRow();
+        if (row < 0 || row >= listChiTiet.size()) {
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn dòng hóa đơn cần thanh toán!",
+                    "Thông báo", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        ChiTietCongNoKhachHangEntry entry = listChiTiet.get(row);
+        if (!"DONHANG".equals(entry.getLoaiChungTu()) || entry.getTongCong() <= 0.0001) {
+            JOptionPane.showMessageDialog(this,
+                    "Dòng đã chọn không phải hóa đơn có giá trị cần thanh toán!",
+                    "Thông báo", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        String selectedCustomerId = currentSelectedKhach.getKhachHangId();
+        Window win = SwingUtilities.getWindowAncestor(this);
+        ThanhToanCongNoKhachDialog dlg = new ThanhToanCongNoKhachDialog(
+                win, currentSelectedKhach, entry.getTongCong(), entry.getSoPhieu());
+        dlg.setVisible(true);
+
+        if (dlg.isSuccess()) {
+            loadDataCongNo();
+            restoreSelectedCustomer(selectedCustomerId);
+        }
+    }
+
+    private void restoreSelectedCustomer(String customerId) {
+        if (customerId == null) return;
+        for (int i = 0; i < listFilteredKhach.size(); i++) {
+            if (customerId.equals(listFilteredKhach.get(i).getKhachHangId())) {
+                tableKhachHang.setRowSelectionInterval(i, i);
+                tableKhachHang.scrollRectToVisible(tableKhachHang.getCellRect(i, 0, true));
+                return;
+            }
         }
     }
 

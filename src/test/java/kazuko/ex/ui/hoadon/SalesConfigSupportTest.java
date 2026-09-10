@@ -22,6 +22,19 @@ class SalesConfigSupportTest {
     }
 
     @Test
+    void calculatesTaxShippingAndReturnsInTheRightOrder() {
+        double grossItems = 1_000_000d;
+        double itemDiscount = 100_000d;
+        double invoiceDiscount = (grossItems - itemDiscount) * 0.10d;
+        double taxable = grossItems - itemDiscount - invoiceDiscount;
+        double tax = SalesConfigSupport.calculateTax(taxable, 8d);
+
+        assertEquals(64_800d, tax, 0.001);
+        assertEquals(924_800d, SalesConfigSupport.calculateInvoiceTotal(
+                taxable, tax, 100_000d, 50_000d, "1"), 0.001);
+    }
+
+    @Test
     void enforcesReturnWindowByCalendarDay() {
         Date returnDate = date(2026, 9, 9);
 

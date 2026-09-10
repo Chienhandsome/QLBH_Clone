@@ -26,6 +26,22 @@ final class SalesConfigSupport {
         return Math.round(amount / unit) * (double) unit;
     }
 
+    static double calculateTax(double taxableAmount, double taxRate) {
+        double safeBase = Math.max(0, taxableAmount);
+        double safeRate = Math.max(0, Math.min(100, taxRate));
+        return safeBase * safeRate / 100.0;
+    }
+
+    static double calculateInvoiceTotal(double taxableAmount, double taxAmount,
+                                        double shippingFee, double returnAmount,
+                                        String roundingUnit) {
+        double amount = Math.max(0, taxableAmount)
+                + Math.max(0, taxAmount)
+                + Math.max(0, shippingFee)
+                - Math.max(0, returnAmount);
+        return roundMoney(Math.max(0, amount), roundingUnit);
+    }
+
     static boolean isReturnAllowed(Date invoiceDate, Date returnDate, int allowedDays) {
         if (invoiceDate == null || returnDate == null) return false;
         ZoneId zone = ZoneId.systemDefault();

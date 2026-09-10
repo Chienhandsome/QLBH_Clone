@@ -87,9 +87,10 @@ public class HoaDonDAO extends BaseDAO {
         }
 
         String sqlMaster = "INSERT INTO TDONHANG (ID, NAME, NGAY, DIENGIAI, TIENHANG, TIENGIAMGIA, TILEGIAMGIA, " +
-                "TONGCONG, TIENTHANHTOAN, CONLAI, DKHOXUATID, DNHANVIENXUATID, DKHACHHANGID, DCUAHANGID, LOAI, STATUS, " +
+                "TIENTHUE, TILETHUE, PHIVANCHUYEN, DOITRA, TONGCONG, TIENTHANHTOAN, CONLAI, " +
+                "DKHOXUATID, DNHANVIENXUATID, DKHACHHANGID, DCUAHANGID, LOAI, STATUS, " +
                 "NOTE, TIMECREATED, USERCREATEDID) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, CURRENT_TIMESTAMP, ?)";
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, CURRENT_TIMESTAMP, ?)";
 
         String sqlDetail = "INSERT INTO TDONHANGCHITIET (ID, TDONHANGID, DMATHANGID, DDONVITINHID, DONGIA, " +
                 "SLXUAT, SLNHAP, TILEGIAMGIA, THANHTIEN, NOTE, STATUS, TIMECREATED, USERCREATEDID) " +
@@ -108,16 +109,20 @@ public class HoaDonDAO extends BaseDAO {
                 psMaster.setDouble(5, dh.getTienHang());
                 psMaster.setDouble(6, dh.getTienGiamGia());
                 psMaster.setDouble(7, dh.getTiLeGiamGia());
-                psMaster.setDouble(8, dh.getTongCong());
-                psMaster.setDouble(9, dh.getTienThanhToan());
-                psMaster.setDouble(10, dh.getConLai());
-                psMaster.setString(11, dh.getKhoXuatId());
-                psMaster.setString(12, dh.getNhanVienXuatId());
-                psMaster.setString(13, dh.getKhachHangId());
-                psMaster.setString(14, dh.getCuaHangId());
-                psMaster.setInt(15, dh.getStatus());
-                psMaster.setString(16, dh.getGhiChu());
-                psMaster.setString(17, getEffectiveUserId());
+                psMaster.setDouble(8, dh.getTienThue());
+                psMaster.setDouble(9, dh.getTiLeThue());
+                psMaster.setDouble(10, dh.getPhiVanChuyen());
+                psMaster.setDouble(11, dh.getTienDoiTra());
+                psMaster.setDouble(12, dh.getTongCong());
+                psMaster.setDouble(13, dh.getTienThanhToan());
+                psMaster.setDouble(14, dh.getConLai());
+                psMaster.setString(15, dh.getKhoXuatId());
+                psMaster.setString(16, dh.getNhanVienXuatId());
+                psMaster.setString(17, dh.getKhachHangId());
+                psMaster.setString(18, dh.getCuaHangId());
+                psMaster.setInt(19, dh.getStatus());
+                psMaster.setString(20, dh.getGhiChu());
+                psMaster.setString(21, getEffectiveUserId());
                 psMaster.executeUpdate();
             }
 
@@ -536,6 +541,7 @@ public class HoaDonDAO extends BaseDAO {
     public boolean updateHoaDon(DonHang dh) {
         if (dh == null || dh.getId() == null) return false;
         String sql = "UPDATE TDONHANG SET NGAY = ?, DIENGIAI = ?, TIENHANG = ?, TIENGIAMGIA = ?, TILEGIAMGIA = ?, " +
+                "TIENTHUE = ?, TILETHUE = ?, PHIVANCHUYEN = ?, DOITRA = ?, " +
                 "TONGCONG = ?, TIENTHANHTOAN = ?, CONLAI = ?, DKHOXUATID = ?, DNHANVIENXUATID = ?, DKHACHHANGID = ?, " +
                 "DCUAHANGID = ?, NOTE = ?, TIMEMODIFIED = CURRENT_TIMESTAMP, USERMODIFIEDID = ? WHERE ID = ?";
 
@@ -550,16 +556,20 @@ public class HoaDonDAO extends BaseDAO {
                 ps.setDouble(3, dh.getTienHang());
                 ps.setDouble(4, dh.getTienGiamGia());
                 ps.setDouble(5, dh.getTiLeGiamGia());
-                ps.setDouble(6, dh.getTongCong());
-                ps.setDouble(7, dh.getTienThanhToan());
-                ps.setDouble(8, dh.getConLai());
-                ps.setString(9, dh.getKhoXuatId());
-                ps.setString(10, dh.getNhanVienXuatId());
-                ps.setString(11, dh.getKhachHangId());
-                ps.setString(12, dh.getCuaHangId());
-                ps.setString(13, dh.getGhiChu());
-                ps.setString(14, getEffectiveUserId());
-                ps.setString(15, dh.getId());
+                ps.setDouble(6, dh.getTienThue());
+                ps.setDouble(7, dh.getTiLeThue());
+                ps.setDouble(8, dh.getPhiVanChuyen());
+                ps.setDouble(9, dh.getTienDoiTra());
+                ps.setDouble(10, dh.getTongCong());
+                ps.setDouble(11, dh.getTienThanhToan());
+                ps.setDouble(12, dh.getConLai());
+                ps.setString(13, dh.getKhoXuatId());
+                ps.setString(14, dh.getNhanVienXuatId());
+                ps.setString(15, dh.getKhachHangId());
+                ps.setString(16, dh.getCuaHangId());
+                ps.setString(17, dh.getGhiChu());
+                ps.setString(18, getEffectiveUserId());
+                ps.setString(19, dh.getId());
                 ps.executeUpdate();
             }
 
@@ -655,6 +665,8 @@ public class HoaDonDAO extends BaseDAO {
         try { dh.setDiaChiKhach(rs.getString("DIACHIKHACH")); } catch (Exception ignored) {}
         try { dh.setDienThoaiKhach(rs.getString("DIENTHOAIKHACH")); } catch (Exception ignored) {}
         try { dh.setUserCreatedId(rs.getString("USERCREATEDID")); } catch (Exception ignored) {}
+        try { dh.setTienThue(rs.getDouble("TIENTHUE")); } catch (Exception ignored) {}
+        try { dh.setTiLeThue(rs.getDouble("TILETHUE")); } catch (Exception ignored) {}
         try { dh.setPhiVanChuyen(rs.getDouble("PHIVANCHUYEN")); } catch (Exception ignored) {}
         try { dh.setTienDoiTra(rs.getDouble("DOITRA")); } catch (Exception ignored) {}
         try { dh.setKhachDua(rs.getDouble("KHACHDUA")); } catch (Exception ignored) {}
