@@ -8,6 +8,7 @@ public class BaoCaoCongNoKhachHangReportRow {
     private String ngay;
     private String tenHangHoa;
     private Double soLuong;
+    private String donViTinh;
     private Double donGia;
     private Double thanhTien;
     private Double tongGiaTriDonHang;
@@ -19,12 +20,14 @@ public class BaoCaoCongNoKhachHangReportRow {
     public BaoCaoCongNoKhachHangReportRow() {}
 
     public BaoCaoCongNoKhachHangReportRow(String ngay, String tenHangHoa,
-                                          Double soLuong, Double donGia, Double thanhTien,
+                                          Double soLuong, String donViTinh,
+                                          Double donGia, Double thanhTien,
                                           Double tongGiaTriDonHang, Double thanhToan, Double conNo,
                                           String ghiChu, String loaiDong) {
         this.ngay = ngay;
         this.tenHangHoa = tenHangHoa;
         this.soLuong = soLuong;
+        this.donViTinh = donViTinh;
         this.donGia = donGia;
         this.thanhTien = thanhTien;
         this.tongGiaTriDonHang = tongGiaTriDonHang;
@@ -40,6 +43,8 @@ public class BaoCaoCongNoKhachHangReportRow {
     public void setTenHangHoa(String tenHangHoa) { this.tenHangHoa = tenHangHoa; }
     public Double getSoLuong() { return soLuong; }
     public void setSoLuong(Double soLuong) { this.soLuong = soLuong; }
+    public String getDonViTinh() { return donViTinh; }
+    public void setDonViTinh(String donViTinh) { this.donViTinh = donViTinh; }
     public Double getDonGia() { return donGia; }
     public void setDonGia(Double donGia) { this.donGia = donGia; }
     public Double getThanhTien() { return thanhTien; }

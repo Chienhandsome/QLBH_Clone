@@ -493,7 +493,11 @@ public class BaoCaoCongNoReportService extends BaseDAO {
                 double orderIncrease = calculateOrderIncrease(
                         event.orderTotal, returnCredit, outgoingAmount,
                         event.discount, event.tax, event.shipping);
-                double immediatePayment = Math.max(0.0, event.payment);
+                // TIENTHANHTOAN tren hoa don la so tien khach dua tai quay. Phan dua du
+                // la tien thoi lai, khong phai khoan khach tra no va khong duoc chuyen
+                // sang bu tru cho hoa don sau.
+                double immediatePayment = calculateAppliedInvoicePayment(
+                        orderIncrease, returnCredit, event.payment);
                 tongTangNoTrongKy += orderIncrease;
                 tongGiamNoTrongKy += immediatePayment + returnCredit;
 
@@ -501,7 +505,7 @@ public class BaoCaoCongNoReportService extends BaseDAO {
                     runningDebt += orderIncrease - immediatePayment;
                     transactionRows.add(new BaoCaoCongNoKhachHangReportRow(
                             formatDate(event.date, sdf), firstNonBlank(event.description, safe(event.documentNo)),
-                            null, null, null, nullableAmount(orderIncrease), nullableAmount(immediatePayment),
+                            null, null, null, null, nullableAmount(orderIncrease), nullableAmount(immediatePayment),
                             runningDebt, safe(event.note), "DONHANG"));
                     continue;
                 }
@@ -536,30 +540,34 @@ public class BaoCaoCongNoReportService extends BaseDAO {
                     transactionRows.add(new BaoCaoCongNoKhachHangReportRow(
                             firstDetail ? formatDate(event.date, sdf) : "",
                             firstNonBlank(detail.tenHang, safe(event.documentNo)),
-                            nullableAmount(detail.soLuong), detail.donGia,
+                            nullableAmount(detail.soLuong), safe(detail.donViTinh), detail.donGia,
                             detail.thanhTien, applyOrderIncrease ? rowIncrease : null,
                             nullableAmount(rowPayment), runningDebt, safe(note),
                             detail.isReturn ? "DOITRA" : "HANGHOA"));
                     firstDetail = false;
                 }
             } else {
-                runningDebt += event.orderTotal - event.payment;
+                double appliedCashPayment = Math.min(
+                        Math.max(0.0, event.payment),
+                        Math.max(0.0, runningDebt + event.orderTotal));
+                runningDebt = Math.max(0.0,
+                        runningDebt + event.orderTotal - appliedCashPayment);
                 tongTangNoTrongKy += event.orderTotal;
-                tongGiamNoTrongKy += event.payment;
+                tongGiamNoTrongKy += appliedCashPayment;
                 transactionRows.add(new BaoCaoCongNoKhachHangReportRow(
                         formatDate(event.date, sdf), event.description,
-                        null, null, null, nullableAmount(event.orderTotal), nullableAmount(event.payment),
+                        null, null, null, null, nullableAmount(event.orderTotal), nullableAmount(appliedCashPayment),
                         runningDebt, firstNonBlank(event.note, safe(event.documentNo)), "PHIEUTHU"));
             }
         }
 
         List<BaoCaoCongNoKhachHangReportRow> rows = new ArrayList<>();
         rows.add(new BaoCaoCongNoKhachHangReportRow(
-                "", "Tổng", null, null, null,
+                "", "Tổng", null, null, null, null,
                 cumulativeTotals.orderValue, cumulativeTotals.payment,
                 cumulativeTotals.getDebt(), "", "TONG"));
         rows.add(new BaoCaoCongNoKhachHangReportRow(
-                "", openingDebtLabel(start, sdf), null, null, null,
+                "", openingDebtLabel(start, sdf), null, null, null, null,
                 noDauKy, null, noDauKy, "", "NODAU"));
         rows.addAll(transactionRows);
 
@@ -617,6 +625,17 @@ public class BaoCaoCongNoReportService extends BaseDAO {
         // hàng đổi mới, phải dựng lại giá trị hàng mới để giữ được phần chênh lệch âm.
         return Math.max(0.0, outgoingAmount - Math.max(0.0, discount)
                 + Math.max(0.0, tax) + Math.max(0.0, shipping));
+    }
+
+    /**
+     * Chi phan tien thuc su can de thanh toan hoa don moi duoc tinh giam cong no.
+     * Tien khach dua vuot qua so phai tra la tien thoi lai, khong phai cong no am.
+     */
+    public static double calculateAppliedInvoicePayment(double orderIncrease, double returnCredit,
+                                                        double tenderedPayment) {
+        double netPayable = Math.max(0.0,
+                Math.max(0.0, orderIncrease) - Math.max(0.0, returnCredit));
+        return Math.min(Math.max(0.0, tenderedPayment), netPayable);
     }
 
     private static String formatReturnNote(String note) {
@@ -707,10 +726,13 @@ public class BaoCaoCongNoReportService extends BaseDAO {
         }
 
         for (DebtOrderTotals order : orderTotals.values()) {
-            totals.orderValue += calculateOrderIncrease(
+            double orderIncrease = calculateOrderIncrease(
                     order.orderTotal, order.returnCredit, order.outgoingAmount,
                     order.discount, order.tax, order.shipping);
-            totals.payment += order.immediatePayment + order.returnCredit;
+            totals.orderValue += orderIncrease;
+            totals.payment += calculateAppliedInvoicePayment(
+                    orderIncrease, order.returnCredit, order.immediatePayment)
+                    + order.returnCredit;
         }
 
         try (PreparedStatement ps = conn.prepareStatement(cashSql)) {
@@ -720,6 +742,10 @@ public class BaoCaoCongNoReportService extends BaseDAO {
                 if (rs.next()) totals.payment += rs.getDouble("THANHTOAN");
             }
         }
+        // Thu vuot qua tong phai thu khong tao ra "no cua hang no khach" trong
+        // bao cao cong no phai thu. Phan vuot la tien thoi/hoan lai.
+        totals.payment = Math.min(Math.max(0.0, totals.payment),
+                Math.max(0.0, totals.orderValue));
         return totals;
     }
 
@@ -800,7 +826,7 @@ public class BaoCaoCongNoReportService extends BaseDAO {
         private double payment;
 
         private double getDebt() {
-            return orderValue - payment;
+            return Math.max(0.0, orderValue - payment);
         }
     }
 

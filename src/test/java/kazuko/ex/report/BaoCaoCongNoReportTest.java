@@ -41,6 +41,25 @@ public class BaoCaoCongNoReportTest {
     }
 
     @Test
+    public void testTienKhachDuaDuKhongTaoCongNoAm() {
+        assertEquals(989_000d,
+                BaoCaoCongNoReportService.calculateAppliedInvoicePayment(
+                        989_000d, 0d, 1_000_000d),
+                0.001,
+                "11.000 tien thoi lai khong duoc tinh la thanh toan cong no");
+        assertEquals(1_465_000d,
+                BaoCaoCongNoReportService.calculateAppliedInvoicePayment(
+                        1_465_000d, 0d, 1_500_000d),
+                0.001,
+                "35.000 tien thoi lai khong duoc bu sang hoa don sau");
+        assertEquals(135_000d,
+                BaoCaoCongNoReportService.calculateAppliedInvoicePayment(
+                        135_000d, 0d, 200_000d),
+                0.001,
+                "65.000 tien thoi lai khong duoc tao so du am");
+    }
+
+    @Test
     public void testBaoCaoCongNoNhaCungCap() throws Exception {
         Calendar cal = Calendar.getInstance();
         cal.set(2026, Calendar.SEPTEMBER, 1, 0, 0, 0);
