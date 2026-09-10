@@ -1,55 +1,57 @@
 package kazuko.ex.report.model;
 
+/**
+ * Một dòng trên báo cáo đối chiếu công nợ của một khách hàng.
+ * Các giá trị số được phép null để JasperReports in ô trống ở dòng chứng từ.
+ */
 public class BaoCaoCongNoKhachHangReportRow {
-    private Integer stt;
-    private String nhomKhachHang;
-    private String maKhachHang;
-    private String tenKhachHang;
-    private String dienThoai;
-    private Double noDau;
-    private Double mua;
+    private String ngay;
+    private String tenHangHoa;
+    private Double soLuong;
+    private Double donGia;
+    private Double thanhTien;
+    private Double tongGiaTriDonHang;
     private Double thanhToan;
-    private Double noCuoi;
+    private Double conNo;
+    private String ghiChu;
+    private String loaiDong;
 
     public BaoCaoCongNoKhachHangReportRow() {}
 
-    public BaoCaoCongNoKhachHangReportRow(Integer stt, String nhomKhachHang, String maKhachHang, String tenKhachHang,
-                                         String dienThoai, Double noDau, Double mua, Double thanhToan, Double noCuoi) {
-        this.stt = stt;
-        this.nhomKhachHang = nhomKhachHang;
-        this.maKhachHang = maKhachHang;
-        this.tenKhachHang = tenKhachHang;
-        this.dienThoai = dienThoai;
-        this.noDau = noDau != null ? noDau : 0.0;
-        this.mua = mua != null ? mua : 0.0;
-        this.thanhToan = thanhToan != null ? thanhToan : 0.0;
-        this.noCuoi = noCuoi != null ? noCuoi : 0.0;
+    public BaoCaoCongNoKhachHangReportRow(String ngay, String tenHangHoa,
+                                          Double soLuong, Double donGia, Double thanhTien,
+                                          Double tongGiaTriDonHang, Double thanhToan, Double conNo,
+                                          String ghiChu, String loaiDong) {
+        this.ngay = ngay;
+        this.tenHangHoa = tenHangHoa;
+        this.soLuong = soLuong;
+        this.donGia = donGia;
+        this.thanhTien = thanhTien;
+        this.tongGiaTriDonHang = tongGiaTriDonHang;
+        this.thanhToan = thanhToan;
+        this.conNo = conNo;
+        this.ghiChu = ghiChu;
+        this.loaiDong = loaiDong;
     }
 
-    public Integer getStt() { return stt; }
-    public void setStt(Integer stt) { this.stt = stt; }
-
-    public String getNhomKhachHang() { return nhomKhachHang; }
-    public void setNhomKhachHang(String nhomKhachHang) { this.nhomKhachHang = nhomKhachHang; }
-
-    public String getMaKhachHang() { return maKhachHang; }
-    public void setMaKhachHang(String maKhachHang) { this.maKhachHang = maKhachHang; }
-
-    public String getTenKhachHang() { return tenKhachHang; }
-    public void setTenKhachHang(String tenKhachHang) { this.tenKhachHang = tenKhachHang; }
-
-    public String getDienThoai() { return dienThoai; }
-    public void setDienThoai(String dienThoai) { this.dienThoai = dienThoai; }
-
-    public Double getNoDau() { return noDau; }
-    public void setNoDau(Double noDau) { this.noDau = noDau; }
-
-    public Double getMua() { return mua; }
-    public void setMua(Double mua) { this.mua = mua; }
-
+    public String getNgay() { return ngay; }
+    public void setNgay(String ngay) { this.ngay = ngay; }
+    public String getTenHangHoa() { return tenHangHoa; }
+    public void setTenHangHoa(String tenHangHoa) { this.tenHangHoa = tenHangHoa; }
+    public Double getSoLuong() { return soLuong; }
+    public void setSoLuong(Double soLuong) { this.soLuong = soLuong; }
+    public Double getDonGia() { return donGia; }
+    public void setDonGia(Double donGia) { this.donGia = donGia; }
+    public Double getThanhTien() { return thanhTien; }
+    public void setThanhTien(Double thanhTien) { this.thanhTien = thanhTien; }
+    public Double getTongGiaTriDonHang() { return tongGiaTriDonHang; }
+    public void setTongGiaTriDonHang(Double tongGiaTriDonHang) { this.tongGiaTriDonHang = tongGiaTriDonHang; }
     public Double getThanhToan() { return thanhToan; }
     public void setThanhToan(Double thanhToan) { this.thanhToan = thanhToan; }
-
-    public Double getNoCuoi() { return noCuoi; }
-    public void setNoCuoi(Double noCuoi) { this.noCuoi = noCuoi; }
+    public Double getConNo() { return conNo; }
+    public void setConNo(Double conNo) { this.conNo = conNo; }
+    public String getGhiChu() { return ghiChu; }
+    public void setGhiChu(String ghiChu) { this.ghiChu = ghiChu; }
+    public String getLoaiDong() { return loaiDong; }
+    public void setLoaiDong(String loaiDong) { this.loaiDong = loaiDong; }
 }

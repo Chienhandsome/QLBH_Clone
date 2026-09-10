@@ -3,6 +3,7 @@ package kazuko.ex.ui.hoadon;
 import kazuko.ex.dao.*;
 import kazuko.ex.model.banhang.DonHang;
 import kazuko.ex.model.banhang.DonHangChiTiet;
+import kazuko.ex.model.banhang.GiaBanGanDayKhachHang;
 import kazuko.ex.model.danhmuc.*;
 import kazuko.ex.model.dathang.KhachDatHang;
 import kazuko.ex.model.dathang.KhachDatHangChiTiet;
@@ -1067,15 +1068,23 @@ public class HoaDonBanHangPanel extends JPanel {
     }
 
     private void openNhapSoLuongForProduct(MatHang m) {
+        KhachHang selectedCustomer = (KhachHang) cbKhachHang.getSelectedItem();
+        List<GiaBanGanDayKhachHang> recentPrices = Collections.emptyList();
+        if (selectedCustomer != null && selectedCustomer.getId() != null
+                && !selectedCustomer.getId().trim().isEmpty()) {
+            recentPrices = hoaDonDAO.getGiaBanGanDayCuaKhachHang(
+                    selectedCustomer.getId(), m.getId(), m.getDonViTinhId());
+        }
+
         Window parentWin = SwingUtilities.getWindowAncestor(this);
         ChonLoaiGiaDialog priceDlg = new ChonLoaiGiaDialog(parentWin, systemConfig,
-                m.getGiaBan(), m.getGiaBan2(), m.getGiaBan3(), m.getGiaBan4());
+                m.getGiaBan(), m.getGiaBan2(), m.getGiaBan3(), m.getGiaBan4(), recentPrices);
         priceDlg.setVisible(true);
 
-        int selectedPriceIndex = priceDlg.getSelectedPriceIndex();
-        if (selectedPriceIndex < 0) return;
+        if (!priceDlg.isConfirmed()) return;
 
-        double price = getPriceForMatHang(m, selectedPriceIndex);
+        int selectedPriceIndex = priceDlg.getSelectedPriceIndex();
+        double price = priceDlg.getSelectedPrice();
         double defaultQty = 1.0;
         try {
             defaultQty = Double.parseDouble(txtSoLuongBarcode.getText().trim().replace(",", "."));
@@ -1093,7 +1102,7 @@ public class HoaDonBanHangPanel extends JPanel {
         if (dlg.isConfirmed()) {
             currentLoaiGiaName = priceDlg.getSelectedPriceName();
 
-            if (priceDlg.isApplyToAll()) {
+            if (priceDlg.isApplyToAll() && selectedPriceIndex >= 0) {
                 applyPriceToAllInvoiceItems(selectedPriceIndex);
             }
 

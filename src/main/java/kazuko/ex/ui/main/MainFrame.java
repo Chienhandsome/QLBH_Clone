@@ -1299,7 +1299,7 @@ public class MainFrame extends JFrame {
                 break;
             case "ĐỐI CHIẾU CÔNG NỢ KHÁCH HÀNG":
             case "BÁO CÁO CÔNG NỢ KHÁCH HÀNG":
-                openTab("Báo cáo công nợ khách hàng", new BaoCaoCongNoKhachHangPanel());
+                openTab("Đối chiếu công nợ khách hàng", new BaoCaoCongNoKhachHangPanel());
                 break;
             case "TỔNG HỢP CÔNG NỢ KHÁCH HÀNG":
                 openTab("Tổng hợp công nợ khách hàng", new TongHopCongNoKhachHangPanel());

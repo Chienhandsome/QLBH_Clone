@@ -2,6 +2,7 @@ package kazuko.ex.dao;
 
 import kazuko.ex.model.banhang.DonHang;
 import kazuko.ex.model.banhang.DonHangChiTiet;
+import kazuko.ex.model.banhang.GiaBanGanDayKhachHang;
 import kazuko.ex.service.AuthService;
 
 import java.sql.*;
@@ -21,6 +22,59 @@ public class HoaDonDAO extends BaseDAO {
             return AuthService.getCurrentUser().getId().trim();
         }
         return "4f1466a0-0756-4ba9-afa8-053b96ca7569";
+    }
+
+    /**
+     * Lấy tối đa ba đơn giá khác nhau gần đây để giao diện hiển thị lịch sử mua.
+     * Chỉ dùng dòng xuất của hóa đơn hoàn tất;
+     * dòng trả, hóa đơn nháp/hủy không được tính.
+     */
+    public List<GiaBanGanDayKhachHang> getGiaBanGanDayCuaKhachHang(
+            String khachHangId, String matHangId, String donViTinhId) {
+        List<GiaBanGanDayKhachHang> result = new ArrayList<>();
+        if (khachHangId == null || khachHangId.trim().isEmpty()
+                || matHangId == null || matHangId.trim().isEmpty()) {
+            return result;
+        }
+
+        String unitCondition = donViTinhId != null && !donViTinhId.trim().isEmpty()
+                ? "AND (c.DDONVITINHID = ? OR c.DDONVITINHID IS NULL) " : "";
+        String sql = "SELECT c.DONGIA, d.NGAY, d.NAME AS SOHOADON, " +
+                "d.TIMECREATED AS DONCREATED, c.TIMECREATED AS CHITIETCREATED " +
+                "FROM TDONHANGCHITIET c JOIN TDONHANG d ON c.TDONHANGID = d.ID " +
+                "WHERE d.DKHACHHANGID = ? AND c.DMATHANGID = ? AND d.LOAI = 0 " +
+                "AND (d.DATHANHTOAN = 30 OR d.STATUS = 1) " +
+                "AND (d.STATUS IS NULL OR d.STATUS >= 0) " +
+                "AND (c.STATUS IS NULL OR c.STATUS >= 0) " +
+                "AND COALESCE(c.XUATVATTU, 0) = 0 " +
+                "AND (COALESCE(c.SLXUATCHUAQUYDOI, 0) > 0 OR COALESCE(c.SLXUAT, 0) > 0) " +
+                "AND COALESCE(c.SLNHAPCHUAQUYDOI, 0) = 0 AND COALESCE(c.SLNHAP, 0) = 0 " +
+                "AND c.DONGIA > 0 " + unitCondition +
+                "ORDER BY d.NGAY DESC, c.TIMECREATED DESC, d.TIMECREATED DESC, c.ID DESC";
+
+        Set<Long> seenPrices = new HashSet<>();
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            int index = 1;
+            ps.setString(index++, khachHangId.trim());
+            ps.setString(index++, matHangId.trim());
+            if (!unitCondition.isEmpty()) ps.setString(index, donViTinhId.trim());
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next() && result.size() < 3) {
+                    // DONGIA là kiểu số thực trong dữ liệu cũ và có thể đọc thành 638000.02
+                    // dù giá nghiệp vụ là 638000. Chuẩn hóa về đơn vị đồng trước khi dùng lại.
+                    double price = Math.round(rs.getDouble("DONGIA"));
+                    long priceKey = Math.round(price);
+                    if (!seenPrices.add(priceKey)) continue;
+                    result.add(new GiaBanGanDayKhachHang(
+                            price, rs.getTimestamp("NGAY"), rs.getString("SOHOADON")));
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Lỗi lấy giá bán gần đây của khách hàng: " + e.getMessage());
+        }
+        return result;
     }
 
     public boolean insertHoaDon(DonHang dh) {

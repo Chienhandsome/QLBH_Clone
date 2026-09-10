@@ -1,7 +1,7 @@
 package kazuko.ex.ui.baocao;
 
-import kazuko.ex.dao.NhomKhachHangDAO;
-import kazuko.ex.model.danhmuc.NhomKhachHang;
+import kazuko.ex.dao.KhachHangDAO;
+import kazuko.ex.model.danhmuc.KhachHang;
 import kazuko.ex.report.service.BaoCaoCongNoReportService;
 import kazuko.ex.util.IconHelper;
 import net.sf.jasperreports.engine.JasperPrint;
@@ -19,11 +19,11 @@ import java.util.List;
 public class BaoCaoCongNoKhachHangPanel extends JPanel {
 
     private final BaoCaoCongNoReportService reportService = new BaoCaoCongNoReportService();
-    private final NhomKhachHangDAO nhomDAO = new NhomKhachHangDAO();
+    private final KhachHangDAO khachHangDAO = new KhachHangDAO();
 
     private JSpinner spinTuNgay;
     private JSpinner spinDenNgay;
-    private JComboBox<ComboItem> cbNhomKhach;
+    private JComboBox<ComboItem> cbKhachHang;
     private JButton btnTaiDuLieu;
 
     private JPanel pnlViewerContainer;
@@ -73,7 +73,7 @@ public class BaoCaoCongNoKhachHangPanel extends JPanel {
 
         spinTuNgay.addChangeListener(e -> onFilterChanged());
         spinDenNgay.addChangeListener(e -> onFilterChanged());
-        cbNhomKhach.addActionListener(e -> onFilterChanged());
+        cbKhachHang.addActionListener(e -> onFilterChanged());
     }
 
     private void onFilterChanged() {
@@ -106,11 +106,11 @@ public class BaoCaoCongNoKhachHangPanel extends JPanel {
         spinDenNgay.setPreferredSize(new Dimension(105, 26));
         pnl.add(spinDenNgay);
 
-        // Nhóm khách
-        pnl.add(new JLabel("Nhóm khách:"));
-        cbNhomKhach = new JComboBox<>();
-        cbNhomKhach.setPreferredSize(new Dimension(160, 26));
-        pnl.add(cbNhomKhach);
+        // Khách hàng cần đối chiếu
+        pnl.add(new JLabel("Khách hàng:"));
+        cbKhachHang = new JComboBox<>();
+        cbKhachHang.setPreferredSize(new Dimension(240, 26));
+        pnl.add(cbKhachHang);
 
         // Nút Tải dữ liệu
         btnTaiDuLieu = new JButton("Tải dữ liệu (F5)");
@@ -125,12 +125,15 @@ public class BaoCaoCongNoKhachHangPanel extends JPanel {
     }
 
     private void loadFilterData() {
-        cbNhomKhach.removeAllItems();
-        cbNhomKhach.addItem(new ComboItem("Tất cả", null));
+        cbKhachHang.removeAllItems();
+        cbKhachHang.addItem(new ComboItem("-- Chọn khách hàng --", null));
         try {
-            List<NhomKhachHang> list = nhomDAO.getAll();
-            for (NhomKhachHang n : list) {
-                cbNhomKhach.addItem(new ComboItem(n.getName(), n.getId()));
+            List<KhachHang> list = khachHangDAO.getAll();
+            for (KhachHang kh : list) {
+                String ma = kh.getMaKhach() != null && !kh.getMaKhach().trim().isEmpty()
+                        ? kh.getMaKhach().trim() + " - " : "";
+                String ten = kh.getName() != null ? kh.getName() : "";
+                cbKhachHang.addItem(new ComboItem(ma + ten, kh.getId()));
             }
         } catch (Exception ignored) {}
     }
@@ -138,8 +141,19 @@ public class BaoCaoCongNoKhachHangPanel extends JPanel {
     public void loadReport() {
         Date tuNgay = (Date) spinTuNgay.getValue();
         Date denNgay = (Date) spinDenNgay.getValue();
-        ComboItem selectedNhom = (ComboItem) cbNhomKhach.getSelectedItem();
-        String nhomId = selectedNhom != null ? selectedNhom.getId() : null;
+        ComboItem selectedKhach = (ComboItem) cbKhachHang.getSelectedItem();
+        String khachHangId = selectedKhach != null ? selectedKhach.getId() : null;
+
+        if (khachHangId == null || khachHangId.trim().isEmpty()) {
+            pnlViewerContainer.removeAll();
+            JLabel message = new JLabel("Vui lòng chọn khách hàng cần đối chiếu công nợ.", SwingConstants.CENTER);
+            message.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+            message.setForeground(new Color(75, 90, 110));
+            pnlViewerContainer.add(message, BorderLayout.CENTER);
+            pnlViewerContainer.revalidate();
+            pnlViewerContainer.repaint();
+            return;
+        }
 
         btnTaiDuLieu.setEnabled(false);
         setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
@@ -147,7 +161,7 @@ public class BaoCaoCongNoKhachHangPanel extends JPanel {
         SwingWorker<JasperPrint, Void> worker = new SwingWorker<>() {
             @Override
             protected JasperPrint doInBackground() throws Exception {
-                return reportService.generateBaoCaoCongNoKhachHang(tuNgay, denNgay, nhomId);
+                return reportService.generateBaoCaoCongNoKhachHang(tuNgay, denNgay, khachHangId);
             }
 
             @Override
