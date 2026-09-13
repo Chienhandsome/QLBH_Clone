@@ -742,6 +742,7 @@ public class MatHangDAO extends BaseDAO {
         mh.setPhuongThucTruKho(rs.getInt("LOAIDINHLUONG"));
         mh.setKichThuoc(rs.getString("SIZE"));
         mh.setKhongInCheBien(rs.getInt("KHONGINCHEBIEN") == 1);
+        mh.setImageData(rs.getBytes("ANH"));
         mh.setHangSanXuat(rs.getString("DHANGSANXUATID"));
         mh.setDoiTacKyGui(rs.getString("DDOITACKYGUIID"));
         return mh;
@@ -754,7 +755,7 @@ public class MatHangDAO extends BaseDAO {
                      "m.MACDINHGIAMGIA, m.MACDINHGIAMTIEN, m.DNHOMMATHANGID, m.DDONVITINHID, m.DDONVITINHCHANID, " +
                      "m.NOTE, m.STATUS, m.USERCREATEDID, m.TIMECREATED, m.USERMODIFIEDID, m.TIMEMODIFIED, " +
                      "m.TONTOITHIEU, m.TONTOIDA, m.BAOHANH, m.DHANGSANXUATID, m.DDOITACKYGUIID, m.HOAHONG, " +
-                     "m.THEOCAN, m.COHANSUDUNG, m.LOAIDINHLUONG, m.SIZE, m.KHONGINCHEBIEN, " +
+                     "m.THEOCAN, m.COHANSUDUNG, m.LOAIDINHLUONG, m.SIZE, m.KHONGINCHEBIEN, m.ANH, " +
                      "n.NAME as TENNHOM, d.NAME as TENDONVITINH, dc.NAME as TENDONVITINHCHAN " +
                      "FROM DMATHANG m " +
                      "LEFT JOIN DNHOMMATHANG n ON m.DNHOMMATHANGID = n.ID " +
@@ -783,7 +784,7 @@ public class MatHangDAO extends BaseDAO {
                 "m.MACDINHGIAMGIA, m.MACDINHGIAMTIEN, m.DNHOMMATHANGID, m.DDONVITINHID, m.DDONVITINHCHANID, " +
                 "m.NOTE, m.STATUS, m.USERCREATEDID, m.TIMECREATED, m.USERMODIFIEDID, m.TIMEMODIFIED, " +
                 "m.TONTOITHIEU, m.TONTOIDA, m.BAOHANH, m.DHANGSANXUATID, m.DDOITACKYGUIID, m.HOAHONG, " +
-                "m.THEOCAN, m.COHANSUDUNG, m.LOAIDINHLUONG, m.SIZE, m.KHONGINCHEBIEN, " +
+                "m.THEOCAN, m.COHANSUDUNG, m.LOAIDINHLUONG, m.SIZE, m.KHONGINCHEBIEN, m.ANH, " +
                 "n.NAME as TENNHOM, d.NAME as TENDONVITINH, dc.NAME as TENDONVITINHCHAN " +
                 "FROM DMATHANG m " +
                 "LEFT JOIN DNHOMMATHANG n ON m.DNHOMMATHANGID = n.ID " +
@@ -836,14 +837,14 @@ public class MatHangDAO extends BaseDAO {
                 "MACDINHGIAMGIA, MACDINHGIAMTIEN, DNHOMMATHANGID, DDONVITINHID, DDONVITINHCHANID, " +
                 "NOTE, STATUS, TIMECREATED, USERCREATEDID, TONTOITHIEU, TONTOIDA, " +
                 "BAOHANH, DHANGSANXUATID, DDOITACKYGUIID, HOAHONG, THEOCAN, " +
-                "COHANSUDUNG, LOAIDINHLUONG, SIZE, KHONGINCHEBIEN" +
+                "COHANSUDUNG, LOAIDINHLUONG, SIZE, KHONGINCHEBIEN, ANH" +
                 ") VALUES (" +
                 "?, ?, ?, ?, ?, ?, ?, " +
                 "?, ?, ?, ?, ?, " +
                 "?, ?, ?, ?, ?, " +
                 "?, 30, ?, ?, ?, ?, " +
                 "?, ?, ?, ?, ?, " +
-                "?, ?, ?, ?" +
+                "?, ?, ?, ?, ?" +
                 ")";
         try (Connection conn = getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -884,6 +885,7 @@ public class MatHangDAO extends BaseDAO {
             ps.setInt(i++, mh.getPhuongThucTruKho());
             ps.setString(i++, mh.getKichThuoc() != null ? mh.getKichThuoc() : "");
             ps.setInt(i++, mh.isKhongInCheBien() ? 1 : 0);
+            setImage(ps, i++, mh.getImageData());
             int rows = ps.executeUpdate();
             if (!conn.getAutoCommit()) conn.commit();
             return rows > 0;
@@ -900,7 +902,7 @@ public class MatHangDAO extends BaseDAO {
                 "MACDINHGIAMGIA=?, MACDINHGIAMTIEN=?, DNHOMMATHANGID=?, DDONVITINHID=?, DDONVITINHCHANID=?, " +
                 "NOTE=?, TIMEMODIFIED=?, USERMODIFIEDID=?, TONTOITHIEU=?, TONTOIDA=?, " +
                 "BAOHANH=?, DHANGSANXUATID=?, DDOITACKYGUIID=?, HOAHONG=?, THEOCAN=?, " +
-                "COHANSUDUNG=?, LOAIDINHLUONG=?, SIZE=?, KHONGINCHEBIEN=? " +
+                "COHANSUDUNG=?, LOAIDINHLUONG=?, SIZE=?, KHONGINCHEBIEN=?, ANH=? " +
                 "WHERE ID=?";
         try (Connection conn = getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -940,6 +942,7 @@ public class MatHangDAO extends BaseDAO {
             ps.setInt(i++, mh.getPhuongThucTruKho());
             ps.setString(i++, mh.getKichThuoc() != null ? mh.getKichThuoc() : "");
             ps.setInt(i++, mh.isKhongInCheBien() ? 1 : 0);
+            setImage(ps, i++, mh.getImageData());
             ps.setString(i++, mh.getId());
             int rows = ps.executeUpdate();
             if (!conn.getAutoCommit()) conn.commit();
@@ -947,6 +950,15 @@ public class MatHangDAO extends BaseDAO {
         } catch (Exception e) {
             e.printStackTrace();
             return false;
+        }
+    }
+
+    private static void setImage(PreparedStatement statement, int parameterIndex, byte[] imageData)
+            throws SQLException {
+        if (imageData == null || imageData.length == 0) {
+            statement.setNull(parameterIndex, Types.BLOB);
+        } else {
+            statement.setBytes(parameterIndex, imageData);
         }
     }
 

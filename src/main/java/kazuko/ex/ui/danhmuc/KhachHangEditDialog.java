@@ -46,7 +46,7 @@ public class KhachHangEditDialog extends JDialog {
     private JTextField txtEmail;
     private DatePickerField txtNgaySinhNhat;
     private JTextField txtDiemBanDau;
-    private JComboBox<String> cbGiaBan;
+    private JComboBox<PriceOption> cbGiaBan;
     private JTextField txtMaSoThue;
     private JComboBox<SUser> cbNhanVien;
     private JComboBox<NhomKhachHang> cbNhomKhachHang;
@@ -248,10 +248,26 @@ public class KhachHangEditDialog extends JDialog {
         lblGiaBan.setBounds(15, y, labelWidth, rowHeight);
         formPanel.add(lblGiaBan);
 
-        String[] giaBanOptions = {"Giá theo danh mục", "Giá bán sỉ", "Giá bán lẻ", "Giá 1", "Giá 2", "Giá 3", "Giá 4"};
-        cbGiaBan = new JComboBox<>(giaBanOptions);
+        SystemConfig priceConfig = new SystemConfigDAO().loadConfig();
+        cbGiaBan = new JComboBox<>();
+        cbGiaBan.addItem(new PriceOption(KhachHang.GIA_THEO_DANH_MUC, "Giá theo danh mục"));
+        if (priceConfig.isSuDungGia2()) {
+            cbGiaBan.addItem(new PriceOption(KhachHang.GIA_BAN_2,
+                    configuredPriceName(priceConfig.getDienGiaiGia2(), "Đơn giá 2")));
+        }
+        if (priceConfig.isSuDungGia3()) {
+            cbGiaBan.addItem(new PriceOption(KhachHang.GIA_BAN_3,
+                    configuredPriceName(priceConfig.getDienGiaiGia3(), "Giá bán 3")));
+        }
+        if (priceConfig.isSuDungGia4()) {
+            cbGiaBan.addItem(new PriceOption(KhachHang.GIA_BAN_4,
+                    configuredPriceName(priceConfig.getDienGiaiGia4(), "Giá bán 4")));
+        }
+        cbGiaBan.addItem(new PriceOption(KhachHang.GIA_VON, "Giá vốn"));
+        cbGiaBan.addItem(new PriceOption(KhachHang.GIA_GAN_NHAT, "Giá gần nhất"));
         cbGiaBan.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         cbGiaBan.setBounds(fieldX, y, fieldWidth, rowHeight);
+        cbGiaBan.setEnabled(priceConfig.isSuDungGiaTheoKhach());
         formPanel.add(cbGiaBan);
 
         // Row 8: Mã số thuế
@@ -483,12 +499,7 @@ public class KhachHangEditDialog extends JDialog {
 
             txtDiemBanDau.setText(String.valueOf((int) currentKhachHang.getDiemTichLuyBanDau()));
 
-            int gbIdx = currentKhachHang.getGiaBanIndex();
-            if (gbIdx >= 0 && gbIdx < cbGiaBan.getItemCount()) {
-                cbGiaBan.setSelectedIndex(gbIdx);
-            } else {
-                cbGiaBan.setSelectedIndex(0);
-            }
+            selectPriceOption(currentKhachHang.getGiaBanIndex());
 
             txtMaSoThue.setText(currentKhachHang.getMaSoThue() != null ? currentKhachHang.getMaSoThue() : "");
 
@@ -600,7 +611,11 @@ public class KhachHangEditDialog extends JDialog {
             currentKhachHang.setDiemTichLuyBanDau(0);
         }
 
-        currentKhachHang.setGiaBanApDung(cbGiaBan.getSelectedIndex());
+        if (systemConfig.isSuDungGiaTheoKhach() || currentKhachHang.getId() == null) {
+            PriceOption selectedPrice = (PriceOption) cbGiaBan.getSelectedItem();
+            currentKhachHang.setGiaBanIndex(selectedPrice != null
+                    ? selectedPrice.code : KhachHang.GIA_THEO_DANH_MUC);
+        }
         currentKhachHang.setMaSoThue(txtMaSoThue.getText().trim());
 
         SUser selectedUser = (SUser) cbNhanVien.getSelectedItem();
@@ -665,7 +680,9 @@ public class KhachHangEditDialog extends JDialog {
         copy.setDiaChi(txtDiaChi.getText().trim());
         copy.setDienThoai(txtDienThoai.getText().trim());
         copy.setEmail(txtEmail.getText().trim());
-        copy.setGiaBanApDung((String) cbGiaBan.getSelectedItem());
+        PriceOption selectedPrice = (PriceOption) cbGiaBan.getSelectedItem();
+        copy.setGiaBanIndex(selectedPrice != null
+                ? selectedPrice.code : KhachHang.GIA_THEO_DANH_MUC);
         copy.setMaSoThue(txtMaSoThue.getText().trim());
         copy.setTinhThanh((String) cbTinhThanh.getSelectedItem());
         copy.setFacebook(txtFacebook.getText().trim());
@@ -703,6 +720,37 @@ public class KhachHangEditDialog extends JDialog {
             currentIndex++;
             currentKhachHang = allCustomers.get(currentIndex);
             loadFormData();
+        }
+    }
+
+    private void selectPriceOption(int code) {
+        for (int i = 0; i < cbGiaBan.getItemCount(); i++) {
+            PriceOption option = cbGiaBan.getItemAt(i);
+            if (option.code == code) {
+                cbGiaBan.setSelectedIndex(i);
+                return;
+            }
+        }
+        cbGiaBan.setSelectedIndex(0);
+    }
+
+    private static String configuredPriceName(String configuredName, String fallback) {
+        return configuredName != null && !configuredName.trim().isEmpty()
+                ? configuredName.trim() : fallback;
+    }
+
+    private static final class PriceOption {
+        private final int code;
+        private final String label;
+
+        private PriceOption(int code, String label) {
+            this.code = code;
+            this.label = label;
+        }
+
+        @Override
+        public String toString() {
+            return label;
         }
     }
 

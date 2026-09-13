@@ -35,12 +35,12 @@ public class BaoCaoMatHangReportService {
         try {
             if (cachedReportNhom == null) {
                 try (InputStream in = BaoCaoMatHangReportService.class.getResourceAsStream("/reports/danh_sach_mat_hang_theo_nhom.jrxml")) {
-                    if (in != null) cachedReportNhom = JasperCompileManager.compileReport(in);
+                    if (in != null) cachedReportNhom = ReportTemplateCompiler.compile(in);
                 }
             }
             if (cachedReportHsx == null) {
                 try (InputStream in = BaoCaoMatHangReportService.class.getResourceAsStream("/reports/danh_sach_mat_hang_theo_hang_san_xuat.jrxml")) {
-                    if (in != null) cachedReportHsx = JasperCompileManager.compileReport(in);
+                    if (in != null) cachedReportHsx = ReportTemplateCompiler.compile(in);
                 }
             }
         } catch (Exception ignored) {}
@@ -50,7 +50,7 @@ public class BaoCaoMatHangReportService {
         if (cachedReportNhom != null) return cachedReportNhom;
         try (InputStream in = getClass().getResourceAsStream("/reports/danh_sach_mat_hang_theo_nhom.jrxml")) {
             if (in == null) throw new JRException("Mẫu /reports/danh_sach_mat_hang_theo_nhom.jrxml không tồn tại!");
-            cachedReportNhom = JasperCompileManager.compileReport(in);
+            cachedReportNhom = ReportTemplateCompiler.compile(in);
             return cachedReportNhom;
         } catch (Exception e) {
             throw new JRException(e);
@@ -61,7 +61,7 @@ public class BaoCaoMatHangReportService {
         if (cachedReportHsx != null) return cachedReportHsx;
         try (InputStream in = getClass().getResourceAsStream("/reports/danh_sach_mat_hang_theo_hang_san_xuat.jrxml")) {
             if (in == null) throw new JRException("Mẫu /reports/danh_sach_mat_hang_theo_hang_san_xuat.jrxml không tồn tại!");
-            cachedReportHsx = JasperCompileManager.compileReport(in);
+            cachedReportHsx = ReportTemplateCompiler.compile(in);
             return cachedReportHsx;
         } catch (Exception e) {
             throw new JRException(e);

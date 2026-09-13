@@ -182,6 +182,8 @@ public class MatHangConfigIntegrationTest {
         mh.setBaoHanh("12 tháng");
         mh.setHoaHong(1.5);
         mh.setPhuongThucTruKho(1);
+        byte[] originalImage = new byte[]{(byte) 0x89, 0x50, 0x4E, 0x47, 1, 2, 3};
+        mh.setImageData(originalImage);
 
         boolean insertOk = matHangDAO.insert(mh);
         assertTrue(insertOk, "Insert MatHang should succeed");
@@ -200,6 +202,7 @@ public class MatHangConfigIntegrationTest {
         assertEquals(46000.0, saved.getGiaBan4(), 0.001);
         assertEquals(5.5, saved.getGiamGiaPt(), 0.001);
         assertEquals(2000.0, saved.getGiamGiaTien(), 0.001);
+        assertArrayEquals(originalImage, saved.getImageData());
 
         // Update fields
         saved.setName(name + " (Updated)");
@@ -212,6 +215,8 @@ public class MatHangConfigIntegrationTest {
         saved.setGiamGiaPt(10.0);
         saved.setGiamGiaTien(5000.0);
         saved.setDonViTinhChanId(null); // Clear bulk unit
+        byte[] updatedImage = new byte[]{9, 8, 7, 6};
+        saved.setImageData(updatedImage);
 
         boolean updateOk = matHangDAO.update(saved);
         assertTrue(updateOk, "Update MatHang should succeed");
@@ -229,8 +234,17 @@ public class MatHangConfigIntegrationTest {
         assertEquals(56000.0, updated.getGiaBan4(), 0.001);
         assertEquals(10.0, updated.getGiamGiaPt(), 0.001);
         assertEquals(5000.0, updated.getGiamGiaTien(), 0.001);
+        assertArrayEquals(updatedImage, updated.getImageData());
+
+        // Nút xóa ảnh phải ghi NULL xuống BLOB, không chỉ xóa phần xem trước.
+        updated.setImageData(null);
+        assertTrue(matHangDAO.update(updated));
+        MatHang withoutImage = matHangDAO.getAll().stream()
+                .filter(m -> code.equals(m.getCode())).findFirst().orElse(null);
+        assertNotNull(withoutImage);
+        assertNull(withoutImage.getImageData());
 
         // Clean up
-        matHangDAO.deletePermanently(updated.getId());
+        matHangDAO.deletePermanently(withoutImage.getId());
     }
 }

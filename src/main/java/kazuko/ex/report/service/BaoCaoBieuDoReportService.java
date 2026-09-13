@@ -48,22 +48,22 @@ public class BaoCaoBieuDoReportService {
         try {
             if (cachedReportBieuDoNhom == null) {
                 try (InputStream in = BaoCaoBieuDoReportService.class.getResourceAsStream("/reports/bieu_do_doanh_so_theo_nhom.jrxml")) {
-                    if (in != null) cachedReportBieuDoNhom = JasperCompileManager.compileReport(in);
+                    if (in != null) cachedReportBieuDoNhom = ReportTemplateCompiler.compile(in);
                 }
             }
             if (cachedReportBieuDoNgay == null) {
                 try (InputStream in = BaoCaoBieuDoReportService.class.getResourceAsStream("/reports/bieu_do_doanh_thu_ngay_trong_thang.jrxml")) {
-                    if (in != null) cachedReportBieuDoNgay = JasperCompileManager.compileReport(in);
+                    if (in != null) cachedReportBieuDoNgay = ReportTemplateCompiler.compile(in);
                 }
             }
             if (cachedReportBieuDoThang == null) {
                 try (InputStream in = BaoCaoBieuDoReportService.class.getResourceAsStream("/reports/bieu_do_doanh_thu_thang_trong_nam.jrxml")) {
-                    if (in != null) cachedReportBieuDoThang = JasperCompileManager.compileReport(in);
+                    if (in != null) cachedReportBieuDoThang = ReportTemplateCompiler.compile(in);
                 }
             }
             if (cachedReportBieuDoNvkd == null) {
                 try (InputStream in = BaoCaoBieuDoReportService.class.getResourceAsStream("/reports/bieu_do_doanh_so_theo_nvkd.jrxml")) {
-                    if (in != null) cachedReportBieuDoNvkd = JasperCompileManager.compileReport(in);
+                    if (in != null) cachedReportBieuDoNvkd = ReportTemplateCompiler.compile(in);
                 }
             }
         } catch (Exception e) {

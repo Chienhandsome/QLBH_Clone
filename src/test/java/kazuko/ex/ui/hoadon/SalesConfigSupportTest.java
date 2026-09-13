@@ -1,5 +1,7 @@
 package kazuko.ex.ui.hoadon;
 
+import kazuko.ex.model.danhmuc.KhachHang;
+import kazuko.ex.model.system.SystemConfig;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
@@ -41,6 +43,40 @@ class SalesConfigSupportTest {
         assertTrue(SalesConfigSupport.isReturnAllowed(date(2026, 9, 3), returnDate, 6));
         assertFalse(SalesConfigSupport.isReturnAllowed(date(2026, 9, 2), returnDate, 6));
         assertFalse(SalesConfigSupport.isReturnAllowed(date(2026, 9, 10), returnDate, 6));
+    }
+
+    @Test
+    void resolvesEveryCustomerPriceCodeAndFallsBackToCatalogPrice() {
+        assertEquals(100_000d, customerPrice(KhachHang.GIA_THEO_DANH_MUC, 80_000d), 0.001);
+        assertEquals(90_000d, customerPrice(KhachHang.GIA_BAN_2, 80_000d), 0.001);
+        assertEquals(85_000d, customerPrice(KhachHang.GIA_BAN_3, 80_000d), 0.001);
+        assertEquals(82_000d, customerPrice(KhachHang.GIA_BAN_4, 80_000d), 0.001);
+        assertEquals(70_000d, customerPrice(KhachHang.GIA_VON, 80_000d), 0.001);
+        assertEquals(80_000d, customerPrice(KhachHang.GIA_GAN_NHAT, 80_000d), 0.001);
+
+        assertEquals(100_000d, customerPrice(KhachHang.GIA_BAN_2, 80_000d, 0d), 0.001);
+        assertEquals(100_000d, customerPrice(KhachHang.GIA_GAN_NHAT, null), 0.001);
+    }
+
+    @Test
+    void usesConfiguredCustomerPriceNames() {
+        SystemConfig config = new SystemConfig();
+        config.setDienGiaiGia2("Giá đại lý");
+        config.setDienGiaiGia3("Giá VIP");
+
+        assertEquals("Giá đại lý", SalesConfigSupport.customerPriceName(KhachHang.GIA_BAN_2, config));
+        assertEquals("Giá VIP", SalesConfigSupport.customerPriceName(KhachHang.GIA_BAN_3, config));
+        assertEquals("Giá vốn", SalesConfigSupport.customerPriceName(KhachHang.GIA_VON, config));
+        assertEquals("Giá gần nhất", SalesConfigSupport.customerPriceName(KhachHang.GIA_GAN_NHAT, config));
+    }
+
+    private double customerPrice(int priceCode, Double latestPrice) {
+        return customerPrice(priceCode, latestPrice, 90_000d);
+    }
+
+    private double customerPrice(int priceCode, Double latestPrice, double price2) {
+        return SalesConfigSupport.resolveCustomerPrice(priceCode,
+                100_000d, price2, 85_000d, 82_000d, 70_000d, latestPrice);
     }
 
     private Date date(int year, int month, int day) {

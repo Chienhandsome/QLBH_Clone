@@ -1,5 +1,8 @@
 package kazuko.ex.ui.hoadon;
 
+import kazuko.ex.model.danhmuc.KhachHang;
+import kazuko.ex.model.system.SystemConfig;
+
 import java.util.Calendar;
 import java.util.Date;
 import java.time.ZoneId;
@@ -59,5 +62,38 @@ final class SalesConfigSupport {
         calendar.set(Calendar.SECOND, 0);
         calendar.set(Calendar.MILLISECOND, 0);
         return calendar.getTime();
+    }
+
+    static double resolveCustomerPrice(int priceCode, double catalogPrice,
+                                       double price2, double price3, double price4,
+                                       double costPrice, Double latestPrice) {
+        double selected;
+        switch (priceCode) {
+            case KhachHang.GIA_BAN_2: selected = price2; break;
+            case KhachHang.GIA_BAN_3: selected = price3; break;
+            case KhachHang.GIA_BAN_4: selected = price4; break;
+            case KhachHang.GIA_VON: selected = costPrice; break;
+            case KhachHang.GIA_GAN_NHAT: selected = latestPrice != null ? latestPrice : 0; break;
+            default: selected = catalogPrice; break;
+        }
+        return Math.round(selected > 0 ? selected : Math.max(0, catalogPrice));
+    }
+
+    static String customerPriceName(int priceCode, SystemConfig config) {
+        switch (priceCode) {
+            case KhachHang.GIA_BAN_2:
+                return configuredName(config != null ? config.getDienGiaiGia2() : null, "Đơn giá 2");
+            case KhachHang.GIA_BAN_3:
+                return configuredName(config != null ? config.getDienGiaiGia3() : null, "Giá bán 3");
+            case KhachHang.GIA_BAN_4:
+                return configuredName(config != null ? config.getDienGiaiGia4() : null, "Giá bán 4");
+            case KhachHang.GIA_VON: return "Giá vốn";
+            case KhachHang.GIA_GAN_NHAT: return "Giá gần nhất";
+            default: return "Giá bán";
+        }
+    }
+
+    private static String configuredName(String value, String fallback) {
+        return value != null && !value.trim().isEmpty() ? value.trim() : fallback;
     }
 }

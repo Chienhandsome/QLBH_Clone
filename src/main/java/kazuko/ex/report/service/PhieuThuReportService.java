@@ -39,7 +39,7 @@ public class PhieuThuReportService {
         if (cachedJasperReport == null) {
             try (InputStream in = PhieuThuReportService.class.getResourceAsStream("/reports/danh_sach_phieu_thu_theo_ngay.jrxml")) {
                 if (in != null) {
-                    cachedJasperReport = JasperCompileManager.compileReport(in);
+                    cachedJasperReport = ReportTemplateCompiler.compile(in);
                 }
             } catch (Exception ignored) {}
         }
@@ -49,7 +49,7 @@ public class PhieuThuReportService {
         if (cachedJasperReportByReason == null) {
             try (InputStream in = PhieuThuReportService.class.getResourceAsStream("/reports/danh_sach_phieu_thu_theo_ly_do.jrxml")) {
                 if (in != null) {
-                    cachedJasperReportByReason = JasperCompileManager.compileReport(in);
+                    cachedJasperReportByReason = ReportTemplateCompiler.compile(in);
                 }
             } catch (Exception ignored) {}
         }
@@ -64,7 +64,7 @@ public class PhieuThuReportService {
             if (in == null) {
                 throw new JRException("Không tìm thấy file mẫu báo cáo /reports/danh_sach_phieu_thu_theo_ngay.jrxml trong resources!");
             }
-            cachedJasperReport = JasperCompileManager.compileReport(in);
+            cachedJasperReport = ReportTemplateCompiler.compile(in);
             return cachedJasperReport;
         } catch (Exception e) {
             throw new JRException("Lỗi khi biên dịch mẫu báo cáo JRXML: " + e.getMessage(), e);
@@ -80,7 +80,7 @@ public class PhieuThuReportService {
             if (in == null) {
                 throw new JRException("Không tìm thấy file mẫu báo cáo /reports/danh_sach_phieu_thu_theo_ly_do.jrxml trong resources!");
             }
-            cachedJasperReportByReason = JasperCompileManager.compileReport(in);
+            cachedJasperReportByReason = ReportTemplateCompiler.compile(in);
             return cachedJasperReportByReason;
         } catch (Exception e) {
             throw new JRException("Lỗi khi biên dịch mẫu báo cáo JRXML: " + e.getMessage(), e);

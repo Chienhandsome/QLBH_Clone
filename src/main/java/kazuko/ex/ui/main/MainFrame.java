@@ -100,6 +100,7 @@ import kazuko.ex.ui.baocao.BaoCaoCongNoNhaCungCapPanel;
 import kazuko.ex.ui.baocao.TongHopCongNoNhaCungCapPanel;
 import kazuko.ex.ui.baocao.BaoCaoCongNoKhachHangPanel;
 import kazuko.ex.ui.baocao.TongHopCongNoKhachHangPanel;
+import kazuko.ex.ui.baocao.BaoCaoPanel;
 import kazuko.ex.ui.baogia.BaoGiaBanHangPanel;
 
 
@@ -168,6 +169,7 @@ public class MainFrame extends JFrame {
     private final SUser currentUser;
     private JTabbedPane mainTabbedPane;
     private ResponsiveToolBar ribbonToolBar;
+    private JMenu reportMenu;
 
     public MainFrame(SUser user) {
         this.currentUser = user;
@@ -590,6 +592,7 @@ public class MainFrame extends JFrame {
 
         // 8. BÁO CÁO
         JMenu mBaoCao = new JMenu("BÁO CÁO");
+        reportMenu = mBaoCao;
 
         // 8.1 BÁO CÁO QUỸ
         JMenu mBaoCaoQuy = new JMenu("BÁO CÁO QUỸ");
@@ -864,7 +867,8 @@ public class MainFrame extends JFrame {
         JButton btnTongHopKQKD = createRibbonToolButton("Tổng hợp KQKD", "Tổng hợp kết quả kinh doanh", "Tree.png", e -> openTab("Tổng hợp KQKD", new BaoCaoKetQuaKinhDoanhPanel()));
         JButton btnTonKho = createRibbonToolButton("Tồn kho", "Tồn kho", "Folder2.png", e -> openTab("Tồn kho", new QuanLyTonKhoPanel()));
         JButton btnGhiChu = createRibbonToolButton("Ghi chú", null, "FilterEdit.png", e -> openQuickNoteDialog());
-        JButton btnBaoCao = createRibbonToolButton("Báo cáo", "Báo cáo", "Preview.png", e -> openTab("Báo cáo", createPlaceholderPanel("Báo cáo")));
+        JButton btnBaoCao = createRibbonToolButton("Báo cáo", "Báo cáo", "Preview.png",
+                e -> openTab("Báo cáo", new BaoCaoPanel(reportMenu, this::createReportPanel)));
         JButton btnThoat = createRibbonToolButton("Thoát", null, "Cancelled.png", e -> onExit());
         JButton btnMoNhanh = createRibbonToolButton("Mở nhanh", null, "tsbQuickOpen.Image.png", e -> openQuickSearchDialog());
 
@@ -1167,437 +1171,337 @@ public class MainFrame extends JFrame {
 
     private void handleReportMenuClick(String title) {
         if (title == null) return;
+        JPanel reportPanel = createReportPanel(title);
+        openTab(title, reportPanel);
+    }
+
+    private JPanel createReportPanel(String title) {
+        if (title == null) return createPlaceholderPanel("Báo cáo");
         switch (title.trim().toUpperCase()) {
             case "DANH SÁCH PHIẾU THU THEO NGÀY":
             case "BÁO CÁO PHIẾU THU THEO NGÀY":
             case "DANH SÁCH PHIẾU THU THE...":
-                openTab("DANH SÁCH PHIẾU THU THE...", new BaoCaoPhieuThuTheoNgayPanel());
-                break;
+                return new BaoCaoPhieuThuTheoNgayPanel();
             case "TỔNG HỢP THU CHI THEO NGÀY":
-                openTab("TỔNG HỢP THU CHI THEO NGÀY", new TongHopThuChiTheoNgayPanel());
-                break;
+                return new TongHopThuChiTheoNgayPanel();
             case "TỔNG HỢP THU CHI THEO LÝ DO":
             case "TỔNG HỢP THU CHI THEO LÝ DO...":
-                openTab("TỔNG HỢP THU CHI THEO LÝ DO", new TongHopThuChiTheoLyDoPanel());
-                break;
+                return new TongHopThuChiTheoLyDoPanel();
             case "BÁO CÁO TỒN QUỸ":
             case "TỒN QUỸ":
             case "SỔ QUỸ":
-                openTab("BÁO CÁO TỒN QUỸ", new BaoCaoTonQuyPanel());
-                break;
+                return new BaoCaoTonQuyPanel();
             case "KHÁCH HÀNG THÂN THIẾT":
             case "BÁO CÁO KHÁCH HÀNG THÂN THIẾT":
-                openTab("Khách hàng thân thiết", new BaoCaoKhachHangThanThietPanel());
-                break;
+                return new BaoCaoKhachHangThanThietPanel();
             case "BÁO CÁO BÁN HÀNG THEO GIỜ":
             case "BÁN HÀNG THEO GIỜ":
-                openTab("Báo cáo bán hàng theo giờ", new BaoCaoBanHangTheoGioPanel());
-                break;
+                return new BaoCaoBanHangTheoGioPanel();
             case "BÁO CÁO BÁN HÀNG THEO KÍCH THƯỚC":
             case "BÁN HÀNG THEO KÍCH THƯỚC":
-                openTab("Báo cáo bán hàng theo kích thước", new BaoCaoBanHangTheoKichThuocPanel());
-                break;
+                return new BaoCaoBanHangTheoKichThuocPanel();
             case "BÁO CÁO TỔNG HỢP GIÁ TRỊ BÁN THEO THÁNG":
             case "TỔNG HỢP GIÁ TRỊ BÁN THEO THÁNG":
-                openTab("Tổng hợp giá trị bán theo tháng", new BaoCaoTongHopGiaTriBanTheoThangPanel());
-                break;
+                return new BaoCaoTongHopGiaTriBanTheoThangPanel();
             case "BÁO CÁO TỔNG HỢP SỐ LƯỢNG BÁN THEO THÁNG":
             case "TỔNG HỢP SỐ LƯỢNG BÁN THEO THÁNG":
-                openTab("Tổng hợp số lượng bán theo tháng", new BaoCaoTongHopSoLuongBanTheoThangPanel());
-                break;
+                return new BaoCaoTongHopSoLuongBanTheoThangPanel();
             case "BÁO CÁO BÁN HÀNG THEO NGÀY":
-                openTab("Báo cáo bán hàng theo ngày", new BaoCaoBanHangTheoNgayPanel());
-                break;
+                return new BaoCaoBanHangTheoNgayPanel();
             case "BÁO CÁO CHI TIẾT BÁN HÀNG THEO NGÀY":
-                openTab("Báo cáo chi tiết bán hàng theo ngày", new BaoCaoChiTietBanHangTheoNgayPanel());
-                break;
+                return new BaoCaoChiTietBanHangTheoNgayPanel();
             case "BÁO CÁO BÁN HÀNG THEO KHÁCH HÀNG":
-                openTab("Báo cáo bán hàng theo khách hàng", new BaoCaoBanHangTheoKhachHangPanel());
-                break;
+                return new BaoCaoBanHangTheoKhachHangPanel();
             case "BÁO CÁO BÁN HÀNG THEO NHÂN VIÊN KINH DOANH":
             case "BÁO CÁO BÁN HÀNG THEO NHÂN VIÊN":
-                openTab("Báo cáo bán hàng theo nhân viên kinh doanh", new BaoCaoBanHangTheoNhanVienPanel());
-                break;
+                return new BaoCaoBanHangTheoNhanVienPanel();
             case "TỔNG HỢP MẶT HÀNG BÁN THEO KHÁCH HÀNG":
-                openTab("Tổng hợp mặt hàng bán theo khách hàng", new TongHopMatHangBanTheoKhachHangPanel());
-                break;
+                return new TongHopMatHangBanTheoKhachHangPanel();
             case "TỔNG HỢP MẶT HÀNG BÁN THEO NGÀY":
-                openTab("Tổng hợp mặt hàng bán theo ngày", new TongHopMatHangBanTheoNgayPanel());
-                break;
+                return new TongHopMatHangBanTheoNgayPanel();
             case "TỔNG HỢP MẶT HÀNG BÁN THEO NHÂN VIÊN KINH DOANH":
             case "TỔNG HỢP MẶT HÀNG BÁN THEO NHÂN VIÊN":
-                openTab("Tổng hợp mặt hàng bán theo nhân viên", new TongHopMatHangBanTheoNhanVienPanel());
-                break;
+                return new TongHopMatHangBanTheoNhanVienPanel();
             case "TỔNG HỢP BÁN HÀNG THEO NGÀY":
-                openTab("Tổng hợp bán hàng theo ngày", new TongHopBanHangTheoNgayPanel());
-                break;
+                return new TongHopBanHangTheoNgayPanel();
             case "TỔNG HỢP BÁN THEO KHÁCH HÀNG":
-                openTab("Tổng hợp bán theo khách hàng", new TongHopBanTheoKhachHangPanel());
-                break;
+                return new TongHopBanTheoKhachHangPanel();
             case "TỔNG HỢP BÁN THEO NHÂN VIÊN BÁN":
             case "TỔNG HỢP BÁN THEO NHÂN VIÊN":
-                openTab("Tổng hợp bán theo nhân viên bán", new TongHopBanTheoNhanVienBanPanel());
-                break;
+                return new TongHopBanTheoNhanVienBanPanel();
             case "TỔNG HỢP BÁN THEO THU NGÂN":
-                openTab("Tổng hợp bán theo thu ngân", new TongHopBanTheoThuNganPanel());
-                break;
+                return new TongHopBanTheoThuNganPanel();
             case "TỔNG HỢP MẶT HÀNG BÁN THEO THU NGÂN":
-                openTab("Tổng hợp mặt hàng bán theo thu ngân", new TongHopMatHangBanTheoThuNganPanel());
-                break;
+                return new TongHopMatHangBanTheoThuNganPanel();
             case "BÁO CÁO CHI TIẾT BÁN HÀNG THEO THU NGÂN":
             case "CHI TIẾT BÁN HÀNG THEO THU NGÂN":
-                openTab("Báo cáo chi tiết bán hàng theo thu ngân", new BaoCaoChiTietBanHangTheoThuNganPanel());
-                break;
+                return new BaoCaoChiTietBanHangTheoThuNganPanel();
             case "BÁO CÁO BÁN HÀNG THEO THU NGÂN":
             case "BÁO CÁO BÁN HÀNGTHEO THU NGÂN":
-                openTab("Báo cáo bán hàng theo thu ngân", new BaoCaoBanHangTheoThuNganPanel());
-                break;
+                return new BaoCaoBanHangTheoThuNganPanel();
             case "TỔNG HỢP TIỀN VẬN CHUYỂN THEO NHÂN VIÊN":
             case "TIỀN VẬN CHUYỂN THEO NHÂN VIÊN":
-                openTab("Tổng hợp tiền vận chuyển theo nhân viên", new TongHopTienVanChuyenTheoNhanVienPanel());
-                break;
+                return new TongHopTienVanChuyenTheoNhanVienPanel();
             case "CHI TIẾT BÁN HÀNG THEO ĐỐI TÁC":
             case "CHI TIẾT HÀNG BÁN THEO ĐỐI TÁC":
             case "BÁN HÀNG THEO ĐỐI TÁC":
-                openTab("Chi tiết bán hàng theo đối tác", new ChiTietHangBanTheoDoiTacPanel());
-                break;
+                return new ChiTietHangBanTheoDoiTacPanel();
             case "TỔNG HỢP HOA HỒNG THEO NVKD":
             case "TỔNG HỢP HOA HỒNG THEO NHÂN VIÊN":
             case "HOA HỒNG THEO NVKD":
-                openTab("Tổng hợp hoa hồng theo NVKD", new TongHopHoaHongTheoNVKDPanel());
-                break;
+                return new TongHopHoaHongTheoNVKDPanel();
             case "CHI TIẾT BÁN HÀNG THEO HÓA ĐƠN":
             case "BÁN HÀNG THEO HÓA ĐƠN":
-                openTab("Chi tiết bán hàng theo hóa đơn", new ChiTietBanHangTheoHoaDonPanel());
-                break;
+                return new ChiTietBanHangTheoHoaDonPanel();
             case "BÁO CÁO CHI TIẾT HÀNG KHUYẾN MẠI":
             case "CHI TIẾT HÀNG KHUYẾN MẠI":
             case "HÀNG KHUYẾN MẠI":
-                openTab("Báo cáo chi tiết hàng khuyến mại", new BaoCaoChiTietHangKhuyenMaiPanel());
-                break;
+                return new BaoCaoChiTietHangKhuyenMaiPanel();
             case "DANH SÁCH ĐỢT KHUYẾN MẠI":
             case "BÁO CÁO ĐỢT KHUYẾN MẠI":
-                openTab("DANH SÁCH ĐỢT KHUYẾN MẠI", new BaoCaoDotKhuyenMaiPanel());
-                break;
+                return new BaoCaoDotKhuyenMaiPanel();
             case "DANH MỤC ĐỢT KHUYẾN MÃI":
             case "ĐỢT KHUYẾN MÃI":
-                openTab("Danh mục đợt khuyến mại", new DanhMucDotKhuyenMaiPanel());
-                break;
+                return new DanhMucDotKhuyenMaiPanel();
             case "KHÁCH HÀNG ĐẾN NGÀY SINH NHẬT":
             case "SINH NHẬT KHÁCH HÀNG":
-                openTab("KHÁCH HÀNG ĐẾN NGÀY SINH NHẬT", new BaoCaoKhachHangSinhNhatPanel());
-                break;
+                return new BaoCaoKhachHangSinhNhatPanel();
             case "DANH SÁCH ĐẶT HÀNG THEO NGÀY":
             case "BÁO CÁO ĐẶT HÀNG THEO NGÀY":
             case "ĐẶT HÀNG THEO NGÀY":
-                openTab("Danh sách đặt hàng theo ngày", new BaoCaoDanhSachDatHangTheoNgayPanel());
-                break;
+                return new BaoCaoDanhSachDatHangTheoNgayPanel();
             case "DANH SÁCH ĐẶT HÀNG THEO KHÁCH HÀNG":
             case "BÁO CÁO ĐẶT HÀNG THEO KHÁCH HÀNG":
             case "ĐẶT HÀNG THEO KHÁCH HÀNG":
-                openTab("Danh sách đặt hàng theo khách hàng", new BaoCaoDanhSachDatHangTheoKhachHangPanel());
-                break;
+                return new BaoCaoDanhSachDatHangTheoKhachHangPanel();
             case "ĐỐI CHIẾU CÔNG NỢ KHÁCH HÀNG":
             case "BÁO CÁO CÔNG NỢ KHÁCH HÀNG":
-                openTab("Đối chiếu công nợ khách hàng", new BaoCaoCongNoKhachHangPanel());
-                break;
+                return new BaoCaoCongNoKhachHangPanel();
             case "TỔNG HỢP CÔNG NỢ KHÁCH HÀNG":
-                openTab("Tổng hợp công nợ khách hàng", new TongHopCongNoKhachHangPanel());
-                break;
+                return new TongHopCongNoKhachHangPanel();
             case "CÔNG NỢ KHÁCH HÀNG":
             case "CÔNG NỢ KHÁCH":
             case "QUẢN LÝ CÔNG NỢ KHÁCH HÀNG":
-                openTab("Công nợ khách hàng", new QuanLyCongNoKhachHangPanel());
-                break;
+                return new QuanLyCongNoKhachHangPanel();
             case "ĐỐI CHIẾU CÔNG NỢ NHÀ CUNG CẤP":
             case "BÁO CÁO CÔNG NỢ NHÀ CUNG CẤP":
-                openTab("Báo cáo công nợ NCC", new BaoCaoCongNoNhaCungCapPanel());
-                break;
+                return new BaoCaoCongNoNhaCungCapPanel();
             case "TỔNG HỢP CÔNG NỢ NHÀ CUNG CẤP":
-                openTab("Tổng hợp công nợ NCC", new TongHopCongNoNhaCungCapPanel());
-                break;
+                return new TongHopCongNoNhaCungCapPanel();
             case "CÔNG NỢ NHÀ CUNG CẤP":
             case "CÔNG NỢ NCC":
             case "QUẢN LÝ CÔNG NỢ NHÀ CUNG CẤP":
-                openTab("Công nợ nhà cung cấp", new QuanLyCongNoNhaCungCapPanel());
-                break;
+                return new QuanLyCongNoNhaCungCapPanel();
             case "BÁO CÁO TỒN KHO THEO KÍCH THƯỚC":
             case "TỒN KHO THEO KÍCH THƯỚC":
-                openTab("Báo cáo tồn kho theo kích thước", new BaoCaoTonKhoTheoKichThuocPanel());
-                break;
+                return new BaoCaoTonKhoTheoKichThuocPanel();
             case "BÁO CÁO HÀNG THEO HẠN DÙNG":
+            case "BÁO CÁO THEO HẠN DÙNG":
             case "HÀNG THEO HẠN DÙNG":
-                openTab("Báo cáo hàng theo hạn dùng", new BaoCaoHangTheoHanDungPanel());
-                break;
+                return new BaoCaoHangTheoHanDungPanel();
             case "BÁO CÁO HÀNG ĐÃ HẾT HẠN":
             case "HÀNG ĐÃ HẾT HẠN":
-                openTab("Báo cáo hàng đã hết hạn", new BaoCaoHangDaHetHanPanel());
-                break;
+                return new BaoCaoHangDaHetHanPanel();
             case "BÁO CÁO HÀNG TỒN KHO CÓ HẠN DÙNG":
             case "HÀNG TỒN KHO CÓ HẠN DÙNG":
-                openTab("Báo cáo hàng tồn kho có hạn dùng", new BaoCaoHangTonKhoHanDungPanel());
-                break;
+                return new BaoCaoHangTonKhoHanDungPanel();
             case "BÁO CÁO HÀNG TỒN KHO":
             case "HÀNG TỒN KHO":
-                openTab("Báo cáo hàng tồn kho", new BaoCaoHangTonKhoPanel());
-                break;
+                return new BaoCaoHangTonKhoPanel();
             case "BÁO CÁO TỔNG HỢP XUẤT NHẬP TỒN":
             case "TỔNG HỢP XUẤT NHẬP TỒN":
-                openTab("Báo cáo tổng hợp xuất nhập tồn", new BaoCaoTongHopXuatNhapTonPanel());
-                break;
+                return new BaoCaoTongHopXuatNhapTonPanel();
             case "TỔNG HỢP LÃI GỘP THEO MẶT HÀNG (GIÁ VỐN)":
             case "TỔNG HỢP LÃI GỘP THEO MẶT HÀNG GIÁ VỐN":
             case "LÃI GỘP THEO MẶT HÀNG (GIÁ VỐN)":
             case "LÃI GỘP MẶT HÀNG GIÁ VỐN":
-                openTab("Lãi gộp theo mặt hàng (giá vốn)", new TongHopLaiGopTheoMatHangGiaVonPanel());
-                break;
+                return new TongHopLaiGopTheoMatHangGiaVonPanel();
             case "TỔNG HỢP LÃI GỘP THEO MẶT HÀNG (GIÁ NHẬP)":
             case "TỔNG HỢP LÃI GỘP THEO MẶT HÀNG GIÁ NHẬP":
             case "LÃI GỘP THEO MẶT HÀNG (GIÁ NHẬP)":
             case "LÃI GỘP MẶT HÀNG GIÁ NHẬP":
-                openTab("Lãi gộp theo mặt hàng (giá nhập)", new TongHopLaiGopTheoMatHangGiaNhapPanel());
-                break;
+                return new TongHopLaiGopTheoMatHangGiaNhapPanel();
             case "CHI TIẾT LÃI THEO HÓA ĐƠN (GIÁ VỐN)":
             case "CHI TIẾT LÃI THEO HÓA ĐƠN GIÁ VỐN":
             case "CHI TIẾT LÃI HÓA ĐƠN (GIÁ VỐN)":
             case "CHI TIẾT LÃI HÓA ĐƠN GIÁ VỐN":
-                openTab("Chi tiết lãi theo hóa đơn (giá vốn)", new ChiTietLaiTheoHoaDonGiaVonPanel());
-                break;
+                return new ChiTietLaiTheoHoaDonGiaVonPanel();
             case "CHI TIẾT LÃI THEO HÓA ĐƠN (GIÁ NHẬP)":
             case "CHI TIẾT LÃI THEO HÓA ĐƠN GIÁ NHẬP":
             case "CHI TIẾT LÃI HÓA ĐƠN (GIÁ NHẬP)":
             case "CHI TIẾT LÃI HÓA ĐƠN GIÁ NHẬP":
-                openTab("Chi tiết lãi theo hóa đơn (giá nhập)", new ChiTietLaiTheoHoaDonGiaNhapPanel());
-                break;
+                return new ChiTietLaiTheoHoaDonGiaNhapPanel();
             case "BÁO CÁO KẾT QUẢ KINH DOANH":
             case "KẾT QUẢ KINH DOANH":
             case "TỔNG HỢP KẾT QUẢ KINH DOANH":
             case "TỔNG HỢP KQKD":
-                openTab("Tổng hợp KQKD", new BaoCaoKetQuaKinhDoanhPanel());
-                break;
+                return new BaoCaoKetQuaKinhDoanhPanel();
             case "CHI TIẾT HOẠT ĐỘNG TRONG NGÀY":
             case "HOẠT ĐỘNG TRONG NGÀY":
-                openTab("Chi tiết hoạt động trong ngày", new ChiTietHoatDongTrongNgayPanel());
-                break;
+                return new ChiTietHoatDongTrongNgayPanel();
             case "BÁO CÁO 20 MẶT HÀNG BÁN CHẠY NHẤT":
             case "20 MẶT HÀNG BÁN CHẠY NHẤT":
             case "TOP 20 MẶT HÀNG BÁN CHẠY":
-                openTab("Top 20 mặt hàng bán chạy nhất", new BaoCao20MatHangBanChayNhatPanel());
-                break;
+                return new BaoCao20MatHangBanChayNhatPanel();
             case "BẢNG TỔNG HỢP THỊ PHẦN":
             case "TỔNG HỢP THỊ PHẦN":
-                openTab("Bảng tổng hợp thị phần", new BangTongHopThiPhanPanel());
-                break;
+                return new BangTongHopThiPhanPanel();
             case "BÁO CÁO PHÂN TÍCH TÌNH HÌNH BÁN HÀNG":
             case "PHÂN TÍCH TÌNH HÌNH BÁN HÀNG":
-                openTab("Phân tích tình hình bán hàng", new BaoCaoPhanTichTinhHinhBanHangPanel());
-                break;
+                return new BaoCaoPhanTichTinhHinhBanHangPanel();
             case "BIỂU ĐỒ DOANH SỐ THEO NHÓM":
             case "BIỂU ĐỒ DOANH SỐ THEO NHÓM HÀNG HÓA":
             case "DOANH SỐ THEO NHÓM":
-                openTab("Biểu đồ doanh số theo nhóm", new BieuDoDoanhSoTheoNhomPanel());
-                break;
+                return new BieuDoDoanhSoTheoNhomPanel();
             case "BIỂU ĐỒ DOANH THU NGÀY TRONG THÁNG":
             case "DOANH THU NGÀY TRONG THÁNG":
-                openTab("Biểu đồ doanh thu ngày trong tháng", new BieuDoDoanhThuNgayTrongThangPanel());
-                break;
+                return new BieuDoDoanhThuNgayTrongThangPanel();
             case "BIỂU ĐỒ DOANH THU THÁNG TRONG NĂM":
             case "DOANH THU THÁNG TRONG NĂM":
-                openTab("Biểu đồ doanh thu tháng trong năm", new BieuDoDoanhThuThangTrongNamPanel());
-                break;
+                return new BieuDoDoanhThuThangTrongNamPanel();
             case "BIỂU ĐỒ THEO NHÂN VIÊN KINH DOANH":
             case "BIỂU ĐỒ DOANH SỐ THEO NHÂN VIÊN KINH DOANH":
             case "DOANH SỐ THEO NHÂN VIÊN KINH DOANH":
-                openTab("Biểu đồ theo NVKD", new BieuDoTheoNhanVienKinhDoanhPanel());
-                break;
+                return new BieuDoTheoNhanVienKinhDoanhPanel();
             case "BÁO CÁO NHẬP XUẤT TỒN THEO KHO":
             case "BÁO CÁO TỒN KHO THEO MẶT HÀNG":
+            case "THẺ KHO":
             case "TỒN KHO":
             case "QUẢN LÝ TỒN KHO":
-                openTab("Tồn kho", new QuanLyTonKhoPanel());
-                break;
+                return new QuanLyTonKhoPanel();
             case "TỒN NHIỀU KHO":
             case "QUẢN LÝ TỒN NHIỀU KHO":
-                openTab("Tồn nhiều kho", new QuanLyTonNhieuKhoPanel());
-                break;
+                return new QuanLyTonNhieuKhoPanel();
             case "DANH SÁCH MẶT HÀNG THEO NHÓM":
-                openTab("DANH SÁCH MẶT HÀNG THEO NHÓM", new BaoCaoMatHangTheoNhomPanel());
-                break;
+                return new BaoCaoMatHangTheoNhomPanel();
             case "DANH SÁCH MẶT HÀNG THEO HÃNG SẢN XUẤT":
-                openTab("DANH SÁCH MẶT HÀNG THEO HÃNG SẢN XUẤT", new BaoCaoMatHangTheoHangSanXuatPanel());
-                break;
+                return new BaoCaoMatHangTheoHangSanXuatPanel();
             case "DANH MỤC MẶT HÀNG":
-                openTab("Danh mục mặt hàng", new DanhMucMatHangPanel());
-                break;
+                return new DanhMucMatHangPanel();
             case "DANH SÁCH KHÁCH HÀNG THEO NHÓM":
-                openTab("DANH SÁCH KHÁCH HÀNG THEO NHÓM", new BaoCaoKhachHangTheoNhomPanel());
-                break;
+                return new BaoCaoKhachHangTheoNhomPanel();
             case "DANH SÁCH KHÁCH HÀNG THEO NHÂN VIÊN":
-                openTab("DANH SÁCH KHÁCH HÀNG THEO NHÂN VIÊN", new BaoCaoKhachHangTheoNhanVienPanel());
-                break;
+                return new BaoCaoKhachHangTheoNhanVienPanel();
             case "DANH MỤC KHÁCH HÀNG":
-                openTab("Danh mục khách hàng", new DanhMucKhachHangPanel());
-                break;
+                return new DanhMucKhachHangPanel();
             case "DANH SÁCH NHÀ CUNG CẤP THEO NHÓM":
-                openTab("DANH SÁCH NHÀ CUNG CẤP THEO NHÓM", new BaoCaoNhaCungCapTheoNhomPanel());
-                break;
+                return new BaoCaoNhaCungCapTheoNhomPanel();
             case "DANH MỤC NHÀ CUNG CẤP":
-                openTab("Danh mục nhà cung cấp", new DanhMucNhaCungCapPanel());
-                break;
+                return new DanhMucNhaCungCapPanel();
             case "DANH SÁCH PHIẾU THU THEO LÝ DO THU CHI":
             case "BÁO CÁO PHIẾU THU THEO LÝ DO THU CHI":
-                openTab("DANH SÁCH PHIẾU THU THE...", new BaoCaoPhieuThuTheoLyDoPanel());
-                break;
+                return new BaoCaoPhieuThuTheoLyDoPanel();
             case "DANH MỤC PHIẾU THU":
-                openTab("Danh mục phiếu thu", new DanhMucPhieuThuPanel());
-                break;
+                return new DanhMucPhieuThuPanel();
 
             case "DANH SÁCH PHIẾU CHI THEO NGÀY":
             case "BÁO CÁO PHIẾU CHI THEO NGÀY":
             case "DANH SÁCH PHIẾU CHI THE...":
-                openTab("DANH SÁCH PHIẾU CHI THE...", new BaoCaoPhieuChiTheoNgayPanel());
-                break;
+                return new BaoCaoPhieuChiTheoNgayPanel();
             case "DANH SÁCH PHIẾU CHI THEO LÝ DO THU CHI":
             case "BÁO CÁO PHIẾU CHI THEO LÝ DO THU CHI":
-                openTab("DANH SÁCH PHIẾU CHI THE...", new BaoCaoPhieuChiTheoLyDoPanel());
-                break;
+                return new BaoCaoPhieuChiTheoLyDoPanel();
             case "DANH MỤC PHIẾU CHI":
-                openTab("Danh mục phiếu chi", new DanhMucPhieuChiPanel());
-                break;
+                return new DanhMucPhieuChiPanel();
             case "TỔNG HỢP ĐẶT HÀNG THEO NGÀY":
-                openTab("Tổng hợp đặt hàng theo ngày", new TongHopDatHangTheoNgayPanel());
-                break;
+                return new TongHopDatHangTheoNgayPanel();
             case "TỔNG HỢP ĐẶT HÀNG THEO KHÁCH HÀNG":
-                openTab("Tổng hợp đặt hàng theo khách hàng", new TongHopDatHangTheoKhachHangPanel());
-                break;
+                return new TongHopDatHangTheoKhachHangPanel();
             case "TỔNG HỢP MẶT HÀNG ĐẶT THEO KHÁCH HÀNG":
             case "MẶT HÀNG ĐẶT THEO KHÁCH HÀNG":
-                openTab("Tổng hợp mặt hàng đặt theo khách hàng", new TongHopMatHangDatTheoKhachHangPanel());
-                break;
+                return new TongHopMatHangDatTheoKhachHangPanel();
             case "TỔNG HỢP MẶT HÀNG ĐẶT THEO NGÀY":
             case "MẶT HÀNG ĐẶT THEO NGÀY":
-                openTab("Tổng hợp mặt hàng đặt theo ngày", new TongHopMatHangDatTheoNgayPanel());
-                break;
+                return new TongHopMatHangDatTheoNgayPanel();
             case "KHÁCH ĐẶT HÀNG":
             case "ĐẶT HÀNG":
-                openTab("Khách đặt hàng", new KhachDatHangPanel());
-                break;
+                return new KhachDatHangPanel();
             case "DANH SÁCH PHIẾU NHẬP KHO THEO NGÀY":
             case "DANH SÁCH PHIẾU NHẬP THEO NGÀY":
-                openTab("Danh sách phiếu nhập kho theo ngày", new BaoCaoDanhSachPhieuNhapTheoNgayPanel());
-                break;
+                return new BaoCaoDanhSachPhieuNhapTheoNgayPanel();
             case "DANH SÁCH PHIẾU NHẬP KHO THEO NHÀ CUNG CẤP":
             case "DANH SÁCH PHIẾU NHẬP THEO NHÀ CUNG CẤP":
-                openTab("Danh sách phiếu nhập kho theo nhà cung cấp", new BaoCaoDanhSachPhieuNhapTheoNhaCungCapPanel());
-                break;
+                return new BaoCaoDanhSachPhieuNhapTheoNhaCungCapPanel();
             case "DANH SÁCH PHIẾU NHẬP KHO THEO NHÂN VIÊN NHẬP":
             case "DANH SÁCH PHIẾU NHẬP THEO NHÂN VIÊN":
-                openTab("Danh sách phiếu nhập kho theo nhân viên", new BaoCaoDanhSachPhieuNhapTheoNhanVienPanel());
-                break;
+                return new BaoCaoDanhSachPhieuNhapTheoNhanVienPanel();
             case "TỔNG HỢP MẶT HÀNG PHIẾU NHẬP THEO NHÀ CUNG CẤP":
             case "TỔNG HỢP MẶT HÀNG NHẬP THEO NHÀ CUNG CẤP":
-                openTab("Tổng hợp mặt hàng phiếu nhập theo NCC", new TongHopMatHangNhapTheoNhaCungCapPanel());
-                break;
+                return new TongHopMatHangNhapTheoNhaCungCapPanel();
             case "TỔNG HỢP MẶT HÀNG PHIẾU NHẬP THEO NHÂN VIÊN NHẬP":
             case "TỔNG HỢP MẶT HÀNG NHẬP THEO NHÂN VIÊN":
-                openTab("Tổng hợp mặt hàng phiếu nhập theo NV", new TongHopMatHangNhapTheoNhanVienPanel());
-                break;
+                return new TongHopMatHangNhapTheoNhanVienPanel();
             case "TỔNG HỢP NHẬP THEO NGÀY":
-                openTab("Tổng hợp nhập theo ngày", new TongHopNhapTheoNgayPanel());
-                break;
+                return new TongHopNhapTheoNgayPanel();
             case "TỔNG HỢP NHẬP THEO NHÀ CUNG CẤP":
-                openTab("Tổng hợp nhập theo nhà cung cấp", new TongHopNhapTheoNhaCungCapPanel());
-                break;
+                return new TongHopNhapTheoNhaCungCapPanel();
             case "TỔNG HỢP NHẬP THEO NHÂN VIÊN NHẬP":
             case "TỔNG HỢP NHẬP THEO NHÂN VIÊN":
-                openTab("Tổng hợp nhập theo nhân viên", new TongHopNhapTheoNhanVienPanel());
-                break;
+                return new TongHopNhapTheoNhanVienPanel();
             case "TỔNG HỢP MẶT HÀNG NHẬP KHO THEO NGÀY":
             case "TỔNG HỢP MẶT HÀNG NHẬP THEO NGÀY":
-                openTab("Tổng hợp mặt hàng nhập kho theo ngày", new TongHopMatHangNhapTheoNgayPanel());
-                break;
+                return new TongHopMatHangNhapTheoNgayPanel();
             case "BÁO CÁO TỔNG HỢP NHẬP KHO":
             case "QUẢN LÝ NHẬP KHO":
-                openTab("Quản lý nhập kho", new QuanLyNhapKhoPanel());
-                break;
+                return new QuanLyNhapKhoPanel();
             case "TỔNG HỢP MẶT HÀNG XUẤT THEO NGÀY":
-                openTab("Tổng hợp mặt hàng xuất theo ngày", new TongHopMatHangXuatTheoNgayPanel());
-                break;
+                return new TongHopMatHangXuatTheoNgayPanel();
             case "TỔNG HỢP MẶT HÀNG XUẤT THEO NHÂN VIÊN XUẤT":
             case "TỔNG HỢP MẶT HÀNG XUẤT THEO NHÂN VIÊN":
-                openTab("Tổng hợp mặt hàng xuất theo nhân viên", new TongHopMatHangXuatTheoNhanVienPanel());
-                break;
+                return new TongHopMatHangXuatTheoNhanVienPanel();
             case "DANH SÁCH PHIẾU XUẤT KHO THEO NHÂN VIÊN XUẤT":
             case "DANH SÁCH PHIẾU XUẤT THEO NHÂN VIÊN":
-                openTab("Danh sách phiếu xuất kho theo nhân viên", new BaoCaoDanhSachPhieuXuatTheoNhanVienPanel());
-                break;
+                return new BaoCaoDanhSachPhieuXuatTheoNhanVienPanel();
             case "DANH SÁCH PHIẾU XUẤT KHO THEO NGÀY":
             case "DANH SÁCH PHIẾU XUẤT THEO NGÀY":
-                openTab("Danh sách phiếu xuất kho theo ngày", new BaoCaoDanhSachPhieuXuatTheoNgayPanel());
-                break;
+                return new BaoCaoDanhSachPhieuXuatTheoNgayPanel();
             case "TỔNG HỢP XUẤT KHÁC THEO NGÀY":
-                openTab("Tổng hợp xuất khác theo ngày", new TongHopXuatKhacTheoNgayPanel());
-                break;
+                return new TongHopXuatKhacTheoNgayPanel();
             case "TỔNG HỢP XUẤT KHÁC THEO NHÂN VIÊN XUẤT":
             case "TỔNG HỢP XUẤT KHÁC THEO NHÂN VIÊN":
-                openTab("Tổng hợp xuất khác theo nhân viên", new TongHopXuatKhacTheoNhanVienPanel());
-                break;
+                return new TongHopXuatKhacTheoNhanVienPanel();
             case "BÁO CÁO TỔNG HỢP XUẤT KHO":
             case "QUẢN LÝ XUẤT KHO":
-                openTab("Quản lý xuất kho", new QuanLyXuatKhoPanel());
-                break;
+                return new QuanLyXuatKhoPanel();
             case "DANH SÁCH PHIẾU CHUYỂN KHO THEO NGÀY":
             case "DANH SÁCH PHIẾU CHUYỂN THEO NGÀY":
-                openTab("Danh sách phiếu chuyển kho theo ngày", new DanhSachPhieuChuyenKhoTheoNgayPanel());
-                break;
+                return new DanhSachPhieuChuyenKhoTheoNgayPanel();
             case "DANH SÁCH PHIẾU CHUYỂN KHO THEO NHÂN VIÊN XUẤT":
             case "DANH SÁCH PHIẾU CHUYỂN THEO NHÂN VIÊN XUẤT":
-                openTab("Danh sách phiếu chuyển kho theo NV xuất", new DanhSachPhieuChuyenKhoTheoNhanVienXuatPanel());
-                break;
+                return new DanhSachPhieuChuyenKhoTheoNhanVienXuatPanel();
             case "DANH SÁCH PHIẾU CHUYỂN KHO THEO NHÂN VIÊN NHẬP":
             case "DANH SÁCH PHIẾU CHUYỂN THEO NHÂN VIÊN NHẬP":
-                openTab("Danh sách phiếu chuyển kho theo NV nhập", new DanhSachPhieuChuyenKhoTheoNhanVienNhanPanel());
-                break;
+                return new DanhSachPhieuChuyenKhoTheoNhanVienNhanPanel();
             case "TỔNG HỢP MẶT HÀNG CHUYỂN KHO THEO NHÂN VIÊN NHẬN":
             case "TỔNG HỢP MẶT HÀNG CHUYỂN THEO NHÂN VIÊN NHẬN":
-                openTab("Tổng hợp mặt hàng chuyển kho theo NV nhận", new TongHopMatHangChuyenKhoTheoNhanVienNhanPanel());
-                break;
+                return new TongHopMatHangChuyenKhoTheoNhanVienNhanPanel();
             case "TỔNG HỢP MẶT HÀNG CHUYỂN KHO THEO NHÂN VIÊN CHUYỂN":
             case "TỔNG HỢP MẶT HÀNG CHUYỂN THEO NHÂN VIÊN CHUYỂN":
-                openTab("Tổng hợp mặt hàng chuyển kho theo NV chuyển", new TongHopMatHangChuyenKhoTheoNhanVienChuyenPanel());
-                break;
+                return new TongHopMatHangChuyenKhoTheoNhanVienChuyenPanel();
             case "TỔNG HỢP MẶT HÀNG CHUYỂN KHO THEO NGÀY":
             case "TỔNG HỢP MẶT HÀNG CHUYỂN THEO NGÀY":
-                openTab("Tổng hợp mặt hàng chuyển kho theo ngày", new TongHopMatHangChuyenKhoTheoNgayPanel());
-                break;
+                return new TongHopMatHangChuyenKhoTheoNgayPanel();
             case "BÁO CÁO TỔNG HỢP CHUYỂN KHO":
             case "QUẢN LÝ CHUYỂN KHO":
-                openTab("Quản lý chuyển kho", new QuanLyChuyenKhoPanel());
-                break;
+                return new QuanLyChuyenKhoPanel();
             case "DANH SÁCH PHIẾU KIỂM KÊ THEO NGÀY":
             case "BÁO CÁO KIỂM KÊ THEO NGÀY":
-                openTab("Danh sách phiếu kiểm kê theo ngày", new BaoCaoDanhSachPhieuKiemKeTheoNgayPanel());
-                break;
+                return new BaoCaoDanhSachPhieuKiemKeTheoNgayPanel();
             case "DANH SÁCH PHIẾU KIỂM KÊ THEO NHÂN VIÊN":
             case "BÁO CÁO KIỂM KÊ THEO NHÂN VIÊN":
-                openTab("Danh sách phiếu kiểm kê theo nhân viên", new BaoCaoDanhSachPhieuKiemKeTheoNhanVienPanel());
-                break;
+                return new BaoCaoDanhSachPhieuKiemKeTheoNhanVienPanel();
             case "TỔNG HỢP MẶT HÀNG PHIẾU KIỂM KÊ THEO NGÀY":
             case "TỔNG HỢP MẶT HÀNG KIỂM KÊ THEO NGÀY":
-                openTab("Tổng hợp mặt hàng phiếu kiểm kê theo ngày", new TongHopMatHangKiemKeTheoNgayPanel());
-                break;
+                return new TongHopMatHangKiemKeTheoNgayPanel();
             case "TỔNG HỢP MẶT HÀNG PHIẾU KIỂM KÊ THEO NHÂN VIÊN":
             case "TỔNG HỢP MẶT HÀNG KIỂM KÊ THEO NHÂN VIÊN":
-                openTab("Tổng hợp mặt hàng phiếu kiểm kê theo nhân viên", new TongHopMatHangKiemKeTheoNhanVienPanel());
-                break;
+                return new TongHopMatHangKiemKeTheoNhanVienPanel();
             case "BÁO CÁO TỔNG HỢP KIỂM KÊ KHO":
             case "QUẢN LÝ KIỂM KÊ":
             case "PHIẾU KIỂM KÊ":
-                openTab("Quản lý kiểm kê", new QuanLyKiemKePanel());
-                break;
+                return new QuanLyKiemKePanel();
             default:
-                openTab(title, createPlaceholderPanel(title));
-                break;
+                return createPlaceholderPanel(title);
         }
     }
 

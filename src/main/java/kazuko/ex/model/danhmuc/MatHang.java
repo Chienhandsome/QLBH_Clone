@@ -38,6 +38,7 @@ public class MatHang {
     private double tonToiDa = 0.0;
     private int phuongThucTruKho = 0; // 0: kiem vat tu, 1: dinh luong combo, 2: ban kem, 3: dich vu, 4: vat tu nguyen lieu
     private String imagePath;
+    private byte[] imageData;
     private int status = 1;
     private Timestamp timeCreated;
     private String userCreatedId;
@@ -160,6 +161,9 @@ public class MatHang {
 
     public String getImagePath() { return imagePath; }
     public void setImagePath(String imagePath) { this.imagePath = imagePath; }
+
+    public byte[] getImageData() { return imageData; }
+    public void setImageData(byte[] imageData) { this.imageData = imageData; }
 
     public int getStatus() { return status; }
     public void setStatus(int status) { this.status = status; }

@@ -17,6 +17,7 @@ import javax.swing.border.LineBorder;
 import javax.swing.border.MatteBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
@@ -24,11 +25,15 @@ import java.awt.*;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
 import java.awt.event.*;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.List;
 import java.util.Locale;
+import javax.imageio.ImageIO;
 
 public class MatHangEditDialog extends JDialog {
     private final MatHangDAO matHangDAO = new MatHangDAO();
@@ -95,6 +100,8 @@ public class MatHangEditDialog extends JDialog {
     // Right Side: Ảnh & Lịch sử
     private JLabel lblImagePreview;
     private String currentImagePath;
+    private byte[] currentImageData;
+    private static final int MAX_STORED_IMAGE_DIMENSION = 1600;
 
     public MatHangEditDialog(Component parent, MatHang item, Runnable onSaveCallback) {
         super(SwingUtilities.getWindowAncestor(parent), item.getId() == null ? "MẶT HÀNG - THÊM MỚI" : "MẶT HÀNG - SỬA", ModalityType.APPLICATION_MODAL);
@@ -1028,7 +1035,9 @@ public class MatHangEditDialog extends JDialog {
         }
 
         // 6. Image
-        if (currentItem.getImagePath() != null && !currentItem.getImagePath().isEmpty()) {
+        if (currentItem.getImageData() != null && currentItem.getImageData().length > 0) {
+            displayImage(currentItem.getImageData());
+        } else if (currentItem.getImagePath() != null && !currentItem.getImagePath().isEmpty()) {
             displayImage(currentItem.getImagePath());
         }
     }
@@ -1124,6 +1133,7 @@ public class MatHangEditDialog extends JDialog {
         }
 
         currentItem.setImagePath(currentImagePath);
+        currentItem.setImageData(currentImageData);
 
         boolean success;
         if (currentItem.getId() == null) {
@@ -1269,34 +1279,118 @@ public class MatHangEditDialog extends JDialog {
             if (tr != null && tr.isDataFlavorSupported(DataFlavor.imageFlavor)) {
                 Image img = (Image) tr.getTransferData(DataFlavor.imageFlavor);
                 if (img != null) {
-                    Image scaled = img.getScaledInstance(230, 180, Image.SCALE_SMOOTH);
-                    lblImagePreview.setIcon(new ImageIcon(scaled));
-                    currentImagePath = "clipboard_image";
+                    storeAndDisplayImage(toBufferedImage(img), null);
+                    return;
                 }
             }
-        } catch (Exception ignored) {}
+            JOptionPane.showMessageDialog(this, "Clipboard không có ảnh.", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+        } catch (Exception e) {
+            showImageError(e);
+        }
     }
 
     private void browseImageFile() {
         JFileChooser chooser = new JFileChooser();
+        chooser.setAcceptAllFileFilterUsed(false);
+        chooser.setFileFilter(new FileNameExtensionFilter(
+                "Tệp ảnh (*.png, *.jpg, *.jpeg, *.gif, *.bmp)",
+                "png", "jpg", "jpeg", "gif", "bmp"));
         if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
             File f = chooser.getSelectedFile();
-            displayImage(f.getAbsolutePath());
+            try {
+                BufferedImage image = ImageIO.read(f);
+                if (image == null) throw new IOException("Định dạng ảnh không được hỗ trợ");
+                storeAndDisplayImage(image, f.getAbsolutePath());
+            } catch (Exception e) {
+                showImageError(e);
+            }
         }
     }
 
     private void displayImage(String path) {
         try {
-            ImageIcon icon = new ImageIcon(path);
-            Image scaled = icon.getImage().getScaledInstance(230, 180, Image.SCALE_SMOOTH);
-            lblImagePreview.setIcon(new ImageIcon(scaled));
-            currentImagePath = path;
-        } catch (Exception ignored) {}
+            BufferedImage image = ImageIO.read(new File(path));
+            if (image == null) return;
+            storeAndDisplayImage(image, path);
+        } catch (Exception ignored) {
+            removeImage();
+        }
+    }
+
+    private void displayImage(byte[] imageData) {
+        if (imageData == null || imageData.length == 0) {
+            removeImage();
+            return;
+        }
+        ImageIcon icon = new ImageIcon(imageData);
+        if (icon.getIconWidth() <= 0 || icon.getIconHeight() <= 0) {
+            removeImage();
+            return;
+        }
+        double scale = Math.min(230.0 / icon.getIconWidth(), 180.0 / icon.getIconHeight());
+        int width = Math.max(1, (int) Math.round(icon.getIconWidth() * scale));
+        int height = Math.max(1, (int) Math.round(icon.getIconHeight() * scale));
+        Image preview = icon.getImage().getScaledInstance(width, height, Image.SCALE_SMOOTH);
+        lblImagePreview.setIcon(new ImageIcon(preview));
+        currentImageData = imageData.clone();
+    }
+
+    private void storeAndDisplayImage(BufferedImage source, String sourcePath) throws IOException {
+        BufferedImage storedImage = resizeForStorage(source);
+        try (ByteArrayOutputStream output = new ByteArrayOutputStream()) {
+            if (!ImageIO.write(storedImage, "png", output)) {
+                throw new IOException("Không thể chuyển ảnh sang định dạng PNG");
+            }
+            currentImagePath = sourcePath;
+            displayImage(output.toByteArray());
+        }
+    }
+
+    private static BufferedImage resizeForStorage(BufferedImage source) {
+        int maxDimension = Math.max(source.getWidth(), source.getHeight());
+        if (maxDimension <= MAX_STORED_IMAGE_DIMENSION) return source;
+
+        double scale = (double) MAX_STORED_IMAGE_DIMENSION / maxDimension;
+        int width = Math.max(1, (int) Math.round(source.getWidth() * scale));
+        int height = Math.max(1, (int) Math.round(source.getHeight() * scale));
+        BufferedImage resized = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D graphics = resized.createGraphics();
+        try {
+            graphics.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+            graphics.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+            graphics.drawImage(source, 0, 0, width, height, null);
+        } finally {
+            graphics.dispose();
+        }
+        return resized;
+    }
+
+    private static BufferedImage toBufferedImage(Image source) throws IOException {
+        ImageIcon loaded = new ImageIcon(source);
+        int width = loaded.getIconWidth();
+        int height = loaded.getIconHeight();
+        if (width <= 0 || height <= 0) throw new IOException("Clipboard chứa ảnh không hợp lệ");
+
+        BufferedImage buffered = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D graphics = buffered.createGraphics();
+        try {
+            graphics.drawImage(loaded.getImage(), 0, 0, null);
+        } finally {
+            graphics.dispose();
+        }
+        return buffered;
+    }
+
+    private void showImageError(Exception error) {
+        JOptionPane.showMessageDialog(this,
+                "Không thể đọc ảnh: " + error.getMessage(),
+                "Lỗi ảnh", JOptionPane.ERROR_MESSAGE);
     }
 
     private void removeImage() {
         lblImagePreview.setIcon(null);
         currentImagePath = null;
+        currentImageData = null;
     }
 
     private double parseNumber(String val) {

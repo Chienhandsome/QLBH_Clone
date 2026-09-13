@@ -47,22 +47,22 @@ public class BaoCaoQuanTriReportService {
         try {
             if (cachedReportTongHopLaiGopGiaVon == null) {
                 try (InputStream in = BaoCaoQuanTriReportService.class.getResourceAsStream("/reports/tong_hop_lai_gop_theo_mat_hang_gia_von.jrxml")) {
-                    if (in != null) cachedReportTongHopLaiGopGiaVon = JasperCompileManager.compileReport(in);
+                    if (in != null) cachedReportTongHopLaiGopGiaVon = ReportTemplateCompiler.compile(in);
                 }
             }
             if (cachedReportTongHopLaiGopGiaNhap == null) {
                 try (InputStream in = BaoCaoQuanTriReportService.class.getResourceAsStream("/reports/tong_hop_lai_gop_theo_mat_hang_gia_nhap.jrxml")) {
-                    if (in != null) cachedReportTongHopLaiGopGiaNhap = JasperCompileManager.compileReport(in);
+                    if (in != null) cachedReportTongHopLaiGopGiaNhap = ReportTemplateCompiler.compile(in);
                 }
             }
             if (cachedReportChiTietLaiHoaDonGiaVon == null) {
                 try (InputStream in = BaoCaoQuanTriReportService.class.getResourceAsStream("/reports/chi_tiet_lai_theo_hoa_don_gia_von.jrxml")) {
-                    if (in != null) cachedReportChiTietLaiHoaDonGiaVon = JasperCompileManager.compileReport(in);
+                    if (in != null) cachedReportChiTietLaiHoaDonGiaVon = ReportTemplateCompiler.compile(in);
                 }
             }
             if (cachedReportChiTietLaiHoaDonGiaNhap == null) {
                 try (InputStream in = BaoCaoQuanTriReportService.class.getResourceAsStream("/reports/chi_tiet_lai_theo_hoa_don_gia_nhap.jrxml")) {
-                    if (in != null) cachedReportChiTietLaiHoaDonGiaNhap = JasperCompileManager.compileReport(in);
+                    if (in != null) cachedReportChiTietLaiHoaDonGiaNhap = ReportTemplateCompiler.compile(in);
                 }
             }
         } catch (Exception ignored) {}
@@ -72,7 +72,7 @@ public class BaoCaoQuanTriReportService {
         if (cachedReportTongHopLaiGopGiaVon != null) return cachedReportTongHopLaiGopGiaVon;
         try (InputStream in = getClass().getResourceAsStream("/reports/tong_hop_lai_gop_theo_mat_hang_gia_von.jrxml")) {
             if (in == null) throw new JRException("Mau /reports/tong_hop_lai_gop_theo_mat_hang_gia_von.jrxml khong ton tai!");
-            cachedReportTongHopLaiGopGiaVon = JasperCompileManager.compileReport(in);
+            cachedReportTongHopLaiGopGiaVon = ReportTemplateCompiler.compile(in);
             return cachedReportTongHopLaiGopGiaVon;
         } catch (Exception e) {
             throw new JRException(e);
@@ -83,7 +83,7 @@ public class BaoCaoQuanTriReportService {
         if (cachedReportTongHopLaiGopGiaNhap != null) return cachedReportTongHopLaiGopGiaNhap;
         try (InputStream in = getClass().getResourceAsStream("/reports/tong_hop_lai_gop_theo_mat_hang_gia_nhap.jrxml")) {
             if (in == null) throw new JRException("Mau /reports/tong_hop_lai_gop_theo_mat_hang_gia_nhap.jrxml khong ton tai!");
-            cachedReportTongHopLaiGopGiaNhap = JasperCompileManager.compileReport(in);
+            cachedReportTongHopLaiGopGiaNhap = ReportTemplateCompiler.compile(in);
             return cachedReportTongHopLaiGopGiaNhap;
         } catch (Exception e) {
             throw new JRException(e);
@@ -94,7 +94,7 @@ public class BaoCaoQuanTriReportService {
         if (cachedReportChiTietLaiHoaDonGiaVon != null) return cachedReportChiTietLaiHoaDonGiaVon;
         try (InputStream in = getClass().getResourceAsStream("/reports/chi_tiet_lai_theo_hoa_don_gia_von.jrxml")) {
             if (in == null) throw new JRException("Mau /reports/chi_tiet_lai_theo_hoa_don_gia_von.jrxml khong ton tai!");
-            cachedReportChiTietLaiHoaDonGiaVon = JasperCompileManager.compileReport(in);
+            cachedReportChiTietLaiHoaDonGiaVon = ReportTemplateCompiler.compile(in);
             return cachedReportChiTietLaiHoaDonGiaVon;
         } catch (Exception e) {
             throw new JRException(e);
@@ -105,7 +105,7 @@ public class BaoCaoQuanTriReportService {
         if (cachedReportChiTietLaiHoaDonGiaNhap != null) return cachedReportChiTietLaiHoaDonGiaNhap;
         try (InputStream in = getClass().getResourceAsStream("/reports/chi_tiet_lai_theo_hoa_don_gia_nhap.jrxml")) {
             if (in == null) throw new JRException("Mau /reports/chi_tiet_lai_theo_hoa_don_gia_nhap.jrxml khong ton tai!");
-            cachedReportChiTietLaiHoaDonGiaNhap = JasperCompileManager.compileReport(in);
+            cachedReportChiTietLaiHoaDonGiaNhap = ReportTemplateCompiler.compile(in);
             return cachedReportChiTietLaiHoaDonGiaNhap;
         } catch (Exception e) {
             throw new JRException(e);

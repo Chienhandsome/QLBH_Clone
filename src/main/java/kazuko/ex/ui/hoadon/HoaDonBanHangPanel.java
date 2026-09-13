@@ -9,6 +9,8 @@ import kazuko.ex.model.dathang.KhachDatHang;
 import kazuko.ex.model.dathang.KhachDatHangChiTiet;
 import kazuko.ex.model.system.SystemConfig;
 import kazuko.ex.ui.common.DatePickerField;
+import kazuko.ex.ui.danhmuc.DanhMucKhachHangPanel;
+import kazuko.ex.ui.danhmuc.KhachHangEditDialog;
 import kazuko.ex.util.AppColors;
 import kazuko.ex.util.CurrencyUtil;
 import kazuko.ex.util.DateUtil;
@@ -68,6 +70,14 @@ public class HoaDonBanHangPanel extends JPanel {
     private DatePickerField dpkNgay;
     private JTextField txtSoHD;
     private JComboBox<KhachHang> cbKhachHang;
+    private JPanel customerLookupField;
+    private JTextField txtKhachHangLookup;
+    private JPopupMenu popupKhachHang;
+    private JTable tableLookupKhachHang;
+    private DefaultTableModel lookupKhachHangModel;
+    private final List<KhachHang> allLookupKhachHangList = new ArrayList<>();
+    private final List<KhachHang> filteredLookupKhachHangList = new ArrayList<>();
+    private boolean isUpdatingCustomerLookup = false;
     private JComboBox<KhoHang> cbKhoXuat;
     private JComboBox<NhanVien> cbNhanVien;
     private JTextField txtDienGiai;
@@ -86,7 +96,6 @@ public class HoaDonBanHangPanel extends JPanel {
 
     // Details Panel & Tabs
     private JTabbedPane tabbedPaneDetails;
-    private JPanel recentPriceButtonsPanel;
     private JTable tableLayHang;
     private DefaultTableModel layHangModel;
     private JTable tableTraHang;
@@ -382,10 +391,11 @@ public class HoaDonBanHangPanel extends JPanel {
         panel.add(lblKhach);
 
         cbKhachHang = new JComboBox<>();
-        cbKhachHang.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        cbKhachHang.setBounds(90, 36, 890, 24);
         cbKhachHang.addActionListener(e -> onCustomerSelected());
-        panel.add(cbKhachHang);
+
+        customerLookupField = createCustomerLookupField();
+        customerLookupField.setBounds(90, 36, 890, 24);
+        panel.add(customerLookupField);
 
         // Row 3: Kho xuất, Nhân viên
         JLabel lblKho = new JLabel("Kho xuất");
@@ -495,6 +505,336 @@ public class HoaDonBanHangPanel extends JPanel {
         return btn;
     }
 
+    private JPanel createCustomerLookupField() {
+        JPanel field = new JPanel(new BorderLayout());
+        field.setBackground(Color.WHITE);
+        field.setBorder(new LineBorder(new Color(170, 190, 215), 1));
+
+        txtKhachHangLookup = new JTextField();
+        txtKhachHangLookup.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        txtKhachHangLookup.setBorder(new EmptyBorder(0, 5, 0, 3));
+        field.add(txtKhachHangLookup, BorderLayout.CENTER);
+
+        JButton btnDropdown = new JButton("▾");
+        btnDropdown.setPreferredSize(new Dimension(24, 22));
+        btnDropdown.setMargin(new Insets(0, 0, 0, 0));
+        btnDropdown.setFocusPainted(false);
+        btnDropdown.setBackground(Color.WHITE);
+        btnDropdown.setBorder(new MatteBorder(0, 1, 0, 0, new Color(190, 205, 225)));
+        btnDropdown.addActionListener(e -> toggleCustomerPopup());
+        field.add(btnDropdown, BorderLayout.EAST);
+
+        initCustomerLookupPopup();
+        txtKhachHangLookup.getDocument().addDocumentListener(new DocumentListener() {
+            @Override public void insertUpdate(DocumentEvent e) { onCustomerLookupTextChanged(); }
+            @Override public void removeUpdate(DocumentEvent e) { onCustomerLookupTextChanged(); }
+            @Override public void changedUpdate(DocumentEvent e) { onCustomerLookupTextChanged(); }
+        });
+        txtKhachHangLookup.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+                if (e.getKeyCode() == KeyEvent.VK_DOWN) {
+                    showCustomerPopup();
+                    moveCustomerLookupSelection(1);
+                    e.consume();
+                } else if (e.getKeyCode() == KeyEvent.VK_UP) {
+                    showCustomerPopup();
+                    moveCustomerLookupSelection(-1);
+                    e.consume();
+                } else if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                    chooseLookupCustomerAndClose();
+                    e.consume();
+                } else if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
+                    popupKhachHang.setVisible(false);
+                }
+            }
+        });
+        return field;
+    }
+
+    private void initCustomerLookupPopup() {
+        popupKhachHang = new JPopupMenu();
+        // Không để popup chiếm focus khi nó tự mở sau ký tự tìm kiếm đầu tiên.
+        popupKhachHang.setFocusable(false);
+        popupKhachHang.setBorder(new LineBorder(new Color(160, 185, 215), 1));
+
+        JPanel content = new JPanel(new BorderLayout());
+        content.setPreferredSize(new Dimension(890, 245));
+        content.setBackground(Color.WHITE);
+
+        String[] columns = {"Tên khách hàng", "Mã khách", "Địa chỉ", "Điện thoại", "Email"};
+        lookupKhachHangModel = new DefaultTableModel(columns, 0) {
+            @Override public boolean isCellEditable(int row, int column) { return false; }
+        };
+        tableLookupKhachHang = new JTable(lookupKhachHangModel);
+        tableLookupKhachHang.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        tableLookupKhachHang.setRowHeight(24);
+        tableLookupKhachHang.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        tableLookupKhachHang.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 12));
+        tableLookupKhachHang.getTableHeader().setBackground(new Color(245, 248, 252));
+        tableLookupKhachHang.setSelectionBackground(new Color(225, 245, 250));
+        tableLookupKhachHang.setSelectionForeground(Color.BLACK);
+        tableLookupKhachHang.getColumnModel().getColumn(0).setPreferredWidth(190);
+        tableLookupKhachHang.getColumnModel().getColumn(1).setPreferredWidth(110);
+        tableLookupKhachHang.getColumnModel().getColumn(2).setPreferredWidth(230);
+        tableLookupKhachHang.getColumnModel().getColumn(3).setPreferredWidth(130);
+        tableLookupKhachHang.getColumnModel().getColumn(4).setPreferredWidth(200);
+        tableLookupKhachHang.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                int row = tableLookupKhachHang.getSelectedRow();
+                if (row >= 0 && row < filteredLookupKhachHangList.size()) {
+                    selectLookupCustomer(filteredLookupKhachHangList.get(row));
+                    if (e.getClickCount() == 2) popupKhachHang.setVisible(false);
+                }
+            }
+        });
+        tableLookupKhachHang.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+                if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                    chooseLookupCustomerAndClose();
+                    e.consume();
+                } else if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
+                    popupKhachHang.setVisible(false);
+                    txtKhachHangLookup.requestFocusInWindow();
+                }
+            }
+        });
+        content.add(new JScrollPane(tableLookupKhachHang), BorderLayout.CENTER);
+
+        JPanel actions = new JPanel(new GridLayout(1, 4, 4, 0));
+        actions.setBorder(new EmptyBorder(4, 4, 4, 4));
+        actions.setBackground(new Color(240, 245, 252));
+        JButton btnThem = createCustomerPopupButton("+ Thêm", "plus.png", new Color(0, 130, 60));
+        JButton btnSua = createCustomerPopupButton("Sửa", "pencil.png", Color.BLACK);
+        JButton btnTai = createCustomerPopupButton("Tải", "Refresh.png", new Color(0, 80, 180));
+        JButton btnDanhMuc = createCustomerPopupButton("Danh mục", "table.png", Color.BLACK);
+        btnThem.addActionListener(e -> addCustomerFromLookup());
+        btnSua.addActionListener(e -> editCustomerFromLookup());
+        btnTai.addActionListener(e -> reloadCustomerLookupData(true));
+        btnDanhMuc.addActionListener(e -> openCustomerCatalog());
+        actions.add(btnThem);
+        actions.add(btnSua);
+        actions.add(btnTai);
+        actions.add(btnDanhMuc);
+        content.add(actions, BorderLayout.SOUTH);
+        popupKhachHang.add(content);
+    }
+
+    private JButton createCustomerPopupButton(String text, String icon, Color foreground) {
+        JButton button = new JButton(text, IconHelper.getIcon(icon, 14, 14));
+        button.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        button.setForeground(foreground);
+        button.setBackground(Color.WHITE);
+        button.setFocusPainted(false);
+        return button;
+    }
+
+    private void onCustomerLookupTextChanged() {
+        if (isUpdatingCustomerLookup) return;
+        isUpdatingCustomerLookup = true;
+        try {
+            cbKhachHang.setSelectedItem(null);
+        } finally {
+            isUpdatingCustomerLookup = false;
+        }
+        filterLookupCustomers(txtKhachHangLookup.getText());
+        if (txtKhachHangLookup.hasFocus()) showCustomerPopup();
+    }
+
+    private void showCustomerPopup() {
+        if (!customerLookupField.isShowing()) return;
+        filterLookupCustomers(txtKhachHangLookup.getText());
+        if (!popupKhachHang.isVisible()) {
+            popupKhachHang.show(customerLookupField, 0, customerLookupField.getHeight());
+            SwingUtilities.invokeLater(() -> txtKhachHangLookup.requestFocusInWindow());
+        }
+    }
+
+    private void moveCustomerLookupSelection(int direction) {
+        int rowCount = tableLookupKhachHang.getRowCount();
+        if (rowCount <= 0) return;
+        int currentRow = tableLookupKhachHang.getSelectedRow();
+        int targetRow = currentRow < 0
+                ? (direction > 0 ? 0 : rowCount - 1)
+                : Math.max(0, Math.min(rowCount - 1, currentRow + direction));
+        tableLookupKhachHang.setRowSelectionInterval(targetRow, targetRow);
+        tableLookupKhachHang.scrollRectToVisible(tableLookupKhachHang.getCellRect(targetRow, 0, true));
+    }
+
+    private void toggleCustomerPopup() {
+        if (popupKhachHang.isVisible()) popupKhachHang.setVisible(false);
+        else showCustomerPopup();
+    }
+
+    private void filterLookupCustomers(String keyword) {
+        String value = keyword != null ? keyword.trim().toLowerCase(Locale.ROOT) : "";
+        filteredLookupKhachHangList.clear();
+        lookupKhachHangModel.setRowCount(0);
+        for (KhachHang customer : allLookupKhachHangList) {
+            if (!matchesCustomer(customer, value)) continue;
+            filteredLookupKhachHangList.add(customer);
+            lookupKhachHangModel.addRow(new Object[]{
+                    safeCustomerValue(customer.getName()), safeCustomerValue(customer.getMaKhach()),
+                    safeCustomerValue(customer.getDiaChi()), safeCustomerValue(customer.getDienThoai()),
+                    safeCustomerValue(customer.getEmail())
+            });
+        }
+    }
+
+    private boolean matchesCustomer(KhachHang customer, String keyword) {
+        if (keyword.isEmpty()) return true;
+        return containsCustomerValue(customer.getName(), keyword)
+                || containsCustomerValue(customer.getMaKhach(), keyword)
+                || containsCustomerValue(customer.getDiaChi(), keyword)
+                || containsCustomerValue(customer.getDienThoai(), keyword)
+                || containsCustomerValue(customer.getEmail(), keyword);
+    }
+
+    private boolean containsCustomerValue(String value, String keyword) {
+        return value != null && value.toLowerCase(Locale.ROOT).contains(keyword);
+    }
+
+    private String safeCustomerValue(String value) {
+        return value != null ? value : "";
+    }
+
+    private void chooseLookupCustomerAndClose() {
+        int row = tableLookupKhachHang.getSelectedRow();
+        if (row < 0 && filteredLookupKhachHangList.size() == 1) row = 0;
+        if (row >= 0 && row < filteredLookupKhachHangList.size()) {
+            selectLookupCustomer(filteredLookupKhachHangList.get(row));
+        }
+        popupKhachHang.setVisible(false);
+    }
+
+    private void selectLookupCustomer(KhachHang customer) {
+        if (customer == null) return;
+        isUpdatingCustomerLookup = true;
+        try {
+            cbKhachHang.setSelectedItem(customer);
+            txtKhachHangLookup.setText(customer.toString());
+        } finally {
+            isUpdatingCustomerLookup = false;
+        }
+        onCustomerSelected();
+    }
+
+    private void reloadCustomerLookupData(boolean preserveSelection) {
+        KhachHang selected = (KhachHang) cbKhachHang.getSelectedItem();
+        String selectedId = preserveSelection && selected != null ? selected.getId() : null;
+
+        allLookupKhachHangList.clear();
+        KhachHang walkInCustomer = new KhachHang();
+        walkInCustomer.setName("Khách lẻ");
+        allLookupKhachHangList.add(walkInCustomer);
+        for (KhachHang customer : khachHangDAO.getAll()) {
+            if (customer.getStatus() >= 0) allLookupKhachHangList.add(customer);
+        }
+
+        isUpdatingCustomerLookup = true;
+        try {
+            cbKhachHang.removeAllItems();
+            for (KhachHang customer : allLookupKhachHangList) cbKhachHang.addItem(customer);
+            int selectedIndex = 0;
+            if (selectedId != null) {
+                for (int i = 1; i < cbKhachHang.getItemCount(); i++) {
+                    if (selectedId.equals(cbKhachHang.getItemAt(i).getId())) {
+                        selectedIndex = i;
+                        break;
+                    }
+                }
+            }
+            if (cbKhachHang.getItemCount() > 0) cbKhachHang.setSelectedIndex(selectedIndex);
+            KhachHang current = (KhachHang) cbKhachHang.getSelectedItem();
+            txtKhachHangLookup.setText(current != null ? current.toString() : "");
+        } finally {
+            isUpdatingCustomerLookup = false;
+        }
+        filterLookupCustomers(txtKhachHangLookup.getText());
+        onCustomerSelected();
+    }
+
+    private void addCustomerFromLookup() {
+        popupKhachHang.setVisible(false);
+        Set<String> existingIds = new HashSet<>();
+        for (KhachHang customer : allLookupKhachHangList) {
+            if (customer.getId() != null) existingIds.add(customer.getId());
+        }
+        KhachHangEditDialog dialog = new KhachHangEditDialog(this, null, () -> {
+            reloadCustomerLookupData(false);
+            for (KhachHang customer : allLookupKhachHangList) {
+                if (customer.getId() != null && !existingIds.contains(customer.getId())) {
+                    selectLookupCustomer(customer);
+                    break;
+                }
+            }
+        });
+        dialog.setVisible(true);
+    }
+
+    private void editCustomerFromLookup() {
+        KhachHang customer = null;
+        int row = tableLookupKhachHang.getSelectedRow();
+        if (row >= 0 && row < filteredLookupKhachHangList.size()) {
+            customer = filteredLookupKhachHangList.get(row);
+        }
+        if (customer == null) customer = (KhachHang) cbKhachHang.getSelectedItem();
+        if (customer == null || customer.getId() == null) {
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn khách hàng cần sửa!",
+                    "Thông báo", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        popupKhachHang.setVisible(false);
+        KhachHang customerToEdit = customer;
+        KhachHangEditDialog dialog = new KhachHangEditDialog(this, customerToEdit, () -> {
+            reloadCustomerLookupData(false);
+            KhachHang refreshed = khachHangDAO.findActiveById(customerToEdit.getId());
+            if (refreshed != null) selectLookupCustomer(refreshed);
+        });
+        dialog.setVisible(true);
+    }
+
+    private void openCustomerCatalog() {
+        popupKhachHang.setVisible(false);
+        Window owner = SwingUtilities.getWindowAncestor(this);
+        JDialog dialog = new JDialog(owner, "DANH SÁCH KHÁCH HÀNG", Dialog.ModalityType.APPLICATION_MODAL);
+        dialog.setSize(950, 580);
+        dialog.setLocationRelativeTo(this);
+        dialog.setLayout(new BorderLayout());
+
+        DanhMucKhachHangPanel customerPanel = new DanhMucKhachHangPanel();
+        dialog.add(customerPanel, BorderLayout.CENTER);
+        JPanel actions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 6));
+        JButton btnChon = new JButton("Chọn khách hàng");
+        JButton btnDong = new JButton("Đóng");
+        btnChon.addActionListener(e -> {
+            KhachHang customer = customerPanel.getSelectedKhachHang();
+            if (customer == null) {
+                JOptionPane.showMessageDialog(dialog, "Vui lòng chọn một khách hàng!",
+                        "Thông báo", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+            reloadCustomerLookupData(false);
+            KhachHang refreshed = khachHangDAO.findActiveById(customer.getId());
+            selectLookupCustomer(refreshed != null ? refreshed : customer);
+            dialog.dispose();
+        });
+        btnDong.addActionListener(e -> dialog.dispose());
+        actions.add(btnChon);
+        actions.add(btnDong);
+        dialog.add(actions, BorderLayout.SOUTH);
+        customerPanel.setOnCustomerDoubleClickListener(customer -> {
+            reloadCustomerLookupData(false);
+            KhachHang refreshed = khachHangDAO.findActiveById(customer.getId());
+            selectLookupCustomer(refreshed != null ? refreshed : customer);
+            dialog.dispose();
+        });
+        dialog.setVisible(true);
+    }
+
     private JTabbedPane createDetailsTabbedPane() {
         tabbedPaneDetails = new JTabbedPane();
         tabbedPaneDetails.setFont(new Font("Segoe UI", Font.BOLD, 12));
@@ -508,10 +848,6 @@ public class HoaDonBanHangPanel extends JPanel {
         tableLayHang.setRowHeight(22);
         tableLayHang.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 12));
         tableLayHang.getTableHeader().setBackground(new Color(235, 242, 252));
-        tableLayHang.getSelectionModel().addListSelectionListener(e -> {
-            if (!e.getValueIsAdjusting()) updateRecentPriceButtons();
-        });
-
         rebuildLayHangTableColumns();
 
         // Popup context menu for columns and actions
@@ -629,33 +965,8 @@ public class HoaDonBanHangPanel extends JPanel {
         JScrollPane spTraHang = new JScrollPane(tableTraHang);
         pnlTraHang.add(spTraHang, BorderLayout.CENTER);
         tabbedPaneDetails.addTab("KHÁCH TRẢ HÀNG", pnlTraHang);
-        installRecentPriceButtonsBesideTabs();
 
         return tabbedPaneDetails;
-    }
-
-    private void installRecentPriceButtonsBesideTabs() {
-        JPanel secondTabHeader = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
-        secondTabHeader.setOpaque(false);
-
-        JLabel returnTabTitle = new JLabel("KHÁCH TRẢ HÀNG");
-        returnTabTitle.setFont(new Font("Segoe UI", Font.BOLD, 12));
-        returnTabTitle.setBorder(new EmptyBorder(4, 5, 4, 5));
-        MouseAdapter selectReturnTab = new MouseAdapter() {
-            @Override
-            public void mousePressed(MouseEvent e) {
-                tabbedPaneDetails.setSelectedIndex(1);
-            }
-        };
-        returnTabTitle.addMouseListener(selectReturnTab);
-        secondTabHeader.add(returnTabTitle);
-
-        recentPriceButtonsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 0));
-        recentPriceButtonsPanel.setOpaque(false);
-        recentPriceButtonsPanel.setVisible(false);
-        secondTabHeader.add(recentPriceButtonsPanel);
-
-        tabbedPaneDetails.setTabComponentAt(1, secondTabHeader);
     }
 
     private JPanel createBottomActionButtons() {
@@ -844,7 +1155,11 @@ public class HoaDonBanHangPanel extends JPanel {
         registerKeyboardAction(e -> txtBarcode.requestFocusInWindow(), f3, JComponent.WHEN_IN_FOCUSED_WINDOW);
 
         KeyStroke f6 = KeyStroke.getKeyStroke(KeyEvent.VK_F6, 0);
-        registerKeyboardAction(e -> cbKhachHang.requestFocusInWindow(), f6, JComponent.WHEN_IN_FOCUSED_WINDOW);
+        registerKeyboardAction(e -> {
+            txtKhachHangLookup.requestFocusInWindow();
+            txtKhachHangLookup.selectAll();
+            showCustomerPopup();
+        }, f6, JComponent.WHEN_IN_FOCUSED_WINDOW);
 
         KeyStroke f9 = KeyStroke.getKeyStroke(KeyEvent.VK_F9, 0);
         registerKeyboardAction(e -> onLuuTam(), f9, JComponent.WHEN_IN_FOCUSED_WINDOW);
@@ -870,14 +1185,7 @@ public class HoaDonBanHangPanel extends JPanel {
 
         loadCategoryTree();
 
-        cbKhachHang.removeAllItems();
-        KhachHang dummyKhach = new KhachHang();
-        dummyKhach.setName("Khách lẻ");
-        cbKhachHang.addItem(dummyKhach);
-        List<KhachHang> khList = khachHangDAO.getAll();
-        for (KhachHang kh : khList) {
-            if (kh.getStatus() >= 0) cbKhachHang.addItem(kh);
-        }
+        reloadCustomerLookupData(false);
 
         cbKhoXuat.removeAllItems();
         List<KhoHang> khoList = khoHangDAO.getAllActive();
@@ -1159,22 +1467,46 @@ public class HoaDonBanHangPanel extends JPanel {
 
     private void openNhapSoLuongForProduct(MatHang m) {
         KhachHang selectedCustomer = (KhachHang) cbKhachHang.getSelectedItem();
+        boolean useCustomerPrice = systemConfig != null
+                && systemConfig.isSuDungGiaTheoKhach()
+                && selectedCustomer != null
+                && selectedCustomer.getId() != null
+                && !selectedCustomer.getId().trim().isEmpty();
+        int customerPriceCode = useCustomerPrice
+                ? selectedCustomer.getGiaBanIndex() : KhachHang.GIA_THEO_DANH_MUC;
+
         List<GiaBanGanDayKhachHang> recentPrices = Collections.emptyList();
         if (selectedCustomer != null && selectedCustomer.getId() != null
-                && !selectedCustomer.getId().trim().isEmpty()) {
+                && !selectedCustomer.getId().trim().isEmpty()
+                && (!useCustomerPrice || customerPriceCode == KhachHang.GIA_GAN_NHAT)) {
             recentPrices = hoaDonDAO.getGiaBanGanDayCuaKhachHang(
                     selectedCustomer.getId(), m.getId(), m.getDonViTinhId());
         }
 
         Window parentWin = SwingUtilities.getWindowAncestor(this);
-        ChonLoaiGiaDialog priceDlg = new ChonLoaiGiaDialog(parentWin, systemConfig,
-                m.getGiaBan(), m.getGiaBan2(), m.getGiaBan3(), m.getGiaBan4(), recentPrices);
-        priceDlg.setVisible(true);
+        int selectedPriceIndex = -1;
+        double price;
+        String selectedPriceName;
+        boolean applyToAll = false;
 
-        if (!priceDlg.isConfirmed()) return;
+        if (useCustomerPrice) {
+            List<GiaBanGanDayKhachHang> filteredRecent = ChonLoaiGiaDialog.filterRecentPrices(recentPrices);
+            Double latestPrice = filteredRecent.isEmpty() ? null : filteredRecent.get(0).getDonGia();
+            price = SalesConfigSupport.resolveCustomerPrice(customerPriceCode,
+                    m.getGiaBan(), m.getGiaBan2(), m.getGiaBan3(), m.getGiaBan4(),
+                    m.getGiaVon(), latestPrice);
+            selectedPriceName = SalesConfigSupport.customerPriceName(customerPriceCode, systemConfig);
+        } else {
+            ChonLoaiGiaDialog priceDlg = new ChonLoaiGiaDialog(parentWin, systemConfig,
+                    m.getGiaBan(), m.getGiaBan2(), m.getGiaBan3(), m.getGiaBan4(), recentPrices);
+            priceDlg.setVisible(true);
+            if (!priceDlg.isConfirmed()) return;
+            selectedPriceIndex = priceDlg.getSelectedPriceIndex();
+            price = priceDlg.getSelectedPrice();
+            selectedPriceName = priceDlg.getSelectedPriceName();
+            applyToAll = priceDlg.isApplyToAll();
+        }
 
-        int selectedPriceIndex = priceDlg.getSelectedPriceIndex();
-        double price = priceDlg.getSelectedPrice();
         double defaultQty = 1.0;
         try {
             defaultQty = Double.parseDouble(txtSoLuongBarcode.getText().trim().replace(",", "."));
@@ -1190,9 +1522,9 @@ public class HoaDonBanHangPanel extends JPanel {
         dlg.setVisible(true);
 
         if (dlg.isConfirmed()) {
-            currentLoaiGiaName = priceDlg.getSelectedPriceName();
+            currentLoaiGiaName = selectedPriceName;
 
-            if (priceDlg.isApplyToAll() && selectedPriceIndex >= 0) {
+            if (applyToAll && selectedPriceIndex >= 0) {
                 applyPriceToAllInvoiceItems(selectedPriceIndex);
             }
 
@@ -1560,7 +1892,6 @@ public class HoaDonBanHangPanel extends JPanel {
         } finally {
             isRefreshingLayHangTable = false;
         }
-        updateRecentPriceButtons();
     }
 
     private void refreshLayHangTable() {
@@ -1657,72 +1988,6 @@ public class HoaDonBanHangPanel extends JPanel {
         recalculateFinancials();
     }
 
-    private void updateRecentPriceButtons() {
-        if (recentPriceButtonsPanel == null || cbKhachHang == null || tableLayHang == null) return;
-        if (isRefreshingLayHangTable) return;
-        recentPriceButtonsPanel.removeAll();
-        recentPriceButtonsPanel.setVisible(false);
-
-        KhachHang customer = (KhachHang) cbKhachHang.getSelectedItem();
-        if (customer == null || customer.getId() == null || customer.getId().trim().isEmpty()) {
-            refreshRecentPriceButtonsLayout();
-            return;
-        }
-
-        int row = tableLayHang.getSelectedRow();
-        int tableRowCount = tableLayHang.getRowCount();
-        if (row < 0 && tableRowCount > 0 && !currentLayHangList.isEmpty()) {
-            row = Math.min(tableRowCount, currentLayHangList.size()) - 1;
-            tableLayHang.setRowSelectionInterval(row, row);
-            // Selection listener se goi lai ham voi chi so dong da hop le.
-            return;
-        }
-        if (row < 0 || row >= currentLayHangList.size()) {
-            refreshRecentPriceButtonsLayout();
-            return;
-        }
-
-        DonHangChiTiet detail = currentLayHangList.get(row);
-        List<GiaBanGanDayKhachHang> recentPrices = ChonLoaiGiaDialog.filterRecentPrices(
-                hoaDonDAO.getGiaBanGanDayCuaKhachHang(
-                        customer.getId(), detail.getMatHangId(), detail.getDonViTinhId()));
-        if (!recentPrices.isEmpty()) {
-            GiaBanGanDayKhachHang recent = recentPrices.get(0);
-            JButton button = new JButton("Giá gần nhất: "
-                    + CurrencyUtil.format(Math.round(recent.getDonGia())));
-            button.setFont(new Font("Segoe UI", Font.PLAIN, 11));
-            button.setMargin(new Insets(2, 6, 2, 6));
-            button.setFocusable(false);
-            button.setBackground(new Color(236, 248, 228));
-            button.setToolTipText(buildRecentPriceTooltip(recent));
-            final int selectedRow = row;
-            button.addActionListener(e -> applySelectedRowPrice(selectedRow, recent.getDonGia()));
-            recentPriceButtonsPanel.add(button);
-        }
-        recentPriceButtonsPanel.setVisible(!recentPrices.isEmpty());
-        refreshRecentPriceButtonsLayout();
-    }
-
-    private String buildRecentPriceTooltip(GiaBanGanDayKhachHang recent) {
-        List<String> parts = new ArrayList<>();
-        if (recent.getSoHoaDon() != null && !recent.getSoHoaDon().trim().isEmpty()) {
-            parts.add("Hóa đơn: " + recent.getSoHoaDon().trim());
-        }
-        if (recent.getNgayHoaDon() != null) {
-            parts.add("Ngày mua: " + DateUtil.formatDate(recent.getNgayHoaDon()));
-        }
-        return parts.isEmpty() ? "Áp dụng giá khách đã mua" : String.join(" - ", parts);
-    }
-
-    private void refreshRecentPriceButtonsLayout() {
-        recentPriceButtonsPanel.revalidate();
-        recentPriceButtonsPanel.repaint();
-        if (tabbedPaneDetails != null) {
-            tabbedPaneDetails.revalidate();
-            tabbedPaneDetails.repaint();
-        }
-    }
-
     private String getConfiguredPriceName(String configuredName, String fallback) {
         return configuredName != null && !configuredName.trim().isEmpty()
                 ? configuredName.trim() : fallback;
@@ -1816,10 +2081,15 @@ public class HoaDonBanHangPanel extends JPanel {
 
     private void onCustomerSelected() {
         KhachHang kh = (KhachHang) cbKhachHang.getSelectedItem();
-        if (kh != null) {
-            txtDiaChiGiaoHang.setText(kh.getDiaChi() != null ? kh.getDiaChi() : "");
+        if (!isUpdatingCustomerLookup && txtKhachHangLookup != null) {
+            isUpdatingCustomerLookup = true;
+            try {
+                txtKhachHangLookup.setText(kh != null ? kh.toString() : "");
+            } finally {
+                isUpdatingCustomerLookup = false;
+            }
         }
-        updateRecentPriceButtons();
+        txtDiaChiGiaoHang.setText(kh != null && kh.getDiaChi() != null ? kh.getDiaChi() : "");
     }
 
     private void updateTonKhoDisplay() {
@@ -2265,7 +2535,7 @@ public class HoaDonBanHangPanel extends JPanel {
                 && (customer == null || customer.getId() == null || customer.getId().trim().isEmpty())) {
             JOptionPane.showMessageDialog(this, "Vui lòng chọn khách hàng trước khi lưu hóa đơn!",
                     "Thiếu khách hàng", JOptionPane.WARNING_MESSAGE);
-            cbKhachHang.requestFocusInWindow();
+            txtKhachHangLookup.requestFocusInWindow();
             return false;
         }
 

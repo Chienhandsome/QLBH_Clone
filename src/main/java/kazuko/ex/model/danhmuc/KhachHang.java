@@ -3,6 +3,13 @@ package kazuko.ex.model.danhmuc;
 import java.sql.Timestamp;
 
 public class KhachHang {
+    public static final int GIA_THEO_DANH_MUC = 0;
+    public static final int GIA_BAN_2 = 1;
+    public static final int GIA_BAN_3 = 2;
+    public static final int GIA_BAN_4 = 3;
+    public static final int GIA_VON = 4;
+    public static final int GIA_GAN_NHAT = 5;
+
     private String id;
     private String maKhach;
     private String name;
@@ -84,23 +91,21 @@ public class KhachHang {
     public void setGiaBanApDung(int index) { setGiaBanIndex(index); }
 
     public int getGiaBanIndex() {
-        if ("Giá bán sỉ".equalsIgnoreCase(giaBanApDung)) return 1;
-        if ("Giá bán lẻ".equalsIgnoreCase(giaBanApDung)) return 2;
-        if ("Giá 1".equalsIgnoreCase(giaBanApDung)) return 3;
-        if ("Giá 2".equalsIgnoreCase(giaBanApDung)) return 4;
-        if ("Giá 3".equalsIgnoreCase(giaBanApDung)) return 5;
-        if ("Giá 4".equalsIgnoreCase(giaBanApDung)) return 6;
-        return 0; // Giá theo danh mục
+        if ("Giá bán 2".equalsIgnoreCase(giaBanApDung) || "Giá 2".equalsIgnoreCase(giaBanApDung)) return GIA_BAN_2;
+        if ("Giá bán 3".equalsIgnoreCase(giaBanApDung) || "Giá 3".equalsIgnoreCase(giaBanApDung)) return GIA_BAN_3;
+        if ("Giá bán 4".equalsIgnoreCase(giaBanApDung) || "Giá 4".equalsIgnoreCase(giaBanApDung)) return GIA_BAN_4;
+        if ("Giá vốn".equalsIgnoreCase(giaBanApDung)) return GIA_VON;
+        if ("Giá gần nhất".equalsIgnoreCase(giaBanApDung)) return GIA_GAN_NHAT;
+        return GIA_THEO_DANH_MUC;
     }
 
     public void setGiaBanIndex(int index) {
         switch (index) {
-            case 1: this.giaBanApDung = "Giá bán sỉ"; break;
-            case 2: this.giaBanApDung = "Giá bán lẻ"; break;
-            case 3: this.giaBanApDung = "Giá 1"; break;
-            case 4: this.giaBanApDung = "Giá 2"; break;
-            case 5: this.giaBanApDung = "Giá 3"; break;
-            case 6: this.giaBanApDung = "Giá 4"; break;
+            case GIA_BAN_2: this.giaBanApDung = "Giá bán 2"; break;
+            case GIA_BAN_3: this.giaBanApDung = "Giá bán 3"; break;
+            case GIA_BAN_4: this.giaBanApDung = "Giá bán 4"; break;
+            case GIA_VON: this.giaBanApDung = "Giá vốn"; break;
+            case GIA_GAN_NHAT: this.giaBanApDung = "Giá gần nhất"; break;
             default: this.giaBanApDung = "Giá theo danh mục"; break;
         }
     }
@@ -155,4 +160,3 @@ public class KhachHang {
         return (name != null ? name : "") + (dienThoai != null && !dienThoai.isEmpty() ? " (" + dienThoai + ")" : "");
     }
 }
-

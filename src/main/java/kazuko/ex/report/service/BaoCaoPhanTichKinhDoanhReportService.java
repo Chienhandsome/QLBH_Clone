@@ -47,27 +47,27 @@ public class BaoCaoPhanTichKinhDoanhReportService {
         try {
             if (cachedReportKetQuaKinhDoanh == null) {
                 try (InputStream in = BaoCaoPhanTichKinhDoanhReportService.class.getResourceAsStream("/reports/bao_cao_ket_qua_kinh_doanh.jrxml")) {
-                    if (in != null) cachedReportKetQuaKinhDoanh = JasperCompileManager.compileReport(in);
+                    if (in != null) cachedReportKetQuaKinhDoanh = ReportTemplateCompiler.compile(in);
                 }
             }
             if (cachedReportChiTietHoatDongTrongNgay == null) {
                 try (InputStream in = BaoCaoPhanTichKinhDoanhReportService.class.getResourceAsStream("/reports/chi_tiet_hoat_dong_trong_ngay.jrxml")) {
-                    if (in != null) cachedReportChiTietHoatDongTrongNgay = JasperCompileManager.compileReport(in);
+                    if (in != null) cachedReportChiTietHoatDongTrongNgay = ReportTemplateCompiler.compile(in);
                 }
             }
             if (cachedReportTop20BanChay == null) {
                 try (InputStream in = BaoCaoPhanTichKinhDoanhReportService.class.getResourceAsStream("/reports/bao_cao_20_mat_hang_ban_chay_nhat.jrxml")) {
-                    if (in != null) cachedReportTop20BanChay = JasperCompileManager.compileReport(in);
+                    if (in != null) cachedReportTop20BanChay = ReportTemplateCompiler.compile(in);
                 }
             }
             if (cachedReportBangTongHopThiPhan == null) {
                 try (InputStream in = BaoCaoPhanTichKinhDoanhReportService.class.getResourceAsStream("/reports/bang_tong_hop_thi_phan.jrxml")) {
-                    if (in != null) cachedReportBangTongHopThiPhan = JasperCompileManager.compileReport(in);
+                    if (in != null) cachedReportBangTongHopThiPhan = ReportTemplateCompiler.compile(in);
                 }
             }
             if (cachedReportPhanTichTinhHinhBanHang == null) {
                 try (InputStream in = BaoCaoPhanTichKinhDoanhReportService.class.getResourceAsStream("/reports/bao_cao_phan_tich_tinh_hinh_ban_hang.jrxml")) {
-                    if (in != null) cachedReportPhanTichTinhHinhBanHang = JasperCompileManager.compileReport(in);
+                    if (in != null) cachedReportPhanTichTinhHinhBanHang = ReportTemplateCompiler.compile(in);
                 }
             }
         } catch (Exception e) {

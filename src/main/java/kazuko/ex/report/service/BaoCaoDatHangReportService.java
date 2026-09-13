@@ -49,32 +49,32 @@ public class BaoCaoDatHangReportService {
         try {
             if (cachedReportNgay == null) {
                 try (InputStream in = BaoCaoDatHangReportService.class.getResourceAsStream("/reports/danh_sach_dat_hang_theo_ngay.jrxml")) {
-                    if (in != null) cachedReportNgay = JasperCompileManager.compileReport(in);
+                    if (in != null) cachedReportNgay = ReportTemplateCompiler.compile(in);
                 }
             }
             if (cachedReportKhachHang == null) {
                 try (InputStream in = BaoCaoDatHangReportService.class.getResourceAsStream("/reports/danh_sach_dat_hang_theo_khach_hang.jrxml")) {
-                    if (in != null) cachedReportKhachHang = JasperCompileManager.compileReport(in);
+                    if (in != null) cachedReportKhachHang = ReportTemplateCompiler.compile(in);
                 }
             }
             if (cachedReportThNgay == null) {
                 try (InputStream in = BaoCaoDatHangReportService.class.getResourceAsStream("/reports/tong_hop_dat_hang_theo_ngay.jrxml")) {
-                    if (in != null) cachedReportThNgay = JasperCompileManager.compileReport(in);
+                    if (in != null) cachedReportThNgay = ReportTemplateCompiler.compile(in);
                 }
             }
             if (cachedReportThKhachHang == null) {
                 try (InputStream in = BaoCaoDatHangReportService.class.getResourceAsStream("/reports/tong_hop_dat_hang_theo_khach_hang.jrxml")) {
-                    if (in != null) cachedReportThKhachHang = JasperCompileManager.compileReport(in);
+                    if (in != null) cachedReportThKhachHang = ReportTemplateCompiler.compile(in);
                 }
             }
             if (cachedReportThMhKhachHang == null) {
                 try (InputStream in = BaoCaoDatHangReportService.class.getResourceAsStream("/reports/tong_hop_mat_hang_dat_theo_khach_hang.jrxml")) {
-                    if (in != null) cachedReportThMhKhachHang = JasperCompileManager.compileReport(in);
+                    if (in != null) cachedReportThMhKhachHang = ReportTemplateCompiler.compile(in);
                 }
             }
             if (cachedReportThMhNgay == null) {
                 try (InputStream in = BaoCaoDatHangReportService.class.getResourceAsStream("/reports/tong_hop_mat_hang_dat_theo_ngay.jrxml")) {
-                    if (in != null) cachedReportThMhNgay = JasperCompileManager.compileReport(in);
+                    if (in != null) cachedReportThMhNgay = ReportTemplateCompiler.compile(in);
                 }
             }
         } catch (Exception ignored) {}
@@ -84,7 +84,7 @@ public class BaoCaoDatHangReportService {
         if (cachedReportNgay != null) return cachedReportNgay;
         try (InputStream in = getClass().getResourceAsStream("/reports/danh_sach_dat_hang_theo_ngay.jrxml")) {
             if (in == null) throw new JRException("Mẫu /reports/danh_sach_dat_hang_theo_ngay.jrxml không tồn tại!");
-            cachedReportNgay = JasperCompileManager.compileReport(in);
+            cachedReportNgay = ReportTemplateCompiler.compile(in);
             return cachedReportNgay;
         } catch (Exception e) {
             throw new JRException(e);
@@ -95,7 +95,7 @@ public class BaoCaoDatHangReportService {
         if (cachedReportKhachHang != null) return cachedReportKhachHang;
         try (InputStream in = getClass().getResourceAsStream("/reports/danh_sach_dat_hang_theo_khach_hang.jrxml")) {
             if (in == null) throw new JRException("Mẫu /reports/danh_sach_dat_hang_theo_khach_hang.jrxml không tồn tại!");
-            cachedReportKhachHang = JasperCompileManager.compileReport(in);
+            cachedReportKhachHang = ReportTemplateCompiler.compile(in);
             return cachedReportKhachHang;
         } catch (Exception e) {
             throw new JRException(e);
@@ -106,7 +106,7 @@ public class BaoCaoDatHangReportService {
         if (cachedReportThNgay != null) return cachedReportThNgay;
         try (InputStream in = getClass().getResourceAsStream("/reports/tong_hop_dat_hang_theo_ngay.jrxml")) {
             if (in == null) throw new JRException("Mẫu /reports/tong_hop_dat_hang_theo_ngay.jrxml không tồn tại!");
-            cachedReportThNgay = JasperCompileManager.compileReport(in);
+            cachedReportThNgay = ReportTemplateCompiler.compile(in);
             return cachedReportThNgay;
         } catch (Exception e) {
             throw new JRException(e);
@@ -117,7 +117,7 @@ public class BaoCaoDatHangReportService {
         if (cachedReportThKhachHang != null) return cachedReportThKhachHang;
         try (InputStream in = getClass().getResourceAsStream("/reports/tong_hop_dat_hang_theo_khach_hang.jrxml")) {
             if (in == null) throw new JRException("Mẫu /reports/tong_hop_dat_hang_theo_khach_hang.jrxml không tồn tại!");
-            cachedReportThKhachHang = JasperCompileManager.compileReport(in);
+            cachedReportThKhachHang = ReportTemplateCompiler.compile(in);
             return cachedReportThKhachHang;
         } catch (Exception e) {
             throw new JRException(e);
@@ -128,7 +128,7 @@ public class BaoCaoDatHangReportService {
         if (cachedReportThMhKhachHang != null) return cachedReportThMhKhachHang;
         try (InputStream in = getClass().getResourceAsStream("/reports/tong_hop_mat_hang_dat_theo_khach_hang.jrxml")) {
             if (in == null) throw new JRException("Mẫu /reports/tong_hop_mat_hang_dat_theo_khach_hang.jrxml không tồn tại!");
-            cachedReportThMhKhachHang = JasperCompileManager.compileReport(in);
+            cachedReportThMhKhachHang = ReportTemplateCompiler.compile(in);
             return cachedReportThMhKhachHang;
         } catch (Exception e) {
             throw new JRException(e);
@@ -139,7 +139,7 @@ public class BaoCaoDatHangReportService {
         if (cachedReportThMhNgay != null) return cachedReportThMhNgay;
         try (InputStream in = getClass().getResourceAsStream("/reports/tong_hop_mat_hang_dat_theo_ngay.jrxml")) {
             if (in == null) throw new JRException("Mẫu /reports/tong_hop_mat_hang_dat_theo_ngay.jrxml không tồn tại!");
-            cachedReportThMhNgay = JasperCompileManager.compileReport(in);
+            cachedReportThMhNgay = ReportTemplateCompiler.compile(in);
             return cachedReportThMhNgay;
         } catch (Exception e) {
             throw new JRException(e);

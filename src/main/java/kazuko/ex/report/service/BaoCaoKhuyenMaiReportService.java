@@ -35,7 +35,7 @@ public class BaoCaoKhuyenMaiReportService {
         try {
             if (cachedReportKm == null) {
                 try (InputStream in = BaoCaoKhuyenMaiReportService.class.getResourceAsStream("/reports/danh_sach_dot_khuyen_mai.jrxml")) {
-                    if (in != null) cachedReportKm = JasperCompileManager.compileReport(in);
+                    if (in != null) cachedReportKm = ReportTemplateCompiler.compile(in);
                 }
             }
         } catch (Exception ignored) {}
@@ -45,7 +45,7 @@ public class BaoCaoKhuyenMaiReportService {
         if (cachedReportKm != null) return cachedReportKm;
         try (InputStream in = getClass().getResourceAsStream("/reports/danh_sach_dot_khuyen_mai.jrxml")) {
             if (in == null) throw new JRException("Mẫu /reports/danh_sach_dot_khuyen_mai.jrxml không tồn tại!");
-            cachedReportKm = JasperCompileManager.compileReport(in);
+            cachedReportKm = ReportTemplateCompiler.compile(in);
             return cachedReportKm;
         } catch (Exception e) {
             throw new JRException(e);

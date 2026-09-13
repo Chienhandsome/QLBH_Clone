@@ -53,22 +53,22 @@ public class BaoCaoCongNoReportService extends BaseDAO {
         try {
             if (cachedReportBaoCaoNCC == null) {
                 try (InputStream in = BaoCaoCongNoReportService.class.getResourceAsStream("/reports/bao_cao_cong_no_nha_cung_cap.jrxml")) {
-                    if (in != null) cachedReportBaoCaoNCC = JasperCompileManager.compileReport(in);
+                    if (in != null) cachedReportBaoCaoNCC = ReportTemplateCompiler.compile(in);
                 }
             }
             if (cachedReportTongHopNCC == null) {
                 try (InputStream in = BaoCaoCongNoReportService.class.getResourceAsStream("/reports/tong_hop_cong_no_nha_cung_cap.jrxml")) {
-                    if (in != null) cachedReportTongHopNCC = JasperCompileManager.compileReport(in);
+                    if (in != null) cachedReportTongHopNCC = ReportTemplateCompiler.compile(in);
                 }
             }
             if (cachedReportBaoCaoKhach == null) {
                 try (InputStream in = BaoCaoCongNoReportService.class.getResourceAsStream("/reports/bao_cao_cong_no_khach_hang.jrxml")) {
-                    if (in != null) cachedReportBaoCaoKhach = JasperCompileManager.compileReport(in);
+                    if (in != null) cachedReportBaoCaoKhach = ReportTemplateCompiler.compile(in);
                 }
             }
             if (cachedReportTongHopKhach == null) {
                 try (InputStream in = BaoCaoCongNoReportService.class.getResourceAsStream("/reports/tong_hop_cong_no_khach_hang.jrxml")) {
-                    if (in != null) cachedReportTongHopKhach = JasperCompileManager.compileReport(in);
+                    if (in != null) cachedReportTongHopKhach = ReportTemplateCompiler.compile(in);
                 }
             }
         } catch (Exception e) {
@@ -80,7 +80,7 @@ public class BaoCaoCongNoReportService extends BaseDAO {
         if (cached != null) return cached;
         try (InputStream in = getClass().getResourceAsStream(resourcePath)) {
             if (in == null) throw new JRException("Không tìm thấy report template: " + resourcePath);
-            return JasperCompileManager.compileReport(in);
+            return ReportTemplateCompiler.compile(in);
         } catch (Exception e) {
             throw new JRException("Lỗi compile report template: " + resourcePath, e);
         }

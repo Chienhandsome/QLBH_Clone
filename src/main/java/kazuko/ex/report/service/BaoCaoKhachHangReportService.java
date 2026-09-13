@@ -44,22 +44,22 @@ public class BaoCaoKhachHangReportService {
         try {
             if (cachedReportNhom == null) {
                 try (InputStream in = BaoCaoKhachHangReportService.class.getResourceAsStream("/reports/danh_sach_khach_hang_theo_nhom.jrxml")) {
-                    if (in != null) cachedReportNhom = JasperCompileManager.compileReport(in);
+                    if (in != null) cachedReportNhom = ReportTemplateCompiler.compile(in);
                 }
             }
             if (cachedReportNhanVien == null) {
                 try (InputStream in = BaoCaoKhachHangReportService.class.getResourceAsStream("/reports/danh_sach_khach_hang_theo_nhan_vien.jrxml")) {
-                    if (in != null) cachedReportNhanVien = JasperCompileManager.compileReport(in);
+                    if (in != null) cachedReportNhanVien = ReportTemplateCompiler.compile(in);
                 }
             }
             if (cachedReportSinhNhat == null) {
                 try (InputStream in = BaoCaoKhachHangReportService.class.getResourceAsStream("/reports/khach_hang_den_ngay_sinh_nhat.jrxml")) {
-                    if (in != null) cachedReportSinhNhat = JasperCompileManager.compileReport(in);
+                    if (in != null) cachedReportSinhNhat = ReportTemplateCompiler.compile(in);
                 }
             }
             if (cachedReportThanThiet == null) {
                 try (InputStream in = BaoCaoKhachHangReportService.class.getResourceAsStream("/reports/khach_hang_than_thiet.jrxml")) {
-                    if (in != null) cachedReportThanThiet = JasperCompileManager.compileReport(in);
+                    if (in != null) cachedReportThanThiet = ReportTemplateCompiler.compile(in);
                 }
             }
         } catch (Exception ignored) {}
@@ -69,7 +69,7 @@ public class BaoCaoKhachHangReportService {
         if (cachedReportThanThiet != null) return cachedReportThanThiet;
         try (InputStream in = getClass().getResourceAsStream("/reports/khach_hang_than_thiet.jrxml")) {
             if (in == null) throw new JRException("Mẫu /reports/khach_hang_than_thiet.jrxml không tồn tại!");
-            cachedReportThanThiet = JasperCompileManager.compileReport(in);
+            cachedReportThanThiet = ReportTemplateCompiler.compile(in);
             return cachedReportThanThiet;
         } catch (Exception e) {
             throw new JRException(e);
@@ -80,7 +80,7 @@ public class BaoCaoKhachHangReportService {
         if (cachedReportNhom != null) return cachedReportNhom;
         try (InputStream in = getClass().getResourceAsStream("/reports/danh_sach_khach_hang_theo_nhom.jrxml")) {
             if (in == null) throw new JRException("Mẫu /reports/danh_sach_khach_hang_theo_nhom.jrxml không tồn tại!");
-            cachedReportNhom = JasperCompileManager.compileReport(in);
+            cachedReportNhom = ReportTemplateCompiler.compile(in);
             return cachedReportNhom;
         } catch (Exception e) {
             throw new JRException(e);
@@ -91,7 +91,7 @@ public class BaoCaoKhachHangReportService {
         if (cachedReportNhanVien != null) return cachedReportNhanVien;
         try (InputStream in = getClass().getResourceAsStream("/reports/danh_sach_khach_hang_theo_nhan_vien.jrxml")) {
             if (in == null) throw new JRException("Mẫu /reports/danh_sach_khach_hang_theo_nhan_vien.jrxml không tồn tại!");
-            cachedReportNhanVien = JasperCompileManager.compileReport(in);
+            cachedReportNhanVien = ReportTemplateCompiler.compile(in);
             return cachedReportNhanVien;
         } catch (Exception e) {
             throw new JRException(e);
@@ -102,7 +102,7 @@ public class BaoCaoKhachHangReportService {
         if (cachedReportSinhNhat != null) return cachedReportSinhNhat;
         try (InputStream in = getClass().getResourceAsStream("/reports/khach_hang_den_ngay_sinh_nhat.jrxml")) {
             if (in == null) throw new JRException("Mẫu /reports/khach_hang_den_ngay_sinh_nhat.jrxml không tồn tại!");
-            cachedReportSinhNhat = JasperCompileManager.compileReport(in);
+            cachedReportSinhNhat = ReportTemplateCompiler.compile(in);
             return cachedReportSinhNhat;
         } catch (Exception e) {
             throw new JRException(e);

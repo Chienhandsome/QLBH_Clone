@@ -3,10 +3,12 @@ package kazuko.ex.config;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class DatabaseConnection {
-    private static DatabaseConfig config = new DatabaseConfig();
-    private static Connection connection = null;
+    private static volatile DatabaseConfig config = new DatabaseConfig();
+    private static final Set<Connection> OPEN_CONNECTIONS = ConcurrentHashMap.newKeySet();
 
     static {
         try {
@@ -20,19 +22,28 @@ public class DatabaseConnection {
         return config;
     }
 
-    public static void setConfig(DatabaseConfig newConfig) {
-        config = newConfig;
+    public static synchronized void setConfig(DatabaseConfig newConfig) {
         closeConnection();
+        config = newConfig;
     }
 
-    public static Connection getConnection() throws SQLException {
-        if (connection == null || connection.isClosed()) {
-            connection = DriverManager.getConnection(
-                    config.getJdbcUrl(),
-                    config.getUsername(),
-                    config.getPassword()
-            );
-        }
+    /**
+     * Opens an independent connection for one DAO operation.
+     *
+     * DAO methods in this application close their connection with
+     * try-with-resources. Returning a shared static connection here lets one
+     * concurrent operation close the transaction, statements and result sets
+     * that another operation is still using.
+     */
+    public static synchronized Connection getConnection() throws SQLException {
+        removeClosedConnections();
+        DatabaseConfig currentConfig = config;
+        Connection connection = DriverManager.getConnection(
+                currentConfig.getJdbcUrl(),
+                currentConfig.getUsername(),
+                currentConfig.getPassword()
+        );
+        OPEN_CONNECTIONS.add(connection);
         return connection;
     }
 
@@ -46,12 +57,24 @@ public class DatabaseConnection {
         }
     }
 
-    public static void closeConnection() {
-        try {
-            if (connection != null && !connection.isClosed()) {
+    public static synchronized void closeConnection() {
+        for (Connection connection : OPEN_CONNECTIONS) {
+            try {
                 connection.close();
+            } catch (SQLException ignored) {
+                // Best effort: callers use this before replacing/restoring a DB.
             }
-        } catch (SQLException ignored) {}
-        connection = null;
+        }
+        OPEN_CONNECTIONS.clear();
+    }
+
+    private static void removeClosedConnections() {
+        OPEN_CONNECTIONS.removeIf(connection -> {
+            try {
+                return connection.isClosed();
+            } catch (SQLException e) {
+                return true;
+            }
+        });
     }
 }

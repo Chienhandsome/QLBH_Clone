@@ -34,7 +34,7 @@ public class BaoCaoNhaCungCapReportService {
         try {
             if (cachedReportNhom == null) {
                 try (InputStream in = BaoCaoNhaCungCapReportService.class.getResourceAsStream("/reports/danh_sach_nha_cung_cap_theo_nhom.jrxml")) {
-                    if (in != null) cachedReportNhom = JasperCompileManager.compileReport(in);
+                    if (in != null) cachedReportNhom = ReportTemplateCompiler.compile(in);
                 }
             }
         } catch (Exception ignored) {}
@@ -44,7 +44,7 @@ public class BaoCaoNhaCungCapReportService {
         if (cachedReportNhom != null) return cachedReportNhom;
         try (InputStream in = getClass().getResourceAsStream("/reports/danh_sach_nha_cung_cap_theo_nhom.jrxml")) {
             if (in == null) throw new JRException("Mẫu /reports/danh_sach_nha_cung_cap_theo_nhom.jrxml không tồn tại!");
-            cachedReportNhom = JasperCompileManager.compileReport(in);
+            cachedReportNhom = ReportTemplateCompiler.compile(in);
             return cachedReportNhom;
         } catch (Exception e) {
             throw new JRException(e);
