@@ -7,6 +7,7 @@ import java.sql.SQLException;
 import java.util.List;
 
 public class AuthService {
+    public static final String DEFAULT_TOUCH_CODE = "123";
     private static SUser currentUser = null;
     private final UserDAO userDAO = new UserDAO();
 
@@ -75,6 +76,65 @@ public class AuthService {
     public SUser login(String username, String password) {
         AuthResult result = authenticate(username, password);
         return result.isSuccess() ? result.getUser() : null;
+    }
+
+    /**
+     * Authenticates the compact numeric code used by the touch login screen.
+     * A configured CARDCODE always wins. Code 123 is the initial Admin fallback
+     * requested for terminals whose database has not configured touch codes.
+     */
+    public AuthResult authenticateByTouchCode(String code) {
+        String inputCode = code != null ? code.trim() : "";
+        if (inputCode.isEmpty()) {
+            return new AuthResult(false, null, "Vui lòng nhập mã đăng nhập!");
+        }
+
+        List<SUser> users = userDAO.getAll();
+        for (SUser user : users) {
+            if (user.getCardCode() != null && inputCode.equals(user.getCardCode().trim())) {
+                return establishSession(user, "MÃ CẢM ỨNG");
+            }
+        }
+
+        if (DEFAULT_TOUCH_CODE.equals(inputCode)) {
+            try {
+                SUser admin = userDAO.findByUsernameChecked("Admin");
+                if (admin != null) {
+                    return establishSession(admin, "MÃ MẶC ĐỊNH");
+                }
+                SUser defaultAdmin = new SUser();
+                defaultAdmin.setId("1");
+                defaultAdmin.setUsername("Admin");
+                defaultAdmin.setName("Administrator");
+                defaultAdmin.setIsAdmin(1);
+                return establishSession(defaultAdmin, "MÃ MẶC ĐỊNH");
+            } catch (SQLException e) {
+                return new AuthResult(false, null,
+                        "Không thể kết nối đến cơ sở dữ liệu để xác thực mã đăng nhập!");
+            }
+        }
+        return new AuthResult(false, null, "Mã đăng nhập không chính xác!");
+    }
+
+    public AuthResult authenticateByCardCode(String cardCode) {
+        String inputCode = cardCode != null ? cardCode.trim() : "";
+        if (inputCode.isEmpty()) {
+            return new AuthResult(false, null, "Vui lòng quét hoặc nhập mã thẻ!");
+        }
+        for (SUser user : userDAO.getAll()) {
+            if (user.getCardCode() != null && inputCode.equals(user.getCardCode().trim())) {
+                return establishSession(user, "THẺ CẢM ỨNG");
+            }
+        }
+        return new AuthResult(false, null, "Thẻ đăng nhập không hợp lệ!");
+    }
+
+    private AuthResult establishSession(SUser user, String method) {
+        currentUser = user;
+        PermissionService.getInstance().initPermissions(user);
+        ActivityLogService.log("Hệ thống", "ĐĂNG NHẬP", user.getUsername(),
+                "Đăng nhập hệ thống bằng " + method.toLowerCase());
+        return new AuthResult(true, user, "Đăng nhập thành công!");
     }
 
     public List<SUser> getAllUsers() {

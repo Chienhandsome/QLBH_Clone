@@ -2,6 +2,7 @@ package kazuko.ex;
 
 import kazuko.ex.config.AppTheme;
 import kazuko.ex.ui.auth.LoginForm;
+import kazuko.ex.ui.touch.TouchLoginFrame;
 import kazuko.ex.ui.touch.TouchSalesFrame;
 
 import javax.swing.*;
@@ -16,10 +17,14 @@ public class Main {
         boolean touchMode = Arrays.stream(args)
                 .anyMatch(arg -> "--touch".equalsIgnoreCase(arg) || "--ts".equalsIgnoreCase(arg));
         SwingUtilities.invokeLater(() -> {
-            LoginForm loginForm = touchMode
-                    ? new LoginForm(false, user -> new TouchSalesFrame(user).setVisible(true))
-                    : new LoginForm();
-            loginForm.setVisible(true);
+            if (touchMode) {
+                TouchLoginFrame login = new TouchLoginFrame(
+                        user -> new TouchSalesFrame(user).setVisible(true));
+                login.setVisible(true);
+            } else {
+                LoginForm login = new LoginForm();
+                login.setVisible(true);
+            }
         });
     }
 }

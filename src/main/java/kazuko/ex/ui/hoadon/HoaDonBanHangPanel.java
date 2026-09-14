@@ -45,6 +45,7 @@ public class HoaDonBanHangPanel extends JPanel {
     private static final Color TOUCH_FIELD = new Color(190, 255, 190);
 
     private final boolean touchMode;
+    private final Runnable touchExitAction;
 
     private final HoaDonDAO hoaDonDAO = new HoaDonDAO();
     private final MatHangDAO matHangDAO = new MatHangDAO();
@@ -143,11 +144,16 @@ public class HoaDonBanHangPanel extends JPanel {
     private JTextField txtTouchPoints;
 
     public HoaDonBanHangPanel() {
-        this(false);
+        this(false, null);
     }
 
     public HoaDonBanHangPanel(boolean touchMode) {
+        this(touchMode, null);
+    }
+
+    public HoaDonBanHangPanel(boolean touchMode, Runnable touchExitAction) {
         this.touchMode = touchMode;
+        this.touchExitAction = touchExitAction;
         if (touchMode) {
             initTouchComponents();
         } else {
@@ -512,6 +518,10 @@ public class HoaDonBanHangPanel extends JPanel {
     }
 
     private void closeTouchWindow() {
+        if (touchExitAction != null) {
+            touchExitAction.run();
+            return;
+        }
         int choice = JOptionPane.showConfirmDialog(this, "Thoát màn hình bán hàng cảm ứng?",
                 "TAP Shop TS", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
         if (choice != JOptionPane.YES_OPTION) return;
