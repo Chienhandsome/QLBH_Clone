@@ -4,9 +4,9 @@ import kazuko.ex.model.dathang.KhachDatHang;
 import kazuko.ex.model.dathang.KhachDatHangChiTiet;
 import kazuko.ex.model.system.STemplate;
 import kazuko.ex.service.AuthService;
+import kazuko.ex.util.VoucherNumberGenerator;
 
 import java.sql.*;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -427,35 +427,26 @@ public class KhachDatHangDAO extends BaseDAO {
      */
     public String generateNextSoPhieu(Date ngay) {
         if (ngay == null) ngay = new Date();
-        SimpleDateFormat sdf = new SimpleDateFormat("yy");
-        String year2Digits = sdf.format(ngay);
-        String prefix = "DH" + year2Digits + "/";
+        VoucherNumberGenerator.CompiledPattern numberPattern = VoucherNumberGenerator.fromConfig(
+                "Đặt hàng", "DH(yy)/(*****)", ngay);
 
         String sql = "SELECT NAME FROM TDATHANG WHERE NAME LIKE ? ORDER BY NAME DESC";
-        int maxIndex = 0;
+        long maxIndex = 0;
 
         try (Connection conn = getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, prefix + "%");
+            ps.setString(1, numberPattern.getSqlLikePattern());
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     String name = rs.getString("NAME");
-                    if (name != null && name.startsWith(prefix)) {
-                        String numPart = name.substring(prefix.length()).trim();
-                        try {
-                            int val = Integer.parseInt(numPart);
-                            if (val > maxIndex) {
-                                maxIndex = val;
-                            }
-                        } catch (NumberFormatException ignored) {}
-                    }
+                    maxIndex = Math.max(maxIndex, numberPattern.extractSequence(name));
                 }
             }
         } catch (SQLException e) {
             System.err.println("Lỗi sinh số phiếu đặt hàng: " + e.getMessage());
         }
 
-        return String.format("%s%05d", prefix, maxIndex + 1);
+        return numberPattern.format(maxIndex + 1);
     }
 
     /**

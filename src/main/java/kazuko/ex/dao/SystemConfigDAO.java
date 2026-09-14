@@ -194,6 +194,15 @@ public class SystemConfigDAO {
                 config.setMatHangCoKichThuoc(Boolean.parseBoolean(props.getProperty("item.hasDimensions", String.valueOf(config.isMatHangCoKichThuoc()))));
                 config.setMatHangCoVatTuDinhLuong(Boolean.parseBoolean(props.getProperty("item.hasBOM", String.valueOf(config.isMatHangCoVatTuDinhLuong()))));
 
+                // Load Cây hiển thị giá
+                config.setCoCayHienThiGia(Boolean.parseBoolean(props.getProperty("customerDisplay.enabled", String.valueOf(config.isCoCayHienThiGia()))));
+                config.setCayHienThiGiaMotDong(Boolean.parseBoolean(props.getProperty("customerDisplay.singleLine", String.valueOf(config.isCayHienThiGiaMotDong()))));
+                config.setCongCayHienThiGia(props.getProperty("customerDisplay.port", config.getCongCayHienThiGia()));
+                config.setCoManHinhPhu(Boolean.parseBoolean(props.getProperty("customerDisplay.secondaryScreen", String.valueOf(config.isCoManHinhPhu()))));
+                String secondaryLogoPath = props.getProperty("customerDisplay.secondaryLogo", "").trim();
+                config.setLogoManHinhPhuPath(secondaryLogoPath.isEmpty() ? null : resolveLogoPath(secondaryLogoPath));
+                config.setManHinhPhuSuDungGiaoDienThuong(Boolean.parseBoolean(props.getProperty("customerDisplay.secondaryScreenUseStandardUi", String.valueOf(config.isManHinhPhuSuDungGiaoDienThuong()))));
+
                 // Load Cảnh báo
                 config.setHienThiCanhBao(Boolean.parseBoolean(props.getProperty("alert.showAlert", String.valueOf(config.isHienThiCanhBao()))));
                 config.setThongBaoHangDuoiMucAnToan(Boolean.parseBoolean(props.getProperty("alert.notifyBelowSafeStock", String.valueOf(config.isThongBaoHangDuoiMucAnToan()))));
@@ -267,6 +276,31 @@ public class SystemConfigDAO {
                     if (!destLogo.getCanonicalPath().equalsIgnoreCase(srcLogo.getCanonicalPath())) {
                         java.nio.file.Files.copy(srcLogo.toPath(), destLogo.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
                         config.setLogoPath(destLogo.getAbsolutePath());
+                    }
+                } catch (Exception ignored) {}
+            }
+        }
+
+        // Keep the secondary-display logo available even when the selected source is temporary.
+        if (config.getLogoManHinhPhuPath() != null && !config.getLogoManHinhPhuPath().trim().isEmpty()) {
+            File srcLogo = new File(config.getLogoManHinhPhuPath().trim());
+            if (srcLogo.exists() && srcLogo.isFile()) {
+                try {
+                    File cfgFile = getConfigFile();
+                    File baseDir = cfgFile.getParentFile();
+                    File targetDir = baseDir != null ? new File(baseDir, "data") : new File("data");
+                    if (!targetDir.exists()) {
+                        targetDir.mkdirs();
+                    }
+                    String ext = "png";
+                    int dotIdx = srcLogo.getName().lastIndexOf('.');
+                    if (dotIdx > 0) {
+                        ext = srcLogo.getName().substring(dotIdx + 1).toLowerCase();
+                    }
+                    File destLogo = new File(targetDir, "secondary_display_logo." + ext);
+                    if (!destLogo.getCanonicalPath().equalsIgnoreCase(srcLogo.getCanonicalPath())) {
+                        java.nio.file.Files.copy(srcLogo.toPath(), destLogo.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                        config.setLogoManHinhPhuPath(destLogo.getAbsolutePath());
                     }
                 } catch (Exception ignored) {}
             }
@@ -371,6 +405,14 @@ public class SystemConfigDAO {
         props.setProperty("item.hasExpiryDate", String.valueOf(config.isMatHangCoHanSuDung()));
         props.setProperty("item.hasDimensions", String.valueOf(config.isMatHangCoKichThuoc()));
         props.setProperty("item.hasBOM", String.valueOf(config.isMatHangCoVatTuDinhLuong()));
+
+        // Save Cây hiển thị giá
+        props.setProperty("customerDisplay.enabled", String.valueOf(config.isCoCayHienThiGia()));
+        props.setProperty("customerDisplay.singleLine", String.valueOf(config.isCayHienThiGiaMotDong()));
+        props.setProperty("customerDisplay.port", config.getCongCayHienThiGia() != null ? config.getCongCayHienThiGia() : "");
+        props.setProperty("customerDisplay.secondaryScreen", String.valueOf(config.isCoManHinhPhu()));
+        props.setProperty("customerDisplay.secondaryLogo", config.getLogoManHinhPhuPath() != null ? config.getLogoManHinhPhuPath() : "");
+        props.setProperty("customerDisplay.secondaryScreenUseStandardUi", String.valueOf(config.isManHinhPhuSuDungGiaoDienThuong()));
 
         // Save Cảnh báo
         props.setProperty("alert.showAlert", String.valueOf(config.isHienThiCanhBao()));

@@ -125,6 +125,8 @@ import kazuko.ex.ui.dathang.DatHangNhaCungCapPanel;
 import kazuko.ex.ui.dathang.KhachDatHangPanel;
 import kazuko.ex.ui.hoadon.HoaDonBanHangPanel;
 import kazuko.ex.ui.hoadon.QuanLyBanHangPanel;
+import kazuko.ex.ui.help.AboutDialog;
+import kazuko.ex.ui.help.RegistrationDialog;
 import kazuko.ex.ui.khohang.ChonKhoBanDauDialog;
 import kazuko.ex.ui.khohang.QuanLyChuyenKhoPanel;
 import kazuko.ex.ui.khohang.QuanLyKiemKePanel;
@@ -753,8 +755,12 @@ public class MainFrame extends JFrame {
 
         // 9. TRỢ GIÚP
         JMenu mTroGiup = new JMenu("TRỢ GIÚP");
-        mTroGiup.add(new JMenuItem("Đăng kí bản quyền"));
-        mTroGiup.add(new JMenuItem("Thông tin phần mềm"));
+        JMenuItem miDangKyBanQuyen = new JMenuItem("Đăng ký bản quyền", IconHelper.getIcon("btnCard.Icon.png", 16, 16));
+        miDangKyBanQuyen.addActionListener(e -> new RegistrationDialog(this).setVisible(true));
+        JMenuItem miThongTinPhanMem = new JMenuItem("Thông tin phần mềm", IconHelper.getIcon("information-white.png", 16, 16));
+        miThongTinPhanMem.addActionListener(e -> new AboutDialog(this).setVisible(true));
+        mTroGiup.add(miDangKyBanQuyen);
+        mTroGiup.add(miThongTinPhanMem);
 
         menuBar.add(mHeThong);
         menuBar.add(mHoatDong);

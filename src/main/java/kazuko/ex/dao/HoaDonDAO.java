@@ -4,6 +4,7 @@ import kazuko.ex.model.banhang.DonHang;
 import kazuko.ex.model.banhang.DonHangChiTiet;
 import kazuko.ex.model.banhang.GiaBanGanDayKhachHang;
 import kazuko.ex.service.AuthService;
+import kazuko.ex.util.VoucherNumberGenerator;
 
 import java.sql.*;
 import java.text.SimpleDateFormat;
@@ -298,28 +299,19 @@ public class HoaDonDAO extends BaseDAO {
 
     public String generateNextSoHoaDon(Date ngay) {
         if (ngay == null) ngay = new Date();
-        SimpleDateFormat sdf = new SimpleDateFormat("yy");
-        String year2Digits = sdf.format(ngay);
-        String prefix = year2Digits;
+        VoucherNumberGenerator.CompiledPattern numberPattern = VoucherNumberGenerator.fromConfig(
+                "Đơn hàng", "(yy)(******)", ngay);
 
         String sql = "SELECT NAME FROM TDONHANG WHERE NAME LIKE ? AND LOAI = 0 ORDER BY NAME DESC";
-        int maxIndex = 0;
+        long maxIndex = 0;
 
         try (Connection conn = getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, prefix + "%");
+            ps.setString(1, numberPattern.getSqlLikePattern());
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     String name = rs.getString("NAME");
-                    if (name != null && name.startsWith(prefix)) {
-                        String numPart = name.substring(prefix.length()).trim();
-                        try {
-                            int val = Integer.parseInt(numPart);
-                            if (val > maxIndex) {
-                                maxIndex = val;
-                            }
-                        } catch (NumberFormatException ignored) {}
-                    }
+                    maxIndex = Math.max(maxIndex, numberPattern.extractSequence(name));
                 }
             }
         } catch (SQLException e) {
@@ -328,17 +320,11 @@ public class HoaDonDAO extends BaseDAO {
 
         if (maxIndex == 0) {
             for (DonHang dh : MEMORY_HOA_DON) {
-                if (dh.getName() != null && dh.getName().startsWith(prefix)) {
-                    try {
-                        String numPart = dh.getName().substring(prefix.length()).trim();
-                        int val = Integer.parseInt(numPart);
-                        if (val > maxIndex) maxIndex = val;
-                    } catch (Exception ignored) {}
-                }
+                maxIndex = Math.max(maxIndex, numberPattern.extractSequence(dh.getName()));
             }
         }
 
-        return String.format("%s%06d", prefix, maxIndex + 1);
+        return numberPattern.format(maxIndex + 1);
     }
 
     public void saveTam(DonHang dh) {

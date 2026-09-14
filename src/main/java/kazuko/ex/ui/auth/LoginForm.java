@@ -17,6 +17,7 @@ import java.io.*;
 import java.net.URL;
 import java.util.List;
 import java.util.Properties;
+import java.util.function.Consumer;
 
 public class LoginForm extends JFrame {
     private static final String PREFS_FILE = "user_prefs.properties";
@@ -27,12 +28,23 @@ public class LoginForm extends JFrame {
     private JCheckBox chkAutoLogin;
     private JLabel lblDbName;
     private final AuthService authService = new AuthService();
+    private final Consumer<SUser> loginSuccessHandler;
 
     public LoginForm() {
-        this(false);
+        this(false, null);
     }
 
     public LoginForm(boolean skipAutoLogin) {
+        this(skipAutoLogin, null);
+    }
+
+    public LoginForm(boolean skipAutoLogin, Consumer<SUser> loginSuccessHandler) {
+        this.loginSuccessHandler = loginSuccessHandler != null
+                ? loginSuccessHandler
+                : user -> {
+                    MainFrame mainFrame = new MainFrame(user);
+                    mainFrame.setVisible(true);
+                };
         initComponents();
         loadDatabaseName();
         loadUserList();
@@ -324,10 +336,7 @@ public class LoginForm extends JFrame {
         if (result.isSuccess() && result.getUser() != null) {
             savePreferences(username, password);
             this.dispose();
-            SwingUtilities.invokeLater(() -> {
-                MainFrame mainFrame = new MainFrame(result.getUser());
-                mainFrame.setVisible(true);
-            });
+            SwingUtilities.invokeLater(() -> loginSuccessHandler.accept(result.getUser()));
         } else {
             JOptionPane.showMessageDialog(this,
                     result.getMessage(),

@@ -7,16 +7,21 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class DatabaseConnection {
-    private static volatile DatabaseConfig config = new DatabaseConfig();
-    private static final Set<Connection> OPEN_CONNECTIONS = ConcurrentHashMap.newKeySet();
 
     static {
+        EmbeddedFirebird.configureNativeLibrary();
+
         try {
             Class.forName("org.firebirdsql.jdbc.FBDriver");
         } catch (ClassNotFoundException e) {
-            System.err.println("Không tìm thấy Firebird JDBC Driver: " + e.getMessage());
+            throw new IllegalStateException(
+                    "Không tìm thấy Firebird JDBC Driver", e
+            );
         }
     }
+
+    private static final Set<Connection> OPEN_CONNECTIONS = ConcurrentHashMap.newKeySet();
+    private static volatile DatabaseConfig config = new DatabaseConfig();
 
     public static DatabaseConfig getConfig() {
         return config;
@@ -48,7 +53,16 @@ public class DatabaseConnection {
     }
 
     public static boolean testConnection(String serverIp, int port, String dbPath, String user, String pass) {
-        String testUrl = "jdbc:firebirdsql://" + serverIp + ":" + port + "/" + dbPath + "?charSet=UTF8";
+        return testConnection(false, serverIp, port, dbPath, user, pass);
+    }
+
+    public static boolean testConnection(boolean embeddedMode, String serverIp, int port,
+                                         String dbPath, String user, String pass) {
+        String normalizedPath = dbPath.replace("\\", "/");
+        String testUrl = embeddedMode
+                ? "jdbc:firebirdsql:embedded:" + normalizedPath + "?charSet=UTF8"
+                : "jdbc:firebirdsql://" + serverIp + ":" + port + "/"
+                    + normalizedPath + "?charSet=UTF8";
         try (Connection testConn = DriverManager.getConnection(testUrl, user, pass)) {
             return testConn != null && !testConn.isClosed();
         } catch (SQLException e) {

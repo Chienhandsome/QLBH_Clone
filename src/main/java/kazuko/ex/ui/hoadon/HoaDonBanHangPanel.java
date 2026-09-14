@@ -30,6 +30,7 @@ import javax.swing.table.TableColumn;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.TreePath;
 import java.awt.*;
 import java.awt.event.*;
 import java.text.DecimalFormat;
@@ -37,6 +38,13 @@ import java.util.*;
 import java.util.List;
 
 public class HoaDonBanHangPanel extends JPanel {
+
+    private static final Color TOUCH_BLUE = new Color(70, 137, 184);
+    private static final Color TOUCH_TEAL = new Color(0, 83, 82);
+    private static final Color TOUCH_GREEN = new Color(0, 105, 12);
+    private static final Color TOUCH_FIELD = new Color(190, 255, 190);
+
+    private final boolean touchMode;
 
     private final HoaDonDAO hoaDonDAO = new HoaDonDAO();
     private final MatHangDAO matHangDAO = new MatHangDAO();
@@ -125,11 +133,390 @@ public class HoaDonBanHangPanel extends JPanel {
     private JButton btnThanhToan;
     private JButton btnThongKe;
 
+    // Touch-screen presentation. The underlying invoice state and handlers are
+    // deliberately shared with the desktop layout above.
+    private JPanel touchCategoryPanel;
+    private JPanel touchProductGrid;
+    private JScrollPane touchProductScroll;
+    private JTextField txtTouchTable;
+    private JTextField txtTouchGuestCount;
+    private JTextField txtTouchPoints;
+
     public HoaDonBanHangPanel() {
-        initComponents();
+        this(false);
+    }
+
+    public HoaDonBanHangPanel(boolean touchMode) {
+        this.touchMode = touchMode;
+        if (touchMode) {
+            initTouchComponents();
+        } else {
+            initComponents();
+        }
         setupKeyBindings();
         loadInitialData();
         resetForNewInvoice();
+    }
+
+    private void initTouchComponents() {
+        setLayout(new BorderLayout(6, 0));
+        setBackground(TOUCH_BLUE);
+        setBorder(new EmptyBorder(4, 4, 4, 4));
+
+        // Initialize the same controls/models used by the desktop invoice so
+        // every action continues through the existing business logic.
+        createTopBarcodePanel();
+        createLeftCatalogPanel();
+        createMasterHeaderForm();
+        createDetailsTabbedPane();
+        createFinancialSummaryPanel();
+        lblTonKho = new JLabel("TỒN: 0");
+
+        JPanel catalogArea = new JPanel(new BorderLayout(6, 6));
+        catalogArea.setOpaque(false);
+        catalogArea.add(createTouchBarcodePanel(), BorderLayout.NORTH);
+
+        touchCategoryPanel = new JPanel();
+        touchCategoryPanel.setLayout(new BoxLayout(touchCategoryPanel, BoxLayout.Y_AXIS));
+        touchCategoryPanel.setBackground(TOUCH_BLUE);
+        JScrollPane categoryScroll = new JScrollPane(touchCategoryPanel);
+        categoryScroll.setPreferredSize(new Dimension(140, 0));
+        categoryScroll.setBorder(BorderFactory.createEmptyBorder());
+        categoryScroll.getVerticalScrollBar().setUnitIncrement(28);
+        catalogArea.add(categoryScroll, BorderLayout.WEST);
+
+        touchProductGrid = new JPanel(new GridLayout(0, 2, 7, 7));
+        touchProductGrid.setBackground(TOUCH_BLUE);
+        touchProductScroll = new JScrollPane(touchProductGrid);
+        touchProductScroll.setBorder(BorderFactory.createEmptyBorder());
+        touchProductScroll.getVerticalScrollBar().setUnitIncrement(52);
+        touchProductScroll.getViewport().setBackground(TOUCH_BLUE);
+        catalogArea.add(touchProductScroll, BorderLayout.CENTER);
+        catalogArea.add(createTouchCatalogActionBar(), BorderLayout.SOUTH);
+
+        JPanel invoiceArea = createTouchInvoicePanel();
+        invoiceArea.setPreferredSize(new Dimension(595, 0));
+
+        add(catalogArea, BorderLayout.CENTER);
+        add(invoiceArea, BorderLayout.EAST);
+    }
+
+    private JPanel createTouchBarcodePanel() {
+        JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 3));
+        panel.setBackground(TOUCH_BLUE);
+        panel.setPreferredSize(new Dimension(0, 58));
+
+        JLabel barcodeLabel = createTouchLabel("MÃ VẠCH");
+        txtBarcode.setFont(new Font("Segoe UI", Font.BOLD, 22));
+        txtBarcode.setPreferredSize(new Dimension(250, 48));
+
+        JLabel quantityLabel = createTouchLabel("SL");
+        txtSoLuongBarcode.setFont(new Font("Segoe UI", Font.BOLD, 28));
+        txtSoLuongBarcode.setHorizontalAlignment(SwingConstants.RIGHT);
+        txtSoLuongBarcode.setPreferredSize(new Dimension(150, 48));
+
+        btnThemBarcode.setText("THÊM");
+        styleTouchButton(btnThemBarcode, TOUCH_GREEN, 110, 48);
+
+        panel.add(barcodeLabel);
+        panel.add(txtBarcode);
+        panel.add(quantityLabel);
+        panel.add(txtSoLuongBarcode);
+        panel.add(btnThemBarcode);
+        return panel;
+    }
+
+    private JPanel createTouchInvoicePanel() {
+        JPanel panel = new JPanel(new BorderLayout(0, 5));
+        panel.setBackground(Color.WHITE);
+        panel.setBorder(new LineBorder(new Color(220, 220, 220), 1, true));
+        panel.add(createTouchInvoiceHeader(), BorderLayout.NORTH);
+
+        tableLayHang.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+        tableLayHang.setRowHeight(40);
+        tableLayHang.setGridColor(new Color(225, 225, 225));
+        tableLayHang.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 14));
+        JScrollPane cartScroll = new JScrollPane(tableLayHang);
+        cartScroll.setBorder(BorderFactory.createEmptyBorder());
+        cartScroll.getViewport().setBackground(Color.WHITE);
+        panel.add(cartScroll, BorderLayout.CENTER);
+
+        JPanel bottom = new JPanel(new BorderLayout(0, 6));
+        bottom.setBackground(Color.WHITE);
+        bottom.add(createTouchSummaryPanel(), BorderLayout.CENTER);
+        bottom.add(createTouchInvoiceActionBar(), BorderLayout.SOUTH);
+        panel.add(bottom, BorderLayout.SOUTH);
+        return panel;
+    }
+
+    private JPanel createTouchInvoiceHeader() {
+        JPanel container = new JPanel();
+        container.setLayout(new BoxLayout(container, BoxLayout.Y_AXIS));
+        container.setBackground(Color.WHITE);
+
+        JPanel tabs = new JPanel(new FlowLayout(FlowLayout.CENTER, 8, 3));
+        tabs.setBackground(Color.WHITE);
+        JButton invoice = new JButton("HÓA ĐƠN BÁN HÀNG");
+        styleTouchButton(invoice, new Color(255, 166, 0), 250, 54);
+        JButton delivery = new JButton("GIAO HÀNG");
+        styleTouchButton(delivery, new Color(85, 85, 85), 145, 54);
+        delivery.addActionListener(e -> {
+            String value = JOptionPane.showInputDialog(this, "Địa chỉ giao hàng:", txtDiaChiGiaoHang.getText());
+            if (value != null) txtDiaChiGiaoHang.setText(value.trim());
+        });
+        JButton mini = new JButton("MINI");
+        styleTouchButton(mini, new Color(85, 85, 85), 90, 54);
+        mini.addActionListener(e -> toggleTouchWindowSize());
+        tabs.add(invoice);
+        tabs.add(delivery);
+        tabs.add(mini);
+        container.add(tabs);
+
+        styleTouchInput(dpkNgay, 150, 42, false);
+        styleTouchInput(txtSoHD, 145, 42, true);
+        JButton priceButton = new JButton("Chọn loại giá");
+        styleTouchButton(priceButton, TOUCH_GREEN, 145, 42);
+        priceButton.addActionListener(e -> JOptionPane.showMessageDialog(this,
+                "Loại giá được chọn khi thêm từng mặt hàng.\nHiện tại: " + currentLoaiGiaName,
+                "Chọn loại giá", JOptionPane.INFORMATION_MESSAGE));
+        container.add(createTouchInfoRow("NGÀY", dpkNgay, new JLabel("SỐ"), txtSoHD, priceButton));
+
+        styleTouchInput(customerLookupField, 280, 42, false);
+        txtTouchPoints = new JTextField("0");
+        styleTouchInput(txtTouchPoints, 105, 42, true);
+        txtTouchPoints.setHorizontalAlignment(SwingConstants.RIGHT);
+        container.add(createTouchInfoRow("K.HÀNG", customerLookupField, new JLabel("ĐIỂM"), txtTouchPoints));
+
+        styleTouchInput(cbKhoXuat, 420, 42, false);
+        container.add(createTouchInfoRow("KHO", cbKhoXuat));
+
+        styleTouchInput(cbNhanVien, 420, 42, false);
+        container.add(createTouchInfoRow("N.VIÊN", cbNhanVien));
+
+        txtTouchGuestCount = new JTextField("0");
+        txtTouchTable = new JTextField();
+        styleTouchInput(txtTouchGuestCount, 120, 42, false);
+        styleTouchInput(txtTouchTable, 185, 42, false);
+        txtTouchGuestCount.setHorizontalAlignment(SwingConstants.RIGHT);
+        container.add(createTouchInfoRow("SỐ KHÁCH", txtTouchGuestCount, new JLabel("BÀN"), txtTouchTable));
+        return container;
+    }
+
+    private JPanel createTouchInfoRow(String label, Component... components) {
+        JPanel row = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 3));
+        row.setBackground(Color.WHITE);
+        row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 48));
+        JLabel rowLabel = createTouchLabel(label);
+        rowLabel.setForeground(Color.BLACK);
+        rowLabel.setPreferredSize(new Dimension(96, 40));
+        row.add(rowLabel);
+        for (Component component : components) {
+            if (component instanceof JLabel) {
+                JLabel inlineLabel = (JLabel) component;
+                inlineLabel.setFont(new Font("Segoe UI", Font.BOLD, 17));
+                inlineLabel.setForeground(Color.BLACK);
+            }
+            row.add(component);
+        }
+        return row;
+    }
+
+    private JPanel createTouchSummaryPanel() {
+        JPanel panel = new JPanel(new GridBagLayout());
+        panel.setBackground(Color.WHITE);
+        panel.setBorder(new EmptyBorder(5, 10, 2, 10));
+        addTouchSummaryRow(panel, 0, "TIỀN HÀNG", txtTienHang, false);
+
+        JPanel discountFields = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
+        discountFields.setBackground(Color.WHITE);
+        styleTouchInput(txtTiLeGiamGia, 85, 42, false);
+        styleTouchInput(txtTienGiamGia, 170, 42, true);
+        discountFields.add(txtTiLeGiamGia);
+        discountFields.add(new JLabel("%"));
+        discountFields.add(txtTienGiamGia);
+        addTouchSummaryRow(panel, 1, "TỈ LỆ GIẢM GIÁ", discountFields, false);
+
+        addTouchSummaryRow(panel, 2, "ĐỔI TRẢ", txtTienDoiTra, false);
+        addTouchSummaryRow(panel, 3, "TỔNG CỘNG", txtTongCong, true);
+        return panel;
+    }
+
+    private void addTouchSummaryRow(JPanel panel, int rowIndex, String label, Component value, boolean total) {
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridy = rowIndex;
+        gbc.insets = new Insets(2, 4, 2, 4);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.gridx = 0;
+        gbc.weightx = 0;
+        JLabel text = new JLabel(label);
+        text.setFont(new Font("Segoe UI", Font.BOLD, total ? 22 : 17));
+        panel.add(text, gbc);
+
+        gbc.gridx = 1;
+        gbc.weightx = 1;
+        if (value instanceof JTextField) {
+            JTextField field = (JTextField) value;
+            styleTouchInput(field, 220, total ? 48 : 40, true);
+            field.setFont(new Font("Segoe UI", Font.BOLD, total ? 28 : 18));
+            if (total) field.setForeground(new Color(205, 20, 0));
+        }
+        panel.add(value, gbc);
+    }
+
+    private JPanel createTouchCatalogActionBar() {
+        JPanel panel = new JPanel(new GridLayout(1, 5, 7, 0));
+        panel.setBackground(TOUCH_BLUE);
+        panel.setPreferredSize(new Dimension(0, 74));
+        panel.add(createTouchActionButton("TÌM MẶT HÀNG", new Color(17, 21, 116), e -> txtBarcode.requestFocusInWindow()));
+
+        btnThongKe = createTouchActionButton("THỐNG KÊ", TOUCH_GREEN, e -> onThongKe());
+        panel.add(btnThongKe);
+        btnMoLai = createTouchActionButton("MỞ LẠI", new Color(105, 97, 12), e -> onMoLaiTam());
+        panel.add(btnMoLai);
+        btnLuuTam = createTouchActionButton("LƯU TẠM", new Color(105, 97, 12), e -> onLuuTam());
+        panel.add(btnLuuTam);
+        panel.add(createTouchActionButton("TRẢ HÀNG", TOUCH_TEAL, e -> onChonMatHangTra()));
+        return panel;
+    }
+
+    private JPanel createTouchInvoiceActionBar() {
+        JPanel panel = new JPanel(new GridLayout(1, 4, 7, 0));
+        panel.setBackground(TOUCH_BLUE);
+        panel.setPreferredSize(new Dimension(0, 74));
+        btnThanhToan = createTouchActionButton("THANH TOÁN", new Color(92, 0, 102), e -> onThanhToan());
+        btnTaoHoaDonMoi = createTouchActionButton("TẠO MỚI", TOUCH_GREEN, e -> resetForNewInvoice());
+        btnMoDatHang = createTouchActionButton("MỞ ĐẶT HÀNG", TOUCH_TEAL, e -> onOpenDatHang());
+        JButton exit = createTouchActionButton("THOÁT", new Color(165, 10, 10), e -> closeTouchWindow());
+        panel.add(btnThanhToan);
+        panel.add(btnTaoHoaDonMoi);
+        panel.add(btnMoDatHang);
+        panel.add(exit);
+        return panel;
+    }
+
+    private JButton createTouchActionButton(String text, Color color, ActionListener action) {
+        JButton button = new JButton("<html><center>" + text.replace(" ", "&nbsp;") + "</center></html>");
+        styleTouchButton(button, color, 120, 70);
+        button.addActionListener(action);
+        return button;
+    }
+
+    private void styleTouchButton(JButton button, Color background, int width, int height) {
+        button.setFont(new Font("Segoe UI", Font.BOLD, 18));
+        button.setForeground(Color.WHITE);
+        button.setBackground(background);
+        button.setFocusPainted(false);
+        button.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        button.setPreferredSize(new Dimension(width, height));
+        button.setBorder(new CompoundBorder(
+                new LineBorder(new Color(230, 235, 240), 2, true),
+                new EmptyBorder(4, 8, 4, 8)));
+        button.putClientProperty("JButton.buttonType", "roundRect");
+    }
+
+    private void styleTouchInput(JComponent component, int width, int height, boolean readOnly) {
+        component.setPreferredSize(new Dimension(width, height));
+        component.setMinimumSize(new Dimension(Math.min(width, 80), height));
+        component.setMaximumSize(new Dimension(width, height));
+        component.setFont(new Font("Segoe UI", Font.PLAIN, 18));
+        component.setBackground(TOUCH_FIELD);
+        if (component instanceof JTextField && readOnly) {
+            ((JTextField) component).setEditable(false);
+        }
+    }
+
+    private JLabel createTouchLabel(String text) {
+        JLabel label = new JLabel(text);
+        label.setFont(new Font("Segoe UI", Font.BOLD, 18));
+        label.setForeground(Color.WHITE);
+        return label;
+    }
+
+    private void refreshTouchCategoryButtons() {
+        if (!touchMode || touchCategoryPanel == null || treeNhomHang == null) return;
+        touchCategoryPanel.removeAll();
+        Object rootObject = treeNhomHang.getModel().getRoot();
+        if (!(rootObject instanceof DefaultMutableTreeNode)) return;
+        DefaultMutableTreeNode root = (DefaultMutableTreeNode) rootObject;
+        addTouchCategoryButton("TẤT CẢ", root, new Color(15, 18, 112));
+        Enumeration<?> children = root.children();
+        while (children.hasMoreElements()) {
+            DefaultMutableTreeNode node = (DefaultMutableTreeNode) children.nextElement();
+            addTouchCategoryButton(String.valueOf(node.getUserObject()), node, TOUCH_GREEN);
+        }
+        touchCategoryPanel.revalidate();
+        touchCategoryPanel.repaint();
+    }
+
+    private void addTouchCategoryButton(String text, DefaultMutableTreeNode node, Color color) {
+        JButton button = new JButton("<html><div style='text-align:left'>" + escapeHtml(text) + "</div></html>");
+        styleTouchButton(button, color, 130, 108);
+        button.setHorizontalAlignment(SwingConstants.LEFT);
+        button.setMaximumSize(new Dimension(Integer.MAX_VALUE, 108));
+        button.addActionListener(e -> {
+            treeNhomHang.setSelectionPath(new TreePath(node.getPath()));
+            filterCatalogByKeyword();
+        });
+        touchCategoryPanel.add(button);
+        touchCategoryPanel.add(Box.createVerticalStrut(7));
+    }
+
+    private void refreshTouchProductGrid() {
+        if (!touchMode || touchProductGrid == null) return;
+        touchProductGrid.removeAll();
+        for (int i = 0; i < filteredCatalogList.size(); i++) {
+            MatHang item = filteredCatalogList.get(i);
+            String name = item.getName() != null ? item.getName() : item.getCode();
+            String html = "<html><table width='100%'><tr><td>" + escapeHtml(name)
+                    + "</td></tr><tr><td align='right'><b>" + CurrencyUtil.format(getPriceForMatHang(item))
+                    + "</b></td></tr></table></html>";
+            JButton tile = new JButton(html);
+            styleTouchButton(tile, TOUCH_TEAL, 300, 101);
+            tile.setFont(new Font("Segoe UI", Font.BOLD, 18));
+            tile.setHorizontalAlignment(SwingConstants.LEFT);
+            tile.setVerticalAlignment(SwingConstants.CENTER);
+            final int row = i;
+            tile.addActionListener(e -> {
+                if (row < tableCatalog.getRowCount()) {
+                    tableCatalog.setRowSelectionInterval(row, row);
+                    updateTonKhoDisplay();
+                }
+                openNhapSoLuongForProduct(item);
+            });
+            touchProductGrid.add(tile);
+        }
+        int rows = Math.max(1, (filteredCatalogList.size() + 1) / 2);
+        touchProductGrid.setPreferredSize(new Dimension(0, rows * 108));
+        touchProductGrid.revalidate();
+        touchProductGrid.repaint();
+    }
+
+    private String escapeHtml(String value) {
+        if (value == null) return "";
+        return value.replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;")
+                .replace("\"", "&quot;");
+    }
+
+    private void toggleTouchWindowSize() {
+        Window window = SwingUtilities.getWindowAncestor(this);
+        if (!(window instanceof JFrame)) return;
+        JFrame frame = (JFrame) window;
+        boolean maximized = (frame.getExtendedState() & JFrame.MAXIMIZED_BOTH) == JFrame.MAXIMIZED_BOTH;
+        frame.setExtendedState(maximized ? JFrame.NORMAL : JFrame.MAXIMIZED_BOTH);
+        if (maximized) {
+            frame.setSize(1180, 760);
+            frame.setLocationRelativeTo(null);
+        }
+    }
+
+    private void closeTouchWindow() {
+        int choice = JOptionPane.showConfirmDialog(this, "Thoát màn hình bán hàng cảm ứng?",
+                "TAP Shop TS", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+        if (choice != JOptionPane.YES_OPTION) return;
+        Window window = SwingUtilities.getWindowAncestor(this);
+        if (window != null) window.dispose();
     }
 
     private void initComponents() {
@@ -1213,6 +1600,10 @@ public class HoaDonBanHangPanel extends JPanel {
             }
         }
         treeNhomHang.setModel(new DefaultTreeModel(root));
+        if (touchMode) {
+            treeNhomHang.setSelectionPath(new TreePath(root.getPath()));
+            refreshTouchCategoryButtons();
+        }
     }
 
     private void onTreeSelectionChanged() {
@@ -1399,6 +1790,7 @@ public class HoaDonBanHangPanel extends JPanel {
             }
             catalogModel.addRow(row);
         }
+        refreshTouchProductGrid();
     }
 
     private double getPriceForMatHang(MatHang m) {
@@ -2090,11 +2482,14 @@ public class HoaDonBanHangPanel extends JPanel {
             }
         }
         txtDiaChiGiaoHang.setText(kh != null && kh.getDiaChi() != null ? kh.getDiaChi() : "");
+        if (txtTouchPoints != null) {
+            txtTouchPoints.setText(kh != null ? CurrencyUtil.format(kh.getDiemTichLuy()) : "0");
+        }
     }
 
     private void updateTonKhoDisplay() {
         int row = tableCatalog.getSelectedRow();
-        if (row >= 0 && row < filteredCatalogList.size()) {
+        if (lblTonKho != null && row >= 0 && row < filteredCatalogList.size()) {
             MatHang m = filteredCatalogList.get(row);
             lblTonKho.setText("TỒN: " + (int) m.getTonToiDa());
         }
@@ -2394,6 +2789,8 @@ public class HoaDonBanHangPanel extends JPanel {
         if (cbKhachHang.getItemCount() > 0) cbKhachHang.setSelectedIndex(0);
         if (cbKhoXuat.getItemCount() > 0) cbKhoXuat.setSelectedIndex(0);
         if (cbNhanVien.getItemCount() > 0) cbNhanVien.setSelectedIndex(0);
+        if (txtTouchGuestCount != null) txtTouchGuestCount.setText("0");
+        if (txtTouchTable != null) txtTouchTable.setText("");
     }
 
     private void loadHoaDonIntoUI(DonHang dh) {
@@ -2406,6 +2803,8 @@ public class HoaDonBanHangPanel extends JPanel {
         txtTiLeGiamGia.setText(String.format("%.0f %%", dh.getTiLeGiamGia()));
         txtTiLeThue.setText(String.format("%.0f %%", dh.getTiLeThue()));
         txtPhiVanChuyen.setText(CurrencyUtil.format(dh.getPhiVanChuyen()));
+        if (txtTouchGuestCount != null) txtTouchGuestCount.setText(String.valueOf(Math.max(0, dh.getSoKhach())));
+        if (txtTouchTable != null) txtTouchTable.setText(dh.getBan() != null ? dh.getBan() : "");
 
         currentLayHangList.clear();
         if (dh.getChiTietLayHang() != null) {
@@ -2430,6 +2829,14 @@ public class HoaDonBanHangPanel extends JPanel {
         currentHoaDon.setNgay(dpkNgay.getDate());
         currentHoaDon.setDienGiai(txtDienGiai.getText().trim());
         currentHoaDon.setDiaChiGiaoHang(txtDiaChiGiaoHang.getText().trim());
+        if (txtTouchGuestCount != null) {
+            try {
+                currentHoaDon.setSoKhach(Math.max(0, Integer.parseInt(txtTouchGuestCount.getText().trim())));
+            } catch (NumberFormatException ignored) {
+                currentHoaDon.setSoKhach(0);
+            }
+        }
+        if (txtTouchTable != null) currentHoaDon.setBan(txtTouchTable.getText().trim());
 
         KhachHang kh = (KhachHang) cbKhachHang.getSelectedItem();
         if (kh != null) {

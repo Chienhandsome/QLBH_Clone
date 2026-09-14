@@ -2,6 +2,7 @@ package kazuko.ex.ui.auth;
 
 import kazuko.ex.config.DatabaseConfig;
 import kazuko.ex.config.DatabaseConnection;
+import kazuko.ex.config.EmbeddedFirebird;
 import kazuko.ex.util.IconHelper;
 
 import javax.swing.*;
@@ -89,7 +90,7 @@ public class DatabaseConfigDialog extends JDialog {
         JPanel modeRadioPanel = new JPanel(new GridLayout(2, 1, 6, 6));
         modeRadioPanel.setOpaque(false);
 
-        rbLocal = new JRadioButton("<html><b>Máy đơn / Cục bộ (Local)</b> - <i>Dữ liệu lưu trên chính máy tính này (localhost)</i></html>");
+        rbLocal = new JRadioButton("<html><b>Máy đơn / Cục bộ (Local)</b> - <i>Chạy trực tiếp, không cần cài Firebird Server</i></html>");
         rbServer = new JRadioButton("<html><b>Máy trạm qua mạng LAN (Client)</b> - <i>Kết nối về máy chủ khác trong cùng mạng nội bộ</i></html>");
         rbLocal.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         rbServer.setFont(new Font("Segoe UI", Font.PLAIN, 12));
@@ -146,7 +147,7 @@ public class DatabaseConfigDialog extends JDialog {
         lblDb.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         connGrid.add(lblDb, gbc);
 
-        txtDatabasePath = new JTextField("D:/THUCTAP/QLBH_Clone/data/DEMO.FDB", 20);
+        txtDatabasePath = new JTextField(EmbeddedFirebird.prepareDatabase().toString(), 20);
         txtDatabasePath.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         gbc.gridx = 1; gbc.gridy = 1; gbc.weightx = 1.0;
         connGrid.add(txtDatabasePath, gbc);
@@ -279,12 +280,15 @@ public class DatabaseConfigDialog extends JDialog {
         rbLocal.addActionListener(e -> {
             txtServerIp.setText("localhost");
             txtPort.setText("3050");
+            resetDefaultPath();
+            updateModeFields();
         });
         rbServer.addActionListener(e -> {
             if ("localhost".equalsIgnoreCase(txtServerIp.getText().trim())) {
                 txtServerIp.setText("192.168.1.");
                 txtServerIp.requestFocus();
             }
+            updateModeFields();
         });
     }
 
@@ -308,7 +312,10 @@ public class DatabaseConfigDialog extends JDialog {
     }
 
     private void browseFile() {
-        JFileChooser chooser = new JFileChooser("D:/THUCTAP/QLBH_Clone/data");
+        File currentFile = new File(txtDatabasePath.getText().trim());
+        File initialDirectory = currentFile.getParentFile();
+        JFileChooser chooser = new JFileChooser(
+                initialDirectory != null ? initialDirectory : EmbeddedFirebird.getDataDirectory().toFile());
         chooser.setDialogTitle("Chọn file Cơ sở dữ liệu Firebird (.FDB)");
         chooser.setFileFilter(new FileNameExtensionFilter("Firebird Database (*.fdb, *.gdb)", "fdb", "gdb", "db"));
         if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
@@ -317,12 +324,8 @@ public class DatabaseConfigDialog extends JDialog {
     }
 
     private void resetDefaultPath() {
-        File defaultFile = new File("data/DEMO.FDB");
-        if (defaultFile.exists()) {
-            txtDatabasePath.setText(defaultFile.getAbsolutePath().replace("\\", "/"));
-        } else {
-            txtDatabasePath.setText("D:/THUCTAP/QLBH_Clone/data/DEMO.FDB");
-        }
+        txtDatabasePath.setText(
+                EmbeddedFirebird.prepareDatabase().toAbsolutePath().toString().replace("\\", "/"));
     }
 
     private void restoreAllDefaults() {
@@ -343,37 +346,49 @@ public class DatabaseConfigDialog extends JDialog {
         txtUsername.setText(cfg.getUsername());
         txtPassword.setText(cfg.getPassword());
 
-        if ("localhost".equalsIgnoreCase(cfg.getServerIp()) || "127.0.0.1".equals(cfg.getServerIp())) {
+        if (cfg.isEmbeddedMode()) {
             rbLocal.setSelected(true);
         } else {
             rbServer.setSelected(true);
         }
+        updateModeFields();
         setStatusIdle();
+    }
+
+    private void updateModeFields() {
+        boolean networkMode = rbServer.isSelected();
+        txtServerIp.setEnabled(networkMode);
+        txtPort.setEnabled(networkMode);
     }
 
     private void setStatusIdle() {
         statusPanel.setBackground(new Color(238, 242, 248));
-        lblStatusText.setText("Nhấn 'Kiểm tra kết nối' để thử kết nối tới máy chủ.");
+        lblStatusText.setText(rbLocal.isSelected()
+                ? "Chế độ cục bộ dùng Firebird Embedded, không cần dịch vụ Firebird Server."
+                : "Nhấn 'Kiểm tra kết nối' để thử kết nối tới máy chủ.");
         lblStatusText.setForeground(new Color(80, 90, 105));
     }
 
     private void onTestConnection() {
+        boolean embeddedMode = rbLocal.isSelected();
         String ip = txtServerIp.getText().trim();
         String portStr = txtPort.getText().trim();
         String dbPath = txtDatabasePath.getText().trim();
         String user = txtUsername.getText().trim();
         String pass = new String(txtPassword.getPassword());
 
-        if (ip.isEmpty() || portStr.isEmpty() || dbPath.isEmpty()) {
+        if (dbPath.isEmpty() || (!embeddedMode && (ip.isEmpty() || portStr.isEmpty()))) {
             statusPanel.setBackground(new Color(254, 237, 237));
-            lblStatusText.setText("Vui lòng nhập đầy đủ IP, Port và Đường dẫn file CSDL!");
+            lblStatusText.setText(embeddedMode
+                    ? "Vui lòng chọn file CSDL cục bộ!"
+                    : "Vui lòng nhập đầy đủ IP, Port và Đường dẫn file CSDL!");
             lblStatusText.setForeground(new Color(200, 30, 30));
             return;
         }
 
         int port;
         try {
-            port = Integer.parseInt(portStr);
+            port = embeddedMode ? 3050 : Integer.parseInt(portStr);
         } catch (NumberFormatException e) {
             statusPanel.setBackground(new Color(254, 237, 237));
             lblStatusText.setText("Cổng (Port) phải là số nguyên hợp lệ (mặc định 3050)!");
@@ -381,56 +396,65 @@ public class DatabaseConfigDialog extends JDialog {
             return;
         }
 
-        lblStatusText.setText("Đang kiểm tra kết nối tới máy chủ...");
+        lblStatusText.setText(embeddedMode
+                ? "Đang mở CSDL bằng Firebird Embedded..."
+                : "Đang kiểm tra kết nối tới máy chủ...");
         lblStatusText.setForeground(new Color(30, 70, 140));
 
         SwingUtilities.invokeLater(() -> {
-            boolean ok = DatabaseConnection.testConnection(ip, port, dbPath, user, pass);
+            boolean ok = DatabaseConnection.testConnection(
+                    embeddedMode, ip, port, dbPath, user, pass);
             if (ok) {
                 statusPanel.setBackground(new Color(235, 250, 240));
                 lblStatusText.setText("Kết nối tới Cơ sở dữ liệu Firebird THÀNH CÔNG!");
                 lblStatusText.setForeground(new Color(20, 130, 60));
                 JOptionPane.showMessageDialog(this,
                         "Kết nối tới Cơ sở dữ liệu Firebird thành công!\n" +
-                        "Máy chủ: " + ip + ":" + port + "\n" +
-                        "File CSDL: " + dbPath,
+                        (embeddedMode ? "Chế độ: Cục bộ (không cần Firebird Server)\n"
+                                : "Máy chủ: " + ip + ":" + port + "\n") +
+                                "File CSDL: " + dbPath,
                         "Kiểm tra kết nối", JOptionPane.INFORMATION_MESSAGE);
             } else {
                 statusPanel.setBackground(new Color(254, 237, 237));
                 lblStatusText.setText("Không thể kết nối! Vui lòng kiểm tra lại IP/Port/File CSDL.");
                 lblStatusText.setForeground(new Color(190, 20, 20));
                 JOptionPane.showMessageDialog(this,
-                        "Không thể kết nối tới Cơ sở dữ liệu Firebird!\n\n" +
-                        "Nguyên nhân có thể do:\n" +
-                        "1. Dịch vụ Firebird Server chưa được khởi động trên máy chủ.\n" +
-                        "2. Địa chỉ IP hoặc Cổng (3050) chưa chính xác hoặc bị Tường lửa (Firewall) chặn.\n" +
-                        "3. Đường dẫn file .FDB không tồn tại trên máy chủ.",
+                        embeddedMode
+                                ? "Không thể mở CSDL cục bộ!\n\n"
+                                    + "Hãy kiểm tra file .FDB hoặc cài lại ứng dụng để khôi phục thư viện đi kèm."
+                                : "Không thể kết nối tới Cơ sở dữ liệu Firebird!\n\n"
+                                    + "Nguyên nhân có thể do:\n"
+                                    + "1. Dịch vụ Firebird Server chưa được khởi động trên máy chủ.\n"
+                                    + "2. Địa chỉ IP hoặc Cổng (3050) chưa chính xác hoặc bị Tường lửa chặn.\n"
+                                    + "3. Đường dẫn file .FDB không tồn tại trên máy chủ.",
                         "Lỗi kết nối CSDL", JOptionPane.ERROR_MESSAGE);
             }
         });
     }
 
     private void onSaveConfig() {
+        boolean embeddedMode = rbLocal.isSelected();
         String ip = txtServerIp.getText().trim();
         String portStr = txtPort.getText().trim();
         String dbPath = txtDatabasePath.getText().trim();
         String user = txtUsername.getText().trim();
         String pass = new String(txtPassword.getPassword());
 
-        if (ip.isEmpty() || portStr.isEmpty() || dbPath.isEmpty()) {
+        if (dbPath.isEmpty() || (!embeddedMode && (ip.isEmpty() || portStr.isEmpty()))) {
             JOptionPane.showMessageDialog(this, "Vui lòng nhập đầy đủ thông tin kết nối!", "Thiếu thông tin", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
         int port;
         try {
-            port = Integer.parseInt(portStr);
+            port = embeddedMode ? 3050 : Integer.parseInt(portStr);
         } catch (NumberFormatException e) {
             JOptionPane.showMessageDialog(this, "Cổng (Port) phải là số nguyên (mặc định 3050)!", "Lỗi nhập liệu", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
         DatabaseConfig cfg = DatabaseConnection.getConfig();
+        cfg.setEmbeddedMode(embeddedMode);
         cfg.setServerIp(ip);
         cfg.setPort(port);
         cfg.setDatabasePath(dbPath);

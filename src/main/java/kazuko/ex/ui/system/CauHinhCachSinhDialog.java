@@ -1,6 +1,7 @@
 package kazuko.ex.ui.system;
 
 import kazuko.ex.util.IconHelper;
+import kazuko.ex.util.VoucherNumberGenerator;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -133,34 +134,32 @@ public class CauHinhCachSinhDialog extends JDialog {
             return;
         }
 
-        int starCount = 0;
-        int firstStar = -1;
-        int lastStar = -1;
-        for (int i = 0; i < pattern.length(); i++) {
-            if (pattern.charAt(i) == '*') {
-                starCount++;
-                if (firstStar == -1) firstStar = i;
-                lastStar = i;
-            }
-        }
-
-        if (starCount == 0) {
-            lblExplanation.setText("Không có ký tự số tự tăng (*)");
+        String error = VoucherNumberGenerator.validate(pattern);
+        if (error != null) {
+            lblExplanation.setText(error);
             return;
         }
 
+        int starCount = 0;
+        for (int i = 0; i < pattern.length(); i++) {
+            if (pattern.charAt(i) == '*') starCount++;
+        }
         long total = (long) Math.pow(10, starCount) - 1;
-        String startNum = String.format("%0" + starCount + "d", 1);
-        String endNum = "9".repeat(starCount);
+        VoucherNumberGenerator.CompiledPattern compiled = VoucherNumberGenerator.compile(pattern, new java.util.Date());
 
-        String startStr = pattern.substring(0, firstStar) + startNum + pattern.substring(lastStar + 1);
-        String endStr = pattern.substring(0, firstStar) + endNum + pattern.substring(lastStar + 1);
-
-        lblExplanation.setText("Có " + total + " chuỗi từ " + startStr + " đến " + endStr);
+        lblExplanation.setText("Có " + total + " chuỗi từ " + compiled.format(1) + " đến " + compiled.format(total));
     }
 
     private void onSave() {
         String pattern = txtPattern.getText().trim();
+        if (!("Bảng lương".equals(voucherType) && pattern.isEmpty())) {
+            String error = VoucherNumberGenerator.validate(pattern);
+            if (error != null) {
+                JOptionPane.showMessageDialog(this, error, "Mẫu số phiếu không hợp lệ", JOptionPane.WARNING_MESSAGE);
+                txtPattern.requestFocus();
+                return;
+            }
+        }
         if (onSaveCallback != null) {
             onSaveCallback.accept(pattern);
         }

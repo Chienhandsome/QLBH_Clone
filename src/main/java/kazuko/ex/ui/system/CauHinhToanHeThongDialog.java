@@ -140,6 +140,15 @@ public class CauHinhToanHeThongDialog extends JDialog {
     private JCheckBox chkMatHangCoKichThuoc;
     private JCheckBox chkMatHangCoVatTuDinhLuong;
 
+    // Tab Cây hiển thị giá
+    private JCheckBox chkCoCayHienThiGia;
+    private JCheckBox chkCayHienThiGiaMotDong;
+    private JTextField txtCongCayHienThiGia;
+    private JCheckBox chkCoManHinhPhu;
+    private JLabel lblLogoManHinhPhuPreview;
+    private String selectedLogoManHinhPhuPath;
+    private JCheckBox chkManHinhPhuSuDungGiaoDienThuong;
+
     // Tab Cân điện tử
     private JCheckBox chkKichHoatSuDungCanDienTu;
     private JTextField txtCongComCanDienTu;
@@ -235,6 +244,7 @@ public class CauHinhToanHeThongDialog extends JDialog {
         pnlCardContainer.add(createTabTichDiem(), "Tích điểm");
         pnlCardContainer.add(createTabKhoHang(), "Kho hàng");
         pnlCardContainer.add(createTabMatHang(), "Mặt hàng");
+        pnlCardContainer.add(createTabCayHienThiGia(), "Cây hiển thị giá");
         pnlCardContainer.add(createTabCanDienTu(), "Cân điện tử");
         pnlCardContainer.add(createTabCanhBao(), "Cảnh báo");
         pnlCardContainer.add(createTabCamUng(), "Cảm ứng");
@@ -244,7 +254,8 @@ public class CauHinhToanHeThongDialog extends JDialog {
         for (MenuItem item : allMenuItems) {
             if (!"Thông tin chung".equals(item.name) && !"Mẫu hóa đơn".equals(item.name) && !"Máy in".equals(item.name) && !"Số phiếu".equals(item.name)
                     && !"Bán hàng".equals(item.name) && !"Thanh toán".equals(item.name) && !"Tích điểm".equals(item.name)
-                    && !"Kho hàng".equals(item.name) && !"Mặt hàng".equals(item.name) && !"Cân điện tử".equals(item.name) && !"Cảnh báo".equals(item.name)
+                    && !"Kho hàng".equals(item.name) && !"Mặt hàng".equals(item.name) && !"Cây hiển thị giá".equals(item.name)
+                    && !"Cân điện tử".equals(item.name) && !"Cảnh báo".equals(item.name)
                     && !"Cảm ứng".equals(item.name) && !"Quản trị".equals(item.name)) {
                 pnlCardContainer.add(createPlaceholderCard(item.name), item.name);
             }
@@ -1579,6 +1590,75 @@ public class CauHinhToanHeThongDialog extends JDialog {
         return container;
     }
 
+    // ==================== TAB: CÂY HIỂN THỊ GIÁ ====================
+    private JPanel createTabCayHienThiGia() {
+        JPanel panel = new JPanel(null);
+        panel.setBackground(Color.WHITE);
+
+        Font normalFont = new Font("Segoe UI", Font.PLAIN, 12);
+        int fieldH = 24;
+
+        chkCoCayHienThiGia = new JCheckBox("Có cây hiển thị giá", false);
+        chkCoCayHienThiGia.setFont(normalFont);
+        chkCoCayHienThiGia.setOpaque(false);
+        chkCoCayHienThiGia.setBounds(10, 10, 230, fieldH);
+        panel.add(chkCoCayHienThiGia);
+
+        chkCayHienThiGiaMotDong = new JCheckBox("Cây hiển thị giá 1 dòng", false);
+        chkCayHienThiGiaMotDong.setFont(normalFont);
+        chkCayHienThiGiaMotDong.setOpaque(false);
+        chkCayHienThiGiaMotDong.setBounds(310, 10, 230, fieldH);
+        panel.add(chkCayHienThiGiaMotDong);
+
+        JLabel lblCongSuDung = new JLabel("Cổng sử dụng");
+        lblCongSuDung.setFont(normalFont);
+        lblCongSuDung.setBounds(15, 48, 100, fieldH);
+        panel.add(lblCongSuDung);
+
+        txtCongCayHienThiGia = new JTextField();
+        txtCongCayHienThiGia.setFont(normalFont);
+        txtCongCayHienThiGia.setBounds(115, 48, 455, fieldH);
+        panel.add(txtCongCayHienThiGia);
+
+        JLabel lblViDuCong = new JLabel("Ví dụ: COM1");
+        lblViDuCong.setFont(new Font("Segoe UI", Font.ITALIC, 12));
+        lblViDuCong.setBounds(120, 74, 130, 20);
+        panel.add(lblViDuCong);
+
+        chkCoManHinhPhu = new JCheckBox("Có màn hình phụ", false);
+        chkCoManHinhPhu.setFont(normalFont);
+        chkCoManHinhPhu.setOpaque(false);
+        chkCoManHinhPhu.setBounds(10, 104, 200, fieldH);
+        panel.add(chkCoManHinhPhu);
+
+        JLabel lblLogoManHinhPhu = new JLabel("Logo màn hình phụ");
+        lblLogoManHinhPhu.setFont(normalFont);
+        lblLogoManHinhPhu.setBounds(120, 140, 130, fieldH);
+        panel.add(lblLogoManHinhPhu);
+
+        lblLogoManHinhPhuPreview = new JLabel("", SwingConstants.CENTER);
+        lblLogoManHinhPhuPreview.setOpaque(true);
+        lblLogoManHinhPhuPreview.setBackground(Color.WHITE);
+        lblLogoManHinhPhuPreview.setBorder(BorderFactory.createLineBorder(new Color(120, 120, 120)));
+        lblLogoManHinhPhuPreview.setBounds(185, 140, 80, 80);
+        panel.add(lblLogoManHinhPhuPreview);
+
+        JButton btnChonLogoManHinhPhu = new JButton("Chọn");
+        btnChonLogoManHinhPhu.setFont(normalFont);
+        btnChonLogoManHinhPhu.setBackground(Color.WHITE);
+        btnChonLogoManHinhPhu.setBounds(186, 228, 78, 26);
+        btnChonLogoManHinhPhu.addActionListener(e -> chooseLogoManHinhPhu());
+        panel.add(btnChonLogoManHinhPhu);
+
+        chkManHinhPhuSuDungGiaoDienThuong = new JCheckBox("Màn hình phụ sử dụng cả giao diện thường", true);
+        chkManHinhPhuSuDungGiaoDienThuong.setFont(normalFont);
+        chkManHinhPhuSuDungGiaoDienThuong.setOpaque(false);
+        chkManHinhPhuSuDungGiaoDienThuong.setBounds(10, 272, 350, fieldH);
+        panel.add(chkManHinhPhuSuDungGiaoDienThuong);
+
+        return panel;
+    }
+
     // ==================== TAB: CÂN ĐIỆN TỬ ====================
     private JPanel createTabCanDienTu() {
         JPanel panel = new JPanel(null);
@@ -2116,6 +2196,39 @@ public class CauHinhToanHeThongDialog extends JDialog {
         }
     }
 
+    private void chooseLogoManHinhPhu() {
+        JFileChooser chooser = new JFileChooser();
+        chooser.setDialogTitle("Chọn logo màn hình phụ");
+        chooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter(
+                "Hình ảnh (*.png, *.jpg, *.jpeg, *.gif, *.bmp)", "png", "jpg", "jpeg", "gif", "bmp"));
+        if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+            File f = chooser.getSelectedFile();
+            if (f != null && f.exists()) {
+                selectedLogoManHinhPhuPath = f.getAbsolutePath();
+                displayLogoManHinhPhu(selectedLogoManHinhPhuPath);
+            }
+        }
+    }
+
+    private void displayLogoManHinhPhu(String path) {
+        lblLogoManHinhPhuPreview.setIcon(null);
+        lblLogoManHinhPhuPreview.setText("");
+        if (path == null || path.trim().isEmpty()) {
+            return;
+        }
+        try {
+            String resolved = SystemConfigDAO.resolveLogoPath(path);
+            File f = resolved != null ? new File(resolved) : new File(path);
+            if (f.exists() && f.isFile()) {
+                java.awt.image.BufferedImage img = javax.imageio.ImageIO.read(f);
+                if (img != null) {
+                    Image scaled = img.getScaledInstance(76, 76, Image.SCALE_SMOOTH);
+                    lblLogoManHinhPhuPreview.setIcon(new ImageIcon(scaled));
+                }
+            }
+        } catch (Exception ignored) {}
+    }
+
     private void loadTemplatesToComboBoxes() {
         List<String> templateNames = templateDAO.getInvoiceTemplateNames();
         if (templateNames == null || templateNames.isEmpty()) {
@@ -2322,6 +2435,15 @@ public class CauHinhToanHeThongDialog extends JDialog {
         chkMatHangCoKichThuoc.setSelected(currentConfig.isMatHangCoKichThuoc());
         chkMatHangCoVatTuDinhLuong.setSelected(currentConfig.isMatHangCoVatTuDinhLuong());
 
+        // Tab Cây hiển thị giá
+        chkCoCayHienThiGia.setSelected(currentConfig.isCoCayHienThiGia());
+        chkCayHienThiGiaMotDong.setSelected(currentConfig.isCayHienThiGiaMotDong());
+        txtCongCayHienThiGia.setText(currentConfig.getCongCayHienThiGia() != null ? currentConfig.getCongCayHienThiGia() : "");
+        chkCoManHinhPhu.setSelected(currentConfig.isCoManHinhPhu());
+        selectedLogoManHinhPhuPath = currentConfig.getLogoManHinhPhuPath();
+        displayLogoManHinhPhu(selectedLogoManHinhPhuPath);
+        chkManHinhPhuSuDungGiaoDienThuong.setSelected(currentConfig.isManHinhPhuSuDungGiaoDienThuong());
+
         // Tab Cân điện tử
         chkKichHoatSuDungCanDienTu.setSelected(currentConfig.isKichHoatSuDungCanDienTu());
         txtCongComCanDienTu.setText(currentConfig.getCongComCanDienTu() != null ? currentConfig.getCongComCanDienTu() : "");
@@ -2467,6 +2589,15 @@ public class CauHinhToanHeThongDialog extends JDialog {
         currentConfig.setMatHangCoHanSuDung(chkMatHangCoHanSuDung.isSelected());
         currentConfig.setMatHangCoKichThuoc(chkMatHangCoKichThuoc.isSelected());
         currentConfig.setMatHangCoVatTuDinhLuong(chkMatHangCoVatTuDinhLuong.isSelected());
+
+        // Tab Cây hiển thị giá
+        currentConfig.setCoCayHienThiGia(chkCoCayHienThiGia.isSelected());
+        currentConfig.setCayHienThiGiaMotDong(chkCayHienThiGiaMotDong.isSelected());
+        currentConfig.setCongCayHienThiGia(txtCongCayHienThiGia.getText().trim());
+        currentConfig.setCoManHinhPhu(chkCoManHinhPhu.isSelected());
+        currentConfig.setLogoManHinhPhuPath(selectedLogoManHinhPhuPath != null && !selectedLogoManHinhPhuPath.trim().isEmpty()
+                ? selectedLogoManHinhPhuPath.trim() : null);
+        currentConfig.setManHinhPhuSuDungGiaoDienThuong(chkManHinhPhuSuDungGiaoDienThuong.isSelected());
 
         // Tab Cân điện tử
         currentConfig.setKichHoatSuDungCanDienTu(chkKichHoatSuDungCanDienTu.isSelected());

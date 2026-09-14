@@ -44,3 +44,9 @@ build/
 *.FDB
 data/DEMO.FDB
 *.properties
+/installer/
+/installer-embedded/
+/packaging/
+/installer-embedded-fixed/
+/installer-input/
+/installer-input-embedded/

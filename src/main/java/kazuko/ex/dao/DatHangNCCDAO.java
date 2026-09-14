@@ -5,9 +5,9 @@ import kazuko.ex.model.dathang.DatHangNCC;
 import kazuko.ex.model.dathang.DatHangNCCChiTiet;
 import kazuko.ex.service.AuthService;
 import kazuko.ex.service.ActivityLogService;
+import kazuko.ex.util.VoucherNumberGenerator;
 
 import java.sql.*;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -33,32 +33,25 @@ public class DatHangNCCDAO {
 
     public synchronized String generateNextSoPhieu(Date date) {
         if (date == null) date = new Date();
-        SimpleDateFormat sdf = new SimpleDateFormat("yy");
-        String yy = sdf.format(date);
-        String prefix = "DMH" + yy + "/";
+        VoucherNumberGenerator.CompiledPattern numberPattern = VoucherNumberGenerator.fromConfig(
+                "Đặt hàng nhà cung cấp", "DMH(yy)/(*****)", date);
 
         String sql = "SELECT NAME FROM TDATHANGNCC WHERE NAME LIKE ? ORDER BY NAME DESC";
-        int maxSeq = 0;
+        long maxSeq = 0;
         try (Connection conn = getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, prefix + "%");
+            ps.setString(1, numberPattern.getSqlLikePattern());
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     String name = rs.getString(1);
-                    if (name != null && name.startsWith(prefix)) {
-                        String numPart = name.substring(prefix.length()).trim();
-                        try {
-                            int seq = Integer.parseInt(numPart);
-                            if (seq > maxSeq) maxSeq = seq;
-                        } catch (NumberFormatException ignored) {}
-                    }
+                    maxSeq = Math.max(maxSeq, numberPattern.extractSequence(name));
                 }
             }
         } catch (SQLException e) {
             System.err.println("Lỗi generateNextSoPhieu DatHangNCC: " + e.getMessage());
         }
 
-        return String.format("%s%05d", prefix, maxSeq + 1);
+        return numberPattern.format(maxSeq + 1);
     }
 
     public List<DatHangNCC> getAll(Date tuNgay, Date denNgay, String nhaCungCapId, String keyword) {

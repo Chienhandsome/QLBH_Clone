@@ -2,6 +2,7 @@ package kazuko.ex.dao;
 
 import kazuko.ex.model.quy.PhieuThu;
 import kazuko.ex.service.AuthService;
+import kazuko.ex.util.VoucherNumberGenerator;
 
 import java.sql.*;
 import java.text.SimpleDateFormat;
@@ -112,27 +113,21 @@ public class PhieuThuDAO extends BaseDAO {
 
     public synchronized String generateNextSoPhieu(Date date) {
         if (date == null) date = new Date();
-        String yearStr = new SimpleDateFormat("yy").format(date);
-        String prefix = "PT" + yearStr + "/";
+        VoucherNumberGenerator.CompiledPattern numberPattern = VoucherNumberGenerator.fromConfig(
+                "Phiếu thu", "PT(yy)/(*****)", date);
 
-        int maxSeq = 0;
+        long maxSeq = 0;
 
         // Check DB
         try (Connection conn = getConnection()) {
             ensureTableExists(conn);
             String sql = "SELECT SOPHIEU FROM TPHIEUTHU WHERE SOPHIEU LIKE ? ORDER BY SOPHIEU DESC";
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
-                ps.setString(1, prefix + "%");
+                ps.setString(1, numberPattern.getSqlLikePattern());
                 try (ResultSet rs = ps.executeQuery()) {
                     while (rs.next()) {
                         String sp = rs.getString(1);
-                        if (sp != null && sp.startsWith(prefix)) {
-                            try {
-                                String numPart = sp.substring(prefix.length());
-                                int val = Integer.parseInt(numPart);
-                                if (val > maxSeq) maxSeq = val;
-                            } catch (Exception ignored) {}
-                        }
+                        maxSeq = Math.max(maxSeq, numberPattern.extractSequence(sp));
                     }
                 }
             }
@@ -140,16 +135,10 @@ public class PhieuThuDAO extends BaseDAO {
 
         // Check Memory
         for (PhieuThu pt : MEMORY_PHIEU_THU) {
-            if (pt.getSoPhieu() != null && pt.getSoPhieu().startsWith(prefix)) {
-                try {
-                    String numPart = pt.getSoPhieu().substring(prefix.length());
-                    int val = Integer.parseInt(numPart);
-                    if (val > maxSeq) maxSeq = val;
-                } catch (Exception ignored) {}
-            }
+            maxSeq = Math.max(maxSeq, numberPattern.extractSequence(pt.getSoPhieu()));
         }
 
-        return String.format("%s%05d", prefix, maxSeq + 1);
+        return numberPattern.format(maxSeq + 1);
     }
 
     public boolean insert(PhieuThu pt) {

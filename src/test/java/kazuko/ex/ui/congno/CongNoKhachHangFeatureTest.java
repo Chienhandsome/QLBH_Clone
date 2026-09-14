@@ -51,7 +51,7 @@ public class CongNoKhachHangFeatureTest {
     public void testGenerateNextSoPhieuThu() {
         String soPhieu = dao.generateNextSoPhieuThu(new Date());
         assertNotNull(soPhieu);
-        assertTrue(soPhieu.startsWith("PT"), "Số phiếu thu phải có tiền tố PT");
+        assertTrue(soPhieu.startsWith("PTCN"), "Phiếu thu công nợ phải có tiền tố PTCN theo cấu hình mặc định");
         System.out.println("Số phiếu thu tạo tiếp theo: " + soPhieu);
     }
 

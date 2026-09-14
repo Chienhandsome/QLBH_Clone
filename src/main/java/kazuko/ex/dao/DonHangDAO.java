@@ -3,9 +3,9 @@ package kazuko.ex.dao;
 import kazuko.ex.model.banhang.DonHang;
 import kazuko.ex.model.banhang.DonHangChiTiet;
 import kazuko.ex.service.AuthService;
+import kazuko.ex.util.VoucherNumberGenerator;
 
 import java.sql.*;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -186,32 +186,26 @@ public class DonHangDAO extends BaseDAO {
 
     public String generateNextSoPhieuXuat(Date ngay) {
         if (ngay == null) ngay = new Date();
-        SimpleDateFormat sdf = new SimpleDateFormat("yy");
-        String prefix = "PX" + sdf.format(ngay) + "/";
+        VoucherNumberGenerator.CompiledPattern numberPattern = VoucherNumberGenerator.fromConfig(
+                "Phiếu xuất kho", "PX(yy)/(*****)", ngay);
 
         String sql = "SELECT NAME FROM TDONHANG WHERE NAME LIKE ? AND (LOAI = 2 OR LOAI IS NULL) ORDER BY NAME DESC";
-        int maxIndex = 0;
+        long maxIndex = 0;
 
         try (Connection conn = getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, prefix + "%");
+            ps.setString(1, numberPattern.getSqlLikePattern());
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     String name = rs.getString("NAME");
-                    if (name != null && name.startsWith(prefix)) {
-                        try {
-                            String numPart = name.substring(prefix.length()).trim();
-                            int val = Integer.parseInt(numPart);
-                            if (val > maxIndex) maxIndex = val;
-                        } catch (Exception ignored) {}
-                    }
+                    maxIndex = Math.max(maxIndex, numberPattern.extractSequence(name));
                 }
             }
         } catch (SQLException e) {
             System.err.println("Lỗi generateNextSoPhieuXuat: " + e.getMessage());
         }
 
-        return String.format("%s%05d", prefix, maxIndex + 1);
+        return numberPattern.format(maxIndex + 1);
     }
 
     public boolean insertPhieuXuatKho(DonHang dh) {
@@ -685,32 +679,26 @@ public class DonHangDAO extends BaseDAO {
 
     public String generateNextSoPhieuNhap(Date ngay) {
         if (ngay == null) ngay = new Date();
-        SimpleDateFormat sdf = new SimpleDateFormat("yy");
-        String prefix = "PN" + sdf.format(ngay) + "/";
+        VoucherNumberGenerator.CompiledPattern numberPattern = VoucherNumberGenerator.fromConfig(
+                "Phiếu nhập kho", "PN(yy)/(*****)", ngay);
 
         String sql = "SELECT NAME FROM TDONHANG WHERE NAME LIKE ? AND (LOAI = 1 OR LOAI IS NULL) ORDER BY NAME DESC";
-        int maxIndex = 0;
+        long maxIndex = 0;
 
         try (Connection conn = getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, prefix + "%");
+            ps.setString(1, numberPattern.getSqlLikePattern());
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     String name = rs.getString("NAME");
-                    if (name != null && name.startsWith(prefix)) {
-                        try {
-                            String numPart = name.substring(prefix.length()).trim();
-                            int val = Integer.parseInt(numPart);
-                            if (val > maxIndex) maxIndex = val;
-                        } catch (Exception ignored) {}
-                    }
+                    maxIndex = Math.max(maxIndex, numberPattern.extractSequence(name));
                 }
             }
         } catch (SQLException e) {
             System.err.println("Lỗi generateNextSoPhieuNhap: " + e.getMessage());
         }
 
-        return String.format("%s%05d", prefix, maxIndex + 1);
+        return numberPattern.format(maxIndex + 1);
     }
 
     public boolean insertPhieuNhapKho(DonHang dh) {
@@ -992,32 +980,26 @@ public class DonHangDAO extends BaseDAO {
 
     public String generateNextSoPhieuChuyenKho(Date ngay) {
         if (ngay == null) ngay = new Date();
-        SimpleDateFormat sdf = new SimpleDateFormat("yy");
-        String prefix = "PCK" + sdf.format(ngay) + "/";
+        VoucherNumberGenerator.CompiledPattern numberPattern = VoucherNumberGenerator.fromConfig(
+                "Phiếu chuyển kho", "PCK(yy)/(*****)", ngay);
 
         String sql = "SELECT NAME FROM TDONHANG WHERE NAME LIKE ? AND LOAI = 3 ORDER BY NAME DESC";
-        int maxIndex = 0;
+        long maxIndex = 0;
 
         try (Connection conn = getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, prefix + "%");
+            ps.setString(1, numberPattern.getSqlLikePattern());
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     String name = rs.getString("NAME");
-                    if (name != null && name.startsWith(prefix)) {
-                        try {
-                            String numPart = name.substring(prefix.length()).trim();
-                            int val = Integer.parseInt(numPart);
-                            if (val > maxIndex) maxIndex = val;
-                        } catch (Exception ignored) {}
-                    }
+                    maxIndex = Math.max(maxIndex, numberPattern.extractSequence(name));
                 }
             }
         } catch (SQLException e) {
             System.err.println("Lỗi generateNextSoPhieuChuyenKho: " + e.getMessage());
         }
 
-        return String.format("%s%05d", prefix, maxIndex + 1);
+        return numberPattern.format(maxIndex + 1);
     }
 
     public boolean insertPhieuChuyenKho(DonHang dh) {
@@ -1388,32 +1370,26 @@ public class DonHangDAO extends BaseDAO {
 
     public String generateNextSoPhieuKiemKe(Date ngay) {
         if (ngay == null) ngay = new Date();
-        SimpleDateFormat sdf = new SimpleDateFormat("yy");
-        String prefix = "PKK" + sdf.format(ngay) + "/";
+        VoucherNumberGenerator.CompiledPattern numberPattern = VoucherNumberGenerator.fromConfig(
+                "Phiếu kiểm kê", "PKK(yy)/(*****)", ngay);
 
         String sql = "SELECT NAME FROM TDONHANG WHERE NAME LIKE ? AND LOAI = 4 ORDER BY NAME DESC";
-        int maxIndex = 0;
+        long maxIndex = 0;
 
         try (Connection conn = getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, prefix + "%");
+            ps.setString(1, numberPattern.getSqlLikePattern());
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     String name = rs.getString("NAME");
-                    if (name != null && name.startsWith(prefix)) {
-                        try {
-                            String numPart = name.substring(prefix.length()).trim();
-                            int val = Integer.parseInt(numPart);
-                            if (val > maxIndex) maxIndex = val;
-                        } catch (Exception ignored) {}
-                    }
+                    maxIndex = Math.max(maxIndex, numberPattern.extractSequence(name));
                 }
             }
         } catch (SQLException e) {
             System.err.println("Lỗi generateNextSoPhieuKiemKe: " + e.getMessage());
         }
 
-        return String.format("%s%05d", prefix, maxIndex + 1);
+        return numberPattern.format(maxIndex + 1);
     }
 
     public double getTonKhoTheoKho(String khoId, String matHangId) {

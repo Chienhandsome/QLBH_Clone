@@ -3,9 +3,9 @@ package kazuko.ex.dao;
 import kazuko.ex.model.congno.ChiTietCongNoKhachHangEntry;
 import kazuko.ex.model.congno.CongNoKhachHangItem;
 import kazuko.ex.service.AuthService;
+import kazuko.ex.util.VoucherNumberGenerator;
 
 import java.sql.*;
-import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.Date;
 import java.util.concurrent.ConcurrentHashMap;
@@ -231,31 +231,25 @@ public class CongNoKhachHangDAO extends BaseDAO {
     }
 
     public String generateNextSoPhieuThu(Date ngay) {
-        SimpleDateFormat sdf = new SimpleDateFormat("yy");
-        String yearCode = sdf.format(ngay != null ? ngay : new Date());
-        String prefix = "PT" + yearCode + "/";
+        Date effectiveDate = ngay != null ? ngay : new Date();
+        VoucherNumberGenerator.CompiledPattern numberPattern = VoucherNumberGenerator.fromConfig(
+                "Phiếu thu công nợ", "PTCN(yy)/(*****)", effectiveDate);
 
         String sql = "SELECT SOPHIEU FROM TPHIEUTHU WHERE SOPHIEU LIKE ? ORDER BY SOPHIEU DESC";
-        int maxSeq = 0;
+        long maxSeq = 0;
         try (Connection conn = getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, prefix + "%");
+            ps.setString(1, numberPattern.getSqlLikePattern());
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     String name = rs.getString("SOPHIEU");
-                    if (name != null && name.startsWith(prefix)) {
-                        String seqStr = name.substring(prefix.length());
-                        try {
-                            int seq = Integer.parseInt(seqStr);
-                            if (seq > maxSeq) maxSeq = seq;
-                        } catch (NumberFormatException ignored) {}
-                    }
+                    maxSeq = Math.max(maxSeq, numberPattern.extractSequence(name));
                 }
             }
         } catch (SQLException e) {
             System.err.println("Lỗi generateNextSoPhieuThu: " + e.getMessage());
         }
-        return String.format("%s%05d", prefix, maxSeq + 1);
+        return numberPattern.format(maxSeq + 1);
     }
 
     public boolean insertPhieuThu(String khachHangId, String tenKhach, String diaChi,

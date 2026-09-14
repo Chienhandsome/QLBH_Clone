@@ -99,7 +99,15 @@ public class SystemConfig {
     private boolean matHangCoKichThuoc = false;
     private boolean matHangCoVatTuDinhLuong = true;
 
-    // 9. Cảnh báo
+    // 9. Cây hiển thị giá
+    private boolean coCayHienThiGia = false;
+    private boolean cayHienThiGiaMotDong = false;
+    private String congCayHienThiGia = "";
+    private boolean coManHinhPhu = false;
+    private String logoManHinhPhuPath = null;
+    private boolean manHinhPhuSuDungGiaoDienThuong = true;
+
+    // 10. Cảnh báo
     private boolean hienThiCanhBao = true;
     private boolean thongBaoHangDuoiMucAnToan = false;
     private boolean thongBaoKhachDenNgaySinhNhat = false;
@@ -412,6 +420,25 @@ public class SystemConfig {
 
     public boolean isMatHangCoVatTuDinhLuong() { return matHangCoVatTuDinhLuong; }
     public void setMatHangCoVatTuDinhLuong(boolean matHangCoVatTuDinhLuong) { this.matHangCoVatTuDinhLuong = matHangCoVatTuDinhLuong; }
+
+    // Getters & Setters Cây hiển thị giá
+    public boolean isCoCayHienThiGia() { return coCayHienThiGia; }
+    public void setCoCayHienThiGia(boolean coCayHienThiGia) { this.coCayHienThiGia = coCayHienThiGia; }
+
+    public boolean isCayHienThiGiaMotDong() { return cayHienThiGiaMotDong; }
+    public void setCayHienThiGiaMotDong(boolean cayHienThiGiaMotDong) { this.cayHienThiGiaMotDong = cayHienThiGiaMotDong; }
+
+    public String getCongCayHienThiGia() { return congCayHienThiGia; }
+    public void setCongCayHienThiGia(String congCayHienThiGia) { this.congCayHienThiGia = congCayHienThiGia; }
+
+    public boolean isCoManHinhPhu() { return coManHinhPhu; }
+    public void setCoManHinhPhu(boolean coManHinhPhu) { this.coManHinhPhu = coManHinhPhu; }
+
+    public String getLogoManHinhPhuPath() { return logoManHinhPhuPath; }
+    public void setLogoManHinhPhuPath(String logoManHinhPhuPath) { this.logoManHinhPhuPath = logoManHinhPhuPath; }
+
+    public boolean isManHinhPhuSuDungGiaoDienThuong() { return manHinhPhuSuDungGiaoDienThuong; }
+    public void setManHinhPhuSuDungGiaoDienThuong(boolean manHinhPhuSuDungGiaoDienThuong) { this.manHinhPhuSuDungGiaoDienThuong = manHinhPhuSuDungGiaoDienThuong; }
 
     // Getters & Setters Cảnh báo
     public boolean isHienThiCanhBao() { return hienThiCanhBao; }
