@@ -1,0 +1,50 @@
+{
+  "used": [
+    {
+      "key": "NAME",
+      "title": "TÊN MẶT HÀNG"
+    },
+    {
+      "key": "QUANTITY",
+      "title": "SỐ LƯỢNG"
+    },
+    {
+      "key": "PRICE",
+      "title": "ĐƠN GIÁ"
+    },
+    {
+      "key": "SALE",
+      "title": "THÀNH TIỀN BÁN"
+    }
+  ],
+  "unused": [
+    {
+      "key": "CODE",
+      "title": "MÃ HÀNG"
+    },
+    {
+      "key": "COST",
+      "title": "GIÁ VỐN"
+    },
+    {
+      "key": "DISCOUNT",
+      "title": "GIẢM GIÁ %"
+    },
+    {
+      "key": "UNIT",
+      "title": "ĐVT"
+    },
+    {
+      "key": "COST_TOTAL",
+      "title": "THÀNH TIỀN NHẬP"
+    },
+    {
+      "key": "PROFIT",
+      "title": "LÃI"
+    },
+    {
+      "key": "MARGIN",
+      "title": "TỈ LỆ LÃI"
+    }
+  ]
+}

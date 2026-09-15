@@ -3,8 +3,6 @@ package kazuko.ex.ui.touch;
 import kazuko.ex.model.system.SUser;
 import kazuko.ex.service.AuthService;
 import kazuko.ex.ui.auth.DatabaseConfigDialog;
-import kazuko.ex.ui.baocao.BaoCaoKetQuaKinhDoanhPanel;
-import kazuko.ex.ui.baocao.ChiTietHoatDongTrongNgayPanel;
 import kazuko.ex.ui.baocao.ReportPanelFactory;
 import kazuko.ex.ui.baogia.BaoGiaBanHangPanel;
 import kazuko.ex.ui.congno.CongNoKhachHangBanDauDialog;
@@ -14,9 +12,7 @@ import kazuko.ex.ui.congno.QuanLyCongNoNhaCungCapPanel;
 import kazuko.ex.ui.danhmuc.CaLamViecDialog;
 import kazuko.ex.ui.danhmuc.DanhMucDotKhuyenMaiPanel;
 import kazuko.ex.ui.danhmuc.DanhMucKhachHangPanel;
-import kazuko.ex.ui.danhmuc.DanhMucNhaCungCapPanel;
 import kazuko.ex.ui.danhmuc.KhachHangThanThietPanel;
-import kazuko.ex.ui.danhmuc.KhoHangDialog;
 import kazuko.ex.ui.danhmuc.LyDoThuChiDialog;
 import kazuko.ex.ui.danhmuc.NhanVienDialog;
 import kazuko.ex.ui.danhmuc.TaiKhoanNganHangDialog;
@@ -26,8 +22,6 @@ import kazuko.ex.ui.help.AboutDialog;
 import kazuko.ex.ui.help.RegistrationDialog;
 import kazuko.ex.ui.hoadon.HoaDonBanHangPanel;
 import kazuko.ex.ui.hoadon.QuanLyBanHangPanel;
-import kazuko.ex.ui.hoadon.ThongKeDoanhThuPanel;
-import kazuko.ex.ui.hoadon.ThongKeMatHangBanPanel;
 import kazuko.ex.ui.khohang.ChonKhoBanDauDialog;
 import kazuko.ex.ui.khohang.QuanLyChuyenKhoPanel;
 import kazuko.ex.ui.khohang.QuanLyKiemKePanel;
@@ -166,16 +160,16 @@ public final class TouchSalesFrame extends JFrame {
             case "HÓA ĐƠN BÁN HÀNG", "HÓA ĐƠN" -> showSales();
             case "QUẢN LÝ BÁN HÀNG" -> showTouchPanel(new TouchQuanLyBanHangPanel(this::showDashboard));
             case "LƯU VẾT HOẠT ĐỘNG" -> showTouchPanel(new TouchLuuVetPanel(this::showDashboard));
-            case "THỐNG KÊ DOANH THU" -> showBusinessPanel(key, new ThongKeDoanhThuPanel());
-            case "THỐNG KÊ MẶT HÀNG BÁN" -> showBusinessPanel(key, new ThongKeMatHangBanPanel());
+            case "THỐNG KÊ DOANH THU" -> showTouchPanel(new TouchThongKeDoanhThuPanel(this::showDashboard));
+            case "THỐNG KÊ MẶT HÀNG BÁN" -> showTouchPanel(new TouchThongKeMatHangBanPanel(this::showDashboard));
             case "TỔNG HỢP KẾT QUẢ KINH DOANH", "TỔNG HỢP KQKD" ->
-                    showBusinessPanel(key, new BaoCaoKetQuaKinhDoanhPanel());
+                    showTouchPanel(new TouchPhanTichKinhDoanhPanel(false, this::showDashboard));
             case "CHI TIẾT HOẠT ĐỘNG NGÀY", "CHI TIẾT HOẠT ĐỘNG" ->
-                    showBusinessPanel(key, new ChiTietHoatDongTrongNgayPanel());
+                    showTouchPanel(new TouchPhanTichKinhDoanhPanel(true, this::showDashboard));
 
             // KHO HÀNG
-            case "DANH MỤC KHO HÀNG" -> new KhoHangDialog(this).setVisible(true);
-            case "DANH MỤC NHÀ CUNG CẤP" -> showBusinessPanel(key, new DanhMucNhaCungCapPanel());
+            case "DANH MỤC KHO HÀNG" -> showTouchPanel(new TouchKhoHangPanel(this::showDashboard));
+            case "DANH MỤC NHÀ CUNG CẤP" -> showTouchPanel(new TouchNhaCungCapPanel(this::showDashboard));
             case "ĐẶT HÀNG NHÀ CUNG CẤP" -> showBusinessPanel(key, new DatHangNhaCungCapPanel());
             case "NHẬP HÀNG VÀO KHO" -> showBusinessPanel(key, new QuanLyNhapKhoPanel());
             case "XUẤT KHO" -> showBusinessPanel(key, new QuanLyXuatKhoPanel());
