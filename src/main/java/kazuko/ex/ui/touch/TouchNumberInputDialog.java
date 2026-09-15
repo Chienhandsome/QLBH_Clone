@@ -24,6 +24,7 @@ public class TouchNumberInputDialog extends JDialog {
 
     private final JLabel displayLabel = new JLabel("0", SwingConstants.CENTER);
     private String currentValue = "0";
+    private boolean isFirstInput = true;
     private boolean confirmed = false;
     private int result = 0;
     private double resultDouble = 0.0;
@@ -50,12 +51,12 @@ public class TouchNumberInputDialog extends JDialog {
         root.setBorder(new LineBorder(HEADER_BG, 3));
 
         // 1. Tiêu đề (Header)
-        JLabel lblTitle = new JLabel(title.toUpperCase(), SwingConstants.CENTER);
+        JLabel lblTitle = new JLabel(title, SwingConstants.CENTER);
         lblTitle.setOpaque(true);
         lblTitle.setBackground(HEADER_BG);
         lblTitle.setForeground(Color.WHITE);
-        lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 17));
-        lblTitle.setPreferredSize(new Dimension(0, 44));
+        lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        lblTitle.setPreferredSize(new Dimension(0, 40));
         root.add(lblTitle, BorderLayout.NORTH);
 
         // 2. Thân chính gồm Display + Bàn phím số
@@ -171,7 +172,7 @@ public class TouchNumberInputDialog extends JDialog {
         getRootPane().registerKeyboardAction(e -> dispose(),
                 KeyStroke.getKeyStroke("ESCAPE"), JComponent.WHEN_IN_FOCUSED_WINDOW);
 
-        setSize(340, 480);
+        setSize(320, 460);
         setLocationRelativeTo(owner);
     }
 
@@ -192,26 +193,37 @@ public class TouchNumberInputDialog extends JDialog {
     }
 
     private void appendInput(String str) {
-        if (".".equals(str)) {
-            if (!currentValue.contains(".")) {
-                if (currentValue.isEmpty() || "0".equals(currentValue)) {
-                    currentValue = "0.";
-                } else {
-                    currentValue += ".";
-                }
-            }
-        } else if ("000".equals(str)) {
-            if ("0".equals(currentValue) || currentValue.isEmpty()) {
+        if (isFirstInput) {
+            if (".".equals(str)) {
+                currentValue = "0.";
+            } else if ("000".equals(str)) {
                 currentValue = "0";
-            } else if (currentValue.length() < 12) {
-                currentValue += "000";
-            }
-        } else {
-            if ("0".equals(currentValue) || currentValue.isEmpty()) {
-                currentValue = str;
             } else {
-                if (currentValue.length() < 12) {
-                    currentValue += str;
+                currentValue = str;
+            }
+            isFirstInput = false;
+        } else {
+            if (".".equals(str)) {
+                if (!currentValue.contains(".")) {
+                    if (currentValue.isEmpty() || "0".equals(currentValue)) {
+                        currentValue = "0.";
+                    } else {
+                        currentValue += ".";
+                    }
+                }
+            } else if ("000".equals(str)) {
+                if ("0".equals(currentValue) || currentValue.isEmpty()) {
+                    currentValue = "0";
+                } else if (currentValue.length() < 12) {
+                    currentValue += "000";
+                }
+            } else {
+                if ("0".equals(currentValue) || currentValue.isEmpty()) {
+                    currentValue = str;
+                } else {
+                    if (currentValue.length() < 12) {
+                        currentValue += str;
+                    }
                 }
             }
         }
@@ -219,12 +231,27 @@ public class TouchNumberInputDialog extends JDialog {
     }
 
     private void backspace() {
-        if (currentValue.length() > 1) {
+        if (isFirstInput) {
+            currentValue = "0";
+            isFirstInput = false;
+        } else if (currentValue.length() > 1) {
             currentValue = currentValue.substring(0, currentValue.length() - 1);
         } else {
             currentValue = "0";
         }
         displayLabel.setText(currentValue);
+    }
+
+    public boolean isConfirmed() {
+        return confirmed;
+    }
+
+    public double getResultDouble() {
+        return resultDouble;
+    }
+
+    public int getResult() {
+        return result;
     }
 
     public static Integer show(Window owner, String title, int initialValue, int min, int max) {

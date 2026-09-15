@@ -1095,17 +1095,28 @@ public class HoaDonBanHangPanel extends JPanel {
             ));
             card.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 
-            String col1Text = (!cfg.getUsedColumns().isEmpty()) ? TouchBanHangProductColumnConfig.getFormattedText(item, cfg.getUsedColumns().get(0), true) : item.getName();
-            JLabel lblLeft = new JLabel("<html><div style='width:130px;'>" + escapeHtml(col1Text) + "</div></html>");
-            lblLeft.setFont(new Font("Segoe UI", Font.BOLD, 15));
-            lblLeft.setForeground(Color.WHITE);
-            card.add(lblLeft, BorderLayout.WEST);
+            if (!cfg.getUsedColumns().isEmpty()) {
+                TouchBanHangProductColumnConfig.ColumnItem col1 = cfg.getUsedColumns().get(0);
+                String col1Text = TouchBanHangProductColumnConfig.getFormattedText(item, col1, true);
+                JLabel lblLeft = new JLabel("<html><div style='width:130px;'>" + escapeHtml(col1Text) + "</div></html>");
+                lblLeft.setFont(col1.getFont());
+                lblLeft.setForeground(col1.getColor());
+                card.add(lblLeft, BorderLayout.WEST);
+            } else {
+                JLabel lblLeft = new JLabel("<html><div style='width:130px;'>" + escapeHtml(item.getName()) + "</div></html>");
+                lblLeft.setFont(new Font("Segoe UI", Font.BOLD, 15));
+                lblLeft.setForeground(Color.WHITE);
+                card.add(lblLeft, BorderLayout.WEST);
+            }
 
-            String col2Text = (cfg.getUsedColumns().size() > 1) ? TouchBanHangProductColumnConfig.getFormattedText(item, cfg.getUsedColumns().get(1), false) : CurrencyUtil.format(item.getGiaBan());
-            JLabel lblRight = new JLabel(col2Text, SwingConstants.RIGHT);
-            lblRight.setFont(new Font("Segoe UI", Font.BOLD, 15));
-            lblRight.setForeground(Color.WHITE);
-            card.add(lblRight, BorderLayout.EAST);
+            if (cfg.getUsedColumns().size() > 1) {
+                TouchBanHangProductColumnConfig.ColumnItem col2 = cfg.getUsedColumns().get(1);
+                String col2Text = TouchBanHangProductColumnConfig.getFormattedText(item, col2, false);
+                JLabel lblRight = new JLabel(col2Text, col2.isRightAligned() ? SwingConstants.RIGHT : SwingConstants.LEFT);
+                lblRight.setFont(col2.getFont());
+                lblRight.setForeground(col2.getColor());
+                card.add(lblRight, BorderLayout.EAST);
+            }
 
             card.addMouseListener(new MouseAdapter() {
                 @Override
@@ -1126,20 +1137,23 @@ public class HoaDonBanHangPanel extends JPanel {
     private void onTouchProductCardClicked(MatHang item) {
         if (item == null) return;
         selectedTouchProduct = item;
+        refreshTouchProductGrid();
 
-        // 1. Read quantity from txtSoLuongBarcode (default 1)
-        double qty = 1.0;
-        try {
-            qty = Double.parseDouble(txtSoLuongBarcode.getText().trim().replace(",", "."));
-            if (qty <= 0) qty = 1.0;
-        } catch (Exception e) {
-            qty = 1.0;
+        Window parentWin = SwingUtilities.getWindowAncestor(this);
+        String title = "NHẬP SỐ LƯỢNG - " + (item.getName() != null ? item.getName() : "");
+        TouchNumberInputDialog numDlg = new TouchNumberInputDialog(parentWin, title, 1.0, 0.01, 999999);
+        numDlg.setVisible(true);
+
+        if (!numDlg.isConfirmed() || numDlg.getResultDouble() <= 0) {
+            return;
         }
 
-        // 2. Read selling price
+        double qty = numDlg.getResultDouble();
+
+        // Read selling price
         double price = item.getGiaBan();
 
-        // 3. Find if already in cart
+        // Find if already in cart
         DonHangChiTiet existing = null;
         for (DonHangChiTiet ct : currentLayHangList) {
             if (item.getId() != null && item.getId().equals(ct.getMatHangId()) && Math.abs(ct.getDonGia() - price) < 0.001) {

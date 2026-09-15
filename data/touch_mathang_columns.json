@@ -174,7 +174,7 @@
     }
   ],
   "cardBgColorHex": "#0F4B78",
-  "gridColumns": 3,
-  "gridRows": 6,
+  "gridColumns": 4,
+  "gridRows": 9,
   "showTitle": false
 }

@@ -1,0 +1,90 @@
+{
+  "usedColumns": [
+    {
+      "key": "REFERENCE",
+      "title": "SỐ ĐƠN HÀNG",
+      "prefix": "",
+      "colorHex": "#FFFFFF",
+      "bold": false,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 18
+    },
+    {
+      "key": "USER",
+      "title": "TÀI KHOẢN",
+      "prefix": "",
+      "colorHex": "#FFFFFF",
+      "bold": true,
+      "italic": false,
+      "rightAligned": true,
+      "fontSize": 18
+    },
+    {
+      "key": "CONTENT",
+      "title": "NỘI DUNG",
+      "prefix": "",
+      "colorHex": "#FFFFFF",
+      "bold": false,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 18
+    },
+    {
+      "key": "TIME",
+      "title": "GIỜ",
+      "prefix": "",
+      "colorHex": "#FFFFFF",
+      "bold": true,
+      "italic": false,
+      "rightAligned": true,
+      "fontSize": 18
+    }
+  ],
+  "unusedColumns": [
+    {
+      "key": "DATE",
+      "title": "NGÀY",
+      "prefix": "",
+      "colorHex": "#FFFFFF",
+      "bold": true,
+      "italic": false,
+      "rightAligned": true,
+      "fontSize": 18
+    },
+    {
+      "key": "ACTION",
+      "title": "HÀNH ĐỘNG",
+      "prefix": "",
+      "colorHex": "#FFFFFF",
+      "bold": false,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 18
+    },
+    {
+      "key": "MODULE",
+      "title": "CHỨC NĂNG",
+      "prefix": "",
+      "colorHex": "#FFFFFF",
+      "bold": false,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 18
+    },
+    {
+      "key": "DEVICE",
+      "title": "THIẾT BỊ",
+      "prefix": "",
+      "colorHex": "#FFFFFF",
+      "bold": false,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 18
+    }
+  ],
+  "cardBgColorHex": "#004F4C",
+  "gridColumns": 1,
+  "gridRows": 10,
+  "showTitle": false
+}

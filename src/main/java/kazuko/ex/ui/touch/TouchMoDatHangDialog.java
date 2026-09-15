@@ -20,8 +20,8 @@ import java.util.List;
 
 /**
  * Hộp thoại cảm ứng "MỞ ĐẶT HÀNG" chuẩn 100% Hình 3.
- * - Header: Slate Blue với chữ MỞ ĐẶT HÀNG
- * - Vùng giữa: Lưới danh sách các phiếu đặt hàng (khung bo góc xám nhạt) + nút bánh răng [⚙]
+ * - Header: Slate Blue với tiêu đề "MỞ ĐẶT HÀNG"
+ * - Vùng giữa: Lưới danh sách các phiếu đặt hàng (hàng chọn màu baby blue #D4EBF8) + nút bánh răng [⚙]
  * - Thanh đáy: CHỌN ĐẶT HÀNG (xám) bên trái, THOÁT (đỏ) bên phải.
  */
 public class TouchMoDatHangDialog extends JDialog {
@@ -29,8 +29,9 @@ public class TouchMoDatHangDialog extends JDialog {
     private static final Color BG_DARK = new Color(8, 61, 86);         // #083D56
     private static final Color HEADER_BG = new Color(74, 130, 158);     // #4A829E
     private static final Color CENTER_CONTAINER_BG = new Color(227, 230, 232); // #E3E6E8
-    private static final Color BTN_CHOOSE_BG = new Color(140, 155, 165);       // #8C9BA5
-    private static final Color BTN_EXIT_BG = new Color(139, 0, 0);          // #8B0000
+    private static final Color BTN_CHOOSE_BG = new Color(127, 148, 163);       // #7F94A3
+    private static final Color BTN_EXIT_BG = new Color(153, 0, 0);             // #990000
+    private static final Color SELECTION_BG = new Color(212, 235, 248);        // #D4EBF8
 
     private final KhachDatHangDAO khachDatHangDAO = new KhachDatHangDAO();
     private List<KhachDatHang> orderList = new ArrayList<>();
@@ -48,29 +49,29 @@ public class TouchMoDatHangDialog extends JDialog {
     }
 
     private void initComponents() {
-        setSize(980, 600);
+        setSize(660, 480);
         setLocationRelativeTo(getParent());
         setResizable(false);
 
-        JPanel root = new JPanel(new BorderLayout(0, 8));
+        JPanel root = new JPanel(new BorderLayout(0, 6));
         root.setBackground(BG_DARK);
-        root.setBorder(new LineBorder(HEADER_BG, 3));
+        root.setBorder(new LineBorder(HEADER_BG, 2));
 
         // 1. Header: MỞ ĐẶT HÀNG
         JLabel lblHeader = new JLabel("MỞ ĐẶT HÀNG", SwingConstants.CENTER);
         lblHeader.setOpaque(true);
         lblHeader.setBackground(HEADER_BG);
         lblHeader.setForeground(Color.WHITE);
-        lblHeader.setFont(new Font("Segoe UI", Font.BOLD, 17));
-        lblHeader.setPreferredSize(new Dimension(980, 42));
+        lblHeader.setFont(new Font("Segoe UI", Font.BOLD, 15));
+        lblHeader.setPreferredSize(new Dimension(660, 38));
         root.add(lblHeader, BorderLayout.NORTH);
 
         // 2. Vùng danh sách trung tâm
         JPanel pnlCenter = new JPanel(new BorderLayout());
         pnlCenter.setBackground(CENTER_CONTAINER_BG);
         pnlCenter.setBorder(new CompoundBorder(
-                new LineBorder(new Color(180, 190, 200), 1, true),
-                new EmptyBorder(6, 6, 6, 6)
+                new LineBorder(new Color(180, 190, 200), 1, false),
+                new EmptyBorder(1, 1, 1, 1)
         ));
 
         String[] cols = {"STT", "Số phiếu", "Ngày đặt", "Khách hàng", "Điện thoại", "Địa chỉ giao", "Tổng cộng", "Ghi chú"};
@@ -100,9 +101,10 @@ public class TouchMoDatHangDialog extends JDialog {
         scroll.getViewport().setBackground(Color.WHITE);
         pnlCenter.add(scroll, BorderLayout.CENTER);
 
-        // Nút bánh răng [⚙] góc dưới phải
-        JPanel pnlGear = new JPanel(new FlowLayout(FlowLayout.RIGHT, 4, 4));
-        pnlGear.setOpaque(false);
+        // Thanh công cụ nhỏ đáy lưới chứa nút bánh răng [⚙] góc dưới phải
+        JPanel pnlGear = new JPanel(new FlowLayout(FlowLayout.RIGHT, 4, 3));
+        pnlGear.setBackground(CENTER_CONTAINER_BG);
+        pnlGear.setPreferredSize(new Dimension(0, 32));
 
         JButton btnGear = createGearButton();
         btnGear.addActionListener(e -> JOptionPane.showMessageDialog(this,
@@ -114,7 +116,7 @@ public class TouchMoDatHangDialog extends JDialog {
 
         JPanel pnlBodyWrapper = new JPanel(new BorderLayout());
         pnlBodyWrapper.setOpaque(false);
-        pnlBodyWrapper.setBorder(new EmptyBorder(0, 14, 4, 14));
+        pnlBodyWrapper.setBorder(new EmptyBorder(0, 8, 2, 8));
         pnlBodyWrapper.add(pnlCenter, BorderLayout.CENTER);
 
         root.add(pnlBodyWrapper, BorderLayout.CENTER);
@@ -122,12 +124,12 @@ public class TouchMoDatHangDialog extends JDialog {
         // 3. Thanh đáy: CHỌN ĐẶT HÀNG vs THOÁT
         JPanel pnlBottom = new JPanel(new BorderLayout(10, 0));
         pnlBottom.setOpaque(false);
-        pnlBottom.setBorder(new EmptyBorder(4, 14, 10, 14));
+        pnlBottom.setBorder(new EmptyBorder(4, 10, 8, 10));
 
-        JButton btnChon = createActionButton("CHỌN ĐẶT HÀNG", BTN_CHOOSE_BG, e -> onConfirmChoose());
+        JButton btnChon = createActionButton("CHỌN ĐẶT HÀNG", BTN_CHOOSE_BG, new Dimension(135, 32), e -> onConfirmChoose());
         pnlBottom.add(btnChon, BorderLayout.WEST);
 
-        JButton btnThoat = createActionButton("THOÁT", BTN_EXIT_BG, e -> dispose());
+        JButton btnThoat = createActionButton("THOÁT", BTN_EXIT_BG, new Dimension(85, 32), e -> dispose());
         pnlBottom.add(btnThoat, BorderLayout.EAST);
 
         root.add(pnlBottom, BorderLayout.SOUTH);
@@ -146,9 +148,9 @@ public class TouchMoDatHangDialog extends JDialog {
                 int cy = getHeight() / 2;
                 g2.setColor(new Color(50, 70, 90));
                 int numTeeth = 8;
-                int rOuter = 10;
-                int rInner = 7;
-                int hole = 4;
+                int rOuter = 8;
+                int rInner = 6;
+                int hole = 3;
                 for (int i = 0; i < numTeeth; i++) {
                     double angle = i * 2 * Math.PI / numTeeth;
                     int tx = cx + (int) (rOuter * Math.cos(angle));
@@ -164,39 +166,59 @@ public class TouchMoDatHangDialog extends JDialog {
         btn.setBackground(Color.WHITE);
         btn.setFocusPainted(false);
         btn.setBorder(new LineBorder(new Color(190, 200, 210), 1, true));
-        btn.setPreferredSize(new Dimension(34, 34));
+        btn.setPreferredSize(new Dimension(26, 26));
         btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         return btn;
     }
 
     private void setupTouchTableStyle(JTable table) {
-        table.setRowHeight(38);
-        table.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        table.setRowHeight(32);
+        table.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        table.setSelectionBackground(new Color(200, 230, 255));
+        table.setSelectionBackground(SELECTION_BG);
         table.setSelectionForeground(Color.BLACK);
-        table.setGridColor(new Color(225, 230, 235));
+        table.setGridColor(new Color(230, 234, 238));
         table.setShowGrid(true);
 
         JTableHeader header = table.getTableHeader();
-        header.setFont(new Font("Segoe UI", Font.BOLD, 13));
-        header.setBackground(new Color(240, 243, 246));
-        header.setForeground(new Color(30, 50, 70));
-        header.setPreferredSize(new Dimension(header.getWidth(), 38));
+        header.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        header.setBackground(new Color(242, 244, 247));
+        header.setForeground(new Color(50, 50, 50));
+        header.setPreferredSize(new Dimension(header.getWidth(), 32));
 
+        // Căn chỉnh lề từng cột
         DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
         centerRenderer.setHorizontalAlignment(SwingConstants.CENTER);
+
+        DefaultTableCellRenderer rightRenderer = new DefaultTableCellRenderer();
+        rightRenderer.setHorizontalAlignment(SwingConstants.RIGHT);
+
+        table.getColumnModel().getColumn(0).setPreferredWidth(42);
         table.getColumnModel().getColumn(0).setCellRenderer(centerRenderer);
-        table.getColumnModel().getColumn(0).setMaxWidth(50);
+
+        table.getColumnModel().getColumn(1).setPreferredWidth(95);
+
+        table.getColumnModel().getColumn(2).setPreferredWidth(88);
+        table.getColumnModel().getColumn(2).setCellRenderer(centerRenderer);
+
+        table.getColumnModel().getColumn(3).setPreferredWidth(115);
+        table.getColumnModel().getColumn(4).setPreferredWidth(75);
+        table.getColumnModel().getColumn(5).setPreferredWidth(85);
+
+        table.getColumnModel().getColumn(6).setPreferredWidth(90);
+        table.getColumnModel().getColumn(6).setCellRenderer(rightRenderer);
+
+        table.getColumnModel().getColumn(7).setPreferredWidth(70);
     }
 
-    private JButton createActionButton(String text, Color bg, java.awt.event.ActionListener listener) {
+    private JButton createActionButton(String text, Color bg, Dimension size, java.awt.event.ActionListener listener) {
         JButton btn = new JButton(text);
-        btn.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        btn.setFont(new Font("Segoe UI", Font.BOLD, 12));
         btn.setForeground(Color.WHITE);
         btn.setBackground(bg);
         btn.setFocusPainted(false);
-        btn.setBorder(new EmptyBorder(8, 20, 8, 20));
+        btn.setBorder(new EmptyBorder(6, 12, 6, 12));
+        btn.setPreferredSize(size);
         btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         btn.addActionListener(listener);
         return btn;

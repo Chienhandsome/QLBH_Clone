@@ -95,7 +95,7 @@ public class TouchMatHangColumnConfig implements Serializable, Cloneable {
     private List<ColumnItem> usedColumns = new ArrayList<>();
     private List<ColumnItem> unusedColumns = new ArrayList<>();
     private String cardBgColorHex = DEFAULT_CARD_BG;
-    private int gridColumns = 2;
+    private int gridColumns = 3;
     private int gridRows = 8;
     private boolean showTitle = true;
 
@@ -150,7 +150,7 @@ public class TouchMatHangColumnConfig implements Serializable, Cloneable {
         }
     }
 
-    public int getGridColumns() { return gridColumns <= 0 ? 2 : gridColumns; }
+    public int getGridColumns() { return gridColumns <= 0 ? 3 : gridColumns; }
     public void setGridColumns(int gridColumns) { this.gridColumns = gridColumns; }
 
     public int getGridRows() { return gridRows <= 0 ? 8 : gridRows; }

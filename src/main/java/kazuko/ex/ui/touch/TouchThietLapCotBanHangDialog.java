@@ -1,12 +1,16 @@
 package kazuko.ex.ui.touch;
 
+import kazuko.ex.model.danhmuc.MatHang;
+
 import javax.swing.*;
+import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 import java.awt.*;
+import java.util.List;
 
 /**
- * Hộp thoại "THIẾT LẬP CỘT HIỂN THỊ" cho thẻ mặt hàng màn hình bán hàng theo chuẩn 100% Hình 4.
+ * Hộp thoại "THIẾT LẬP CỘT HIỂN THỊ" cho thẻ mặt hàng màn hình bán hàng (Hình 4 và chuẩn POS).
  */
 public class TouchThietLapCotBanHangDialog extends JDialog {
     private static final Color BG = new Color(0, 67, 86);
@@ -28,7 +32,7 @@ public class TouchThietLapCotBanHangDialog extends JDialog {
     private final JPanel unusedPanel = new JPanel();
     private final JPanel usedPanel = new JPanel();
     private final JPanel formatContainer = new JPanel(new BorderLayout(15, 0));
-    private final JPanel previewCard = new JPanel(new BorderLayout(5, 5));
+    private final JPanel previewCard = new JPanel();
 
     // Nút định dạng
     private final JButton btnAlignLeft = button("CĂN TRÁI", GRAY_BTN);
@@ -46,52 +50,80 @@ public class TouchThietLapCotBanHangDialog extends JDialog {
     private final JButton btnMoveUp = button("LÊN", GRAY_BTN);
     private final JButton btnMoveDown = button("XUỐNG", GRAY_BTN);
 
-    private JPanel rightBox;
-    private final JPanel rightBoxWrapper = new JPanel(new BorderLayout(6, 0));
     private boolean isFormattingOpen = false;
 
     public TouchThietLapCotBanHangDialog(Window owner, Runnable onUpdated) {
         super(owner, "Thiết lập hiển thị hàng hóa", ModalityType.APPLICATION_MODAL);
-        this.config = TouchBanHangProductConfigDAO.loadConfig();
+        this.config = TouchBanHangProductConfigDAO.loadConfig().clone();
         this.onUpdated = onUpdated;
 
         setUndecorated(true);
+        setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
         initComponents();
+
+        getRootPane().registerKeyboardAction(e -> dispose(),
+                KeyStroke.getKeyStroke("ESCAPE"), JComponent.WHEN_IN_FOCUSED_WINDOW);
+
+        if (!config.getUsedColumns().isEmpty()) {
+            selectedUsed = config.getUsedColumns().get(0);
+        }
         refreshUnusedList();
         refreshUsedList();
         updateFormattingButtonsState();
-        pack();
+        updatePreviewCard();
+
+        setSize(980, 580);
         setLocationRelativeTo(owner);
     }
 
     private void initComponents() {
-        JPanel root = new JPanel(new BorderLayout(0, 10));
+        JPanel root = new JPanel(new BorderLayout(0, 8));
         root.setBackground(BG);
-        root.setBorder(new LineBorder(HEADER, 2));
-        root.setPreferredSize(new Dimension(860, 500));
+        root.setBorder(new LineBorder(HEADER, 3));
 
-        // 1. Header
+        // 1. Tiêu đề hộp thoại
         JLabel lblTitle = new JLabel("THIẾT LẬP CỘT HIỂN THỊ", SwingConstants.CENTER);
         lblTitle.setOpaque(true);
         lblTitle.setBackground(HEADER);
         lblTitle.setForeground(Color.WHITE);
-        lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 15));
-        lblTitle.setPreferredSize(new Dimension(860, 36));
+        lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 18));
+        lblTitle.setPreferredSize(new Dimension(0, 44));
         root.add(lblTitle, BorderLayout.NORTH);
 
-        // 2. Thân giữa: Lưới 2 cột (Chưa dùng - Chuyển - Sử dụng)
-        JPanel centerWrapper = new JPanel(new BorderLayout(10, 0));
-        centerWrapper.setOpaque(false);
-        centerWrapper.setBorder(new EmptyBorder(0, 15, 0, 15));
+        // 2. Thân chính: Danh sách cột & Bảng định dạng
+        JPanel mainBody = new JPanel(new BorderLayout(0, 8));
+        mainBody.setOpaque(false);
+        mainBody.setBorder(new EmptyBorder(8, 12, 4, 12));
 
-        JPanel normalColumnsPanel = new JPanel(new BorderLayout(10, 0));
-        normalColumnsPanel.setOpaque(false);
+        JPanel columnTransferPanel = createColumnTransferPanel();
+        mainBody.add(columnTransferPanel, BorderLayout.CENTER);
 
-        // Cột trái: CÁC CỘT KHÔNG SỬ DỤNG
+        // Khung định dạng bên dưới (ẩn mặc định)
+        initFormatContainer();
+        formatContainer.setVisible(false);
+        mainBody.add(formatContainer, BorderLayout.SOUTH);
+
+        root.add(mainBody, BorderLayout.CENTER);
+
+        // 3. Thanh nút đáy: ĐỊNH DẠNG bên trái, CẬP NHẬT & THOÁT bên phải
+        JPanel bottomBar = createBottomBar();
+        root.add(bottomBar, BorderLayout.SOUTH);
+
+        setContentPane(root);
+    }
+
+    private JPanel createColumnTransferPanel() {
+        JPanel panel = new JPanel(new GridBagLayout());
+        panel.setOpaque(false);
+        GridBagConstraints c = new GridBagConstraints();
+        c.fill = GridBagConstraints.BOTH;
+        c.insets = new Insets(0, 6, 0, 6);
+
+        // CỘT TRÁI: CÁC CỘT KHÔNG SỬ DỤNG
         JPanel leftBox = new JPanel(new BorderLayout(0, 6));
         leftBox.setOpaque(false);
         JLabel lblLeft = new JLabel("CÁC CỘT KHÔNG SỬ DỤNG");
-        lblLeft.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        lblLeft.setFont(new Font("Segoe UI", Font.BOLD, 14));
         lblLeft.setForeground(Color.WHITE);
         leftBox.add(lblLeft, BorderLayout.NORTH);
 
@@ -99,42 +131,53 @@ public class TouchThietLapCotBanHangDialog extends JDialog {
         unusedPanel.setOpaque(true);
         unusedPanel.setBackground(LIST_BG);
         unusedPanel.setBorder(new EmptyBorder(6, 6, 6, 6));
-        JScrollPane spLeft = new JScrollPane(unusedPanel);
-        spLeft.setBorder(new LineBorder(new Color(140, 160, 170), 1));
+        JScrollPane spLeft = new JScrollPane(unusedPanel,
+                ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED, ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        spLeft.setBorder(new LineBorder(HEADER, 1, true));
+        spLeft.getViewport().setBackground(LIST_BG);
+        spLeft.getVerticalScrollBar().setUnitIncrement(35);
         leftBox.add(spLeft, BorderLayout.CENTER);
-        leftBox.setPreferredSize(new Dimension(310, 360));
-        normalColumnsPanel.add(leftBox, BorderLayout.WEST);
 
-        // Cột giữa: Nút chuyển (THÊM >>, << XÓA, << XÓA HẾT)
-        JPanel midBox = new JPanel(new GridBagLayout());
+        c.gridx = 0; c.gridy = 0; c.weightx = 0.44; c.weighty = 1.0;
+        panel.add(leftBox, c);
+
+        // CỘT GIỮA: THÊM >>, << XÓA, << XÓA HẾT
+        JPanel midBox = new JPanel();
+        midBox.setLayout(new BoxLayout(midBox, BoxLayout.Y_AXIS));
         midBox.setOpaque(false);
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.gridx = 0;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.insets = new Insets(6, 4, 6, 4);
+        midBox.setBorder(new EmptyBorder(25, 4, 10, 4));
 
         JButton btnAdd = button("THÊM >>", GRAY_BTN);
-        btnAdd.setPreferredSize(new Dimension(105, 42));
+        btnAdd.setPreferredSize(new Dimension(125, 46));
+        btnAdd.setMaximumSize(new Dimension(125, 46));
         btnAdd.addActionListener(e -> onAddColumn());
-        gbc.gridy = 0; midBox.add(btnAdd, gbc);
 
         JButton btnRemove = button("<< XÓA", GRAY_BTN);
-        btnRemove.setPreferredSize(new Dimension(105, 42));
+        btnRemove.setPreferredSize(new Dimension(125, 46));
+        btnRemove.setMaximumSize(new Dimension(125, 46));
         btnRemove.addActionListener(e -> onRemoveColumn());
-        gbc.gridy = 1; midBox.add(btnRemove, gbc);
 
         JButton btnRemoveAll = button("<< XÓA HẾT", GREEN);
-        btnRemoveAll.setPreferredSize(new Dimension(105, 42));
+        btnRemoveAll.setPreferredSize(new Dimension(125, 46));
+        btnRemoveAll.setMaximumSize(new Dimension(125, 46));
         btnRemoveAll.addActionListener(e -> onRemoveAllColumns());
-        gbc.gridy = 2; midBox.add(btnRemoveAll, gbc);
 
-        normalColumnsPanel.add(midBox, BorderLayout.CENTER);
+        midBox.add(Box.createVerticalGlue());
+        midBox.add(btnAdd);
+        midBox.add(Box.createVerticalStrut(10));
+        midBox.add(btnRemove);
+        midBox.add(Box.createVerticalStrut(10));
+        midBox.add(btnRemoveAll);
+        midBox.add(Box.createVerticalGlue());
 
-        // Cột phải: CÁC CỘT SỬ DỤNG
-        rightBox = new JPanel(new BorderLayout(0, 6));
+        c.gridx = 1; c.gridy = 0; c.weightx = 0.12; c.weighty = 1.0;
+        panel.add(midBox, c);
+
+        // CỘT PHẢI: CÁC CỘT SỬ DỤNG
+        JPanel rightBox = new JPanel(new BorderLayout(0, 6));
         rightBox.setOpaque(false);
         JLabel lblRight = new JLabel("CÁC CỘT SỬ DỤNG");
-        lblRight.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        lblRight.setFont(new Font("Segoe UI", Font.BOLD, 14));
         lblRight.setForeground(Color.WHITE);
         rightBox.add(lblRight, BorderLayout.NORTH);
 
@@ -142,48 +185,151 @@ public class TouchThietLapCotBanHangDialog extends JDialog {
         usedPanel.setOpaque(true);
         usedPanel.setBackground(LIST_BG);
         usedPanel.setBorder(new EmptyBorder(6, 6, 6, 6));
-        JScrollPane spRight = new JScrollPane(usedPanel);
-        spRight.setBorder(new LineBorder(new Color(140, 160, 170), 1));
+        JScrollPane spRight = new JScrollPane(usedPanel,
+                ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED, ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        spRight.setBorder(new LineBorder(HEADER, 1, true));
+        spRight.getViewport().setBackground(LIST_BG);
+        spRight.getVerticalScrollBar().setUnitIncrement(35);
         rightBox.add(spRight, BorderLayout.CENTER);
-        rightBox.setPreferredSize(new Dimension(310, 360));
 
-        // Nút LÊN, XUỐNG ngoài cùng bên phải
-        JPanel reorderBox = new JPanel(new GridBagLayout());
+        c.gridx = 2; c.gridy = 0; c.weightx = 0.44; c.weighty = 1.0;
+        panel.add(rightBox, c);
+
+        // CỘT NGOÀI CÙNG BÊN PHẢI: LÊN, XUỐNG
+        JPanel reorderBox = new JPanel();
+        reorderBox.setLayout(new BoxLayout(reorderBox, BoxLayout.Y_AXIS));
         reorderBox.setOpaque(false);
-        GridBagConstraints gbc2 = new GridBagConstraints();
-        gbc2.gridx = 0;
-        gbc2.fill = GridBagConstraints.HORIZONTAL;
-        gbc2.insets = new Insets(6, 4, 6, 4);
+        reorderBox.setBorder(new EmptyBorder(25, 4, 10, 0));
 
-        btnMoveUp.setPreferredSize(new Dimension(90, 42));
+        btnMoveUp.setPreferredSize(new Dimension(105, 46));
+        btnMoveUp.setMaximumSize(new Dimension(105, 46));
         btnMoveUp.addActionListener(e -> onMoveUp());
-        gbc2.gridy = 0; reorderBox.add(btnMoveUp, gbc2);
 
-        btnMoveDown.setPreferredSize(new Dimension(90, 42));
+        btnMoveDown.setPreferredSize(new Dimension(105, 46));
+        btnMoveDown.setMaximumSize(new Dimension(105, 46));
         btnMoveDown.addActionListener(e -> onMoveDown());
-        gbc2.gridy = 1; reorderBox.add(btnMoveDown, gbc2);
 
-        rightBoxWrapper.setOpaque(false);
-        rightBoxWrapper.add(rightBox, BorderLayout.CENTER);
-        rightBoxWrapper.add(reorderBox, BorderLayout.EAST);
-        normalColumnsPanel.add(rightBoxWrapper, BorderLayout.EAST);
+        reorderBox.add(Box.createVerticalGlue());
+        reorderBox.add(btnMoveUp);
+        reorderBox.add(Box.createVerticalStrut(10));
+        reorderBox.add(btnMoveDown);
+        reorderBox.add(Box.createVerticalGlue());
 
-        // Xây dựng panel định dạng
-        initFormatContainer();
+        c.gridx = 3; c.gridy = 0; c.weightx = 0.10; c.weighty = 1.0;
+        panel.add(reorderBox, c);
 
-        centerWrapper.add(normalColumnsPanel, BorderLayout.CENTER);
-        root.add(centerWrapper, BorderLayout.CENTER);
+        return panel;
+    }
 
-        // 3. Thanh nút đáy: ĐỊNH DẠNG bên trái, CẬP NHẬT & THOÁT bên phải
+    private void initFormatContainer() {
+        formatContainer.setOpaque(false);
+        formatContainer.setBorder(new EmptyBorder(8, 6, 4, 6));
+
+        // 1. Ô xem trước ở bên trái
+        previewCard.setPreferredSize(new Dimension(280, 80));
+        previewCard.setBorder(new CompoundBorder(
+                new LineBorder(Color.WHITE, 2, true),
+                new EmptyBorder(10, 14, 10, 14)
+        ));
+        previewCard.setOpaque(true);
+        previewCard.setBackground(TEAL);
+        formatContainer.add(previewCard, BorderLayout.WEST);
+
+        // 2. Cụm nút định dạng bên phải
+        JPanel centerFormat = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 0));
+        centerFormat.setOpaque(false);
+
+        JPanel ctrlGrid = new JPanel(new GridBagLayout());
+        ctrlGrid.setOpaque(false);
+        GridBagConstraints cc = new GridBagConstraints();
+        cc.insets = new Insets(3, 4, 3, 4);
+        cc.fill = GridBagConstraints.BOTH;
+
+        btnAlignLeft.setPreferredSize(new Dimension(100, 38));
+        btnAlignRight.setPreferredSize(new Dimension(100, 38));
+        btnBold.setPreferredSize(new Dimension(65, 38));
+        btnItalic.setPreferredSize(new Dimension(80, 38));
+        btnFontSize.setPreferredSize(new Dimension(90, 38));
+        btnTextColor.setPreferredSize(new Dimension(90, 38));
+
+        btnAlignLeft.addActionListener(e -> {
+            if (selectedUsed != null) {
+                selectedUsed.setRightAligned(false);
+                updateFormattingButtonsState();
+                updatePreviewCard();
+            }
+        });
+        btnAlignRight.addActionListener(e -> {
+            if (selectedUsed != null) {
+                selectedUsed.setRightAligned(true);
+                updateFormattingButtonsState();
+                updatePreviewCard();
+            }
+        });
+        btnBold.addActionListener(e -> {
+            if (selectedUsed != null) {
+                selectedUsed.setBold(!selectedUsed.isBold());
+                updateFormattingButtonsState();
+                updatePreviewCard();
+            }
+        });
+        btnItalic.addActionListener(e -> {
+            if (selectedUsed != null) {
+                selectedUsed.setItalic(!selectedUsed.isItalic());
+                updateFormattingButtonsState();
+                updatePreviewCard();
+            }
+        });
+        btnFontSize.addActionListener(e -> {
+            if (selectedUsed != null) {
+                Integer sz = TouchNumberInputDialog.showDialog(this, "CỠ CHỮ CỘT HIỂN THỊ", selectedUsed.getFontSize(), 8, 36);
+                if (sz != null && sz > 0) {
+                    selectedUsed.setFontSize(sz);
+                    updateFormattingButtonsState();
+                    updatePreviewCard();
+                }
+            }
+        });
+        btnTextColor.addActionListener(e -> {
+            if (selectedUsed != null) {
+                Color picked = TouchChonMauDialog.showDialog(this, selectedUsed.getColor());
+                if (picked != null) {
+                    selectedUsed.setColor(picked);
+                    updateFormattingButtonsState();
+                    updatePreviewCard();
+                }
+            }
+        });
+
+        // Hàng 1: CĂN TRÁI, CĂN PHẢI
+        cc.gridx = 0; cc.gridy = 0; cc.gridwidth = 1; ctrlGrid.add(btnAlignLeft, cc);
+        cc.gridx = 1; cc.gridy = 0; cc.gridwidth = 1; ctrlGrid.add(btnAlignRight, cc);
+
+        // Hàng 2: ĐẬM, NGHIÊNG, CỠ CHỮ, MÀU CHỮ
+        JPanel row2 = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 0));
+        row2.setOpaque(false);
+        row2.add(btnBold);
+        row2.add(btnItalic);
+        row2.add(btnFontSize);
+        row2.add(btnTextColor);
+
+        cc.gridx = 0; cc.gridy = 1; cc.gridwidth = 2;
+        ctrlGrid.add(row2, cc);
+
+        centerFormat.add(ctrlGrid);
+        formatContainer.add(centerFormat, BorderLayout.CENTER);
+    }
+
+    private JPanel createBottomBar() {
         JPanel bottomBar = new JPanel(new BorderLayout());
         bottomBar.setOpaque(false);
-        bottomBar.setPreferredSize(new Dimension(860, 52));
-        bottomBar.setBorder(new EmptyBorder(0, 15, 10, 15));
+        bottomBar.setPreferredSize(new Dimension(0, 56));
+        bottomBar.setBorder(new EmptyBorder(4, 15, 10, 15));
 
         // Trái: ĐỊNH DẠNG
         JPanel leftBottom = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
         leftBottom.setOpaque(false);
-        btnDinhDang.setPreferredSize(new Dimension(130, 44));
+        btnDinhDang.setPreferredSize(new Dimension(140, 44));
         btnDinhDang.addActionListener(e -> toggleFormattingMode());
         leftBottom.add(btnDinhDang);
         bottomBar.add(leftBottom, BorderLayout.WEST);
@@ -201,102 +347,15 @@ public class TouchThietLapCotBanHangDialog extends JDialog {
         rightBottom.add(btnThoat);
 
         bottomBar.add(rightBottom, BorderLayout.EAST);
-        root.add(bottomBar, BorderLayout.SOUTH);
-
-        setContentPane(root);
+        return bottomBar;
     }
 
-    private void initFormatContainer() {
-        formatContainer.setOpaque(false);
-
-        // Nửa trái: các nút thuộc tính định dạng
-        JPanel toolsGrid = new JPanel(new GridLayout(3, 2, 8, 8));
-        toolsGrid.setOpaque(false);
-
-        btnAlignLeft.addActionListener(e -> {
-            if (selectedUsed != null) {
-                selectedUsed.setRightAligned(false);
-                updateFormattingButtonsState();
-                refreshUsedList();
-            }
-        });
-        btnAlignRight.addActionListener(e -> {
-            if (selectedUsed != null) {
-                selectedUsed.setRightAligned(true);
-                updateFormattingButtonsState();
-                refreshUsedList();
-            }
-        });
-        btnBold.addActionListener(e -> {
-            if (selectedUsed != null) {
-                selectedUsed.setBold(!selectedUsed.isBold());
-                updateFormattingButtonsState();
-                refreshUsedList();
-            }
-        });
-        btnItalic.addActionListener(e -> {
-            if (selectedUsed != null) {
-                selectedUsed.setItalic(!selectedUsed.isItalic());
-                updateFormattingButtonsState();
-                refreshUsedList();
-            }
-        });
-        btnFontSize.addActionListener(e -> {
-            if (selectedUsed != null) {
-                Integer sz = TouchNumberInputDialog.showDialog(this, "CỠ CHỮ CỘT HIỂN THỊ", selectedUsed.getFontSize(), 8, 36);
-                if (sz != null) {
-                    selectedUsed.setFontSize(sz);
-                    btnFontSize.setText("CỠ CHỮ: " + sz);
-                    refreshUsedList();
-                }
-            }
-        });
-        btnTextColor.addActionListener(e -> {
-            if (selectedUsed != null) {
-                Color picked = TouchChonMauDialog.showDialog(this, selectedUsed.getColor());
-                if (picked != null) {
-                    selectedUsed.setColor(picked);
-                    refreshUsedList();
-                }
-            }
-        });
-
-        toolsGrid.add(btnAlignLeft);
-        toolsGrid.add(btnAlignRight);
-        toolsGrid.add(btnBold);
-        toolsGrid.add(btnItalic);
-        toolsGrid.add(btnFontSize);
-        toolsGrid.add(btnTextColor);
-
-        formatContainer.add(toolsGrid, BorderLayout.WEST);
-
-        // Nửa phải: Card xem trước (Preview Card)
-        previewCard.setOpaque(true);
-        previewCard.setBackground(TEAL);
-        previewCard.setBorder(new LineBorder(Color.WHITE, 2, true));
-        previewCard.setPreferredSize(new Dimension(280, 180));
-        formatContainer.add(previewCard, BorderLayout.CENTER);
-    }
-
-    private void toggleFormattingMode() {
+    void toggleFormattingMode() {
         isFormattingOpen = !isFormattingOpen;
-        rightBoxWrapper.remove(rightBox);
-        if (isFormattingOpen) {
-            btnDinhDang.setText("DANH SÁCH");
-            btnDinhDang.setBackground(ORANGE);
-            rightBoxWrapper.add(formatContainer, BorderLayout.CENTER);
-            btnMoveUp.setEnabled(false);
-            btnMoveDown.setEnabled(false);
-        } else {
-            btnDinhDang.setText("ĐỊNH DẠNG");
-            btnDinhDang.setBackground(PURPLE);
-            rightBoxWrapper.add(rightBox, BorderLayout.CENTER);
-            btnMoveUp.setEnabled(true);
-            btnMoveDown.setEnabled(true);
-        }
-        rightBoxWrapper.revalidate();
-        rightBoxWrapper.repaint();
-        updateFormattingButtonsState();
+        formatContainer.setVisible(isFormattingOpen);
+        btnDinhDang.setBackground(isFormattingOpen ? ORANGE : PURPLE);
+        revalidate();
+        repaint();
     }
 
     private void refreshUnusedList() {
@@ -308,7 +367,7 @@ public class TouchThietLapCotBanHangDialog extends JDialog {
                 refreshUnusedList();
             });
             unusedPanel.add(btn);
-            unusedPanel.add(Box.createVerticalStrut(4));
+            unusedPanel.add(Box.createVerticalStrut(6));
         }
         unusedPanel.revalidate();
         unusedPanel.repaint();
@@ -324,7 +383,7 @@ public class TouchThietLapCotBanHangDialog extends JDialog {
                 updateFormattingButtonsState();
             });
             usedPanel.add(btn);
-            usedPanel.add(Box.createVerticalStrut(4));
+            usedPanel.add(Box.createVerticalStrut(6));
         }
         usedPanel.revalidate();
         usedPanel.repaint();
@@ -357,18 +416,46 @@ public class TouchThietLapCotBanHangDialog extends JDialog {
 
     private void updatePreviewCard() {
         previewCard.removeAll();
-        previewCard.setLayout(new BorderLayout(8, 0));
-        previewCard.setBorder(new EmptyBorder(12, 14, 12, 14));
+        previewCard.setLayout(new BorderLayout(10, 0));
 
-        JLabel lblName = new JLabel("ALYNA Hair Coat 80ml", SwingConstants.LEFT);
-        lblName.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        lblName.setForeground(Color.WHITE);
-        previewCard.add(lblName, BorderLayout.WEST);
+        MatHang sample = new MatHang();
+        sample.setName("ALYNA Hair Coat 80ml");
+        sample.setGiaBan(35000);
+        sample.setTenDonViTinh("Chai");
+        sample.setCode("MH001");
+        sample.setBaoHanh("12T");
+        sample.setGhiChu("Mới");
 
-        JLabel lblPrice = new JLabel("35,000", SwingConstants.RIGHT);
-        lblPrice.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        lblPrice.setForeground(Color.WHITE);
-        previewCard.add(lblPrice, BorderLayout.EAST);
+        List<TouchBanHangProductColumnConfig.ColumnItem> used = config.getUsedColumns();
+        if (used.isEmpty()) {
+            JLabel lblEmpty = new JLabel("(Chưa chọn cột hiển thị)", SwingConstants.CENTER);
+            lblEmpty.setFont(new Font("Segoe UI", Font.ITALIC, 14));
+            lblEmpty.setForeground(Color.LIGHT_GRAY);
+            previewCard.add(lblEmpty, BorderLayout.CENTER);
+        } else if (used.size() == 1) {
+            TouchBanHangProductColumnConfig.ColumnItem col = used.get(0);
+            String val = TouchBanHangProductColumnConfig.getFormattedText(sample, col, true);
+            JLabel lbl = new JLabel(val, col.isRightAligned() ? SwingConstants.RIGHT : SwingConstants.LEFT);
+            lbl.setFont(col.getFont());
+            lbl.setForeground(col.getColor());
+            previewCard.add(lbl, BorderLayout.CENTER);
+        } else {
+            // Cột 1
+            TouchBanHangProductColumnConfig.ColumnItem col1 = used.get(0);
+            String val1 = TouchBanHangProductColumnConfig.getFormattedText(sample, col1, true);
+            JLabel lbl1 = new JLabel(val1, col1.isRightAligned() ? SwingConstants.RIGHT : SwingConstants.LEFT);
+            lbl1.setFont(col1.getFont());
+            lbl1.setForeground(col1.getColor());
+            previewCard.add(lbl1, BorderLayout.WEST);
+
+            // Cột 2
+            TouchBanHangProductColumnConfig.ColumnItem col2 = used.get(1);
+            String val2 = TouchBanHangProductColumnConfig.getFormattedText(sample, col2, false);
+            JLabel lbl2 = new JLabel(val2, col2.isRightAligned() ? SwingConstants.RIGHT : SwingConstants.LEFT);
+            lbl2.setFont(col2.getFont());
+            lbl2.setForeground(col2.getColor());
+            previewCard.add(lbl2, BorderLayout.EAST);
+        }
 
         previewCard.revalidate();
         previewCard.repaint();
@@ -382,6 +469,7 @@ public class TouchThietLapCotBanHangDialog extends JDialog {
             selectedUnused = null;
             refreshUnusedList();
             refreshUsedList();
+            updateFormattingButtonsState();
         }
     }
 
@@ -439,12 +527,12 @@ public class TouchThietLapCotBanHangDialog extends JDialog {
 
     private JButton createColumnButton(String text, boolean isSelected) {
         JButton btn = new JButton(text);
-        btn.setMaximumSize(new Dimension(Integer.MAX_VALUE, 44));
-        btn.setPreferredSize(new Dimension(280, 44));
+        btn.setMaximumSize(new Dimension(Integer.MAX_VALUE, 46));
+        btn.setPreferredSize(new Dimension(280, 46));
         btn.setFont(new Font("Segoe UI", Font.BOLD, 14));
         btn.setForeground(Color.WHITE);
         btn.setBackground(isSelected ? ORANGE : TEAL);
-        btn.setBorder(new LineBorder(Color.WHITE, 1, true));
+        btn.setBorder(new LineBorder(isSelected ? Color.WHITE : new Color(0, 110, 110), isSelected ? 2 : 1, true));
         btn.setFocusPainted(false);
         btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         return btn;

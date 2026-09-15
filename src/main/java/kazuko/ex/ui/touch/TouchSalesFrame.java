@@ -49,7 +49,6 @@ import kazuko.ex.ui.quy.TaoPhieuThuDialog;
 import kazuko.ex.ui.quy.TonQuyPanel;
 import kazuko.ex.ui.system.CauHinhToanHeThongDialog;
 import kazuko.ex.ui.system.GhiChuNhanhDialog;
-import kazuko.ex.ui.system.LuuVetHoatDongPanel;
 import kazuko.ex.ui.system.QuanLyNguoiDungDialog;
 import kazuko.ex.ui.system.TaoMoiCSDLDialog;
 
@@ -165,8 +164,8 @@ public final class TouchSalesFrame extends JFrame {
             case "BÁO GIÁ BÁN HÀNG" -> showBusinessPanel(key, new BaoGiaBanHangPanel());
             case "KHÁCH ĐẶT HÀNG" -> showTouchPanel(new TouchKhachDatHangPanel(this::showDashboard));
             case "HÓA ĐƠN BÁN HÀNG", "HÓA ĐƠN" -> showSales();
-            case "QUẢN LÝ BÁN HÀNG" -> showBusinessPanel(key, new QuanLyBanHangPanel());
-            case "LƯU VẾT HOẠT ĐỘNG" -> showBusinessPanel(key, new LuuVetHoatDongPanel());
+            case "QUẢN LÝ BÁN HÀNG" -> showTouchPanel(new TouchQuanLyBanHangPanel(this::showDashboard));
+            case "LƯU VẾT HOẠT ĐỘNG" -> showTouchPanel(new TouchLuuVetPanel(this::showDashboard));
             case "THỐNG KÊ DOANH THU" -> showBusinessPanel(key, new ThongKeDoanhThuPanel());
             case "THỐNG KÊ MẶT HÀNG BÁN" -> showBusinessPanel(key, new ThongKeMatHangBanPanel());
             case "TỔNG HỢP KẾT QUẢ KINH DOANH", "TỔNG HỢP KQKD" ->

@@ -1,0 +1,130 @@
+{
+  "usedColumns": [
+    {
+      "key": "SO_PHIEU",
+      "title": "SỐ PHIẾU",
+      "prefix": "Số phiếu: ",
+      "colorHex": "#FFFFFF",
+      "bold": true,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 14
+    },
+    {
+      "key": "TONG_CONG",
+      "title": "TỔNG CỘNG",
+      "prefix": "Tổng cộng: ",
+      "colorHex": "#FFFFFF",
+      "bold": true,
+      "italic": false,
+      "rightAligned": true,
+      "fontSize": 14
+    },
+    {
+      "key": "KHACH_HANG",
+      "title": "KHÁCH HÀNG",
+      "prefix": "Khách hàng: ",
+      "colorHex": "#FFFFFF",
+      "bold": false,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 13
+    },
+    {
+      "key": "THANH_TOAN_BOI",
+      "title": "THANH TOÁN BỞI",
+      "prefix": "Thanh toán bởi: ",
+      "colorHex": "#FFFFFF",
+      "bold": false,
+      "italic": false,
+      "rightAligned": true,
+      "fontSize": 13
+    }
+  ],
+  "unusedColumns": [
+    {
+      "key": "GHI_CHU",
+      "title": "GHI CHÚ",
+      "prefix": "Ghi chú: ",
+      "colorHex": "#FFFFFF",
+      "bold": false,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 13
+    },
+    {
+      "key": "NGAY",
+      "title": "NGÀY",
+      "prefix": "Ngày: ",
+      "colorHex": "#FFFFFF",
+      "bold": false,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 13
+    },
+    {
+      "key": "MA_KHACH",
+      "title": "MÃ KHÁCH",
+      "prefix": "Mã khách: ",
+      "colorHex": "#FFFFFF",
+      "bold": false,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 13
+    },
+    {
+      "key": "DIA_CHI",
+      "title": "ĐỊA CHỈ",
+      "prefix": "Địa chỉ: ",
+      "colorHex": "#FFFFFF",
+      "bold": false,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 13
+    },
+    {
+      "key": "DIEN_THOAI",
+      "title": "ĐIỆN THOẠI",
+      "prefix": "Điện thoại: ",
+      "colorHex": "#FFFFFF",
+      "bold": false,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 13
+    },
+    {
+      "key": "GIAM_GIA",
+      "title": "GIẢM GIÁ",
+      "prefix": "Giảm giá: ",
+      "colorHex": "#FFFFFF",
+      "bold": false,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 13
+    },
+    {
+      "key": "PT_GIAM_GIA",
+      "title": "% GIẢM GIÁ",
+      "prefix": "% Giảm giá: ",
+      "colorHex": "#FFFFFF",
+      "bold": false,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 13
+    },
+    {
+      "key": "TIEN_HANG",
+      "title": "TIỀN HÀNG",
+      "prefix": "Tiền hàng: ",
+      "colorHex": "#FFFFFF",
+      "bold": false,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 13
+    }
+  ],
+  "gridColumns": 3,
+  "gridRows": 6,
+  "cardBgHex": "#004F4C",
+  "showTitle": false
+}
