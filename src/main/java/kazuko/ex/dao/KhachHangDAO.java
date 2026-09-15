@@ -125,6 +125,10 @@ public class KhachHangDAO extends BaseDAO {
         return dbSuccess;
     }
 
+    public boolean delete(String id) {
+        return moveToTrash(id);
+    }
+
     public boolean restoreFromTrash(String id) {
         if (id == null) return false;
         boolean dbSuccess = trySetStatusDb(id, 30);

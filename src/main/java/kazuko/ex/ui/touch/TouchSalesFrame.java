@@ -156,14 +156,14 @@ public final class TouchSalesFrame extends JFrame {
             // HOẠT ĐỘNG
             case "DANH MỤC CỬA HÀNG" -> showTouchPanel(new TouchCuaHangPanel(this::showDashboard));
             case "DANH MỤC MẶT HÀNG" -> showTouchPanel(new TouchMatHangPanel(this::showDashboard));
-            case "DANH MỤC KHÁCH HÀNG" -> showBusinessPanel(key, new DanhMucKhachHangPanel());
+            case "DANH MỤC KHÁCH HÀNG" -> showTouchPanel(new TouchKhachHangPanel(this::showDashboard));
             case "GỬI TIN NHẮN KHÁCH HÀNG", "GỬI TIN NHẮN TỚI KHÁCH HÀNG" ->
                     showBusinessPanel(key, ReportPanelFactory.createPlaceholderPanel("Gửi tin nhắn tới khách hàng"));
             case "DANH MỤC ĐỢT KHUYẾN MẠI", "ĐỢT KHUYẾN MÃI" ->
                     showBusinessPanel(key, new DanhMucDotKhuyenMaiPanel());
-            case "KHÁCH HÀNG THÂN THIẾT" -> showBusinessPanel(key, new KhachHangThanThietPanel());
+            case "KHÁCH HÀNG THÂN THIẾT" -> showTouchPanel(new TouchKhachHangThanThietPanel(this::showDashboard));
             case "BÁO GIÁ BÁN HÀNG" -> showBusinessPanel(key, new BaoGiaBanHangPanel());
-            case "KHÁCH ĐẶT HÀNG" -> showBusinessPanel(key, new KhachDatHangPanel());
+            case "KHÁCH ĐẶT HÀNG" -> showTouchPanel(new TouchKhachDatHangPanel(this::showDashboard));
             case "HÓA ĐƠN BÁN HÀNG", "HÓA ĐƠN" -> showSales();
             case "QUẢN LÝ BÁN HÀNG" -> showBusinessPanel(key, new QuanLyBanHangPanel());
             case "LƯU VẾT HOẠT ĐỘNG" -> showBusinessPanel(key, new LuuVetHoatDongPanel());

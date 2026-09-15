@@ -1,0 +1,86 @@
+{
+  "usedColumns": [
+    {
+      "key": "MAT_HANG",
+      "title": "MẶT HÀNG",
+      "prefix": "",
+      "colorHex": "#FFFFFF",
+      "bold": false,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 13
+    },
+    {
+      "key": "SO_LUONG",
+      "title": "SỐ LƯỢNG",
+      "prefix": "",
+      "colorHex": "#FFFFFF",
+      "bold": false,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 13
+    },
+    {
+      "key": "DVT",
+      "title": "ĐVT",
+      "prefix": "",
+      "colorHex": "#FFFFFF",
+      "bold": false,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 13
+    },
+    {
+      "key": "GIAM_GIA",
+      "title": "GIẢM GIÁ %",
+      "prefix": "",
+      "colorHex": "#FFFFFF",
+      "bold": false,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 13
+    },
+    {
+      "key": "THANH_TIEN",
+      "title": "THÀNH TIỀN",
+      "prefix": "",
+      "colorHex": "#FFFFFF",
+      "bold": false,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 13
+    }
+  ],
+  "unusedColumns": [
+    {
+      "key": "GHI_CHU",
+      "title": "GHI CHÚ",
+      "prefix": "Ghi chú: ",
+      "colorHex": "#FFFFFF",
+      "bold": false,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 13
+    },
+    {
+      "key": "MA_HANG",
+      "title": "MÃ HÀNG",
+      "prefix": "Mã: ",
+      "colorHex": "#FFFFFF",
+      "bold": false,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 13
+    },
+    {
+      "key": "DON_GIA",
+      "title": "ĐƠN GIÁ",
+      "prefix": "Đơn giá: ",
+      "colorHex": "#FFFFFF",
+      "bold": false,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 13
+    }
+  ]
+}

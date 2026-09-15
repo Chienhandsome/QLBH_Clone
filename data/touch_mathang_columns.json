@@ -1,0 +1,180 @@
+{
+  "usedColumns": [
+    {
+      "key": "NAME",
+      "title": "TÊN MẶT HÀNG",
+      "prefix": "TÊN: ",
+      "colorHex": "#FF50DC",
+      "bold": true,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 26
+    },
+    {
+      "key": "HANG_SAN_XUAT",
+      "title": "HÃNG SẢN XUẤT",
+      "prefix": "Hãng sản xuất: ",
+      "colorHex": "#FFFFFF",
+      "bold": false,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 20
+    },
+    {
+      "key": "CODE",
+      "title": "MÃ HÀNG",
+      "prefix": "MÃ: ",
+      "colorHex": "#FFFFFF",
+      "bold": true,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 20
+    },
+    {
+      "key": "GIA_BAN",
+      "title": "GIÁ BÁN",
+      "prefix": "GIÁ: ",
+      "colorHex": "#FFFF00",
+      "bold": true,
+      "italic": false,
+      "rightAligned": true,
+      "fontSize": 23
+    }
+  ],
+  "unusedColumns": [
+    {
+      "key": "GHI_CHU",
+      "title": "GHI CHÚ",
+      "prefix": "Ghi chú: ",
+      "colorHex": "#FFFFFF",
+      "bold": false,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 18
+    },
+    {
+      "key": "NHOM_MAT_HANG",
+      "title": "NHÓM MẶT HÀNG",
+      "prefix": "Nhóm: ",
+      "colorHex": "#FFFFFF",
+      "bold": false,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 18
+    },
+    {
+      "key": "DON_VI_TINH",
+      "title": "ĐƠN VỊ TÍNH",
+      "prefix": "ĐVT: ",
+      "colorHex": "#FFFFFF",
+      "bold": false,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 18
+    },
+    {
+      "key": "GIA_NHAP",
+      "title": "GIÁ NHẬP",
+      "prefix": "Giá nhập: ",
+      "colorHex": "#00FFFF",
+      "bold": false,
+      "italic": false,
+      "rightAligned": true,
+      "fontSize": 18
+    },
+    {
+      "key": "TON_TOI_THIEU",
+      "title": "TỒN TỐI THIỂU",
+      "prefix": "Tồn min: ",
+      "colorHex": "#FFFFFF",
+      "bold": false,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 18
+    },
+    {
+      "key": "TON_TOI_DA",
+      "title": "TỒN TỐI ĐA",
+      "prefix": "Tồn max: ",
+      "colorHex": "#FFFFFF",
+      "bold": false,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 18
+    },
+    {
+      "key": "BAO_HANH",
+      "title": "BẢO HÀNH",
+      "prefix": "Bảo hành: ",
+      "colorHex": "#FFFFFF",
+      "bold": false,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 18
+    },
+    {
+      "key": "HOA_HONG",
+      "title": "HOA HỒNG",
+      "prefix": "Hoa hồng: ",
+      "colorHex": "#FFFFFF",
+      "bold": false,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 18
+    },
+    {
+      "key": "GIA_BAN_2",
+      "title": "ĐƠN GIÁ 2",
+      "prefix": "Giá 2: ",
+      "colorHex": "#FFFF00",
+      "bold": false,
+      "italic": false,
+      "rightAligned": true,
+      "fontSize": 20
+    },
+    {
+      "key": "GIA_BAN_3",
+      "title": "ĐƠN GIÁ 3",
+      "prefix": "Giá 3: ",
+      "colorHex": "#FFFF00",
+      "bold": false,
+      "italic": false,
+      "rightAligned": true,
+      "fontSize": 20
+    },
+    {
+      "key": "GIA_BAN_4",
+      "title": "ĐƠN GIÁ 4",
+      "prefix": "Giá 4: ",
+      "colorHex": "#FFFF00",
+      "bold": false,
+      "italic": false,
+      "rightAligned": true,
+      "fontSize": 20
+    },
+    {
+      "key": "MA_SAN_CO",
+      "title": "MÃ SẴN CÓ",
+      "prefix": "Mã phụ: ",
+      "colorHex": "#FFFFFF",
+      "bold": false,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 18
+    },
+    {
+      "key": "TON_KHO",
+      "title": "TỒN KHO",
+      "prefix": "Tồn kho: ",
+      "colorHex": "#FFFFFF",
+      "bold": false,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 18
+    }
+  ],
+  "cardBgColorHex": "#0F4B78",
+  "gridColumns": 3,
+  "gridRows": 6,
+  "showTitle": false
+}

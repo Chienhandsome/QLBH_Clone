@@ -1,0 +1,66 @@
+{
+  "usedColumns": [
+    {
+      "key": "TEN_HANG",
+      "title": "TÊN HÀNG",
+      "prefix": "",
+      "colorHex": "#FFFFFF",
+      "bold": true,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 14
+    },
+    {
+      "key": "GIA_BAN",
+      "title": "GIÁ BÁN",
+      "prefix": "",
+      "colorHex": "#FFFFFF",
+      "bold": true,
+      "italic": false,
+      "rightAligned": true,
+      "fontSize": 14
+    }
+  ],
+  "unusedColumns": [
+    {
+      "key": "DVT",
+      "title": "ĐVT",
+      "prefix": "",
+      "colorHex": "#FFFFFF",
+      "bold": false,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 13
+    },
+    {
+      "key": "MA_HANG",
+      "title": "MÃ HÀNG",
+      "prefix": "",
+      "colorHex": "#FFFFFF",
+      "bold": false,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 13
+    },
+    {
+      "key": "BAO_HANH",
+      "title": "BẢO HÀNH",
+      "prefix": "",
+      "colorHex": "#FFFFFF",
+      "bold": false,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 13
+    },
+    {
+      "key": "GHI_CHU",
+      "title": "GHI CHÚ",
+      "prefix": "",
+      "colorHex": "#FFFFFF",
+      "bold": false,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 13
+    }
+  ]
+}

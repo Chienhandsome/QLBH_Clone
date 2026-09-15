@@ -1,0 +1,110 @@
+{
+  "usedColumns": [
+    {
+      "key": "TINH_THANH",
+      "title": "TỈNH THÀNH",
+      "prefix": "",
+      "colorHex": "#FFFFFF",
+      "bold": false,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 13
+    },
+    {
+      "key": "MA_KHACH",
+      "title": "MÃ KHÁCH",
+      "prefix": "",
+      "colorHex": "#FFFFFF",
+      "bold": true,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 15
+    },
+    {
+      "key": "NAME",
+      "title": "TÊN KHÁCH HÀNG",
+      "prefix": "",
+      "colorHex": "#FFFFFF",
+      "bold": false,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 13
+    },
+    {
+      "key": "NHOM_KHACH",
+      "title": "NHÓM KHÁCH",
+      "prefix": "Nhóm: ",
+      "colorHex": "#FFFFFF",
+      "bold": false,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 13
+    }
+  ],
+  "unusedColumns": [
+    {
+      "key": "DIEN_THOAI",
+      "title": "ĐIỆN THOẠI",
+      "prefix": "ĐT: ",
+      "colorHex": "#FFFFFF",
+      "bold": false,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 13
+    },
+    {
+      "key": "DIA_CHI",
+      "title": "ĐỊA CHỈ",
+      "prefix": "ĐC: ",
+      "colorHex": "#FFFFFF",
+      "bold": false,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 13
+    },
+    {
+      "key": "EMAIL",
+      "title": "EMAIL",
+      "prefix": "Email: ",
+      "colorHex": "#FFFFFF",
+      "bold": false,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 13
+    },
+    {
+      "key": "MA_SO_THUE",
+      "title": "MÃ SỐ THUẾ",
+      "prefix": "MST: ",
+      "colorHex": "#FFFFFF",
+      "bold": false,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 13
+    },
+    {
+      "key": "DIEM_TICH_LUY",
+      "title": "ĐIỂM TÍCH LŨY",
+      "prefix": "Điểm: ",
+      "colorHex": "#FFFF00",
+      "bold": false,
+      "italic": false,
+      "rightAligned": true,
+      "fontSize": 13
+    },
+    {
+      "key": "GHI_CHU",
+      "title": "GHI CHÚ",
+      "prefix": "Ghi chú: ",
+      "colorHex": "#FFFFFF",
+      "bold": false,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 13
+    }
+  ],
+  "cardBgColorHex": "#004F4C",
+  "gridColumns": 5,
+  "gridRows": 6,
+  "showTitle": true
+}

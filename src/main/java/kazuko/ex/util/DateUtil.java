@@ -19,4 +19,13 @@ public class DateUtil {
         if (date == null) return "";
         return DATETIME_FORMAT.format(date);
     }
+
+    public static Date parseDate(String str) {
+        if (str == null || str.trim().isEmpty()) return null;
+        try {
+            return DATE_FORMAT.parse(str.trim());
+        } catch (Exception e) {
+            return null;
+        }
+    }
 }

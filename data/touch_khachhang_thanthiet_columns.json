@@ -1,0 +1,90 @@
+{
+  "usedColumns": [
+    {
+      "key": "NAME",
+      "title": "TÊN KHÁCH HÀNG",
+      "prefix": "KH: ",
+      "colorHex": "#FFFFFF",
+      "bold": false,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 15
+    },
+    {
+      "key": "DIEM_TICH_LUY",
+      "title": "ĐIỂM TÍCH LŨY",
+      "prefix": "ĐIỂM: ",
+      "colorHex": "#FFFFFF",
+      "bold": false,
+      "italic": false,
+      "rightAligned": true,
+      "fontSize": 15
+    },
+    {
+      "key": "DIEN_THOAI",
+      "title": "ĐIỆN THOẠI",
+      "prefix": "ĐT: ",
+      "colorHex": "#FFFFFF",
+      "bold": false,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 14
+    },
+    {
+      "key": "EMAIL",
+      "title": "EMAIL",
+      "prefix": "Email: ",
+      "colorHex": "#FFFFFF",
+      "bold": false,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 14
+    },
+    {
+      "key": "SO_HOA_DON",
+      "title": "SỐ HÓA ĐƠN",
+      "prefix": "Số HĐ: ",
+      "colorHex": "#FFFFFF",
+      "bold": false,
+      "italic": false,
+      "rightAligned": true,
+      "fontSize": 14
+    }
+  ],
+  "unusedColumns": [
+    {
+      "key": "GHI_CHU",
+      "title": "GHI CHÚ",
+      "prefix": "Ghi chú: ",
+      "colorHex": "#FFFFFF",
+      "bold": false,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 14
+    },
+    {
+      "key": "DIA_CHI",
+      "title": "ĐỊA CHỈ",
+      "prefix": "ĐC: ",
+      "colorHex": "#FFFFFF",
+      "bold": false,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 14
+    },
+    {
+      "key": "DOANH_SO",
+      "title": "DOANH SỐ",
+      "prefix": "DS: ",
+      "colorHex": "#FFFFFF",
+      "bold": false,
+      "italic": false,
+      "rightAligned": true,
+      "fontSize": 14
+    }
+  ],
+  "cardBgColorHex": "#004F4C",
+  "gridColumns": 2,
+  "gridRows": 5,
+  "showTitle": true
+}

@@ -45,6 +45,12 @@ final class TouchMatHangPanel extends JPanel {
     private int groupIndex;
     private int productIndex;
 
+    private final StringBuilder searchBuffer = new StringBuilder();
+    private boolean isSearchOpen = false;
+    private JButton btnSearch;
+    private JLabel lblSearchTerm;
+    private JPanel searchKeyboardWrapper;
+
     private final JTextField groupName = field();
     private final JTextField groupCode = field();
     private final JTextField groupNote = field();
@@ -111,7 +117,8 @@ final class TouchMatHangPanel extends JPanel {
         JButton edit = button("CHỈNH SỬA", DARK_GREEN);
         JButton delete = button("XÓA", RED);
         JButton refresh = button("REFRESH", DARK_GREEN);
-        JButton search = button("TÌM", DARK_GREEN);
+        JButton search = button("TÌM", isSearchOpen ? ORANGE : DARK_GREEN);
+        this.btnSearch = search;
         for (JButton b : List.of(add, edit, delete, refresh, search)) {
             b.setPreferredSize(new Dimension(172, 50));
             toolbar.add(b);
@@ -119,15 +126,71 @@ final class TouchMatHangPanel extends JPanel {
         add.addActionListener(e -> beginProduct(null));
         edit.addActionListener(e -> { if (requireProduct()) beginProduct(selectedProduct); });
         delete.addActionListener(e -> { if (requireProduct()) deleteProduct(selectedProduct); });
-        refresh.addActionListener(e -> showCatalogue());
-        search.addActionListener(e -> searchProducts());
+        refresh.addActionListener(e -> {
+            searchBuffer.setLength(0);
+            isSearchOpen = false;
+            showCatalogue();
+        });
+        search.addActionListener(e -> toggleSearch());
         right.add(toolbar, BorderLayout.NORTH);
 
-        JPanel productRows = new JPanel(new GridLayout(0, 2, 7, 7));
+        TouchMatHangColumnConfig config = TouchMatHangConfigDAO.loadConfig();
+        int cols = config.getGridColumns();
+        JPanel productRows = new ScrollableRowsPanel(new GridLayout(0, cols, 7, 7));
         productRows.setBackground(new Color(235, 235, 235));
         productRows.setBorder(new EmptyBorder(7, 7, 7, 7));
         productRows.setName("productRows");
-        right.add(scroll(productRows), BorderLayout.CENTER);
+
+        JPanel gridWrapper = new JPanel(new BorderLayout());
+        gridWrapper.setOpaque(false);
+        gridWrapper.add(scroll(productRows), BorderLayout.CENTER);
+
+        JPanel rightControls = new JPanel(new BorderLayout());
+        rightControls.setOpaque(false);
+        rightControls.setPreferredSize(new Dimension(54, 0));
+        rightControls.setBorder(new EmptyBorder(0, 4, 0, 0));
+
+        JButton settingBtn = new JButton();
+        settingBtn.setIcon(new GearIcon(28, Color.WHITE));
+        settingBtn.setBackground(BG);
+        settingBtn.setFocusPainted(false);
+        settingBtn.setBorder(new LineBorder(new Color(190, 210, 210), 2, true));
+        settingBtn.setPreferredSize(new Dimension(50, 50));
+        settingBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        settingBtn.setToolTipText("Thiết lập cột hiển thị");
+        settingBtn.addActionListener(e -> openColumnSetting());
+        rightControls.add(settingBtn, BorderLayout.SOUTH);
+
+        gridWrapper.add(rightControls, BorderLayout.EAST);
+
+        JPanel centerArea = new JPanel(new BorderLayout());
+        centerArea.setOpaque(false);
+        centerArea.add(gridWrapper, BorderLayout.CENTER);
+
+        searchKeyboardWrapper = new JPanel(new BorderLayout());
+        searchKeyboardWrapper.setOpaque(false);
+
+        lblSearchTerm = new JLabel("", SwingConstants.CENTER);
+        lblSearchTerm.setOpaque(true);
+        lblSearchTerm.setBackground(Color.YELLOW);
+        lblSearchTerm.setForeground(new Color(190, 0, 0));
+        lblSearchTerm.setFont(new Font("Segoe UI", Font.BOLD, 22));
+        lblSearchTerm.setBorder(new EmptyBorder(3, 16, 3, 16));
+        lblSearchTerm.setVisible(searchBuffer.length() > 0);
+        if (searchBuffer.length() > 0) lblSearchTerm.setText(searchBuffer.toString());
+
+        JPanel indicatorPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 2));
+        indicatorPanel.setOpaque(false);
+        indicatorPanel.add(lblSearchTerm);
+
+        JPanel keyboardPanel = createSearchKeyboard();
+        searchKeyboardWrapper.add(indicatorPanel, BorderLayout.NORTH);
+        searchKeyboardWrapper.add(keyboardPanel, BorderLayout.CENTER);
+        searchKeyboardWrapper.setVisible(isSearchOpen);
+
+        centerArea.add(searchKeyboardWrapper, BorderLayout.SOUTH);
+        right.add(centerArea, BorderLayout.CENTER);
+
         JButton close = button("THOÁT", RED);
         close.setPreferredSize(new Dimension(150, 58));
         close.addActionListener(e -> exit.run());
@@ -151,6 +214,8 @@ final class TouchMatHangPanel extends JPanel {
             selectedGroupId = id;
             selectedGroupName = name;
             selectedProduct = null;
+            searchBuffer.setLength(0);
+            if (lblSearchTerm != null) lblSearchTerm.setVisible(false);
             showCatalogue();
         });
         parent.add(item);
@@ -161,57 +226,273 @@ final class TouchMatHangPanel extends JPanel {
         if (catalogueScreen == null) return;
         JPanel rows = findNamedPanel(catalogueScreen, "productRows");
         if (rows == null) return;
+        TouchMatHangColumnConfig config = TouchMatHangConfigDAO.loadConfig();
+        int cols = config.getGridColumns();
+        if (rows.getLayout() instanceof GridLayout gl && gl.getColumns() != cols) {
+            rows.setLayout(new GridLayout(0, cols, 7, 7));
+        }
         rows.removeAll();
         List<MatHang> products;
-        if (selectedGroupId == null) products = productDao.getAll();
-        else if ("__none__".equals(selectedGroupId)) products = productDao.getByNhom("Chưa thiết lập", null);
-        else products = productDao.getByNhom(selectedGroupName, selectedGroupId);
-        for (MatHang product : products) rows.add(productCard(product));
-        if ((products.size() & 1) == 1) {
-            JPanel filler = new JPanel();
-            filler.setOpaque(false);
-            rows.add(filler);
+        if (searchBuffer.length() > 0) {
+            products = productDao.search(searchBuffer.toString().trim(), selectedGroupName, "__none__".equals(selectedGroupId) ? null : selectedGroupId);
+        } else if (selectedGroupId == null) {
+            products = productDao.getAll();
+        } else if ("__none__".equals(selectedGroupId)) {
+            products = productDao.getByNhom("Chưa thiết lập", null);
+        } else {
+            products = productDao.getByNhom(selectedGroupName, selectedGroupId);
+        }
+        for (MatHang product : products) rows.add(productCard(product, config));
+        int remainder = products.size() % cols;
+        if (remainder > 0) {
+            int missing = cols - remainder;
+            for (int i = 0; i < missing; i++) {
+                JPanel filler = new JPanel();
+                filler.setOpaque(false);
+                rows.add(filler);
+            }
         }
         rows.revalidate();
         rows.repaint();
     }
 
     private JPanel productCard(MatHang product) {
-        JPanel card = new JPanel(new BorderLayout());
-        card.setBackground(product == selectedProduct ? ORANGE : TEAL);
-        card.setBorder(new EmptyBorder(4, 14, 4, 14));
-        card.setPreferredSize(new Dimension(500, 106));
-        JLabel title = new JLabel("TÊN: " + safe(product.getName()));
-        title.setForeground(new Color(255, 80, 220));
-        title.setFont(font(29));
-        card.add(title, BorderLayout.NORTH);
-        JLabel detail = new JLabel("<html><b>Hãng sản xuất:</b> " + safe(product.getHangSanXuat())
-                + "<br><b>MÃ: " + safe(product.getCode()) + "</b></html>");
-        detail.setForeground(Color.WHITE);
-        detail.setFont(font(20));
-        card.add(detail, BorderLayout.CENTER);
-        JLabel price = new JLabel("GIÁ: " + MONEY.format(product.getGiaBan()), SwingConstants.RIGHT);
-        price.setForeground(Color.YELLOW);
-        price.setFont(font(23));
-        card.add(price, BorderLayout.EAST);
-        card.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        card.addMouseListener(new java.awt.event.MouseAdapter() {
+        return productCard(product, TouchMatHangConfigDAO.loadConfig());
+    }
+
+    private JPanel productCard(MatHang product, TouchMatHangColumnConfig config) {
+        JPanel card = new JPanel(new BorderLayout(4, 4));
+        boolean selected = selectedProduct != null && product.getId() != null
+                && product.getId().equals(selectedProduct.getId());
+        card.setBackground(selected ? ORANGE : config.getCardBgColor());
+        card.setBorder(new EmptyBorder(5, 10, 5, 10));
+        card.setPreferredSize(new Dimension(0, 106));
+        card.setMinimumSize(new Dimension(60, 106));
+
+        int colCount = config.getGridColumns();
+        int fontScale = colCount >= 4 ? -4 : (colCount == 3 ? -2 : 0);
+
+        List<TouchMatHangColumnConfig.ColumnItem> used = config.getUsedColumns();
+        if (used == null || used.isEmpty()) {
+            JLabel title = new JLabel(safe(product.getName()));
+            title.setForeground(Color.WHITE);
+            title.setFont(font(24));
+            card.add(title, BorderLayout.CENTER);
+        } else {
+            TouchMatHangColumnConfig.ColumnItem topItem = null;
+            List<TouchMatHangColumnConfig.ColumnItem> leftItems = new ArrayList<>();
+            List<TouchMatHangColumnConfig.ColumnItem> rightItems = new ArrayList<>();
+
+            for (int i = 0; i < used.size(); i++) {
+                TouchMatHangColumnConfig.ColumnItem col = used.get(i);
+                if (i == 0 && !col.isRightAligned()) {
+                    topItem = col;
+                } else if (col.isRightAligned()) {
+                    rightItems.add(col);
+                } else {
+                    leftItems.add(col);
+                }
+            }
+
+            if (topItem != null) {
+                String text = TouchMatHangColumnConfig.getFormattedText(product, topItem, config.isShowTitle());
+                JLabel title = new JLabel(text);
+                title.setForeground(topItem.getColor());
+                Font tf = topItem.getFont();
+                title.setFont(fontScale != 0 ? new Font(tf.getName(), tf.getStyle(), Math.max(13, tf.getSize() + fontScale)) : tf);
+                card.add(title, BorderLayout.NORTH);
+            }
+
+            JPanel body = new JPanel(new BorderLayout(4, 0));
+            body.setOpaque(false);
+
+            if (!leftItems.isEmpty()) {
+                JPanel pLeft = new JPanel();
+                pLeft.setLayout(new BoxLayout(pLeft, BoxLayout.Y_AXIS));
+                pLeft.setOpaque(false);
+                for (TouchMatHangColumnConfig.ColumnItem col : leftItems) {
+                    String text = TouchMatHangColumnConfig.getFormattedText(product, col, config.isShowTitle());
+                    JLabel lbl = new JLabel(text);
+                    lbl.setForeground(col.getColor());
+                    Font f = col.getFont();
+                    lbl.setFont(fontScale != 0 ? new Font(f.getName(), f.getStyle(), Math.max(11, f.getSize() + fontScale)) : f);
+                    pLeft.add(lbl);
+                }
+                body.add(pLeft, BorderLayout.CENTER);
+            }
+
+            if (!rightItems.isEmpty()) {
+                JPanel pRight = new JPanel();
+                pRight.setLayout(new BoxLayout(pRight, BoxLayout.Y_AXIS));
+                pRight.setOpaque(false);
+                for (TouchMatHangColumnConfig.ColumnItem col : rightItems) {
+                    String text = TouchMatHangColumnConfig.getFormattedText(product, col, config.isShowTitle());
+                    JLabel lbl = new JLabel(text, SwingConstants.RIGHT);
+                    lbl.setAlignmentX(Component.RIGHT_ALIGNMENT);
+                    lbl.setForeground(col.getColor());
+                    Font f = col.getFont();
+                    lbl.setFont(fontScale != 0 ? new Font(f.getName(), f.getStyle(), Math.max(11, f.getSize() + fontScale)) : f);
+                    pRight.add(lbl);
+                }
+                body.add(pRight, BorderLayout.EAST);
+            }
+
+            card.add(body, BorderLayout.CENTER);
+        }
+
+        java.awt.event.MouseAdapter selector = new java.awt.event.MouseAdapter() {
             @Override public void mouseClicked(java.awt.event.MouseEvent e) {
                 selectedProduct = product;
                 refresh();
             }
-        });
+        };
+        installCardSelector(card, selector);
         return card;
     }
 
-    private void searchProducts() {
-        String term = JOptionPane.showInputDialog(this, "Nhập mã hoặc tên mặt hàng:", "TÌM MẶT HÀNG", JOptionPane.PLAIN_MESSAGE);
-        if (term == null || term.isBlank()) return;
-        List<MatHang> found = productDao.search(term.trim(), selectedGroupName, "__none__".equals(selectedGroupId) ? null : selectedGroupId);
-        JPanel rows = findNamedPanel(catalogueScreen, "productRows");
-        rows.removeAll();
-        for (MatHang product : found) rows.add(productCard(product));
-        rows.revalidate(); rows.repaint();
+    private void openColumnSetting() {
+        Window owner = SwingUtilities.getWindowAncestor(this);
+        TouchThietLapCotDialog dialog = new TouchThietLapCotDialog(owner, this::showCatalogue);
+        dialog.setVisible(true);
+    }
+
+    private void toggleSearch() {
+        isSearchOpen = !isSearchOpen;
+        if (btnSearch != null) btnSearch.setBackground(isSearchOpen ? ORANGE : DARK_GREEN);
+        if (searchKeyboardWrapper != null) {
+            searchKeyboardWrapper.setVisible(isSearchOpen);
+            if (!isSearchOpen) {
+                searchBuffer.setLength(0);
+                if (lblSearchTerm != null) lblSearchTerm.setVisible(false);
+                refresh();
+            } else {
+                if (lblSearchTerm != null) lblSearchTerm.setVisible(searchBuffer.length() > 0);
+            }
+            searchKeyboardWrapper.revalidate();
+            searchKeyboardWrapper.repaint();
+        }
+        if (catalogueScreen != null) {
+            catalogueScreen.revalidate();
+            catalogueScreen.repaint();
+        }
+    }
+
+    private void onKeyboardChar(String ch) {
+        searchBuffer.append(ch);
+        updateSearchLive();
+    }
+
+    private void onKeyboardBackspace() {
+        if (searchBuffer.length() > 0) {
+            searchBuffer.deleteCharAt(searchBuffer.length() - 1);
+            updateSearchLive();
+        }
+    }
+
+    private void onKeyboardSpace() {
+        searchBuffer.append(" ");
+        updateSearchLive();
+    }
+
+    private void onKeyboardCancel() {
+        searchBuffer.setLength(0);
+        if (lblSearchTerm != null) lblSearchTerm.setVisible(false);
+        isSearchOpen = false;
+        if (btnSearch != null) btnSearch.setBackground(DARK_GREEN);
+        if (searchKeyboardWrapper != null) searchKeyboardWrapper.setVisible(false);
+        refresh();
+        if (catalogueScreen != null) {
+            catalogueScreen.revalidate();
+            catalogueScreen.repaint();
+        }
+    }
+
+    private void onKeyboardEnter() {
+        isSearchOpen = false;
+        if (btnSearch != null) btnSearch.setBackground(DARK_GREEN);
+        if (searchKeyboardWrapper != null) searchKeyboardWrapper.setVisible(false);
+        if (catalogueScreen != null) {
+            catalogueScreen.revalidate();
+            catalogueScreen.repaint();
+        }
+    }
+
+    private void updateSearchLive() {
+        String term = searchBuffer.toString();
+        if (lblSearchTerm != null) {
+            if (term.isEmpty()) {
+                lblSearchTerm.setVisible(false);
+            } else {
+                lblSearchTerm.setText(term);
+                lblSearchTerm.setVisible(true);
+            }
+        }
+        refresh();
+    }
+
+    private JPanel createSearchKeyboard() {
+        JPanel keyboard = new JPanel();
+        keyboard.setLayout(new BoxLayout(keyboard, BoxLayout.Y_AXIS));
+        keyboard.setOpaque(false);
+        keyboard.setBorder(new EmptyBorder(3, 0, 4, 0));
+
+        // Row 1: 1 2 3 4 5 6 7 8 9 0 - = [◀]
+        JPanel r1 = new JPanel(new FlowLayout(FlowLayout.CENTER, 4, 2));
+        r1.setOpaque(false);
+        String[] k1 = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "-", "="};
+        for (String k : k1) r1.add(createKeyButton(k, 56, 44, new Color(28, 107, 140), Color.WHITE, e -> onKeyboardChar(k)));
+        JButton btnBack = createKeyButton("", 66, 44, new Color(55, 55, 55), Color.WHITE, e -> onKeyboardBackspace());
+        btnBack.setIcon(new TouchNumberInputDialog.ArrowIcon(TouchNumberInputDialog.ArrowIcon.Direction.LEFT, 24, Color.WHITE));
+        r1.add(btnBack);
+        keyboard.add(r1);
+
+        // Row 2: Q W E R T Y U I O P \ @
+        JPanel r2 = new JPanel(new FlowLayout(FlowLayout.CENTER, 4, 2));
+        r2.setOpaque(false);
+        String[] k2 = {"Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P", "\\", "@"};
+        for (String k : k2) r2.add(createKeyButton(k, 60, 44, new Color(28, 107, 140), Color.WHITE, e -> onKeyboardChar(k)));
+        keyboard.add(r2);
+
+        // Row 3: A S D F G H J K L ; '
+        JPanel r3 = new JPanel(new FlowLayout(FlowLayout.CENTER, 4, 2));
+        r3.setOpaque(false);
+        String[] k3 = {"A", "S", "D", "F", "G", "H", "J", "K", "L", ";", "'"};
+        for (String k : k3) r3.add(createKeyButton(k, 64, 44, new Color(28, 107, 140), Color.WHITE, e -> onKeyboardChar(k)));
+        keyboard.add(r3);
+
+        // Row 4: Z X C V B N M , . [▲]
+        JPanel r4 = new JPanel(new FlowLayout(FlowLayout.CENTER, 4, 2));
+        r4.setOpaque(false);
+        String[] k4 = {"Z", "X", "C", "V", "B", "N", "M", ",", "."};
+        for (String k : k4) r4.add(createKeyButton(k, 62, 44, new Color(28, 107, 140), Color.WHITE, e -> onKeyboardChar(k)));
+        JButton btnEnter = createKeyButton("", 66, 44, new Color(55, 55, 55), Color.WHITE, e -> onKeyboardEnter());
+        btnEnter.setIcon(new UpArrowIcon(22, Color.YELLOW));
+        r4.add(btnEnter);
+        keyboard.add(r4);
+
+        // Row 5: [ Hủy bỏ ] [ Space ]
+        JPanel r5 = new JPanel(new FlowLayout(FlowLayout.CENTER, 6, 2));
+        r5.setOpaque(false);
+        JButton btnCancel = createKeyButton("Hủy bỏ", 140, 44, new Color(195, 20, 20), Color.WHITE, e -> onKeyboardCancel());
+        JButton btnSpace = createKeyButton("", 360, 44, new Color(75, 75, 75), Color.WHITE, e -> onKeyboardSpace());
+        r5.add(btnCancel);
+        r5.add(btnSpace);
+        keyboard.add(r5);
+
+        return keyboard;
+    }
+
+    private JButton createKeyButton(String text, int width, int height, Color bg, Color fg, java.awt.event.ActionListener action) {
+        JButton b = new JButton(text);
+        b.setFont(font(19));
+        b.setForeground(fg);
+        b.setBackground(bg);
+        b.setFocusPainted(false);
+        b.setBorder(new LineBorder(new Color(190, 210, 210), 1, true));
+        b.setPreferredSize(new Dimension(width, height));
+        b.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        if (action != null) b.addActionListener(action);
+        return b;
     }
 
     private void showGroupList() {
@@ -264,7 +545,9 @@ final class TouchMatHangPanel extends JPanel {
                 e -> moveGroup(-1), e -> moveGroup(1), e -> beginGroup(null), e -> copyGroup(), e -> deleteGroup(editingGroup));
         JPanel body = new JPanel(new BorderLayout()); body.setOpaque(false);
         body.add(topActions, BorderLayout.NORTH);
-        JPanel fields = new JPanel(new GridBagLayout()); fields.setOpaque(false);
+        JPanel fields = new JPanel(new GridBagLayout());
+        fields.setOpaque(true);
+        fields.setBackground(BG);
         GridBagConstraints c = constraints();
         addFieldRow(fields, c, 0, "TÊN NHÓM MẶT HÀNG", groupName);
         addFieldRow(fields, c, 1, "ĐÁNH MÃ SẢN PHẨM", groupCode);
@@ -337,7 +620,11 @@ final class TouchMatHangPanel extends JPanel {
         noKitchenPrint.setOpaque(false); noKitchenPrint.setForeground(Color.WHITE); noKitchenPrint.setFont(font(18));
         c.gridx = 1; c.gridy = 9; c.gridwidth = 3; c.weightx = 1; fields.add(noKitchenPrint, c);
         c.gridy = 10; c.weighty = 1; fields.add(Box.createVerticalGlue(), c);
-        body.add(new JScrollPane(fields), BorderLayout.CENTER); root.add(body, BorderLayout.CENTER);
+        JScrollPane formScroll = scroll(fields);
+        formScroll.setOpaque(false);
+        formScroll.getViewport().setOpaque(true);
+        formScroll.getViewport().setBackground(BG);
+        body.add(formScroll, BorderLayout.CENTER); root.add(body, BorderLayout.CENTER);
         root.add(saveFooter(() -> saveProduct(false), () -> saveProduct(true), () -> {
             if (!saveProduct(false)) return false;
             showCatalogue();
@@ -492,6 +779,89 @@ final class TouchMatHangPanel extends JPanel {
         return null;
     }
 
+    private static void installCardSelector(Component component, java.awt.event.MouseAdapter selector) {
+        component.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        component.addMouseListener(selector);
+        if (component instanceof Container container) {
+            for (Component child : container.getComponents()) installCardSelector(child, selector);
+        }
+    }
+
     private enum DeleteChoice { PERMANENT, TRASH, CANCEL }
     @FunctionalInterface private interface SaveAction { boolean run(); }
+
+    static class GearIcon implements Icon {
+        private final int size;
+        private final Color color;
+
+        GearIcon(int size, Color color) {
+            this.size = size;
+            this.color = color;
+        }
+
+        @Override
+        public void paintIcon(Component c, Graphics g, int x, int y) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2.translate(x + size / 2.0, y + size / 2.0);
+            g2.setColor(color);
+
+            int teeth = 8;
+            double radius = size * 0.38;
+            double toothHeight = size * 0.12;
+            double toothWidth = size * 0.16;
+
+            for (int i = 0; i < teeth; i++) {
+                g2.rotate(2 * Math.PI / teeth);
+                g2.fill(new java.awt.geom.RoundRectangle2D.Double(-toothWidth / 2, -radius - toothHeight, toothWidth, toothHeight * 1.4, 2, 2));
+            }
+
+            int r = (int) radius;
+            g2.fillOval(-r, -r, r * 2, r * 2);
+
+            int holeRadius = (int) (size * 0.16);
+            g2.setComposite(AlphaComposite.Clear);
+            g2.fillOval(-holeRadius, -holeRadius, holeRadius * 2, holeRadius * 2);
+
+            g2.dispose();
+        }
+
+        @Override public int getIconWidth() { return size; }
+        @Override public int getIconHeight() { return size; }
+    }
+
+    static class ScrollableRowsPanel extends JPanel implements Scrollable {
+        ScrollableRowsPanel(LayoutManager layout) { super(layout); }
+        @Override public Dimension getPreferredScrollableViewportSize() { return getPreferredSize(); }
+        @Override public int getScrollableUnitIncrement(Rectangle r, int o, int d) { return 45; }
+        @Override public int getScrollableBlockIncrement(Rectangle r, int o, int d) { return 150; }
+        @Override public boolean getScrollableTracksViewportWidth() { return true; }
+        @Override public boolean getScrollableTracksViewportHeight() { return false; }
+    }
+
+    static class UpArrowIcon implements Icon {
+        private final int size;
+        private final Color color;
+
+        UpArrowIcon(int size, Color color) {
+            this.size = size;
+            this.color = color;
+        }
+
+        @Override
+        public void paintIcon(Component c, Graphics g, int x, int y) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2.setColor(color);
+            int cx = x + (getIconWidth() - size) / 2;
+            int cy = y + (getIconHeight() - size) / 2;
+            int[] xPoints = {cx + size / 2, cx, cx + size};
+            int[] yPoints = {cy, cy + size, cy + size};
+            g2.fillPolygon(xPoints, yPoints, 3);
+            g2.dispose();
+        }
+
+        @Override public int getIconWidth() { return size + 10; }
+        @Override public int getIconHeight() { return size + 6; }
+    }
 }
