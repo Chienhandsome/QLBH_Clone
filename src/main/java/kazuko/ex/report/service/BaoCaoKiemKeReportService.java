@@ -184,12 +184,7 @@ public class BaoCaoKiemKeReportService {
             }
         }
 
-        if (rows.isEmpty()) {
-            rows.add(new DanhSachPhieuKiemKeTheoNgayReportRow(1, "Ngày: 15/05/2026", "KK0001", "Kiểm kê kho Kim Cương định kỳ tháng 5", "Khớp số liệu"));
-            rows.add(new DanhSachPhieuKiemKeTheoNgayReportRow(2, "Ngày: 15/05/2026", "KK0002", "Kiểm kê kho Vàng 18k", "Khớp"));
-            rows.add(new DanhSachPhieuKiemKeTheoNgayReportRow(3, "Ngày: 20/05/2026", "KK0003", "Kiểm kê đột xuất tủ trưng bày 01", "Đầy đủ số lượng"));
-        }
-
+        // Giữ danh sách rỗng; Jasper hiển thị khung báo cáo không có dòng chi tiết.
         return rows;
     }
 
@@ -232,12 +227,7 @@ public class BaoCaoKiemKeReportService {
             }
         }
 
-        if (rows.isEmpty()) {
-            rows.add(new TongHopMatHangKiemKeTheoNgayReportRow(1, "Ngày: 15/05/2026", "Vòng tay Kim Cương Nữ", "Cái", 5.0, 5.0, 0.0, 0.0));
-            rows.add(new TongHopMatHangKiemKeTheoNgayReportRow(2, "Ngày: 15/05/2026", "Nhẫn cưới Kim Cương Trắng", "Cặp", 13.0, 12.0, 1.0, 0.0));
-            rows.add(new TongHopMatHangKiemKeTheoNgayReportRow(3, "Ngày: 20/05/2026", "Nhẫn Kim Cương Nam NC02", "Cái", 4.0, 5.0, 0.0, 1.0));
-        }
-
+        // Giữ danh sách rỗng; Jasper hiển thị khung báo cáo không có dòng chi tiết.
         return rows;
     }
 
@@ -279,12 +269,7 @@ public class BaoCaoKiemKeReportService {
             }
         }
 
-        if (rows.isEmpty()) {
-            rows.add(new TongHopMatHangKiemKeTheoNhanVienReportRow(1, "Nhân viên: Nguyễn Văn A", "Vòng tay Kim Cương Nữ", "Cái", 5.0, 5.0, 0.0, 0.0));
-            rows.add(new TongHopMatHangKiemKeTheoNhanVienReportRow(2, "Nhân viên: Nguyễn Văn A", "Nhẫn cưới Kim Cương Trắng", "Cặp", 13.0, 12.0, 1.0, 0.0));
-            rows.add(new TongHopMatHangKiemKeTheoNhanVienReportRow(3, "Nhân viên: Trần Thị B", "Nhẫn Kim Cương Nam NC02", "Cái", 4.0, 5.0, 0.0, 1.0));
-        }
-
+        // Giữ danh sách rỗng; Jasper hiển thị khung báo cáo không có dòng chi tiết.
         return rows;
     }
 
@@ -315,12 +300,7 @@ public class BaoCaoKiemKeReportService {
             }
         }
 
-        if (rows.isEmpty()) {
-            rows.add(new DanhSachPhieuKiemKeTheoNhanVienReportRow(1, "Nhân viên: Nguyễn Văn A", "15/05/2026", "KK0001", "Kiểm kê kho Kim Cương định kỳ tháng 5", "Khớp số liệu"));
-            rows.add(new DanhSachPhieuKiemKeTheoNhanVienReportRow(2, "Nhân viên: Nguyễn Văn A", "15/05/2026", "KK0002", "Kiểm kê kho Vàng 18k", "Khớp"));
-            rows.add(new DanhSachPhieuKiemKeTheoNhanVienReportRow(3, "Nhân viên: Trần Thị B", "20/05/2026", "KK0003", "Kiểm kê đột xuất tủ trưng bày 01", "Đầy đủ"));
-        }
-
+        // Giữ danh sách rỗng; Jasper hiển thị khung báo cáo không có dòng chi tiết.
         return rows;
     }
 

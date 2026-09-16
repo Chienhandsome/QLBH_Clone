@@ -122,7 +122,7 @@ public class LicenseService {
         return expectedKeyForMachine(machineId).equals(normalizeKey(registrationKey));
     }
 
-    static String expectedKeyForMachine(String machineId) {
+    public static String expectedKeyForMachine(String machineId) {
         byte[] digest = sha256(KEY_SEED + '|' + machineId);
         StringBuilder raw = new StringBuilder("QLBH");
         for (int i = 0; i < 10; i++) {

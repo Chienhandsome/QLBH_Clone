@@ -36,11 +36,11 @@ public class ChonCotHienThiDialog extends JDialog {
     public static final List<String> DEFAULT_ALL_COLUMNS = DEFAULT_VISIBLE_COLUMNS;
 
     public static final List<String> ALL_POSSIBLE_CATALOG_COLUMNS = Arrays.asList(
-            "Mã hàng", "Tên hàng", "ĐVT", "ĐVT chẵn", "Giá bán", "Bảo hành", "Đơn giá 2", "giá blabla", "Quy đổi", "Giá bán chẵn", "Mã vạch", "Tồn kho", "Giá nhập", "Ghi chú"
+            "Mã hàng", "Tên hàng", "ĐVT", "ĐVT chẵn", "Giá bán", "Bảo hành"
     );
 
     public static final List<String> DEFAULT_VISIBLE_CATALOG_COLUMNS = Arrays.asList(
-            "Mã hàng", "Tên hàng", "ĐVT", "ĐVT chẵn", "Giá bán", "Bảo hành", "Đơn giá 2", "giá blabla", "Quy đổi", "Giá bán chẵn"
+            "Mã hàng", "Tên hàng", "ĐVT", "ĐVT chẵn", "Giá bán", "Bảo hành"
     );
 
     private List<String> allPossibleCols = ALL_POSSIBLE_COLUMNS;

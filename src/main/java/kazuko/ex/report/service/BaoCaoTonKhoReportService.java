@@ -276,13 +276,7 @@ public class BaoCaoTonKhoReportService {
             }
         }
 
-        if (rows.isEmpty()) {
-            rows.add(new TonKhoTheoKichThuocReportRow(1, "Nhóm: Vòng tay", "VT001", "Vòng tay Kim Cương Nữ", "Cái", 5.0, 0.0));
-            rows.add(new TonKhoTheoKichThuocReportRow(2, "Nhóm: Vòng tay", "VT002", "Vòng tay Vàng 18k", "Cái", 8.0, 0.0));
-            rows.add(new TonKhoTheoKichThuocReportRow(3, "Nhóm: Nhẫn cưới", "NC001", "Nhẫn cưới Kim Cương Trắng", "Cặp", 12.0, 0.0));
-            rows.add(new TonKhoTheoKichThuocReportRow(4, "Nhóm: Nhẫn cưới", "NC002", "Nhẫn cưới Bạch Kim", "Cặp", 6.0, 0.0));
-        }
-
+        // Giữ danh sách rỗng; Jasper hiển thị khung báo cáo không có dòng chi tiết.
         return rows;
     }
 
@@ -491,11 +485,7 @@ public class BaoCaoTonKhoReportService {
             }
         }
 
-        if (rows.isEmpty()) {
-            rows.add(new BaoCaoHangTonKhoReportRow(1, "Nhóm hàng: Nhẫn", "VT001", "Vòng tay Kim Cương Nữ", "Cái", 5.0, 1.0, 10.0, 12000000.0, 60000000.0, 15000000.0, 75000000.0));
-            rows.add(new BaoCaoHangTonKhoReportRow(2, "Nhóm hàng: Nhẫn", "NC001", "Nhẫn cưới Kim Cương Trắng", "Cặp", 8.0, 2.0, 15.0, 8500000.0, 68000000.0, 11000000.0, 88000000.0));
-        }
-
+        // Giữ danh sách rỗng; Jasper hiển thị khung báo cáo không có dòng chi tiết.
         return rows;
     }
 
@@ -584,11 +574,7 @@ public class BaoCaoTonKhoReportService {
             }
         }
 
-        if (rows.isEmpty()) {
-            rows.add(new BaoCaoTongHopXuatNhapTonReportRow(1, "Nhóm hàng: Nhẫn", "VT001", "Vòng tay Kim Cương Nữ", "Cái", 12000000.0, 5.0, 60000000.0, 0.0, 0.0, 0.0, 0.0, 5.0, 60000000.0));
-            rows.add(new BaoCaoTongHopXuatNhapTonReportRow(2, "Nhóm hàng: Nhẫn", "NC001", "Nhẫn cưới Kim Cương Trắng", "Cặp", 8500000.0, 8.0, 68000000.0, 0.0, 0.0, 0.0, 0.0, 8.0, 68000000.0));
-        }
-
+        // Giữ danh sách rỗng; Jasper hiển thị khung báo cáo không có dòng chi tiết.
         return rows;
     }
 

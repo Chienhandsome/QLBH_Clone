@@ -221,13 +221,7 @@ public class BaoCaoDatHangReportService {
             }
         }
 
-        // Fallback sample data if empty
-        if (rows.isEmpty()) {
-            rows.add(new DanhSachDatHangTheoNgayReportRow(1, "DH26/00001", "Nguyễn Văn An", "123 Lê Lợi, Q.1, TPHCM", "0901234567", 15000000.0, 500000.0, 50000.0, 14550000.0));
-            rows.add(new DanhSachDatHangTheoNgayReportRow(2, "DH26/00002", "Trần Thị Bích", "456 Nguyễn Huệ, Q.1, TPHCM", "0912345678", 22000000.0, 1000000.0, 100000.0, 21100000.0));
-            rows.add(new DanhSachDatHangTheoNgayReportRow(3, "DH26/00003", "Lê Hoàng Cường", "789 Hai Bà Trưng, Q.3, TPHCM", "0987654321", 8500000.0, 0.0, 0.0, 8500000.0));
-        }
-
+        // Giữ danh sách rỗng; Jasper hiển thị khung báo cáo không có dòng chi tiết.
         JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(rows);
 
         Map<String, Object> parameters = new HashMap<>();
@@ -285,15 +279,7 @@ public class BaoCaoDatHangReportService {
             }
         }
 
-        // Fallback sample data if empty
-        if (rows.isEmpty()) {
-            String kh1 = "Khách hàng: Nguyễn Văn An";
-            String kh2 = "Khách hàng: Trần Thị Bích";
-            rows.add(new DanhSachDatHangTheoKhachHangReportRow(1, sdf.format(new Date()), "DH26/00001", 15000000.0, 500000.0, 50000.0, 14550000.0, kh1));
-            rows.add(new DanhSachDatHangTheoKhachHangReportRow(2, sdf.format(new Date()), "DH26/00004", 5000000.0, 0.0, 30000.0, 5030000.0, kh1));
-            rows.add(new DanhSachDatHangTheoKhachHangReportRow(3, sdf.format(new Date()), "DH26/00002", 22000000.0, 1000000.0, 100000.0, 21100000.0, kh2));
-        }
-
+        // Giữ danh sách rỗng; Jasper hiển thị khung báo cáo không có dòng chi tiết.
         // Sort by group / date
         rows.sort((r1, r2) -> {
             int cmp = (r1.getKhachHang() != null ? r1.getKhachHang() : "").compareToIgnoreCase(r2.getKhachHang() != null ? r2.getKhachHang() : "");
@@ -351,11 +337,7 @@ public class BaoCaoDatHangReportService {
 
         List<TongHopDatHangTheoNgayReportRow> rows = new ArrayList<>(mapByDate.values());
 
-        if (rows.isEmpty()) {
-            rows.add(new TongHopDatHangTheoNgayReportRow(1, sdf.format(new Date()), 25000000.0, 1000000.0, 100000.0, 24100000.0));
-            rows.add(new TongHopDatHangTheoNgayReportRow(2, "02/09/2026", 18500000.0, 500000.0, 50000.0, 18050000.0));
-        }
-
+        // Giữ danh sách rỗng; Jasper hiển thị khung báo cáo không có dòng chi tiết.
         for (int i = 0; i < rows.size(); i++) {
             rows.get(i).setStt(i + 1);
         }
@@ -432,11 +414,7 @@ public class BaoCaoDatHangReportService {
             }
         }
 
-        if (rows.isEmpty()) {
-            rows.add(new TongHopDatHangTheoKhachHangReportRow(1, "KH001", "Nguyễn Văn An", "123 Lê Lợi, Q.1, TPHCM", "0901234567", 25000000.0, 1000000.0, 100000.0, 24100000.0));
-            rows.add(new TongHopDatHangTheoKhachHangReportRow(2, "KH002", "Trần Thị Bích", "456 Nguyễn Huệ, Q.1, TPHCM", "0912345678", 18500000.0, 500000.0, 50000.0, 18050000.0));
-        }
-
+        // Giữ danh sách rỗng; Jasper hiển thị khung báo cáo không có dòng chi tiết.
         // Sort by customer name
         rows.sort((r1, r2) -> (r1.getTenKhachHang() != null ? r1.getTenKhachHang() : "").compareToIgnoreCase(r2.getTenKhachHang() != null ? r2.getTenKhachHang() : ""));
 
@@ -502,14 +480,7 @@ public class BaoCaoDatHangReportService {
             }
         }
 
-        if (rows.isEmpty()) {
-            String g1 = "Khách hàng: Nguyễn Văn An";
-            String g2 = "Khách hàng: Trần Thị Bích";
-            rows.add(new TongHopMatHangDatTheoKhachHangReportRow(1, g1, "Nhẫn kim cương Solitaire 1 Carat", 1.0, 15000000.0, 15000000.0));
-            rows.add(new TongHopMatHangDatTheoKhachHangReportRow(2, g1, "Dây chuyền vàng trắng Ý 18K", 2.0, 4500000.0, 9000000.0));
-            rows.add(new TongHopMatHangDatTheoKhachHangReportRow(3, g2, "Vòng tay đá Sapphire thiên nhiên", 1.0, 22000000.0, 22000000.0));
-        }
-
+        // Giữ danh sách rỗng; Jasper hiển thị khung báo cáo không có dòng chi tiết.
         // Sort by groupKhachHang, tenMatHang
         rows.sort((r1, r2) -> {
             int cmp = (r1.getGroupKhachHang() != null ? r1.getGroupKhachHang() : "").compareToIgnoreCase(r2.getGroupKhachHang() != null ? r2.getGroupKhachHang() : "");
@@ -582,13 +553,7 @@ public class BaoCaoDatHangReportService {
             }
         }
 
-        if (rows.isEmpty()) {
-            String g1 = "Ngày: " + sdf.format(new Date());
-            rows.add(new TongHopMatHangDatTheoNgayReportRow(1, g1, "Nhẫn kim cương Solitaire 1 Carat", "Chiếc", 1.0, 15000000.0, 15000000.0));
-            rows.add(new TongHopMatHangDatTheoNgayReportRow(2, g1, "Dây chuyền vàng trắng Ý 18K", "Sợi", 2.0, 4500000.0, 9000000.0));
-            rows.add(new TongHopMatHangDatTheoNgayReportRow(3, g1, "Vòng tay đá Sapphire thiên nhiên", "Chiếc", 1.0, 22000000.0, 22000000.0));
-        }
-
+        // Giữ danh sách rỗng; Jasper hiển thị khung báo cáo không có dòng chi tiết.
         // Sort by groupNgay, matHang
         rows.sort((r1, r2) -> {
             int cmp = (r1.getGroupNgay() != null ? r1.getGroupNgay() : "").compareToIgnoreCase(r2.getGroupNgay() != null ? r2.getGroupNgay() : "");

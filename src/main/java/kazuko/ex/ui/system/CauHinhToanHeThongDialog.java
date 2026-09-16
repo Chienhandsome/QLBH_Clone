@@ -1,5 +1,6 @@
 package kazuko.ex.ui.system;
 
+import kazuko.ex.config.SystemConfigRestartPolicy;
 import kazuko.ex.dao.STemplateDAO;
 import kazuko.ex.dao.SystemConfigDAO;
 import kazuko.ex.dao.BillTemplateDAO;
@@ -2491,6 +2492,9 @@ public class CauHinhToanHeThongDialog extends JDialog {
     }
 
     private void onSave() {
+        String previousFontSize = currentConfig.getDoToChuHienThi();
+        String previousSystemTheme = currentConfig.getGiaoDienChuongTrinh();
+
         // Tab 1
         currentConfig.setTenCongTy(txtTenCongTy.getText().trim());
         currentConfig.setDiaChi(txtDiaChi.getText().trim());
@@ -2642,12 +2646,22 @@ public class CauHinhToanHeThongDialog extends JDialog {
         currentConfig.setKichHoatLuuVetHoatDong(chkKichHoatLuuVetHoatDong.isSelected());
         currentConfig.setHeThongChayNhieuMayTram(chkHeThongChayNhieuMayTram.isSelected());
 
+        boolean restartRequired = SystemConfigRestartPolicy.requiresRestart(
+                previousFontSize,
+                previousSystemTheme,
+                currentConfig.getDoToChuHienThi(),
+                currentConfig.getGiaoDienChuongTrinh()
+        );
+
         boolean ok = configDAO.saveConfig(currentConfig);
         if (ok) {
             JOptionPane.showMessageDialog(
                     this,
-                    "Đã lưu thông tin cấu hình toàn bộ hệ thống thành công!\n"
-                            + "Vui lòng khởi động lại ứng dụng để áp dụng giao diện và cỡ chữ mới.",
+                    restartRequired
+                            ? "Đã lưu cấu hình thành công!\n"
+                                    + "Bạn đã thay đổi cỡ chữ hoặc màu hệ thống. "
+                                    + "Vui lòng khởi động lại ứng dụng để áp dụng."
+                            : "Đã lưu và áp dụng cấu hình thành công!",
                     "Thông báo",
                     JOptionPane.INFORMATION_MESSAGE
             );

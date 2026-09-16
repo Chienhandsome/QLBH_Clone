@@ -56,7 +56,7 @@ public class BaoCaoPhieuChiTheoNgayPanel extends JPanel {
         pnlViewerContainer = new JPanel(new BorderLayout());
         pnlViewerContainer.setBackground(new Color(215, 228, 242));
 
-        currentViewer = new JRViewer(null);
+        currentViewer = new ReportJRViewer(null);
         pnlViewerContainer.add(currentViewer, BorderLayout.CENTER);
 
         add(pnlViewerContainer, BorderLayout.CENTER);
@@ -199,7 +199,7 @@ public class BaoCaoPhieuChiTheoNgayPanel extends JPanel {
                 try {
                     JasperPrint print = get();
                     pnlViewerContainer.removeAll();
-                    currentViewer = new JRViewer(print);
+                    currentViewer = new ReportJRViewer(print);
                     currentViewer.setZoomRatio(1.0f);
                     pnlViewerContainer.add(currentViewer, BorderLayout.CENTER);
                     pnlViewerContainer.revalidate();

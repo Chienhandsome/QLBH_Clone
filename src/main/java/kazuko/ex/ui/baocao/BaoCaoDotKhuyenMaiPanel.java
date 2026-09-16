@@ -36,7 +36,7 @@ public class BaoCaoDotKhuyenMaiPanel extends JPanel {
         pnlViewerContainer = new JPanel(new BorderLayout());
         pnlViewerContainer.setBackground(new Color(215, 228, 242));
 
-        currentViewer = new JRViewer(null);
+        currentViewer = new ReportJRViewer(null);
         pnlViewerContainer.add(currentViewer, BorderLayout.CENTER);
 
         add(pnlViewerContainer, BorderLayout.CENTER);
@@ -98,7 +98,7 @@ public class BaoCaoDotKhuyenMaiPanel extends JPanel {
     private void updateReportViewer(JasperPrint print) {
         pnlViewerContainer.removeAll();
         if (print != null) {
-            currentViewer = new JRViewer(print);
+            currentViewer = new ReportJRViewer(print);
             pnlViewerContainer.add(currentViewer, BorderLayout.CENTER);
         } else {
             pnlViewerContainer.add(new JLabel("Không có dữ liệu báo cáo", SwingConstants.CENTER), BorderLayout.CENTER);

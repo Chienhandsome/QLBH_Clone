@@ -25,6 +25,7 @@ public final class TouchLoginFrame extends JFrame {
     private static final Color KEY_BOTTOM = new Color(43, 133, 163);
     private static final Color ORANGE = new Color(255, 139, 0);
     private static final Color GREEN = new Color(0, 119, 9);
+    private static final Color FORM_BACKGROUND = new Color(63, 24, 22);
 
     private final AuthService authService = new AuthService();
     private final Consumer<SUser> successHandler;
@@ -66,52 +67,75 @@ public final class TouchLoginFrame extends JFrame {
     }
 
     private JPanel createLoginScreen() {
-        JPanel root = new JPanel(new BorderLayout());
+        // Chia đúng 50/50 để giữ nửa trái trống ở mọi độ phân giải/DPI.
+        JPanel root = new JPanel(new GridLayout(1, 2));
         root.setBackground(BACKGROUND);
 
-        JPanel right = new JPanel(new BorderLayout(12, 12));
+        JPanel leftBlank = new JPanel();
+        leftBlank.setBackground(BACKGROUND);
+        root.add(leftBlank);
+
+        JPanel right = new JPanel(new BorderLayout(0, 18));
         right.setBackground(BACKGROUND);
-        right.setBorder(new EmptyBorder(18, 12, 12, 12));
-        right.setPreferredSize(new Dimension(790, 0));
+        right.setBorder(new EmptyBorder(18, 20, 16, 20));
 
         JLabel banner = new JLabel("MỜI BẠN NHẬP THÔNG TIN ĐỂ ĐĂNG NHẬP", SwingConstants.CENTER);
         banner.setOpaque(true);
         banner.setBackground(BANNER);
         banner.setForeground(Color.WHITE);
-        banner.setFont(new Font("Segoe UI", Font.BOLD, 21));
+        banner.setFont(new Font("Segoe UI", Font.BOLD, 22));
         banner.setBorder(new LineBorder(new Color(135, 0, 0), 2, true));
-        banner.setPreferredSize(new Dimension(0, 58));
+        banner.setPreferredSize(new Dimension(0, 66));
         right.add(banner, BorderLayout.NORTH);
 
-        JPanel body = new JPanel(new BorderLayout(34, 0));
-        body.setBackground(BACKGROUND);
-        body.setBorder(new EmptyBorder(72, 0, 0, 0));
-        JPanel modes = new JPanel(new GridLayout(3, 1, 0, 24));
+        JPanel bodyHost = transparentPanel(new GridBagLayout());
+        bodyHost.setBorder(new EmptyBorder(20, 0, 12, 0));
+
+        JPanel body = transparentPanel(new BorderLayout(20, 0));
+        body.setBorder(new CompoundBorder(
+                new LineBorder(new Color(103, 51, 48), 1, true),
+                new EmptyBorder(20, 20, 20, 20)));
+        body.setBackground(FORM_BACKGROUND);
+        body.setOpaque(true);
+
+        JPanel modes = new JPanel(new GridLayout(3, 1, 0, 12));
         modes.setOpaque(false);
-        modes.setPreferredSize(new Dimension(140, 360));
+        modes.setPreferredSize(new Dimension(96, 300));
         modes.add(codeModeButton);
         modes.add(passwordModeButton);
         modes.add(cardModeButton);
-        body.add(modes, BorderLayout.WEST);
+        JPanel modeHost = transparentPanel(new GridBagLayout());
+        modeHost.setPreferredSize(new Dimension(96, 0));
+        modeHost.add(modes);
+        body.add(modeHost, BorderLayout.WEST);
 
         modeCards.setOpaque(false);
         modeCards.add(createPasswordCard(), Mode.PASSWORD.name());
         modeCards.add(createCodeCard(), Mode.CODE.name());
         modeCards.add(createCardReaderCard(), Mode.CARD.name());
         body.add(modeCards, BorderLayout.CENTER);
-        right.add(body, BorderLayout.CENTER);
+
+        GridBagConstraints bodyGbc = new GridBagConstraints();
+        bodyGbc.gridx = 0;
+        bodyGbc.gridy = 0;
+        bodyGbc.weightx = 1;
+        bodyGbc.weighty = 1;
+        bodyGbc.fill = GridBagConstraints.HORIZONTAL;
+        bodyGbc.anchor = GridBagConstraints.CENTER;
+        bodyHost.add(body, bodyGbc);
+        right.add(bodyHost, BorderLayout.CENTER);
         right.add(createFooter(), BorderLayout.SOUTH);
 
-        root.add(Box.createHorizontalGlue(), BorderLayout.CENTER);
-        root.add(right, BorderLayout.EAST);
+        root.add(right);
         return root;
     }
 
     private JPanel createPasswordCard() {
         JPanel panel = transparentPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(7, 5, 7, 5);
+        gbc.insets = new Insets(8, 6, 8, 6);
         gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.anchor = GridBagConstraints.CENTER;
 
         styleCredentialField(username);
         styleCredentialField(password);
@@ -124,8 +148,8 @@ public final class TouchLoginFrame extends JFrame {
         addCredentialRow(panel, gbc, 1, "MẬT KHẨU:", password, passwordKeyboard);
 
         gbc.gridy = 2;
-        gbc.gridx = 0;
-        gbc.gridwidth = 3;
+        gbc.gridx = 1;
+        gbc.gridwidth = 2;
         JCheckBox remember = createTouchCheckBox("Ghi nhớ mật khẩu");
         panel.add(remember, gbc);
         gbc.gridy = 3;
@@ -138,19 +162,21 @@ public final class TouchLoginFrame extends JFrame {
         panel.add(hint, gbc);
 
         gbc.gridy = 5;
-        gbc.gridwidth = 1;
-        JButton login = createActionButton("Đăng nhập", GREEN, 190, 58);
-        login.addActionListener(e -> submitPassword());
-        panel.add(login, gbc);
         gbc.gridx = 1;
         gbc.gridwidth = 2;
-        JButton reset = createActionButton("Nhập lại", new Color(86, 0, 94), 190, 58);
+        gbc.weightx = 1;
+        JPanel actions = transparentPanel(new GridLayout(1, 2, 12, 0));
+        JButton login = createActionButton("Đăng nhập", GREEN, 170, 54);
+        login.addActionListener(e -> submitPassword());
+        actions.add(login);
+        JButton reset = createActionButton("Nhập lại", new Color(86, 0, 94), 170, 54);
         reset.addActionListener(e -> {
             password.setText("");
             username.selectAll();
             username.requestFocusInWindow();
         });
-        panel.add(reset, gbc);
+        actions.add(reset);
+        panel.add(actions, gbc);
         return panel;
     }
 
@@ -200,8 +226,8 @@ public final class TouchLoginFrame extends JFrame {
         info.add(createFooterLabel("PHIÊN BẢN 5.1.0.0"));
         info.add(createFooterLabel("CƠ SỞ DỮ LIỆU: " + databaseName()));
         footer.add(info, BorderLayout.CENTER);
-        JButton power = createActionButton("⏻", BACKGROUND.brighter(), 100, 90);
-        power.setFont(new Font("Segoe UI Symbol", Font.BOLD, 50));
+        JButton power = createActionButton("⏻", BACKGROUND.brighter(), 84, 82);
+        power.setFont(new Font("Segoe UI Symbol", Font.BOLD, 42));
         power.addActionListener(e -> exitApplication());
         footer.add(power, BorderLayout.EAST);
         return footer;
@@ -383,9 +409,11 @@ public final class TouchLoginFrame extends JFrame {
         gbc.gridy = row;
         gbc.gridx = 0;
         gbc.gridwidth = 1;
+        gbc.weightx = 0;
         JLabel text = new JLabel(label);
         text.setForeground(Color.WHITE);
-        text.setFont(new Font("Segoe UI", Font.BOLD, 18));
+        text.setFont(new Font("Segoe UI", Font.BOLD, 17));
+        text.setPreferredSize(new Dimension(112, 48));
         panel.add(text, gbc);
         gbc.gridx = 1;
         gbc.weightx = 1;
@@ -396,9 +424,13 @@ public final class TouchLoginFrame extends JFrame {
     }
 
     private void styleCredentialField(JComponent field) {
-        field.setFont(new Font("Segoe UI", Font.PLAIN, 25));
-        field.setPreferredSize(new Dimension(330, 52));
+        field.setFont(new Font("Segoe UI", Font.PLAIN, 23));
+        field.setPreferredSize(new Dimension(250, 50));
+        field.setMinimumSize(new Dimension(120, 50));
         field.setBackground(Color.WHITE);
+        field.setBorder(new CompoundBorder(
+                new LineBorder(new Color(205, 205, 205), 1, true),
+                new EmptyBorder(3, 10, 3, 10)));
     }
 
     private JCheckBox createTouchCheckBox(String text) {
@@ -411,14 +443,14 @@ public final class TouchLoginFrame extends JFrame {
     }
 
     private JButton createModeButton(String text) {
-        JButton button = createActionButton(text, BACKGROUND.brighter(), 140, 105);
-        button.setFont(new Font("Segoe UI Symbol", Font.BOLD, 52));
+        JButton button = createActionButton(text, BACKGROUND.brighter(), 96, 92);
+        button.setFont(new Font("Segoe UI Symbol", Font.BOLD, 38));
         return button;
     }
 
     private JButton createSmallButton(String text) {
-        JButton button = createActionButton(text, BACKGROUND.brighter(), 72, 52);
-        button.setFont(new Font("Segoe UI Symbol", Font.BOLD, 28));
+        JButton button = createActionButton(text, BACKGROUND.brighter(), 58, 50);
+        button.setFont(new Font("Segoe UI Symbol", Font.BOLD, 24));
         return button;
     }
 
@@ -463,8 +495,8 @@ public final class TouchLoginFrame extends JFrame {
         label.setOpaque(true);
         label.setBackground(new Color(69, 36, 34));
         label.setForeground(Color.WHITE);
-        label.setFont(new Font("Segoe UI", Font.BOLD, 16));
-        label.setBorder(new EmptyBorder(3, 8, 3, 8));
+        label.setFont(new Font("Segoe UI", Font.BOLD, 15));
+        label.setBorder(new EmptyBorder(5, 10, 5, 10));
         return label;
     }
 

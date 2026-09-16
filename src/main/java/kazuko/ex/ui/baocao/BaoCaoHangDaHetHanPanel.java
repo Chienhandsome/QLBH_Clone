@@ -72,7 +72,7 @@ public class BaoCaoHangDaHetHanPanel extends JPanel {
         pnlViewerContainer = new JPanel(new BorderLayout());
         pnlViewerContainer.setBackground(new Color(215, 228, 242));
 
-        currentViewer = new JRViewer(null);
+        currentViewer = new ReportJRViewer(null);
         pnlViewerContainer.add(currentViewer, BorderLayout.CENTER);
 
         add(pnlViewerContainer, BorderLayout.CENTER);
@@ -198,7 +198,7 @@ public class BaoCaoHangDaHetHanPanel extends JPanel {
                     JasperPrint jp = get();
                     pnlViewerContainer.removeAll();
                     if (jp != null) {
-                        currentViewer = new JRViewer(jp);
+                        currentViewer = new ReportJRViewer(jp);
                         pnlViewerContainer.add(currentViewer, BorderLayout.CENTER);
                     }
                     pnlViewerContainer.revalidate();

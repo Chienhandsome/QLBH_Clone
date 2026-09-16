@@ -180,9 +180,7 @@ public class BaoCaoPhanTichKinhDoanhReportService {
         // I. DOANH THU
         rows.add(new BaoCaoKetQuaKinhDoanhReportRow("I.", "DOANH THU", null, doanhThuBanHang, 100.0, null, doanhThuBanHang, 0.0, true, false, 0));
         int dtIdx = 1;
-        if (nhomDoanhThu.isEmpty()) {
-            rows.add(new BaoCaoKetQuaKinhDoanhReportRow(String.valueOf(dtIdx++), "Kiềm", null, doanhThuBanHang, 100.0, null, doanhThuBanHang, 0.0, false, false, 1));
-        } else {
+        if (!nhomDoanhThu.isEmpty()) {
             for (Map.Entry<String, Double> entry : nhomDoanhThu.entrySet()) {
                 double val = entry.getValue();
                 double pct = doanhThuBanHang > 0 ? (val / doanhThuBanHang * 100.0) : 0.0;
@@ -204,9 +202,7 @@ public class BaoCaoPhanTichKinhDoanhReportService {
         // B. Biến phí
         rows.add(new BaoCaoKetQuaKinhDoanhReportRow("B.", "Biến phí", 0.0, giaVonBanHang, null, 100.0, giaVonBanHang, 0.0, true, true, 1));
         int bpIdx = 1;
-        if (nhomGiaVon.isEmpty()) {
-            rows.add(new BaoCaoKetQuaKinhDoanhReportRow(String.valueOf(bpIdx++), "Kiềm", 0.0, 0.0, null, 0.0, 0.0, 0.0, false, false, 2));
-        } else {
+        if (!nhomGiaVon.isEmpty()) {
             for (Map.Entry<String, Double> entry : nhomGiaVon.entrySet()) {
                 rows.add(new BaoCaoKetQuaKinhDoanhReportRow(String.valueOf(bpIdx++), entry.getKey(), 0.0, entry.getValue(), null, 0.0, entry.getValue(), 0.0, false, false, 2));
             }

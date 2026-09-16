@@ -290,11 +290,7 @@ public class BaoCaoNhapKhoReportService {
             }
         }
 
-        if (rows.isEmpty()) {
-            rows.add(new DanhSachPhieuNhapTheoNgayReportRow(1, "Ngày: 03/09/2026", "PN26/00001", "", "KHO BÁN HÀNG", "Nhập mua hàng", 70000.0, 0.0, 0.0, 70000.0));
-            rows.add(new DanhSachPhieuNhapTheoNgayReportRow(2, "Ngày: 03/09/2026", "PN26/00002", "", "KHO BÁN HÀNG", "Nhập mua hàng", 117120000.0, 0.0, 0.0, 117120000.0));
-        }
-
+        // Giữ danh sách rỗng; Jasper hiển thị khung báo cáo không có dòng chi tiết.
         return rows;
     }
 
@@ -356,11 +352,7 @@ public class BaoCaoNhapKhoReportService {
             }
         }
 
-        if (rows.isEmpty()) {
-            rows.add(new DanhSachPhieuNhapTheoNhaCungCapReportRow(1, "Nhà cung cấp:", "03/09/2026", "PN26/00001", "KHO BÁN HÀNG", "", "Nhập mua hàng", 70000.0, 0.0, 0.0, 70000.0));
-            rows.add(new DanhSachPhieuNhapTheoNhaCungCapReportRow(2, "Nhà cung cấp:", "03/09/2026", "PN26/00002", "KHO BÁN HÀNG", "", "Nhập mua hàng", 117120000.0, 0.0, 0.0, 117120000.0));
-        }
-
+        // Giữ danh sách rỗng; Jasper hiển thị khung báo cáo không có dòng chi tiết.
         return rows;
     }
 
@@ -418,11 +410,7 @@ public class BaoCaoNhapKhoReportService {
             }
         }
 
-        if (rows.isEmpty()) {
-            rows.add(new DanhSachPhieuNhapTheoNhanVienReportRow(1, "Nhân viên nhập:", "03/09/2026", "PN26/00001", "Nhập mua hàng", 70000.0, 0.0, 0.0, 70000.0));
-            rows.add(new DanhSachPhieuNhapTheoNhanVienReportRow(2, "Nhân viên nhập:", "03/09/2026", "PN26/00002", "Nhập mua hàng", 117120000.0, 0.0, 0.0, 117120000.0));
-        }
-
+        // Giữ danh sách rỗng; Jasper hiển thị khung báo cáo không có dòng chi tiết.
         return rows;
     }
 
@@ -477,16 +465,7 @@ public class BaoCaoNhapKhoReportService {
             }
         }
 
-        if (rows.isEmpty()) {
-            rows.add(new TongHopMatHangNhapTheoNhaCungCapReportRow(1, "Nhà cung cấp:", "am00002", "2900001", "bao", 100.0, 0.0, 0.0));
-            rows.add(new TongHopMatHangNhapTheoNhaCungCapReportRow(2, "Nhà cung cấp:", "3k0", "3K0", "Chiếc", 1.0, 30000.0, 30000.0));
-            rows.add(new TongHopMatHangNhapTheoNhaCungCapReportRow(3, "Nhà cung cấp:", "3k0", "3K0", "Chiếc", 1000.0, 30000.0, 30000000.0));
-            rows.add(new TongHopMatHangNhapTheoNhaCungCapReportRow(4, "Nhà cung cấp:", "4k0", "4K0", "Chiếc", 1.0, 40000.0, 40000.0));
-            rows.add(new TongHopMatHangNhapTheoNhaCungCapReportRow(5, "Nhà cung cấp:", "4k9", "4K9", "Chiếc", 1000.0, 87120.0, 87120000.0));
-            rows.add(new TongHopMatHangNhapTheoNhaCungCapReportRow(6, "Nhà cung cấp:", "1900001", "ALYNA Bấm móng lớn", "Cây", 1.0, 0.0, 0.0));
-            rows.add(new TongHopMatHangNhapTheoNhaCungCapReportRow(7, "Nhà cung cấp:", "1300002", "ALYNA BB Cream 2 màu kèm puff hộp...", "Hộp", 1.0, 0.0, 0.0));
-        }
-
+        // Giữ danh sách rỗng; Jasper hiển thị khung báo cáo không có dòng chi tiết.
         return rows;
     }
 
@@ -541,16 +520,7 @@ public class BaoCaoNhapKhoReportService {
             }
         }
 
-        if (rows.isEmpty()) {
-            rows.add(new TongHopMatHangNhapTheoNhanVienReportRow(1, "Nhân viên nhập:", "am00002", "2900001", "bao", 100.0, 0.0, 0.0));
-            rows.add(new TongHopMatHangNhapTheoNhanVienReportRow(2, "Nhân viên nhập:", "3k0", "3K0", "Chiếc", 1.0, 30000.0, 30000.0));
-            rows.add(new TongHopMatHangNhapTheoNhanVienReportRow(3, "Nhân viên nhập:", "3k0", "3K0", "Chiếc", 1000.0, 30000.0, 30000000.0));
-            rows.add(new TongHopMatHangNhapTheoNhanVienReportRow(4, "Nhân viên nhập:", "4k0", "4K0", "Chiếc", 1.0, 40000.0, 40000.0));
-            rows.add(new TongHopMatHangNhapTheoNhanVienReportRow(5, "Nhân viên nhập:", "4k9", "4K9", "Chiếc", 1000.0, 87120.0, 87120000.0));
-            rows.add(new TongHopMatHangNhapTheoNhanVienReportRow(6, "Nhân viên nhập:", "1900001", "ALYNA Bấm móng lớn", "Cây", 1.0, 0.0, 0.0));
-            rows.add(new TongHopMatHangNhapTheoNhanVienReportRow(7, "Nhân viên nhập:", "1300002", "ALYNA BB Cream 2 màu kèm puff hộp...", "Hộp", 1.0, 0.0, 0.0));
-        }
-
+        // Giữ danh sách rỗng; Jasper hiển thị khung báo cáo không có dòng chi tiết.
         return rows;
     }
 
@@ -602,10 +572,7 @@ public class BaoCaoNhapKhoReportService {
             }
         }
 
-        if (rows.isEmpty()) {
-            rows.add(new TongHopNhapTheoNgayReportRow(1, "03/09/2026", 117190000.0, 0.0, 0.0, 117190000.0));
-        }
-
+        // Giữ danh sách rỗng; Jasper hiển thị khung báo cáo không có dòng chi tiết.
         return rows;
     }
 
@@ -656,10 +623,7 @@ public class BaoCaoNhapKhoReportService {
             }
         }
 
-        if (rows.isEmpty()) {
-            rows.add(new TongHopNhapTheoNhaCungCapReportRow(1, "", 117190000.0, 0.0, 0.0, 117190000.0));
-        }
-
+        // Giữ danh sách rỗng; Jasper hiển thị khung báo cáo không có dòng chi tiết.
         return rows;
     }
 
@@ -710,10 +674,7 @@ public class BaoCaoNhapKhoReportService {
             }
         }
 
-        if (rows.isEmpty()) {
-            rows.add(new TongHopNhapTheoNhanVienReportRow(1, "", 117190000.0, 0.0, 0.0, 117190000.0));
-        }
-
+        // Giữ danh sách rỗng; Jasper hiển thị khung báo cáo không có dòng chi tiết.
         return rows;
     }
 
@@ -768,16 +729,7 @@ public class BaoCaoNhapKhoReportService {
             }
         }
 
-        if (rows.isEmpty()) {
-            rows.add(new TongHopMatHangNhapTheoNgayReportRow(1, "Ngày: 03/09/2026", "am00002", "2900001", "bao", 100.0, 0.0, 0.0));
-            rows.add(new TongHopMatHangNhapTheoNgayReportRow(2, "Ngày: 03/09/2026", "3k0", "3K0", "Chiếc", 1.0, 30000.0, 30000.0));
-            rows.add(new TongHopMatHangNhapTheoNgayReportRow(3, "Ngày: 03/09/2026", "3k0", "3K0", "Chiếc", 1000.0, 30000.0, 30000000.0));
-            rows.add(new TongHopMatHangNhapTheoNgayReportRow(4, "Ngày: 03/09/2026", "4k0", "4K0", "Chiếc", 1.0, 40000.0, 40000.0));
-            rows.add(new TongHopMatHangNhapTheoNgayReportRow(5, "Ngày: 03/09/2026", "4k9", "4K9", "Chiếc", 1000.0, 87120.0, 87120000.0));
-            rows.add(new TongHopMatHangNhapTheoNgayReportRow(6, "Ngày: 03/09/2026", "1900001", "ALYNA Bấm móng lớn", "Cây", 1.0, 0.0, 0.0));
-            rows.add(new TongHopMatHangNhapTheoNgayReportRow(7, "Ngày: 03/09/2026", "1300002", "ALYNA BB Cream 2 màu kèm puff hộp...", "Hộp", 1.0, 0.0, 0.0));
-        }
-
+        // Giữ danh sách rỗng; Jasper hiển thị khung báo cáo không có dòng chi tiết.
         return rows;
     }
 

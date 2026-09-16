@@ -155,13 +155,6 @@ public class BaoCaoBieuDoReportService {
             }
         }
 
-        // Demo sample if empty for nice visual render
-        if (nhomRevenue.isEmpty()) {
-            nhomRevenue.put("Công ty", 161000.0);
-            nhomRevenue.put("Kiềm", 48000.0);
-            totalRev = 209000.0;
-        }
-
         List<BieuDoDoanhSoTheoNhomReportRow> rows = new ArrayList<>();
         for (Map.Entry<String, Double> e : nhomRevenue.entrySet()) {
             double rev = e.getValue();
@@ -320,12 +313,6 @@ public class BaoCaoBieuDoReportService {
                 nvkdRevenue.put(nv, nvkdRevenue.getOrDefault(nv, 0.0) + tong);
                 totalRev += tong;
             }
-        }
-
-        if (nvkdRevenue.isEmpty()) {
-            nvkdRevenue.put("Nguyễn Văn A", 120000.0);
-            nvkdRevenue.put("Trần Thị B", 85000.0);
-            totalRev = 205000.0;
         }
 
         List<BieuDoDoanhSoTheoNvkdReportRow> rows = new ArrayList<>();

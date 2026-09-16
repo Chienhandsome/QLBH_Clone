@@ -29,6 +29,7 @@ import net.sf.jasperreports.engine.type.HorizontalTextAlignEnum;
 import net.sf.jasperreports.engine.type.ResetTypeEnum;
 import net.sf.jasperreports.engine.type.SortFieldTypeEnum;
 import net.sf.jasperreports.engine.type.SortOrderEnum;
+import net.sf.jasperreports.engine.type.WhenNoDataTypeEnum;
 import net.sf.jasperreports.engine.xml.JRXmlLoader;
 
 import java.io.InputStream;
@@ -51,6 +52,10 @@ public final class ReportTemplateCompiler {
 
     public static JasperReport compile(InputStream input) throws JRException {
         JasperDesign design = JRXmlLoader.load(input);
+        // Báo cáo không có dữ liệu vẫn phải hiển thị tiêu đề, header cột,
+        // tổng cộng và chữ ký thay vì trả về một trang trắng/không có trang.
+        // Điều này loại bỏ nhu cầu chèn dữ liệu minh họa vào luồng production.
+        design.setWhenNoDataType(WhenNoDataTypeEnum.ALL_SECTIONS_NO_DETAIL);
         try {
             List<ReportColumnSetting> settings = SETTING_DAO.findByReportKey(design.getName());
             if (!settings.isEmpty()) {

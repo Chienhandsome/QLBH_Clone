@@ -241,17 +241,7 @@ public class BaoCaoXuatKhoReportService {
             }
         }
 
-        if (rows.isEmpty()) {
-            rows.add(new TongHopMatHangXuatTheoNgayReportRow(1, "Số lượng xuất: 1", "3K0", "Chiếc", 16720.0, 16720.0));
-            rows.add(new TongHopMatHangXuatTheoNgayReportRow(2, "Số lượng xuất: 1", "ALYNA Bấm móng lớn", "Cây", 0.0, 0.0));
-            rows.add(new TongHopMatHangXuatTheoNgayReportRow(3, "Số lượng xuất: 1", "ALYNA BB Cream 2 màu kèm puff hộp nhựa", "Hộp", 0.0, 0.0));
-            rows.add(new TongHopMatHangXuatTheoNgayReportRow(1, "Số lượng xuất: 10,000", "Bếp từ SANAKY 1012", "Chiếc", 0.0, 0.0));
-            rows.add(new TongHopMatHangXuatTheoNgayReportRow(2, "Số lượng xuất: 10,000", "Bếp từ Sanaky AT1015", "Chiếc", 0.0, 0.0));
-            rows.add(new TongHopMatHangXuatTheoNgayReportRow(3, "Số lượng xuất: 10,000", "Siêu tốc KL 108", "Chiếc", 0.0, 0.0));
-            rows.add(new TongHopMatHangXuatTheoNgayReportRow(1, "Số lượng xuất: 20,000", "Bếp ga 02E", "Chiếc", 519200.0, 10384000000.0));
-            rows.add(new TongHopMatHangXuatTheoNgayReportRow(1, "Số lượng xuất: 40,000", "Bếp từ Sato 05IC", "Chiếc", 0.0, 0.0));
-        }
-
+        // Giữ danh sách rỗng; Jasper hiển thị khung báo cáo không có dòng chi tiết.
         return rows;
     }
 
@@ -305,12 +295,7 @@ public class BaoCaoXuatKhoReportService {
             }
         }
 
-        if (rows.isEmpty()) {
-            rows.add(new TongHopMatHangXuatTheoNhanVienReportRow(1, "Nhân viên xuất:", "3K0", "Chiếc", 1.0, 16720.0, 16720.0));
-            rows.add(new TongHopMatHangXuatTheoNhanVienReportRow(2, "Nhân viên xuất:", "ALYNA Bấm móng lớn", "Cây", 1.0, 0.0, 0.0));
-            rows.add(new TongHopMatHangXuatTheoNhanVienReportRow(3, "Nhân viên xuất:", "ALYNA BB Cream 2 màu kèm puff hộp nhựa", "Hộp", 1.0, 0.0, 0.0));
-        }
-
+        // Giữ danh sách rỗng; Jasper hiển thị khung báo cáo không có dòng chi tiết.
         return rows;
     }
 
@@ -349,11 +334,7 @@ public class BaoCaoXuatKhoReportService {
             }
         }
 
-        if (rows.isEmpty()) {
-            rows.add(new DanhSachPhieuXuatTheoNhanVienReportRow(1, "24/08/2026", "PX26/00001", 10384000000.0, 0.0, 0.0, 10384000000.0, ""));
-            rows.add(new DanhSachPhieuXuatTheoNhanVienReportRow(2, "03/09/2026", "PX26/00002", 16720.0, 0.0, 0.0, 16720.0, ""));
-        }
-
+        // Giữ danh sách rỗng; Jasper hiển thị khung báo cáo không có dòng chi tiết.
         return rows;
     }
 
@@ -401,10 +382,7 @@ public class BaoCaoXuatKhoReportService {
             }
         }
 
-        if (rows.isEmpty()) {
-            rows.add(new TongHopXuatKhacTheoNgayReportRow(1, "03/09/2026", 16720.0, 0.0, 0.0, 16720.0));
-        }
-
+        // Giữ danh sách rỗng; Jasper hiển thị khung báo cáo không có dòng chi tiết.
         return rows;
     }
 
@@ -454,10 +432,7 @@ public class BaoCaoXuatKhoReportService {
             }
         }
 
-        if (rows.isEmpty()) {
-            rows.add(new TongHopXuatKhacTheoNhanVienReportRow(1, "", 16720.0, 0.0, 0.0, 16720.0));
-        }
-
+        // Giữ danh sách rỗng; Jasper hiển thị khung báo cáo không có dòng chi tiết.
         return rows;
     }
 
@@ -506,10 +481,7 @@ public class BaoCaoXuatKhoReportService {
             }
         }
 
-        if (rows.isEmpty()) {
-            rows.add(new DanhSachPhieuXuatTheoNgayReportRow(1, "Ngày: 03/09/2026", "PX26/00002", "KHO BÁN HÀNG", "", 16720.0, 0.0, 0.0, 16720.0));
-        }
-
+        // Giữ danh sách rỗng; Jasper hiển thị khung báo cáo không có dòng chi tiết.
         return rows;
     }
 

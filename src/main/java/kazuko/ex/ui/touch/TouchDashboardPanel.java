@@ -102,13 +102,6 @@ final class TouchDashboardPanel extends JPanel {
         this.activeMainMenu = menu;
         mainButtons.forEach((label, button) -> button.setSelectedStyle(label.equals(menu)));
         invoiceButton.setSelectedStyle(true);
-        if ("BÁO CÁO".equals(menu)) {
-            submenuHost.removeAll();
-            submenuHost.revalidate();
-            submenuHost.repaint();
-            openModule.accept(menu);
-            return;
-        }
         renderSubmenu(menu, null);
     }
 

@@ -200,10 +200,10 @@ public final class TouchSalesFrame extends JFrame {
 
             // QUẢN TRỊ
             case "CHỈ TIÊU DOANH THU" -> showBusinessPanel(key, new ChiTieuDoanhThuPanel());
-            case "XÓA DỮ LIỆU" -> showBusinessPanel(key, ReportPanelFactory.createPlaceholderPanel("Xóa dữ liệu"));
+            case "XÓA DỮ LIỆU" -> showTouchPanel(new TouchXoaDuLieuPanel(this::showDashboard));
             case "CÔNG CỤ NHÀ PHÁT TRIỂN" -> showBusinessPanel(key, ReportPanelFactory.createPlaceholderPanel("Công cụ nhà phát triển"));
-            case "NGƯỜI DÙNG VÀ PHÂN QUYỀN" -> new QuanLyNguoiDungDialog(this).setVisible(true);
-            case "CẤU HÌNH TOÀN HỆ THỐNG" -> new CauHinhToanHeThongDialog(this).setVisible(true);
+            case "NGƯỜI DÙNG VÀ PHÂN QUYỀN" -> showTouchPanel(new TouchNguoiDungVaPhanQuyenPanel(this::showDashboard));
+            case "CẤU HÌNH TOÀN HỆ THỐNG" -> showTouchPanel(new TouchCauHinhToanHeThongPanel(this::showDashboard));
             case "TỒN KHO BAN ĐẦU" -> {
                 ChonKhoBanDauDialog selectDlg = new ChonKhoBanDauDialog(this);
                 selectDlg.setVisible(true);
@@ -219,8 +219,9 @@ public final class TouchSalesFrame extends JFrame {
             case "HỖ TRỢ TỪ XA TEAMVIEWER" -> JOptionPane.showMessageDialog(this,
                     "Vui lòng liên hệ tổng đài Tân An Phát để được hỗ trợ từ xa:\nHotline: 0967041111",
                     "Hỗ trợ từ xa", JOptionPane.INFORMATION_MESSAGE);
-            case "ĐĂNG KÝ BẢN QUYỀN..." -> new RegistrationDialog(this).setVisible(true);
-            case "THÔNG TIN PHẦN MỀM" -> new AboutDialog(this).setVisible(true);
+            case "ĐĂNG KÝ BẢN QUYỀN..." -> showTouchPanel(new TouchDangKyBanQuyenPanel(this::showDashboard));
+            case "THÔNG TIN PHẦN MỀM" -> showTouchPanel(new TouchThongTinPhanMemPanel(this::showDashboard,
+                    () -> showTouchPanel(new TouchDangKyBanQuyenPanel(this::showDashboard))));
             case "GHI CHÚ" -> new GhiChuNhanhDialog(this).setVisible(true);
 
             default -> {

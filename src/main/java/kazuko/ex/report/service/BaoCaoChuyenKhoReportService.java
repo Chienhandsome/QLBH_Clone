@@ -241,15 +241,7 @@ public class BaoCaoChuyenKhoReportService {
             }
         }
 
-        if (rows.isEmpty()) {
-            rows.add(new TongHopMatHangChuyenKhoReportRow(1, "Nhân viên nhập: ", "1900002", "ALYNA Bấm móng nhỏ", "Cây", 0.0, 0.0, 0.0));
-            rows.add(new TongHopMatHangChuyenKhoReportRow(2, "Nhân viên nhập: ", "1900002", "ALYNA Bấm móng nhỏ", "Cây", 1.0, 0.0, 0.0));
-            rows.add(new TongHopMatHangChuyenKhoReportRow(3, "Nhân viên nhập: ", "1300003", "ALYNA Đắp mặt nạ đủ loại", "Bịch", 0.0, 0.0, 0.0));
-            rows.add(new TongHopMatHangChuyenKhoReportRow(4, "Nhân viên nhập: ", "1300003", "ALYNA Đắp mặt nạ đủ loại", "Bịch", 1.0, 0.0, 0.0));
-            rows.add(new TongHopMatHangChuyenKhoReportRow(5, "Nhân viên nhập: ", "1300005", "ALYNA Hair Coat 80ml", "chai", 0.0, 0.0, 0.0));
-            rows.add(new TongHopMatHangChuyenKhoReportRow(6, "Nhân viên nhập: ", "1300005", "ALYNA Hair Coat 80ml", "chai", 1.0, 0.0, 0.0));
-        }
-
+        // Giữ danh sách rỗng; Jasper hiển thị khung báo cáo không có dòng chi tiết.
         return rows;
     }
 
@@ -295,15 +287,7 @@ public class BaoCaoChuyenKhoReportService {
             }
         }
 
-        if (rows.isEmpty()) {
-            rows.add(new TongHopMatHangChuyenKhoReportRow(1, "Nhân viên xuất: ", "1900002", "ALYNA Bấm móng nhỏ", "Cây", 0.0, 0.0, 0.0));
-            rows.add(new TongHopMatHangChuyenKhoReportRow(2, "Nhân viên xuất: ", "1900002", "ALYNA Bấm móng nhỏ", "Cây", 1.0, 0.0, 0.0));
-            rows.add(new TongHopMatHangChuyenKhoReportRow(3, "Nhân viên xuất: ", "1300003", "ALYNA Đắp mặt nạ đủ loại", "Bịch", 0.0, 0.0, 0.0));
-            rows.add(new TongHopMatHangChuyenKhoReportRow(4, "Nhân viên xuất: ", "1300003", "ALYNA Đắp mặt nạ đủ loại", "Bịch", 1.0, 0.0, 0.0));
-            rows.add(new TongHopMatHangChuyenKhoReportRow(5, "Nhân viên xuất: ", "1300005", "ALYNA Hair Coat 80ml", "chai", 0.0, 0.0, 0.0));
-            rows.add(new TongHopMatHangChuyenKhoReportRow(6, "Nhân viên xuất: ", "1300005", "ALYNA Hair Coat 80ml", "chai", 1.0, 0.0, 0.0));
-        }
-
+        // Giữ danh sách rỗng; Jasper hiển thị khung báo cáo không có dòng chi tiết.
         return rows;
     }
 
@@ -349,15 +333,7 @@ public class BaoCaoChuyenKhoReportService {
             }
         }
 
-        if (rows.isEmpty()) {
-            rows.add(new TongHopMatHangChuyenKhoReportRow(1, "Ngày: 03/09/2026", "1900002", "ALYNA Bấm móng nhỏ", "Cây", 0.0, 0.0, 0.0));
-            rows.add(new TongHopMatHangChuyenKhoReportRow(2, "Ngày: 03/09/2026", "1900002", "ALYNA Bấm móng nhỏ", "Cây", 1.0, 0.0, 0.0));
-            rows.add(new TongHopMatHangChuyenKhoReportRow(3, "Ngày: 03/09/2026", "1300003", "ALYNA Đắp mặt nạ đủ loại", "Bịch", 0.0, 0.0, 0.0));
-            rows.add(new TongHopMatHangChuyenKhoReportRow(4, "Ngày: 03/09/2026", "1300003", "ALYNA Đắp mặt nạ đủ loại", "Bịch", 1.0, 0.0, 0.0));
-            rows.add(new TongHopMatHangChuyenKhoReportRow(5, "Ngày: 03/09/2026", "1300005", "ALYNA Hair Coat 80ml", "chai", 0.0, 0.0, 0.0));
-            rows.add(new TongHopMatHangChuyenKhoReportRow(6, "Ngày: 03/09/2026", "1300005", "ALYNA Hair Coat 80ml", "chai", 1.0, 0.0, 0.0));
-        }
-
+        // Giữ danh sách rỗng; Jasper hiển thị khung báo cáo không có dòng chi tiết.
         return rows;
     }
 
@@ -397,10 +373,7 @@ public class BaoCaoChuyenKhoReportService {
             }
         }
 
-        if (rows.isEmpty()) {
-            rows.add(new DanhSachPhieuChuyenKhoReportRow(1, "Nhân viên xuất: ", "PCK26/00001", "03/09/2026", "KHO BÁN HÀNG", "KHO TỔNG", "", "", "Chuyển kho nội bộ", 0.0, ""));
-        }
-
+        // Giữ danh sách rỗng; Jasper hiển thị khung báo cáo không có dòng chi tiết.
         return rows;
     }
 
@@ -437,10 +410,7 @@ public class BaoCaoChuyenKhoReportService {
             }
         }
 
-        if (rows.isEmpty()) {
-            rows.add(new DanhSachPhieuChuyenKhoReportRow(1, "Nhân viên nhập: ", "PCK26/00001", "03/09/2026", "KHO BÁN HÀNG", "KHO TỔNG", "", "", "Chuyển kho nội bộ", 0.0, ""));
-        }
-
+        // Giữ danh sách rỗng; Jasper hiển thị khung báo cáo không có dòng chi tiết.
         return rows;
     }
 
@@ -468,10 +438,7 @@ public class BaoCaoChuyenKhoReportService {
             }
         }
 
-        if (rows.isEmpty()) {
-            rows.add(new DanhSachPhieuChuyenKhoReportRow(1, "", "PCK26/00001", "08/09/2026", "KHO BÁN HÀNG", "KHO TỔNG", "", "", "Chuyển kho nội bộ", 0.0, ""));
-        }
-
+        // Giữ danh sách rỗng; Jasper hiển thị khung báo cáo không có dòng chi tiết.
         return rows;
     }
 

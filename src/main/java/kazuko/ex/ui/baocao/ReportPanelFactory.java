@@ -26,6 +26,14 @@ public final class ReportPanelFactory {
     private ReportPanelFactory() {}
 
     public static JPanel createReportPanel(String title) {
+        JPanel content = createReportContent(title);
+        if (content instanceof ReportScreenPanel) {
+            return content;
+        }
+        return new ReportScreenPanel(title, content);
+    }
+
+    private static JPanel createReportContent(String title) {
         if (title == null) return createPlaceholderPanel("Báo cáo");
         switch (title.trim().toUpperCase()) {
             case "DANH SÁCH PHIẾU THU THEO NGÀY":

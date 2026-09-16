@@ -301,13 +301,7 @@ public class BaoCaoQuanTriReportService {
             r.setLoiNhuan(tongCongBan - giaTriVon);
         }
 
-        if (rows.isEmpty()) {
-            rows.add(new BaoCaoLaiGopTheoMatHangReportRow(1, "Nhóm hàng hóa: Vòng tay", "VT001", "Vòng tay Kim Cương Nữ", "Cái", 5.0, 0.0, 15000000.0, 75000000.0, 2000000.0, 73000000.0, isGiaNhap ? 10000000.0 : 10500000.0, isGiaNhap ? 50000000.0 : 52500000.0, isGiaNhap ? 23000000.0 : 20500000.0));
-            rows.add(new BaoCaoLaiGopTheoMatHangReportRow(2, "Nhóm hàng hóa: Vòng tay", "VT002", "Vòng tay Vàng 18k", "Cái", 3.0, 1.0, 8000000.0, 24000000.0, 0.0, 24000000.0, isGiaNhap ? 6000000.0 : 6200000.0, isGiaNhap ? 12000000.0 : 12400000.0, isGiaNhap ? 12000000.0 : 11600000.0));
-            rows.add(new BaoCaoLaiGopTheoMatHangReportRow(3, "Nhóm hàng hóa: Nhẫn cưới", "NC001", "Nhẫn cưới Kim Cương Trắng", "Cặp", 4.0, 0.0, 22000000.0, 88000000.0, 3000000.0, 85000000.0, isGiaNhap ? 15000000.0 : 15500000.0, isGiaNhap ? 60000000.0 : 62000000.0, isGiaNhap ? 25000000.0 : 23000000.0));
-            rows.add(new BaoCaoLaiGopTheoMatHangReportRow(4, "Nhóm hàng hóa: Nhẫn cưới", "NC002", "Nhẫn cưới Bạch Kim", "Cặp", 2.0, 0.0, 18000000.0, 36000000.0, 1000000.0, 35000000.0, isGiaNhap ? 12000000.0 : 12500000.0, isGiaNhap ? 24000000.0 : 25000000.0, isGiaNhap ? 11000000.0 : 10000000.0));
-        }
-
+        // Giữ danh sách rỗng; Jasper hiển thị khung báo cáo không có dòng chi tiết.
         rows.sort((r1, r2) -> {
             int cmp = r1.getGroupName().compareToIgnoreCase(r2.getGroupName());
             if (cmp != 0) return cmp;
@@ -417,13 +411,7 @@ public class BaoCaoQuanTriReportService {
             }
         }
 
-        if (rows.isEmpty()) {
-            rows.add(new ChiTietLaiTheoHoaDonReportRow(1, "Số hóa đơn: HD0001  -  Ngày: 01/09/2026  -  KH: Nguyễn Văn A", "VT001", "Vòng tay Kim Cương Nữ", "Cái", 2.0, 0.0, 15000000.0, 30000000.0, 1000000.0, 29000000.0, isGiaNhap ? 10000000.0 : 10500000.0, isGiaNhap ? 20000000.0 : 21000000.0, isGiaNhap ? 9000000.0 : 8000000.0));
-            rows.add(new ChiTietLaiTheoHoaDonReportRow(2, "Số hóa đơn: HD0001  -  Ngày: 01/09/2026  -  KH: Nguyễn Văn A", "NC001", "Nhẫn cưới Kim Cương Trắng", "Cặp", 1.0, 0.0, 22000000.0, 22000000.0, 500000.0, 21500000.0, isGiaNhap ? 15000000.0 : 15500000.0, isGiaNhap ? 15000000.0 : 15500000.0, isGiaNhap ? 6500000.0 : 6000000.0));
-            rows.add(new ChiTietLaiTheoHoaDonReportRow(3, "Số hóa đơn: HD0002  -  Ngày: 02/09/2026  -  KH: Trần Thị B", "VT002", "Vòng tay Vàng 18k", "Cái", 1.0, 0.0, 8000000.0, 8000000.0, 0.0, 8000000.0, isGiaNhap ? 6000000.0 : 6200000.0, isGiaNhap ? 6000000.0 : 6200000.0, isGiaNhap ? 2000000.0 : 1800000.0));
-            rows.add(new ChiTietLaiTheoHoaDonReportRow(4, "Số hóa đơn: HD0002  -  Ngày: 02/09/2026  -  KH: Trần Thị B", "NC002", "Nhẫn cưới Bạch Kim", "Cặp", 1.0, 0.0, 18000000.0, 18000000.0, 500000.0, 17500000.0, isGiaNhap ? 12000000.0 : 12500000.0, isGiaNhap ? 12000000.0 : 12500000.0, isGiaNhap ? 5500000.0 : 5000000.0));
-        }
-
+        // Giữ danh sách rỗng; Jasper hiển thị khung báo cáo không có dòng chi tiết.
         return rows;
     }
 
