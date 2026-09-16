@@ -22,14 +22,21 @@ public class TouchEmbeddedKeyboardPanel extends JPanel {
     private final Consumer<String> onKeyPress;
     private final Runnable onBackspace;
     private final Runnable onSpace;
+    private final boolean stretchKeys;
 
     private final List<JButton> alphabetButtons = new ArrayList<>();
     private JButton btnShift;
 
     public TouchEmbeddedKeyboardPanel(Consumer<String> onKeyPress, Runnable onBackspace, Runnable onSpace) {
+        this(onKeyPress, onBackspace, onSpace, false);
+    }
+
+    public TouchEmbeddedKeyboardPanel(Consumer<String> onKeyPress, Runnable onBackspace,
+                                      Runnable onSpace, boolean stretchKeys) {
         this.onKeyPress = onKeyPress;
         this.onBackspace = onBackspace;
         this.onSpace = onSpace;
+        this.stretchKeys = stretchKeys;
 
         setOpaque(false);
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
@@ -45,7 +52,8 @@ public class TouchEmbeddedKeyboardPanel extends JPanel {
         for (String k : r1) {
             row1.add(createCharButton(k, false));
         }
-        JButton btnBksp = createSpecialButton("◄", SPECIAL_KEY_BG, new Dimension(70, 38));
+        JButton btnBksp = createSpecialButton("◄", SPECIAL_KEY_BG,
+                new Dimension(stretchKeys ? 100 : 70, stretchKeys ? 58 : 38));
         btnBksp.setForeground(Color.WHITE);
         btnBksp.setFont(new Font("Segoe UI", Font.BOLD, 18));
         btnBksp.addActionListener(e -> {
@@ -92,7 +100,8 @@ public class TouchEmbeddedKeyboardPanel extends JPanel {
         add(Box.createVerticalStrut(4));
 
         // Hàng 5: Space (thanh dài ở giữa như Hình 2)
-        JPanel row5 = createRowPanel();
+        JPanel row5 = new JPanel(new FlowLayout(FlowLayout.CENTER, 3, 0));
+        row5.setOpaque(false);
         JButton btnSpace = new JButton() {
             @Override
             protected void paintComponent(Graphics g) {
@@ -106,7 +115,7 @@ public class TouchEmbeddedKeyboardPanel extends JPanel {
                 g2.dispose();
             }
         };
-        btnSpace.setPreferredSize(new Dimension(340, 36));
+        btnSpace.setPreferredSize(new Dimension(stretchKeys ? 720 : 340, stretchKeys ? 54 : 36));
         btnSpace.setFocusPainted(false);
         btnSpace.setContentAreaFilled(false);
         btnSpace.setBorderPainted(false);
@@ -119,15 +128,21 @@ public class TouchEmbeddedKeyboardPanel extends JPanel {
     }
 
     private JPanel createRowPanel() {
-        JPanel pnl = new JPanel(new FlowLayout(FlowLayout.CENTER, 3, 0));
+        JPanel pnl = stretchKeys
+                ? new JPanel(new GridLayout(1, 0, 6, 0))
+                : new JPanel(new FlowLayout(FlowLayout.CENTER, 3, 0));
         pnl.setOpaque(false);
+        if (stretchKeys) {
+            pnl.setMaximumSize(new Dimension(Integer.MAX_VALUE, 58));
+            pnl.setPreferredSize(new Dimension(0, 58));
+        }
         return pnl;
     }
 
     private JButton createCharButton(String text, boolean isAlpha) {
         JButton btn = new JButton(text);
-        btn.setPreferredSize(new Dimension(56, 38));
-        btn.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        btn.setPreferredSize(new Dimension(stretchKeys ? 100 : 56, stretchKeys ? 58 : 38));
+        btn.setFont(new Font("Segoe UI", Font.BOLD, stretchKeys ? 22 : 16));
         btn.setForeground(Color.WHITE);
         btn.setBackground(KEY_BG);
         btn.setBorder(new LineBorder(KEY_BORDER, 1, true));

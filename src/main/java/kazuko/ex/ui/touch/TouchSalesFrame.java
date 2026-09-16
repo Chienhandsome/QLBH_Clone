@@ -13,7 +13,6 @@ import kazuko.ex.ui.danhmuc.CaLamViecDialog;
 import kazuko.ex.ui.danhmuc.DanhMucDotKhuyenMaiPanel;
 import kazuko.ex.ui.danhmuc.DanhMucKhachHangPanel;
 import kazuko.ex.ui.danhmuc.KhachHangThanThietPanel;
-import kazuko.ex.ui.danhmuc.LyDoThuChiDialog;
 import kazuko.ex.ui.danhmuc.NhanVienDialog;
 import kazuko.ex.ui.danhmuc.TaiKhoanNganHangDialog;
 import kazuko.ex.ui.dathang.DatHangNhaCungCapPanel;
@@ -37,7 +36,6 @@ import kazuko.ex.ui.quantri.ChiTieuDoanhThuPanel;
 import kazuko.ex.ui.quy.DanhMucPhieuChiPanel;
 import kazuko.ex.ui.quy.DanhMucPhieuThuPanel;
 import kazuko.ex.ui.quy.TaoPhieuChiDialog;
-import kazuko.ex.ui.quy.TaoPhieuThuDialog;
 import kazuko.ex.ui.quy.TonQuyPanel;
 import kazuko.ex.ui.system.CauHinhToanHeThongDialog;
 import kazuko.ex.ui.system.GhiChuNhanhDialog;
@@ -178,9 +176,10 @@ public final class TouchSalesFrame extends JFrame {
             case "TỒN NHIỀU KHO" -> showBusinessPanel(key, new QuanLyTonNhieuKhoPanel());
 
             // QUỸ
-            case "DANH MỤC LÝ DO THU CHI" -> new LyDoThuChiDialog(this).setVisible(true);
+            case "DANH MỤC LÝ DO THU CHI" ->
+                    showTouchPanel(new TouchLyDoThuChiPanel(this::showDashboard));
             case "DANH MỤC TÀI KHOẢN NGÂN HÀNG" -> new TaiKhoanNganHangDialog(this).setVisible(true);
-            case "TẠO PHIẾU THU" -> new TaoPhieuThuDialog(this).setVisible(true);
+            case "TẠO PHIẾU THU" -> showTouchPanel(new TouchPhieuThuPanel(this::showDashboard));
             case "TẠO PHIẾU CHI" -> new TaoPhieuChiDialog(this).setVisible(true);
             case "DANH MỤC PHIẾU THU" -> showBusinessPanel(key, new DanhMucPhieuThuPanel());
             case "DANH MỤC PHIẾU CHI" -> showBusinessPanel(key, new DanhMucPhieuChiPanel());
