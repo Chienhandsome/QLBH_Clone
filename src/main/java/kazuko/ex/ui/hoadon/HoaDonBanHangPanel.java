@@ -2626,7 +2626,9 @@ public class HoaDonBanHangPanel extends JPanel {
                     m.getGiaBan(), m.getGiaBan2(), m.getGiaBan3(), m.getGiaBan4(),
                     m.getGiaVon(), latestPrice);
             selectedPriceName = SalesConfigSupport.customerPriceName(customerPriceCode, systemConfig);
-        } else {
+        } else if (SalesConfigSupport.shouldShowPriceSelection(systemConfig,
+                m.getGiaBan2(), m.getGiaBan3(), m.getGiaBan4(),
+                !ChonLoaiGiaDialog.filterRecentPrices(recentPrices).isEmpty())) {
             ChonLoaiGiaDialog priceDlg = new ChonLoaiGiaDialog(parentWin, systemConfig,
                     m.getGiaBan(), m.getGiaBan2(), m.getGiaBan3(), m.getGiaBan4(), recentPrices);
             priceDlg.setVisible(true);
@@ -2635,6 +2637,10 @@ public class HoaDonBanHangPanel extends JPanel {
             price = priceDlg.getSelectedPrice();
             selectedPriceName = priceDlg.getSelectedPriceName();
             applyToAll = priceDlg.isApplyToAll();
+        } else {
+            selectedPriceIndex = 0;
+            price = m.getGiaBan();
+            selectedPriceName = "Giá bán";
         }
 
         double defaultQty = 1.0;

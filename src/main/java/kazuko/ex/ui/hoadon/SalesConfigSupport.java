@@ -93,6 +93,27 @@ final class SalesConfigSupport {
         }
     }
 
+    static boolean shouldShowPriceSelection(SystemConfig config) {
+        if (config == null) return false;
+        // 1. Ô "Hiển thị để lựa chọn nếu có nhiều giá" không được tick -> luôn luôn không hiện
+        if (!config.isHienThiDeLuaChonNeuCoNhieuGia()) {
+            return false;
+        }
+        // 2. Cả 3 giá (giá 2, giá 3, giá 4) đều không được tick -> không hiện
+        return config.isSuDungGia2() || config.isSuDungGia3() || config.isSuDungGia4();
+    }
+
+    static boolean shouldShowPriceSelection(SystemConfig config, double gia2, double gia3, double gia4, boolean hasRecentPrices) {
+        if (!shouldShowPriceSelection(config)) {
+            return false;
+        }
+        // Kiểm tra xem thực tế có giá phụ nào bật và > 0, hoặc có giá gần đây hay không
+        return (config.isSuDungGia2() && gia2 > 0)
+                || (config.isSuDungGia3() && gia3 > 0)
+                || (config.isSuDungGia4() && gia4 > 0)
+                || hasRecentPrices;
+    }
+
     private static String configuredName(String value, String fallback) {
         return value != null && !value.trim().isEmpty() ? value.trim() : fallback;
     }

@@ -70,6 +70,47 @@ class SalesConfigSupportTest {
         assertEquals("Giá gần nhất", SalesConfigSupport.customerPriceName(KhachHang.GIA_GAN_NHAT, config));
     }
 
+    @Test
+    void shouldNotShowPriceSelectionWhenShowChoiceOptionIsUnchecked() {
+        SystemConfig config = new SystemConfig();
+        config.setHienThiDeLuaChonNeuCoNhieuGia(false); // Ô không được tick -> luôn không hiện
+        config.setSuDungGia2(true);
+        config.setSuDungGia3(true);
+        config.setSuDungGia4(true);
+
+        assertFalse(SalesConfigSupport.shouldShowPriceSelection(config));
+        assertFalse(SalesConfigSupport.shouldShowPriceSelection(config, 50_000d, 60_000d, 70_000d, true));
+    }
+
+    @Test
+    void shouldNotShowPriceSelectionWhenAllThreePricesAreUnchecked() {
+        SystemConfig config = new SystemConfig();
+        config.setHienThiDeLuaChonNeuCoNhieuGia(true); // Ô hiển thị được tick
+        config.setSuDungGia2(false); // Cả 3 giá đều KHÔNG được tick
+        config.setSuDungGia3(false);
+        config.setSuDungGia4(false);
+
+        assertFalse(SalesConfigSupport.shouldShowPriceSelection(config));
+        assertFalse(SalesConfigSupport.shouldShowPriceSelection(config, 50_000d, 60_000d, 70_000d, true));
+    }
+
+    @Test
+    void shouldShowPriceSelectionWhenOptionIsCheckedAndAtLeastOnePriceIsCheckedAndAvailable() {
+        SystemConfig config = new SystemConfig();
+        config.setHienThiDeLuaChonNeuCoNhieuGia(true);
+        config.setSuDungGia2(true);
+        config.setSuDungGia3(false);
+        config.setSuDungGia4(false);
+
+        assertTrue(SalesConfigSupport.shouldShowPriceSelection(config));
+        // Mặt hàng có giá 2 > 0 -> hiện bảng chọn giá
+        assertTrue(SalesConfigSupport.shouldShowPriceSelection(config, 50_000d, 0d, 0d, false));
+        // Mặt hàng không có giá 2 (giá 2 = 0) và không có giá gần đây -> không hiện
+        assertFalse(SalesConfigSupport.shouldShowPriceSelection(config, 0d, 0d, 0d, false));
+        // Nhưng nếu khách có giá mua gần đây -> hiện
+        assertTrue(SalesConfigSupport.shouldShowPriceSelection(config, 0d, 0d, 0d, true));
+    }
+
     private double customerPrice(int priceCode, Double latestPrice) {
         return customerPrice(priceCode, latestPrice, 90_000d);
     }
