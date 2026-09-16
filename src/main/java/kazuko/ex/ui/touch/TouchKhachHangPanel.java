@@ -94,7 +94,7 @@ public class TouchKhachHangPanel extends JPanel {
     // Nút toolbar danh mục
     private JButton btnEdit;
     private JButton btnDelete;
-    private JPanel cardsGridPanel;
+    private TouchScrollableRowsPanel cardsGridPanel;
 
     public TouchKhachHangPanel(Runnable exit) {
         this.exit = exit;
@@ -332,22 +332,14 @@ public class TouchKhachHangPanel extends JPanel {
         TouchKhachHangColumnConfig cfg = TouchKhachHangConfigDAO.loadConfig();
         int cols = cfg.getGridColumns();
 
-        cardsGridPanel.setLayout(new GridLayout(0, cols, 8, 8));
+        cardsGridPanel.configureGrid(cols, cfg.getGridRows(), 8, 8);
 
         for (KhachHang kh : currentCustomerList) {
             JPanel card = createCustomerCard(kh, cfg);
             cardsGridPanel.add(card);
         }
 
-        int remainder = currentCustomerList.size() % cols;
-        if (remainder > 0) {
-            int missing = cols - remainder;
-            for (int i = 0; i < missing; i++) {
-                JPanel filler = new JPanel();
-                filler.setOpaque(false);
-                cardsGridPanel.add(filler);
-            }
-        }
+        cardsGridPanel.completeGrid();
 
         updateActionButtons();
         cardsGridPanel.revalidate();

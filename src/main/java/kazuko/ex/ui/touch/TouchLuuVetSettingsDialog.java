@@ -94,8 +94,7 @@ final class TouchLuuVetSettingsDialog extends JDialog {
         JPanel left = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0)); left.setOpaque(false);
         for (JButton b : new JButton[]{formatButton, columnsButton, rowsButton, cellColorButton, titleButton}) { b.setPreferredSize(new Dimension(190, 58)); left.add(b); }
         formatButton.addActionListener(e -> toggleFormatting());
-        columnsButton.addActionListener(e -> { Integer v = TouchNumberInputDialog.showDialog(this, "NHẬP SỐ CỘT", config.getGridColumns(), 1, 10); if (v != null) { config.setGridColumns(v); updateBottomButtons(); } });
-        rowsButton.addActionListener(e -> { Integer v = TouchNumberInputDialog.showDialog(this, "NHẬP SỐ DÒNG", config.getGridRows(), 1, 50); if (v != null) { config.setGridRows(v); updateBottomButtons(); } });
+        TouchGridSettingsSupport.bind(this, columnsButton, rowsButton, config, this::updateBottomButtons);
         cellColorButton.addActionListener(e -> { Color v = TouchChonMauDialog.show(this, config.getCardBgColor()); if (v != null) config.setCardBgColor(v); });
         titleButton.addActionListener(e -> { config.setShowTitle(!config.isShowTitle()); updateBottomButtons(); });
         footer.add(left, BorderLayout.WEST);
@@ -126,7 +125,7 @@ final class TouchLuuVetSettingsDialog extends JDialog {
     private void removeAllColumns() { config.getUnusedColumns().addAll(config.getUsedColumns()); config.getUsedColumns().clear(); selectedUsed = null; refreshLists(); }
     private void move(int delta) { if (selectedUsed == null) return; int old = config.getUsedColumns().indexOf(selectedUsed), next = old + delta; if (old < 0 || next < 0 || next >= config.getUsedColumns().size()) return; config.getUsedColumns().remove(old); config.getUsedColumns().add(next, selectedUsed); refreshLists(); }
     private void toggleFormatting() { formatting = !formatting; formatPanel.setVisible(formatting); formatButton.setBackground(formatting ? ORANGE : PURPLE); columnsButton.setVisible(formatting); rowsButton.setVisible(formatting); cellColorButton.setVisible(formatting); titleButton.setVisible(formatting); setSize(1200, formatting ? 860 : 740); setLocationRelativeTo(getOwner()); revalidate(); }
-    private void updateBottomButtons() { columnsButton.setText("SỐ CỘT: " + config.getGridColumns()); rowsButton.setText("SỐ DÒNG: " + config.getGridRows()); titleButton.setBackground(config.isShowTitle() ? ORANGE : new Color(90, 85, 0)); columnsButton.setVisible(formatting); rowsButton.setVisible(formatting); cellColorButton.setVisible(formatting); titleButton.setVisible(formatting); }
+    private void updateBottomButtons() { TouchGridSettingsSupport.refreshLabels(columnsButton, rowsButton, config); titleButton.setBackground(config.isShowTitle() ? ORANGE : new Color(90, 85, 0)); columnsButton.setVisible(formatting); rowsButton.setVisible(formatting); cellColorButton.setVisible(formatting); titleButton.setVisible(formatting); }
 
     private static JPanel listPanel() { JPanel p = new JPanel(); p.setLayout(new BoxLayout(p, BoxLayout.Y_AXIS)); p.setBackground(HEADER); p.setBorder(new EmptyBorder(5, 5, 5, 5)); return p; }
     private static JPanel titled(String title, JPanel content) { JPanel p = new JPanel(new BorderLayout(0, 5)); p.setOpaque(false); JLabel l = new JLabel(title); l.setForeground(Color.WHITE); l.setFont(font(18)); p.add(l, BorderLayout.NORTH); JScrollPane s = new JScrollPane(content); s.setBorder(new LineBorder(Color.LIGHT_GRAY, 2, true)); s.getVerticalScrollBar().setUnitIncrement(40); p.add(s, BorderLayout.CENTER); return p; }

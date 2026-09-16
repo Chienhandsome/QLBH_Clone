@@ -16,22 +16,22 @@ public final class AppColors {
     public static final Color PRIMARY_DARK_BLUE = new Color(0, 71, 143);
 
     /** Màu xanh pastel nhạt làm nền Form Đăng nhập & Popup (#CADDF3) */
-    public static final Color PRIMARY_LIGHT_BLUE = new Color(202, 221, 243);
+    public static Color PRIMARY_LIGHT_BLUE = new Color(202, 221, 243);
 
     /** Màu xanh rất nhạt làm nền Toolbar / Thanh Ribbon (#EBF0F8) */
-    public static final Color RIBBON_BG = new Color(235, 240, 248);
+    public static Color RIBBON_BG = new Color(235, 240, 248);
 
     /** Màu nền thanh công cụ phụ / Toolbar bảng dữ liệu (#F0F3F8) */
-    public static final Color TOOLBAR_BG = new Color(240, 243, 248);
+    public static Color TOOLBAR_BG = new Color(240, 243, 248);
 
     // ==========================================
     // 2. MÀU VIỀN & ĐƯỜNG KẺ (BORDERS & LINES)
     // ==========================================
     /** Màu viền xanh nhạt của Toolbar và Panel */
-    public static final Color BORDER_BLUE = new Color(180, 200, 225);
+    public static Color BORDER_BLUE = new Color(180, 200, 225);
 
     /** Màu viền ngăn cách phân vùng dưới chân trang */
-    public static final Color BORDER_SEPARATOR = new Color(175, 200, 230);
+    public static Color BORDER_SEPARATOR = new Color(175, 200, 230);
 
     /** Màu viền xám nhẹ tiêu chuẩn */
     public static final Color BORDER_GRAY = new Color(220, 220, 220);
@@ -40,7 +40,7 @@ public final class AppColors {
     // 3. MÀU VĂN BẢN (TEXT COLORS)
     // ==========================================
     /** Màu chữ đen đậm tiêu chuẩn */
-    public static final Color TEXT_DARK = new Color(30, 30, 30);
+    public static Color TEXT_DARK = new Color(30, 30, 30);
 
     /** Màu chữ liên kết xanh gạch chân (Hyperlink) */
     public static final Color TEXT_LINK = new Color(0, 51, 204);
@@ -71,4 +71,27 @@ public final class AppColors {
 
     /** Màu nền trắng */
     public static final Color WHITE = Color.WHITE;
+
+    /**
+     * Chuyển các màu dùng chung giữa bảng màu sáng và tối.
+     * Phương thức này được gọi trước khi tạo các màn hình nghiệp vụ.
+     */
+    public static void applyThemeMode(boolean isDark) {
+        if (isDark) {
+            RIBBON_BG = new Color(0x2D2D30);
+            TOOLBAR_BG = new Color(0x1E1E1E);
+            BORDER_BLUE = new Color(0x4A4A4F);
+            BORDER_SEPARATOR = new Color(0x3F3F46);
+            TEXT_DARK = new Color(0xDCDCDC);
+            PRIMARY_LIGHT_BLUE = new Color(0x3A3A3D);
+            return;
+        }
+
+        PRIMARY_LIGHT_BLUE = new Color(202, 221, 243);
+        RIBBON_BG = new Color(235, 240, 248);
+        TOOLBAR_BG = new Color(240, 243, 248);
+        BORDER_BLUE = new Color(180, 200, 225);
+        BORDER_SEPARATOR = new Color(175, 200, 230);
+        TEXT_DARK = new Color(30, 30, 30);
+    }
 }

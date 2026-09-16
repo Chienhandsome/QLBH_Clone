@@ -388,23 +388,10 @@ public class TouchThietLapCotQuanLyBanHangDialog extends JDialog {
         leftBottom.add(btnDinhDang);
 
         btnSoCot.setPreferredSize(new Dimension(115, 46));
-        btnSoCot.addActionListener(e -> {
-            Integer val = TouchNumberInputDialog.showDialog(this, "NHẬP SỐ CỘT", config.getGridColumns(), 1, 10);
-            if (val != null && val > 0) {
-                config.setGridColumns(val);
-                updateBottomButtons();
-            }
-        });
+        TouchGridSettingsSupport.bind(this, btnSoCot, btnSoDong, config, this::updateBottomButtons);
         leftBottom.add(btnSoCot);
 
         btnSoDong.setPreferredSize(new Dimension(115, 46));
-        btnSoDong.addActionListener(e -> {
-            Integer val = TouchNumberInputDialog.showDialog(this, "NHẬP SỐ DÒNG", config.getGridRows(), 1, 50);
-            if (val != null && val > 0) {
-                config.setGridRows(val);
-                updateBottomButtons();
-            }
-        });
         leftBottom.add(btnSoDong);
 
         btnMauO.setPreferredSize(new Dimension(105, 46));
@@ -453,8 +440,7 @@ public class TouchThietLapCotQuanLyBanHangDialog extends JDialog {
     }
 
     private void updateBottomButtons() {
-        btnSoCot.setText("SỐ CỘT: " + config.getGridColumns());
-        btnSoDong.setText("SỐ DÒNG: " + config.getGridRows());
+        TouchGridSettingsSupport.refreshLabels(btnSoCot, btnSoDong, config);
         btnHienTieuDe.setBackground(config.isShowTitle() ? ORANGE : OLIVE);
     }
 

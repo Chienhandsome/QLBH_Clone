@@ -2644,7 +2644,13 @@ public class CauHinhToanHeThongDialog extends JDialog {
 
         boolean ok = configDAO.saveConfig(currentConfig);
         if (ok) {
-            JOptionPane.showMessageDialog(this, "Đã lưu thông tin cấu hình toàn bộ hệ thống thành công!", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Đã lưu thông tin cấu hình toàn bộ hệ thống thành công!\n"
+                            + "Vui lòng khởi động lại ứng dụng để áp dụng giao diện và cỡ chữ mới.",
+                    "Thông báo",
+                    JOptionPane.INFORMATION_MESSAGE
+            );
             dispose();
         } else {
             JOptionPane.showMessageDialog(this, "Không thể lưu cấu hình hệ thống!", "Lỗi", JOptionPane.ERROR_MESSAGE);

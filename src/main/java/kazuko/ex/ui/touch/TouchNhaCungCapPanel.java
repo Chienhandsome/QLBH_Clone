@@ -23,7 +23,7 @@ final class TouchNhaCungCapPanel extends JPanel {
     private final Runnable exit;
     private final CardLayout navigation = new CardLayout();
     private final JPanel screens = new JPanel(navigation);
-    private final JPanel cardGrid = new JPanel();
+    private final TouchScrollableRowsPanel cardGrid = new TouchScrollableRowsPanel();
     private final JLabel detailTitle = new JLabel("NHÀ CUNG CẤP");
     private final JTextField code = field(), name = field(), address = field(), phone = field(),
             email = field(), group = field(), website = field(), note = field();
@@ -96,14 +96,14 @@ final class TouchNhaCungCapPanel extends JPanel {
     }
 
     private void renderCards() {
-        if (config == null) config = TouchNhaCungCapConfigDAO.load(); cardGrid.removeAll(); cardGrid.setLayout(new GridLayout(0, config.getGridColumns(), 7, 7)); cardGrid.setBorder(new EmptyBorder(7, 7, 7, 7));
+        if (config == null) config = TouchNhaCungCapConfigDAO.load(); cardGrid.removeAll(); cardGrid.configureGrid(config.getGridColumns(), config.getGridRows(), 7, 7); cardGrid.setBorder(new EmptyBorder(7, 7, 7, 7));
         String q = searchText.toLowerCase(Locale.ROOT);
         int height = Math.max(95, 790 / config.getGridRows());
         for (NhaCungCap supplier : suppliers) {
             if (!q.isBlank() && !(safe(supplier.getName()) + " " + safe(supplier.getMaNhaCungCap()) + " " + safe(supplier.getDienThoai())).toLowerCase(Locale.ROOT).contains(q)) continue;
             cardGrid.add(supplierCard(supplier, height));
         }
-        cardGrid.revalidate(); cardGrid.repaint();
+        cardGrid.completeGrid(); cardGrid.revalidate(); cardGrid.repaint();
     }
 
     private JPanel supplierCard(NhaCungCap supplier, int height) {

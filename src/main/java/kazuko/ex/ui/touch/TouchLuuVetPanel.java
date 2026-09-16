@@ -31,7 +31,7 @@ final class TouchLuuVetPanel extends JPanel {
     private final JComboBox<String> userField = new JComboBox<>();
     private final JTextField referenceField = textField();
     private final JTextField contentField = textField();
-    private final JPanel logRows = new JPanel();
+    private final TouchScrollableRowsPanel logRows = new TouchScrollableRowsPanel();
     private List<ActivityLog> currentLogs = new ArrayList<>();
     private ActivityLog selectedLog;
 
@@ -121,13 +121,10 @@ final class TouchLuuVetPanel extends JPanel {
     private void renderLogs() {
         TouchLuuVetColumnConfig config = TouchLuuVetConfigDAO.load();
         int columns = config.getGridColumns();
-        logRows.setLayout(new GridLayout(0, columns, 7, 7));
+        logRows.configureGrid(columns, config.getGridRows(), 7, 7);
         logRows.removeAll();
         for (ActivityLog log : currentLogs) logRows.add(logCard(log, config));
-        int remainder = currentLogs.size() % columns;
-        for (int i = remainder == 0 ? 0 : remainder; i > 0 && i < columns; i++) {
-            JPanel filler = new JPanel(); filler.setOpaque(false); logRows.add(filler);
-        }
+        logRows.completeGrid();
         logRows.revalidate(); logRows.repaint();
     }
 
@@ -136,7 +133,7 @@ final class TouchLuuVetPanel extends JPanel {
         JPanel card = new JPanel(new GridLayout(2, 2, 8, 2));
         card.setBackground(selected ? ORANGE : config.getCardBgColor());
         card.setBorder(new EmptyBorder(7, 14, 7, 14));
-        int height = Math.max(72, 850 / config.getGridRows());
+        int height = Math.max(1, 850 / config.getGridRows());
         card.setPreferredSize(new Dimension(0, height));
         List<TouchLuuVetColumnConfig.ColumnItem> used = config.getUsedColumns();
         for (int i = 0; i < 4; i++) {

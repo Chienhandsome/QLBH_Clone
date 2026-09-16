@@ -30,7 +30,8 @@ final class TouchTonKhoPanel extends JPanel {
     private final KhoHangDAO warehouseDao = new KhoHangDAO();
     private final NhomMatHangDAO groupDao = new NhomMatHangDAO();
     private final Runnable exit;
-    private final JPanel warehouseList = verticalList(), groupList = verticalList(), cardGrid = new JPanel();
+    private final JPanel warehouseList = verticalList(), groupList = verticalList();
+    private final TouchScrollableRowsPanel cardGrid = new TouchScrollableRowsPanel();
     private final JScrollPane cardScroll = new JScrollPane(cardGrid, ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED, ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
     private final JButton detail = button("CHI TIẾT", GRAY), nonZero = button("☒  TỒN <> 0", BG);
     private final List<TonKhoItem> stocks = new ArrayList<>(), filtered = new ArrayList<>();
@@ -97,10 +98,10 @@ final class TouchTonKhoPanel extends JPanel {
     }
 
     private void renderCards() {
-        if (config == null) config = TouchTonKhoConfigDAO.load(); cardGrid.removeAll(); cardGrid.setLayout(new GridLayout(0, config.getGridColumns(), 7, 7)); cardGrid.setBorder(new EmptyBorder(7, 7, 7, 7));
-        int viewportHeight = Math.max(640, cardScroll.getViewport().getHeight()); int cardHeight = Math.max(90, (viewportHeight - (config.getGridRows() + 1) * 7) / config.getGridRows());
+        if (config == null) config = TouchTonKhoConfigDAO.load(); cardGrid.removeAll(); cardGrid.configureGrid(config.getGridColumns(), config.getGridRows(), 7, 7); cardGrid.setBorder(new EmptyBorder(7, 7, 7, 7));
+        int viewportHeight = Math.max(1, cardScroll.getViewport().getHeight()); int cardHeight = Math.max(1, (viewportHeight - (config.getGridRows() + 1) * 7) / config.getGridRows());
         for (TonKhoItem stock : filtered) cardGrid.add(stockCard(stock, cardHeight));
-        int rows = Math.max(config.getGridRows(), (int) Math.ceil(filtered.size() / (double) config.getGridColumns())); cardGrid.setPreferredSize(new Dimension(0, rows * (cardHeight + 7) + 7)); refresh(cardGrid);
+        cardGrid.completeGrid(); refresh(cardGrid);
     }
 
     private JPanel stockCard(TonKhoItem stock, int height) {

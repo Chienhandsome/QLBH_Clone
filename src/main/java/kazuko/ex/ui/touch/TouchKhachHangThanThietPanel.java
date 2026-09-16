@@ -283,22 +283,14 @@ public class TouchKhachHangThanThietPanel extends JPanel {
 
         TouchKhachHangThanThietColumnConfig cfg = TouchKhachHangThanThietConfigDAO.loadConfig();
         int cols = Math.max(1, cfg.getGridColumns());
-        cardsGridPanel.setLayout(new GridLayout(0, cols, 8, 8));
+        cardsGridPanel.configureGrid(cols, cfg.getGridRows(), 8, 8);
 
         for (KhachHangLoyaltySummary s : filteredSummaries) {
             JPanel card = createLoyaltyCard(s, cfg);
             cardsGridPanel.add(card);
         }
 
-        int remainder = filteredSummaries.size() % cols;
-        if (remainder > 0) {
-            int missing = cols - remainder;
-            for (int i = 0; i < missing; i++) {
-                JPanel filler = new JPanel();
-                filler.setOpaque(false);
-                cardsGridPanel.add(filler);
-            }
-        }
+        cardsGridPanel.completeGrid();
 
         cardsGridPanel.revalidate();
         cardsGridPanel.repaint();

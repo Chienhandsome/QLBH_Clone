@@ -11,7 +11,7 @@ import java.util.List;
 /**
  * Cấu hình hiển thị cột và định dạng thẻ khách hàng thân thiết cảm ứng.
  */
-public class TouchKhachHangThanThietColumnConfig implements Serializable, Cloneable {
+public class TouchKhachHangThanThietColumnConfig implements Serializable, Cloneable, TouchGridSettingsModel {
     public static final String DEFAULT_CARD_BG = "#004F4C"; // Teal đậm mặc định
 
     private static final DecimalFormat DF_CURRENCY = new DecimalFormat("#,##0");

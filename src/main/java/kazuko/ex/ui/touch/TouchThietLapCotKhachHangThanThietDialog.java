@@ -324,22 +324,9 @@ public class TouchThietLapCotKhachHangThanThietDialog extends JDialog {
         leftActions.add(btnDinhDang);
 
         btnSoCot.setPreferredSize(new Dimension(125, 52));
-        btnSoCot.addActionListener(e -> {
-            Integer val = TouchNumberInputDialog.showDialog(this, "NHẬP SỐ CỘT", config.getGridColumns());
-            if (val != null && val > 0 && val <= 10) {
-                config.setGridColumns(val);
-                updateBottomButtons();
-            }
-        });
+        TouchGridSettingsSupport.bind(this, btnSoCot, btnSoDong, config, this::updateBottomButtons);
 
         btnSoDong.setPreferredSize(new Dimension(125, 52));
-        btnSoDong.addActionListener(e -> {
-            Integer val = TouchNumberInputDialog.showDialog(this, "NHẬP SỐ DÒNG", config.getGridRows());
-            if (val != null && val > 0 && val <= 50) {
-                config.setGridRows(val);
-                updateBottomButtons();
-            }
-        });
 
         btnMauO.setPreferredSize(new Dimension(115, 52));
         btnMauO.addActionListener(e -> {
@@ -517,8 +504,7 @@ public class TouchThietLapCotKhachHangThanThietDialog extends JDialog {
     }
 
     private void updateBottomButtons() {
-        btnSoCot.setText("SỐ CỘT: " + config.getGridColumns());
-        btnSoDong.setText("SỐ DÒNG: " + config.getGridRows());
+        TouchGridSettingsSupport.refreshLabels(btnSoCot, btnSoDong, config);
         btnHienTieuDe.setText(config.isShowTitle() ? "ẨN TIÊU ĐỀ" : "HIỆN TIÊU ĐỀ");
 
         btnSoCot.setVisible(isFormattingOpen);

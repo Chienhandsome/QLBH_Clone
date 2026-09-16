@@ -12,7 +12,7 @@ import java.util.List;
 /**
  * Cấu hình hiển thị cột cho thẻ hóa đơn Quản lý bán hàng cảm ứng (Hình 2).
  */
-public class TouchQuanLyBanHangBillColumnConfig implements Serializable, Cloneable {
+public class TouchQuanLyBanHangBillColumnConfig implements Serializable, Cloneable, TouchGridSettingsModel {
     public static final String DEFAULT_CARD_BG = "#004F4C"; // Xanh teal như Hình 1
 
     public static class ColumnItem implements Serializable, Cloneable {

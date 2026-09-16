@@ -136,7 +136,8 @@ final class TouchMatHangPanel extends JPanel {
 
         TouchMatHangColumnConfig config = TouchMatHangConfigDAO.loadConfig();
         int cols = config.getGridColumns();
-        JPanel productRows = new ScrollableRowsPanel(new GridLayout(0, cols, 7, 7));
+        ScrollableRowsPanel productRows = new ScrollableRowsPanel(new GridLayout(0, cols, 7, 7));
+        productRows.configureGrid(cols, config.getGridRows(), 7, 7);
         productRows.setBackground(new Color(235, 235, 235));
         productRows.setBorder(new EmptyBorder(7, 7, 7, 7));
         productRows.setName("productRows");
@@ -228,7 +229,9 @@ final class TouchMatHangPanel extends JPanel {
         if (rows == null) return;
         TouchMatHangColumnConfig config = TouchMatHangConfigDAO.loadConfig();
         int cols = config.getGridColumns();
-        if (rows.getLayout() instanceof GridLayout gl && gl.getColumns() != cols) {
+        if (rows instanceof TouchScrollableRowsPanel grid) {
+            grid.configureGrid(cols, config.getGridRows(), 7, 7);
+        } else {
             rows.setLayout(new GridLayout(0, cols, 7, 7));
         }
         rows.removeAll();
@@ -243,15 +246,7 @@ final class TouchMatHangPanel extends JPanel {
             products = productDao.getByNhom(selectedGroupName, selectedGroupId);
         }
         for (MatHang product : products) rows.add(productCard(product, config));
-        int remainder = products.size() % cols;
-        if (remainder > 0) {
-            int missing = cols - remainder;
-            for (int i = 0; i < missing; i++) {
-                JPanel filler = new JPanel();
-                filler.setOpaque(false);
-                rows.add(filler);
-            }
-        }
+        if (rows instanceof TouchScrollableRowsPanel grid) grid.completeGrid();
         rows.revalidate();
         rows.repaint();
     }
@@ -830,13 +825,8 @@ final class TouchMatHangPanel extends JPanel {
         @Override public int getIconHeight() { return size; }
     }
 
-    static class ScrollableRowsPanel extends JPanel implements Scrollable {
+    static class ScrollableRowsPanel extends TouchScrollableRowsPanel {
         ScrollableRowsPanel(LayoutManager layout) { super(layout); }
-        @Override public Dimension getPreferredScrollableViewportSize() { return getPreferredSize(); }
-        @Override public int getScrollableUnitIncrement(Rectangle r, int o, int d) { return 45; }
-        @Override public int getScrollableBlockIncrement(Rectangle r, int o, int d) { return 150; }
-        @Override public boolean getScrollableTracksViewportWidth() { return true; }
-        @Override public boolean getScrollableTracksViewportHeight() { return false; }
     }
 
     static class UpArrowIcon implements Icon {

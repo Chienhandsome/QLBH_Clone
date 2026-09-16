@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /** Cấu hình hiển thị cột và định dạng thẻ khách hàng trên màn hình cảm ứng theo Hình 1. */
-public class TouchKhachHangColumnConfig implements Serializable, Cloneable {
+public class TouchKhachHangColumnConfig implements Serializable, Cloneable, TouchGridSettingsModel {
     public static final String DEFAULT_CARD_BG = "#004F4C"; // Màu Teal mặc định
 
     public static class ColumnItem implements Serializable, Cloneable {

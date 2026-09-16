@@ -323,22 +323,9 @@ public class TouchThietLapCotDialog extends JDialog {
         leftActions.add(btnDinhDang);
 
         btnSoCot.setPreferredSize(new Dimension(125, 52));
-        btnSoCot.addActionListener(e -> {
-            Integer val = TouchNumberInputDialog.show(this, "NHẬP SỐ CỘT HIỂN THỊ TRÊN LƯỚI", config.getGridColumns(), 1, 10);
-            if (val != null && val > 0) {
-                config.setGridColumns(val);
-                updateBottomButtons();
-            }
-        });
+        TouchGridSettingsSupport.bind(this, btnSoCot, btnSoDong, config, this::updateBottomButtons);
 
         btnSoDong.setPreferredSize(new Dimension(125, 52));
-        btnSoDong.addActionListener(e -> {
-            Integer val = TouchNumberInputDialog.show(this, "NHẬP SỐ DÒNG HIỂN THỊ TRÊN LƯỚI", config.getGridRows(), 1, 50);
-            if (val != null && val > 0) {
-                config.setGridRows(val);
-                updateBottomButtons();
-            }
-        });
 
         btnMauO.setPreferredSize(new Dimension(115, 52));
         btnMauO.addActionListener(e -> {
@@ -475,8 +462,7 @@ public class TouchThietLapCotDialog extends JDialog {
     }
 
     private void updateBottomButtons() {
-        btnSoCot.setText("SỐ CỘT: " + config.getGridColumns());
-        btnSoDong.setText("SỐ DÒNG: " + config.getGridRows());
+        TouchGridSettingsSupport.refreshLabels(btnSoCot, btnSoDong, config);
         btnHienTieuDe.setBackground(config.isShowTitle() ? ORANGE : OLIVE);
 
         // Ẩn các nút chi tiết nếu chưa bấm Định Dạng

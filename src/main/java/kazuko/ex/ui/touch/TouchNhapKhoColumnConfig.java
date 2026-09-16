@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /** Persisted card layout for the touch warehouse-receipt list. */
-final class TouchNhapKhoColumnConfig implements Serializable, Cloneable {
+final class TouchNhapKhoColumnConfig implements Serializable, Cloneable, TouchGridSettingsModel {
     static final class ColumnItem implements Serializable, Cloneable {
         private String key, title, prefix, colorHex;
         private boolean bold, italic, rightAligned;
@@ -58,7 +58,7 @@ final class TouchNhapKhoColumnConfig implements Serializable, Cloneable {
     private static ColumnItem col(String key, String title, String prefix) { return new ColumnItem(key, title, prefix, "#FFFFFF", true, false, false, 16); }
     List<ColumnItem> getUsedColumns() { return usedColumns; } List<ColumnItem> getUnusedColumns() { return unusedColumns; }
     Color getCardBgColor() { try { return Color.decode(cardBgColorHex); } catch (Exception e) { return new Color(0, 79, 76); } } void setCardBgColor(Color c) { if (c != null) cardBgColorHex = hex(c); }
-    int getGridColumns() { return Math.max(1, gridColumns); } void setGridColumns(int v) { gridColumns = Math.max(1, v); } int getGridRows() { return Math.max(1, gridRows); } void setGridRows(int v) { gridRows = Math.max(1, v); }
+    public int getGridColumns() { return Math.max(1, gridColumns); } public void setGridColumns(int v) { gridColumns = Math.max(1, v); } public int getGridRows() { return Math.max(1, gridRows); } public void setGridRows(int v) { gridRows = Math.max(1, v); }
     boolean isShowTitle() { return showTitle; } void setShowTitle(boolean v) { showTitle = v; }
     static String value(DonHang d, ColumnItem item, boolean title) {
         if (d == null || item == null) return "";

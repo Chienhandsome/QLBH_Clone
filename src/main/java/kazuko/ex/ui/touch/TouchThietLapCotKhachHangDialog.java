@@ -158,8 +158,7 @@ public class TouchThietLapCotKhachHangDialog extends JDialog {
         bottomBar.setBorder(new EmptyBorder(0, 5, 6, 5));
 
         btnDinhDang.addActionListener(e -> toggleFormattingView(centerWrapper, normalColumnsPanel));
-        btnSoCot.addActionListener(e -> changeColumns());
-        btnSoDong.addActionListener(e -> changeRows());
+        TouchGridSettingsSupport.bind(this, btnSoCot, btnSoDong, config, this::updateBottomLabels);
         btnMauO.addActionListener(e -> changeCardColor());
         btnHienTieuDe.addActionListener(e -> toggleShowTitle());
         btnCapNhat.addActionListener(e -> saveAndClose());
@@ -412,22 +411,6 @@ public class TouchThietLapCotKhachHangDialog extends JDialog {
         }
     }
 
-    private void changeColumns() {
-        Integer cols = TouchNumberInputDialog.showDialog(this, "NHẬP SỐ CỘT", config.getGridColumns());
-        if (cols != null && cols >= 1 && cols <= 8) {
-            config.setGridColumns(cols);
-            updateBottomLabels();
-        }
-    }
-
-    private void changeRows() {
-        Integer rows = TouchNumberInputDialog.showDialog(this, "NHẬP SỐ DÒNG", config.getGridRows());
-        if (rows != null && rows >= 1 && rows <= 12) {
-            config.setGridRows(rows);
-            updateBottomLabels();
-        }
-    }
-
     private void toggleShowTitle() {
         config.setShowTitle(!config.isShowTitle());
         updateBottomLabels();
@@ -435,8 +418,7 @@ public class TouchThietLapCotKhachHangDialog extends JDialog {
     }
 
     private void updateBottomLabels() {
-        btnSoCot.setText("SỐ CỘT: " + config.getGridColumns());
-        btnSoDong.setText("SỐ DÒNG: " + config.getGridRows());
+        TouchGridSettingsSupport.refreshLabels(btnSoCot, btnSoDong, config);
         btnHienTieuDe.setText(config.isShowTitle() ? "ẨN TIÊU ĐỀ" : "HIỆN TIÊU ĐỀ");
     }
 

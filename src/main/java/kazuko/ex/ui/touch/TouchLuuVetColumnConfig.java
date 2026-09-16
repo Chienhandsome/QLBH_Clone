@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /** Persisted presentation settings for the touch activity-log cards. */
-public class TouchLuuVetColumnConfig implements Serializable, Cloneable {
+public class TouchLuuVetColumnConfig implements Serializable, Cloneable, TouchGridSettingsModel {
     public static class ColumnItem implements Serializable, Cloneable {
         private String key;
         private String title;

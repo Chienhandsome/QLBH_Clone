@@ -55,7 +55,7 @@ public class TouchQuanLyBanHangPanel extends JPanel {
     private final JTextField txtDenNgay = new JTextField();
 
     // Lưới thẻ hóa đơn
-    private final JPanel billsGridPanel = new JPanel();
+    private final TouchScrollableRowsPanel billsGridPanel = new TouchScrollableRowsPanel();
 
     // Tab bên phải
     private final JButton btnTabHoaDon = new JButton("HÓA ĐƠN BÁN HÀNG");
@@ -239,7 +239,7 @@ public class TouchQuanLyBanHangPanel extends JPanel {
         JPanel gridWrapper = new JPanel(new BorderLayout());
         gridWrapper.setOpaque(false);
 
-        billsGridPanel.setLayout(new GridLayout(0, config.getGridColumns(), 8, 8));
+        billsGridPanel.configureGrid(config.getGridColumns(), config.getGridRows(), 8, 8);
         billsGridPanel.setOpaque(false);
 
         JScrollPane spBills = new JScrollPane(billsGridPanel,
@@ -622,7 +622,7 @@ public class TouchQuanLyBanHangPanel extends JPanel {
 
     private void renderBillsGrid() {
         billsGridPanel.removeAll();
-        billsGridPanel.setLayout(new GridLayout(0, config.getGridColumns(), 8, 8));
+        billsGridPanel.configureGrid(config.getGridColumns(), config.getGridRows(), 8, 8);
 
         if (billsList.isEmpty()) {
             JLabel lblEmpty = new JLabel("(Không có hóa đơn trong khoảng ngày này)", SwingConstants.CENTER);
@@ -636,8 +636,7 @@ public class TouchQuanLyBanHangPanel extends JPanel {
             }
         }
 
-        int totalRows = Math.max(config.getGridRows(), (billsList.size() + config.getGridColumns() - 1) / config.getGridColumns());
-        billsGridPanel.setPreferredSize(new Dimension(0, totalRows * 85));
+        billsGridPanel.completeGrid();
 
         billsGridPanel.revalidate();
         billsGridPanel.repaint();

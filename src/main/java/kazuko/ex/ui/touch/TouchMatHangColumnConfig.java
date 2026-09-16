@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Locale;
 
 /** Cấu hình hiển thị cột và định dạng thẻ mặt hàng trên màn hình cảm ứng. */
-public class TouchMatHangColumnConfig implements Serializable, Cloneable {
+public class TouchMatHangColumnConfig implements Serializable, Cloneable, TouchGridSettingsModel {
     private static final NumberFormat MONEY = NumberFormat.getNumberInstance(new Locale("vi", "VN"));
     public static final String DEFAULT_CARD_BG = "#004F4C"; // Teal mặc định
 
@@ -95,7 +95,7 @@ public class TouchMatHangColumnConfig implements Serializable, Cloneable {
     private List<ColumnItem> usedColumns = new ArrayList<>();
     private List<ColumnItem> unusedColumns = new ArrayList<>();
     private String cardBgColorHex = DEFAULT_CARD_BG;
-    private int gridColumns = 3;
+    private int gridColumns = 2;
     private int gridRows = 8;
     private boolean showTitle = true;
 

@@ -1,0 +1,120 @@
+{
+  "usedColumns": [
+    {
+      "key": "WARRANTY",
+      "title": "BẢO HÀNH",
+      "prefix": "Bảo hành: ",
+      "colorHex": "#FFFFFF",
+      "bold": true,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 15
+    },
+    {
+      "key": "NAME",
+      "title": "MẶT HÀNG",
+      "prefix": "Mặt hàng: ",
+      "colorHex": "#FFFFFF",
+      "bold": true,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 18
+    },
+    {
+      "key": "STOCK",
+      "title": "TỒN",
+      "prefix": "Tồn: ",
+      "colorHex": "#FFFF00",
+      "bold": true,
+      "italic": false,
+      "rightAligned": true,
+      "fontSize": 18
+    }
+  ],
+  "unusedColumns": [
+    {
+      "key": "STOCK2",
+      "title": "TỒN 2 ĐVT",
+      "prefix": "Tồn 2 ĐVT: ",
+      "colorHex": "#FFFFFF",
+      "bold": true,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 16
+    },
+    {
+      "key": "SALE_PRICE",
+      "title": "GIÁ BÁN",
+      "prefix": "Giá bán: ",
+      "colorHex": "#FFFFFF",
+      "bold": true,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 16
+    },
+    {
+      "key": "UNIT",
+      "title": "ĐVT",
+      "prefix": "ĐVT: ",
+      "colorHex": "#FFFFFF",
+      "bold": true,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 16
+    },
+    {
+      "key": "CODE",
+      "title": "MÃ HÀNG",
+      "prefix": "Mã hàng: ",
+      "colorHex": "#FFFFFF",
+      "bold": true,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 16
+    },
+    {
+      "key": "MIN_STOCK",
+      "title": "TỒN TỐI THIỂU",
+      "prefix": "Tồn tối thiểu: ",
+      "colorHex": "#FFFFFF",
+      "bold": true,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 16
+    },
+    {
+      "key": "MANUFACTURER",
+      "title": "HÃNG SX",
+      "prefix": "Hãng SX: ",
+      "colorHex": "#FFFFFF",
+      "bold": true,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 16
+    },
+    {
+      "key": "COST_PRICE",
+      "title": "GIÁ VỐN",
+      "prefix": "Giá vốn: ",
+      "colorHex": "#FFFFFF",
+      "bold": true,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 16
+    },
+    {
+      "key": "UNIT2",
+      "title": "ĐVT 2",
+      "prefix": "ĐVT 2: ",
+      "colorHex": "#FFFFFF",
+      "bold": true,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 16
+    }
+  ],
+  "cardBgColorHex": "#004F4C",
+  "gridColumns": 3,
+  "gridRows": 8,
+  "showTitle": false
+}

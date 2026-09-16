@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /** Persisted layout and typography of touch stock cards. */
-final class TouchTonKhoColumnConfig implements Serializable, Cloneable {
+final class TouchTonKhoColumnConfig implements Serializable, Cloneable, TouchGridSettingsModel {
     static final class ColumnItem implements Serializable, Cloneable {
         private String key, title, prefix, colorHex;
         private boolean bold, italic, rightAligned;
@@ -58,8 +58,8 @@ final class TouchTonKhoColumnConfig implements Serializable, Cloneable {
     List<ColumnItem> getUnusedColumns() { return unusedColumns; }
     Color getCardBgColor() { try { return Color.decode(cardBgColorHex); } catch (Exception e) { return new Color(0, 79, 76); } }
     void setCardBgColor(Color value) { if (value != null) cardBgColorHex = hex(value); }
-    int getGridColumns() { return Math.max(1, gridColumns); } void setGridColumns(int value) { gridColumns = Math.max(1, value); }
-    int getGridRows() { return Math.max(1, gridRows); } void setGridRows(int value) { gridRows = Math.max(1, value); }
+    public int getGridColumns() { return Math.max(1, gridColumns); } public void setGridColumns(int value) { gridColumns = Math.max(1, value); }
+    public int getGridRows() { return Math.max(1, gridRows); } public void setGridRows(int value) { gridRows = Math.max(1, value); }
     boolean isShowTitle() { return showTitle; } void setShowTitle(boolean value) { showTitle = value; }
 
     static String value(TonKhoItem stock, ColumnItem item, boolean title) {
