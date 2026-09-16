@@ -14,6 +14,8 @@ import kazuko.ex.model.danhmuc.MatHang;
 import kazuko.ex.model.danhmuc.NhaCungCap;
 import kazuko.ex.model.danhmuc.NhanVien;
 import kazuko.ex.ui.common.DatePickerField;
+import kazuko.ex.ui.touch.TouchNumberInputDialog;
+import kazuko.ex.ui.touch.TouchTextKeyboardDialog;
 import kazuko.ex.util.CurrencyUtil;
 import kazuko.ex.util.ExcelExporter;
 import kazuko.ex.util.IconHelper;
@@ -96,11 +98,17 @@ public class PhieuNhapKhoDialog extends JDialog {
     private boolean isUpdatingTotals = false;
 
     public PhieuNhapKhoDialog(Window parent, Runnable onDataSaved) {
-        this(parent, null, onDataSaved);
+        this(parent, null, onDataSaved, false);
     }
 
     public PhieuNhapKhoDialog(Window parent, DonHang donHang, Runnable onDataSaved) {
+        this(parent, donHang, onDataSaved, false);
+    }
+
+    /** Creates either the existing desktop editor or its full-screen touch presentation. */
+    public PhieuNhapKhoDialog(Window parent, DonHang donHang, Runnable onDataSaved, boolean touchMode) {
         super(parent, donHang == null ? "PHIẾU NHẬP KHO - THÊM MỚI" : "PHIẾU NHẬP KHO - CHỈNH SỬA", ModalityType.APPLICATION_MODAL);
+        if (touchMode) setUndecorated(true);
         this.currentDonHang = donHang;
         this.onDataSaved = onDataSaved;
         this.systemConfig = systemConfigDAO.getConfig();
@@ -115,7 +123,12 @@ public class PhieuNhapKhoDialog extends JDialog {
         }
 
         setupKeyBindings();
-        setSize(1200, 720);
+        if (touchMode) {
+            applyTouchLayout();
+            setSize(parent == null ? new Dimension(1200, 760) : parent.getSize());
+        } else {
+            setSize(1200, 720);
+        }
         setLocationRelativeTo(parent);
     }
 
@@ -1255,6 +1268,79 @@ public class PhieuNhapKhoDialog extends JDialog {
             ta.setEditable(false);
             JOptionPane.showMessageDialog(this, new JScrollPane(ta), title, JOptionPane.INFORMATION_MESSAGE);
         }
+    }
+
+    /** Rebuilds the editor with the large touch layout while retaining all business state/actions. */
+    private void applyTouchLayout() {
+        Color bg = new Color(0, 67, 86), olive = new Color(105, 140, 25), green = new Color(0, 90, 20),
+                gray = new Color(145, 145, 145), red = new Color(165, 10, 10), teal = new Color(0, 79, 76);
+        getContentPane().removeAll();
+        JPanel root = new JPanel(new BorderLayout(0, 8));
+        root.setBackground(bg); root.setBorder(new EmptyBorder(7, 7, 7, 7));
+
+        JPanel heading = new JPanel(new BorderLayout()); heading.setBackground(olive); heading.setPreferredSize(new Dimension(0, 76));
+        JLabel title = new JLabel("PHIẾU NHẬP KHO"); title.setForeground(Color.WHITE); title.setFont(touchFont(25)); title.setBorder(new EmptyBorder(0, 5, 0, 0)); heading.add(title);
+        JPanel nav = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 5)); nav.setOpaque(false);
+        JButton previous = touchButton("TRƯỚC", green), next = touchButton("SAU", gray), create = touchButton("TẠO MỚI", green), copy = touchButton("SAO CHÉP", gray), remove = touchButton("XÓA", gray);
+        for (JButton b : new JButton[]{previous, next, create, copy, remove}) { b.setPreferredSize(new Dimension(145, 60)); nav.add(b); }
+        previous.addActionListener(e -> navigateRecord(-1)); next.addActionListener(e -> navigateRecord(1)); create.addActionListener(e -> resetForNew()); copy.addActionListener(e -> copyCurrentVoucher()); remove.addActionListener(e -> deleteCurrentVoucher()); heading.add(nav, BorderLayout.EAST); root.add(heading, BorderLayout.NORTH);
+
+        JPanel center = new JPanel(new BorderLayout(0, 7)); center.setOpaque(false);
+        JPanel form = new JPanel(new GridLayout(1, 2, 24, 0)); form.setOpaque(false); form.setBorder(new EmptyBorder(8, 5, 0, 5));
+        JPanel left = new JPanel(new GridBagLayout()); left.setOpaque(false); GridBagConstraints c = touchConstraints();
+        JPanel dateNumber = new JPanel(new GridLayout(1, 2, 8, 0)); dateNumber.setOpaque(false); dateNumber.add(dpkNgay); dateNumber.add(txtSoPhieu);
+        addTouchRow(left, c, 0, "NGÀY / SỐ", dateNumber, "▼", teal, () -> dpkNgay.requestFocusInWindow());
+        addTouchRow(left, c, 1, "NHÀ CC", cbNhaCungCap, "⌕", teal, cbNhaCungCap::showPopup);
+        addTouchRow(left, c, 2, "KHO NHẬP", cbKhoNhap, "⌕", teal, cbKhoNhap::showPopup);
+        addTouchRow(left, c, 3, "NV NHẬP", cbNhanVienNhap, "⌕", teal, cbNhanVienNhap::showPopup);
+        addTouchRow(left, c, 4, "DIỄN GIẢI", txtDienGiai, "⌨", teal, () -> touchKeyboard(txtDienGiai, "DIỄN GIẢI"));
+        JPanel lineActions = new JPanel(new FlowLayout(FlowLayout.LEFT, 7, 0)); lineActions.setOpaque(false); JButton addItem = touchButton("THÊM MẶT HÀNG", green), editItem = touchButton("SỬA", gray), deleteItem = touchButton("XÓA", gray); addItem.setPreferredSize(new Dimension(310, 57)); editItem.setPreferredSize(new Dimension(180, 57)); deleteItem.setPreferredSize(new Dimension(180, 57)); addItem.addActionListener(e -> showTouchProductPicker()); editItem.addActionListener(e -> editSelectedTouchLine()); deleteItem.addActionListener(e -> deleteSelectedLineItem()); lineActions.add(addItem); lineActions.add(editItem); lineActions.add(deleteItem); c.gridx = 0; c.gridy = 5; c.gridwidth = 3; c.weightx = 1; left.add(lineActions, c);
+        form.add(left);
+
+        JPanel totals = new JPanel(new GridBagLayout()); totals.setOpaque(false); GridBagConstraints t = touchConstraints();
+        addTouchRow(totals, t, 0, "TIỀN HÀNG", lblTienHangVal, "", bg, null);
+        JPanel discount = new JPanel(new GridLayout(1, 2, 8, 0)); discount.setOpaque(false); discount.add(txtTiLeGiamGia); discount.add(txtTienGiamGia); addTouchRow(totals, t, 1, "GIẢM GIÁ", discount, "⌨", teal, () -> touchKeyboard(txtTienGiamGia, "TIỀN GIẢM GIÁ"));
+        JPanel tax = new JPanel(new GridLayout(1, 2, 8, 0)); tax.setOpaque(false); tax.add(txtTiLeThue); tax.add(txtTienThue); addTouchRow(totals, t, 2, "THUẾ", tax, "⌨", teal, () -> touchKeyboard(txtTienThue, "TIỀN THUẾ"));
+        addTouchRow(totals, t, 3, "PHÍ V.CHUYỂN", txtPhiVanChuyen, "⌨", teal, () -> touchKeyboard(txtPhiVanChuyen, "PHÍ VẬN CHUYỂN"));
+        addTouchRow(totals, t, 4, "TỔNG CỘNG", lblTongCongVal, "", bg, null);
+        addTouchRow(totals, t, 5, "GHI CHÚ", txtGhiChu, "⌨", teal, () -> touchKeyboard(txtGhiChu, "GHI CHÚ")); form.add(totals); center.add(form, BorderLayout.NORTH);
+
+        tableChiTiet.setFont(new Font("Segoe UI", Font.PLAIN, 18)); tableChiTiet.setRowHeight(38); tableChiTiet.getTableHeader().setFont(touchFont(17)); tableChiTiet.getTableHeader().setPreferredSize(new Dimension(0, 42));
+        JScrollPane detail = new JScrollPane(tableChiTiet); detail.setBorder(new LineBorder(new Color(215, 230, 235), 2)); detail.getVerticalScrollBar().setUnitIncrement(40); center.add(detail); root.add(center);
+
+        JPanel footer = new JPanel(new BorderLayout()); footer.setOpaque(false);
+        JPanel print = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0)); print.setOpaque(false); JButton savePrint = touchButton("LƯU & IN", green), savePreview = touchButton("LƯU & XEM IN", green); savePrint.setPreferredSize(new Dimension(165, 68)); savePreview.setPreferredSize(new Dimension(225, 68)); savePrint.addActionListener(e -> saveAndPrint(true)); savePreview.addActionListener(e -> saveAndPrint(false)); print.add(savePrint); print.add(savePreview); footer.add(print, BorderLayout.WEST);
+        JPanel saves = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0)); saves.setOpaque(false); JButton save = touchButton("LƯU", gray), saveNew = touchButton("LƯU & MỚI", gray), saveClose = touchButton("LƯU & THOÁT", gray), close = touchButton("THOÁT", red); for (JButton b : new JButton[]{save, saveNew, saveClose, close}) { b.setPreferredSize(new Dimension(190, 68)); saves.add(b); } save.addActionListener(e -> saveVoucher(false, false)); saveNew.addActionListener(e -> saveVoucher(true, false)); saveClose.addActionListener(e -> saveVoucher(false, true)); close.addActionListener(e -> dispose()); footer.add(saves, BorderLayout.EAST); root.add(footer, BorderLayout.SOUTH);
+        setContentPane(root); root.revalidate(); root.repaint();
+    }
+
+    private GridBagConstraints touchConstraints() { GridBagConstraints c = new GridBagConstraints(); c.fill = GridBagConstraints.HORIZONTAL; c.insets = new Insets(5, 5, 5, 5); return c; }
+    private void addTouchRow(JPanel panel, GridBagConstraints c, int row, String text, JComponent input, String actionText, Color actionColor, Runnable action) {
+        JLabel label = new JLabel(text); label.setForeground(Color.WHITE); label.setFont(touchFont(17)); label.setPreferredSize(new Dimension(140, 48)); c.gridx = 0; c.gridy = row; c.gridwidth = 1; c.weightx = 0; panel.add(label, c);
+        touchStyle(input); c.gridx = 1; c.weightx = 1; panel.add(input, c);
+        JButton button = touchButton(actionText, actionColor); button.setPreferredSize(new Dimension(actionText.isBlank() ? 1 : 72, 52)); button.setVisible(!actionText.isBlank()); if (action != null) button.addActionListener(e -> action.run()); c.gridx = 2; c.weightx = 0; panel.add(button, c);
+    }
+    private void touchStyle(Component component) { component.setFont(new Font("Segoe UI", Font.PLAIN, 22)); component.setPreferredSize(new Dimension(250, 50)); if (component instanceof JLabel l) { l.setOpaque(true); l.setBackground(new Color(242, 255, 185)); l.setHorizontalAlignment(SwingConstants.RIGHT); } if (component instanceof Container container) for (Component child : container.getComponents()) { child.setFont(new Font("Segoe UI", Font.PLAIN, 22)); if (child instanceof JTextField) child.setPreferredSize(new Dimension(180, 48)); } }
+    private void touchKeyboard(JTextField target, String title) { String value = TouchTextKeyboardDialog.showDialog(this, title, target.getText()); if (value != null) { target.setText(value); recalculateTotals(); } }
+    private JButton touchButton(String text, Color color) { JButton b = new JButton(text); b.setBackground(color); b.setForeground(Color.WHITE); b.setFont(touchFont(18)); b.setFocusPainted(false); b.setBorder(new LineBorder(new Color(215, 230, 235), 2, true)); return b; }
+    private Font touchFont(int size) { return new Font("Segoe UI", Font.BOLD, size); }
+
+    private void showTouchProductPicker() {
+        JDialog picker = new JDialog(this, "CHỌN MẶT HÀNG", ModalityType.APPLICATION_MODAL); picker.setUndecorated(true);
+        JPanel root = new JPanel(new BorderLayout(0, 8)); root.setBackground(new Color(0, 67, 86)); root.setBorder(new EmptyBorder(7, 7, 7, 7)); JLabel heading = new JLabel("CHỌN MẶT HÀNG", SwingConstants.CENTER); heading.setOpaque(true); heading.setBackground(new Color(79, 139, 169)); heading.setForeground(Color.WHITE); heading.setFont(touchFont(25)); heading.setPreferredSize(new Dimension(0, 70)); root.add(heading, BorderLayout.NORTH);
+        DefaultListModel<MatHang> model = new DefaultListModel<>(); for (MatHang m : allCatalogItems) model.addElement(m); JList<MatHang> list = new JList<>(model); list.setFont(touchFont(19)); list.setFixedCellHeight(58); list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION); root.add(new JScrollPane(list));
+        JPanel footer = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0)); footer.setOpaque(false); JButton add = touchButton("THÊM", new Color(0, 90, 20)), close = touchButton("THOÁT", new Color(165, 10, 10)); add.setPreferredSize(new Dimension(190, 65)); close.setPreferredSize(new Dimension(190, 65)); add.addActionListener(e -> { MatHang m = list.getSelectedValue(); if (m == null) return; addTouchProduct(m); picker.dispose(); }); close.addActionListener(e -> picker.dispose()); footer.add(add); footer.add(close); root.add(footer, BorderLayout.SOUTH); picker.setContentPane(root); picker.setSize(900, 700); picker.setLocationRelativeTo(this); picker.setVisible(true);
+    }
+    private void addTouchProduct(MatHang m) {
+        Integer qty = TouchNumberInputDialog.showDialog(this, "NHẬP SỐ LƯỢNG", 1, 1, 999999); if (qty == null) return;
+        String priceText = TouchTextKeyboardDialog.showDialog(this, "NHẬP ĐƠN GIÁ", df.format(m.getGiaNhap())); if (priceText == null) return; double price = parseDouble(priceText, m.getGiaNhap());
+        boolean found = false; if (systemConfig == null || !systemConfig.isChoPhepNhapMotMatHangNhieuLan()) for (DonHangChiTiet old : lineItems) if (m.getId() != null && m.getId().equals(old.getMatHangId())) { old.setSoLuong(old.getSoLuong() + qty); old.tinhThanhTien(); found = true; break; }
+        if (!found) { DonHangChiTiet item = new DonHangChiTiet(); item.setMatHangId(m.getId()); item.setMaHang(m.getCode()); item.setTenHang(m.getName()); item.setDonViTinhId(m.getDonViTinhId()); item.setTenDonViTinh(m.getTenDonViTinh()); item.setSoLuong(qty); item.setDonGia(price); item.setBaoHanh(m.getBaoHanh()); item.tinhThanhTien(); lineItems.add(item); }
+        refreshDetailTable(); recalculateTotals();
+    }
+    private void editSelectedTouchLine() {
+        int row = tableChiTiet.getSelectedRow(); if (row < 0 || row >= lineItems.size()) { JOptionPane.showMessageDialog(this, "Vui lòng chọn mặt hàng cần sửa!", "THÔNG BÁO", JOptionPane.INFORMATION_MESSAGE); return; }
+        DonHangChiTiet item = lineItems.get(row); Integer qty = TouchNumberInputDialog.showDialog(this, "NHẬP SỐ LƯỢNG", Math.max(1, (int)Math.round(item.getSoLuong())), 1, 999999); if (qty == null) return; String price = TouchTextKeyboardDialog.showDialog(this, "NHẬP ĐƠN GIÁ", df.format(item.getDonGia())); if (price == null) return; item.setSoLuong(qty); item.setDonGia(parseDouble(price, item.getDonGia())); item.tinhThanhTien(); refreshDetailTable(); recalculateTotals();
     }
 
     private void exportDetailExcel() {

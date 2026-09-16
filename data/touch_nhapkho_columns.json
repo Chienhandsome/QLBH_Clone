@@ -1,0 +1,210 @@
+{
+  "usedColumns": [
+    {
+      "key": "NUMBER",
+      "title": "SỐ PHIẾU",
+      "prefix": "Số phiếu: ",
+      "colorHex": "#FFFFFF",
+      "bold": true,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 16
+    },
+    {
+      "key": "DATE",
+      "title": "NGÀY",
+      "prefix": "Ngày: ",
+      "colorHex": "#FFFFFF",
+      "bold": true,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 16
+    },
+    {
+      "key": "SUPPLIER",
+      "title": "NHÀ CUNG CẤP",
+      "prefix": "Nhà CC: ",
+      "colorHex": "#FFFFFF",
+      "bold": true,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 16
+    },
+    {
+      "key": "TOTAL",
+      "title": "TỔNG CỘNG",
+      "prefix": "Tổng cộng: ",
+      "colorHex": "#FFFFFF",
+      "bold": true,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 16
+    },
+    {
+      "key": "PAID",
+      "title": "THANH TOÁN",
+      "prefix": "Thanh toán: ",
+      "colorHex": "#FFFFFF",
+      "bold": true,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 16
+    }
+  ],
+  "unusedColumns": [
+    {
+      "key": "NOTE",
+      "title": "GHI CHÚ",
+      "prefix": "Ghi chú: ",
+      "colorHex": "#FFFFFF",
+      "bold": true,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 16
+    },
+    {
+      "key": "DISCOUNT",
+      "title": "TIỀN GIẢM GIÁ",
+      "prefix": "Tiền giảm giá: ",
+      "colorHex": "#FFFFFF",
+      "bold": true,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 16
+    },
+    {
+      "key": "DISCOUNT_RATE",
+      "title": "TỈ LỆ GIẢM GIÁ",
+      "prefix": "Tỉ lệ giảm giá: ",
+      "colorHex": "#FFFFFF",
+      "bold": true,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 16
+    },
+    {
+      "key": "ITEM_AMOUNT",
+      "title": "TIỀN HÀNG",
+      "prefix": "Tiền hàng: ",
+      "colorHex": "#FFFFFF",
+      "bold": true,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 16
+    },
+    {
+      "key": "WAREHOUSE",
+      "title": "KHO NHẬP",
+      "prefix": "Kho nhập: ",
+      "colorHex": "#FFFFFF",
+      "bold": true,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 16
+    },
+    {
+      "key": "EMPLOYEE",
+      "title": "NHÂN VIÊN NHẬP",
+      "prefix": "NV nhập: ",
+      "colorHex": "#FFFFFF",
+      "bold": true,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 16
+    },
+    {
+      "key": "DESCRIPTION",
+      "title": "DIỄN GIẢI",
+      "prefix": "Diễn giải: ",
+      "colorHex": "#FFFFFF",
+      "bold": true,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 16
+    },
+    {
+      "key": "STORE",
+      "title": "CỬA HÀNG",
+      "prefix": "Cửa hàng: ",
+      "colorHex": "#FFFFFF",
+      "bold": true,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 16
+    },
+    {
+      "key": "CARD_PAYMENT",
+      "title": "THẺ TT",
+      "prefix": "Thẻ TT: ",
+      "colorHex": "#FFFFFF",
+      "bold": true,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 16
+    },
+    {
+      "key": "PREPAID",
+      "title": "THẺ TRẢ TRƯỚC",
+      "prefix": "Thẻ trả trước: ",
+      "colorHex": "#FFFFFF",
+      "bold": true,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 16
+    },
+    {
+      "key": "REWARD",
+      "title": "TRỪ TÍCH LŨY",
+      "prefix": "Trừ tích lũy: ",
+      "colorHex": "#FFFFFF",
+      "bold": true,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 16
+    },
+    {
+      "key": "BANK",
+      "title": "TÀI KHOẢN NGÂN HÀNG",
+      "prefix": "Tài khoản NH: ",
+      "colorHex": "#FFFFFF",
+      "bold": true,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 16
+    },
+    {
+      "key": "VOUCHER",
+      "title": "MÃ VOUCHER",
+      "prefix": "Mã voucher: ",
+      "colorHex": "#FFFFFF",
+      "bold": true,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 16
+    },
+    {
+      "key": "CARD",
+      "title": "THẺ",
+      "prefix": "Thẻ: ",
+      "colorHex": "#FFFFFF",
+      "bold": true,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 16
+    },
+    {
+      "key": "TABLE",
+      "title": "BÀN",
+      "prefix": "Bàn: ",
+      "colorHex": "#FFFFFF",
+      "bold": true,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 16
+    }
+  ],
+  "cardBgColorHex": "#004F4C",
+  "gridColumns": 3,
+  "gridRows": 6,
+  "showTitle": true
+}

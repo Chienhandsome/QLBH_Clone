@@ -1,0 +1,90 @@
+{
+  "usedColumns": [
+    {
+      "key": "NAME",
+      "title": "TÊN NHÀ CUNG CẤP",
+      "prefix": "",
+      "colorHex": "#FFFFFF",
+      "bold": true,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 18
+    }
+  ],
+  "unusedColumns": [
+    {
+      "key": "NOTE",
+      "title": "GHI CHÚ",
+      "prefix": "Ghi chú: ",
+      "colorHex": "#FFFFFF",
+      "bold": false,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 16
+    },
+    {
+      "key": "GROUP",
+      "title": "NHÓM NHÀ CUNG CẤP",
+      "prefix": "Nhóm: ",
+      "colorHex": "#FFFFFF",
+      "bold": false,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 16
+    },
+    {
+      "key": "CODE",
+      "title": "MÃ NHÀ CUNG CẤP",
+      "prefix": "Mã: ",
+      "colorHex": "#FFFFFF",
+      "bold": false,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 16
+    },
+    {
+      "key": "ADDRESS",
+      "title": "ĐỊA CHỈ",
+      "prefix": "Địa chỉ: ",
+      "colorHex": "#FFFFFF",
+      "bold": false,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 16
+    },
+    {
+      "key": "PHONE",
+      "title": "ĐIỆN THOẠI",
+      "prefix": "Điện thoại: ",
+      "colorHex": "#FFFFFF",
+      "bold": false,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 16
+    },
+    {
+      "key": "EMAIL",
+      "title": "EMAIL",
+      "prefix": "Email: ",
+      "colorHex": "#FFFFFF",
+      "bold": false,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 16
+    },
+    {
+      "key": "WEBSITE",
+      "title": "WEBSITE",
+      "prefix": "Website: ",
+      "colorHex": "#FFFFFF",
+      "bold": false,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 16
+    }
+  ],
+  "cardBgColorHex": "#004F4C",
+  "gridColumns": 2,
+  "gridRows": 7,
+  "showTitle": false
+}

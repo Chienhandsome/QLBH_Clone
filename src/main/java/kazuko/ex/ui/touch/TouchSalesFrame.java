@@ -25,8 +25,6 @@ import kazuko.ex.ui.hoadon.QuanLyBanHangPanel;
 import kazuko.ex.ui.khohang.ChonKhoBanDauDialog;
 import kazuko.ex.ui.khohang.QuanLyChuyenKhoPanel;
 import kazuko.ex.ui.khohang.QuanLyKiemKePanel;
-import kazuko.ex.ui.khohang.QuanLyNhapKhoPanel;
-import kazuko.ex.ui.khohang.QuanLyTonKhoPanel;
 import kazuko.ex.ui.khohang.QuanLyTonNhieuKhoPanel;
 import kazuko.ex.ui.khohang.QuanLyXuatKhoPanel;
 import kazuko.ex.ui.khohang.TinhLaiGiaVonDialog;
@@ -171,12 +169,12 @@ public final class TouchSalesFrame extends JFrame {
             case "DANH MỤC KHO HÀNG" -> showTouchPanel(new TouchKhoHangPanel(this::showDashboard));
             case "DANH MỤC NHÀ CUNG CẤP" -> showTouchPanel(new TouchNhaCungCapPanel(this::showDashboard));
             case "ĐẶT HÀNG NHÀ CUNG CẤP" -> showBusinessPanel(key, new DatHangNhaCungCapPanel());
-            case "NHẬP HÀNG VÀO KHO" -> showBusinessPanel(key, new QuanLyNhapKhoPanel());
+            case "NHẬP HÀNG VÀO KHO" -> showTouchPanel(new TouchNhapKhoPanel(this::showDashboard));
             case "XUẤT KHO" -> showBusinessPanel(key, new QuanLyXuatKhoPanel());
             case "CHUYỂN KHO" -> showBusinessPanel(key, new QuanLyChuyenKhoPanel());
             case "KIỂM KÊ KHO" -> showBusinessPanel(key, new QuanLyKiemKePanel());
             case "TÍNH LẠI GIÁ VỐN" -> new TinhLaiGiaVonDialog(this).setVisible(true);
-            case "TỒN KHO" -> showBusinessPanel(key, new QuanLyTonKhoPanel());
+            case "TỒN KHO" -> showTouchPanel(new TouchTonKhoPanel(this::showDashboard));
             case "TỒN NHIỀU KHO" -> showBusinessPanel(key, new QuanLyTonNhieuKhoPanel());
 
             // QUỸ
