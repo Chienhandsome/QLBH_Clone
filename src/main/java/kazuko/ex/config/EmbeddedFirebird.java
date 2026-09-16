@@ -92,11 +92,25 @@ public final class EmbeddedFirebird {
     }
 
     private static Path findSeedDatabase() throws IOException {
-        List<Path> candidates = List.of(
-                getApplicationDirectory().resolve("seed").resolve(DATABASE_NAME),
-                Path.of("").toAbsolutePath().resolve("installer-input").resolve("seed").resolve(DATABASE_NAME),
-                Path.of("").toAbsolutePath().resolve("data").resolve(DATABASE_NAME)
-        );
+        Path applicationDirectory = getApplicationDirectory();
+        Path workingDirectory = Path.of("").toAbsolutePath().normalize();
+        List<Path> candidates = new ArrayList<>();
+
+        candidates.add(applicationDirectory.resolve("seed").resolve(DATABASE_NAME));
+        candidates.add(applicationDirectory.resolve("data").resolve(DATABASE_NAME));
+        if (applicationDirectory.getParent() != null) {
+            candidates.add(applicationDirectory.getParent().resolve("seed").resolve(DATABASE_NAME));
+            candidates.add(applicationDirectory.getParent().resolve("data").resolve(DATABASE_NAME));
+            candidates.add(applicationDirectory.getParent().resolve("installer-input").resolve("seed").resolve(DATABASE_NAME));
+            candidates.add(applicationDirectory.getParent().resolve("installer-input-embedded").resolve("seed").resolve(DATABASE_NAME));
+        }
+        candidates.add(workingDirectory.resolve("installer-input").resolve("seed").resolve(DATABASE_NAME));
+        candidates.add(workingDirectory.resolve("installer-input-embedded").resolve("seed").resolve(DATABASE_NAME));
+        candidates.add(workingDirectory.resolve("data").resolve(DATABASE_NAME));
+        candidates.add(workingDirectory.resolve("QLBH_Clone").resolve("installer-input").resolve("seed").resolve(DATABASE_NAME));
+        candidates.add(workingDirectory.resolve("QLBH_Clone").resolve("installer-input-embedded").resolve("seed").resolve(DATABASE_NAME));
+        candidates.add(workingDirectory.resolve("QLBH_Clone").resolve("data").resolve(DATABASE_NAME));
+        candidates.add(Path.of("D:/THUCTAP/QLBH_Clone/data", DATABASE_NAME));
 
         for (Path candidate : candidates) {
             if (Files.isRegularFile(candidate)) {
@@ -113,12 +127,26 @@ public final class EmbeddedFirebird {
         List<Path> candidates = new ArrayList<>();
 
         addFirebirdCandidates(candidates, applicationDirectory.resolve("firebird"));
+        if (applicationDirectory.getParent() != null) {
+            addFirebirdCandidates(candidates, applicationDirectory.getParent().resolve("firebird"));
+            addFirebirdCandidates(candidates, applicationDirectory.getParent().resolve("packaging").resolve("firebird"));
+            addFirebirdCandidates(candidates, applicationDirectory.getParent().resolve("installer-input").resolve("firebird"));
+            addFirebirdCandidates(candidates, applicationDirectory.getParent().resolve("installer-input-embedded").resolve("firebird"));
+        }
         addFirebirdCandidates(candidates, workingDirectory.resolve("packaging").resolve("firebird"));
         addFirebirdCandidates(candidates, workingDirectory.resolve("installer-input").resolve("firebird"));
+        addFirebirdCandidates(candidates, workingDirectory.resolve("installer-input-embedded").resolve("firebird"));
+        addFirebirdCandidates(candidates, workingDirectory.resolve("firebird"));
+        addFirebirdCandidates(candidates, workingDirectory.resolve("QLBH_Clone").resolve("packaging").resolve("firebird"));
+        addFirebirdCandidates(candidates, workingDirectory.resolve("QLBH_Clone").resolve("installer-input").resolve("firebird"));
+        addFirebirdCandidates(candidates, workingDirectory.resolve("QLBH_Clone").resolve("installer-input-embedded").resolve("firebird"));
+        addFirebirdCandidates(candidates, Path.of("D:/THUCTAP/QLBH_Clone/installer-input/firebird"));
+        addFirebirdCandidates(candidates, Path.of("D:/THUCTAP/QLBH_Clone/packaging/firebird"));
         return candidates;
     }
 
     private static void addFirebirdCandidates(List<Path> candidates, Path root) {
+        if (root == null) return;
         candidates.add(root);
         candidates.add(root.resolve("Firebird-2.5.9.27139-0_x64_embed"));
     }

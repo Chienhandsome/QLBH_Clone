@@ -35,7 +35,6 @@ import kazuko.ex.ui.nhansu.TinhLuongPanel;
 import kazuko.ex.ui.quantri.ChiTieuDoanhThuPanel;
 import kazuko.ex.ui.quy.DanhMucPhieuChiPanel;
 import kazuko.ex.ui.quy.DanhMucPhieuThuPanel;
-import kazuko.ex.ui.quy.TaoPhieuChiDialog;
 import kazuko.ex.ui.quy.TonQuyPanel;
 import kazuko.ex.ui.system.CauHinhToanHeThongDialog;
 import kazuko.ex.ui.system.GhiChuNhanhDialog;
@@ -180,20 +179,20 @@ public final class TouchSalesFrame extends JFrame {
                     showTouchPanel(new TouchLyDoThuChiPanel(this::showDashboard));
             case "DANH MỤC TÀI KHOẢN NGÂN HÀNG" -> new TaiKhoanNganHangDialog(this).setVisible(true);
             case "TẠO PHIẾU THU" -> showTouchPanel(new TouchPhieuThuPanel(this::showDashboard));
-            case "TẠO PHIẾU CHI" -> new TaoPhieuChiDialog(this).setVisible(true);
-            case "DANH MỤC PHIẾU THU" -> showBusinessPanel(key, new DanhMucPhieuThuPanel());
-            case "DANH MỤC PHIẾU CHI" -> showBusinessPanel(key, new DanhMucPhieuChiPanel());
-            case "TỒN QUỸ" -> showBusinessPanel(key, new TonQuyPanel());
+            case "TẠO PHIẾU CHI" -> showTouchPanel(new TouchPhieuChiPanel(this::showDashboard));
+            case "DANH MỤC PHIẾU THU" -> showTouchPanel(new TouchDanhMucPhieuThuPanel(this::showDashboard));
+            case "DANH MỤC PHIẾU CHI" -> showTouchPanel(new TouchDanhMucPhieuChiPanel(this::showDashboard));
+            case "TỒN QUỸ" -> showTouchPanel(new TouchTonQuyPanel(this::showDashboard));
 
             // CÔNG NỢ
-            case "CÔNG NỢ KHÁCH HÀNG" -> showBusinessPanel(key, new QuanLyCongNoKhachHangPanel());
-            case "CÔNG NỢ NHÀ CUNG CẤP" -> showBusinessPanel(key, new QuanLyCongNoNhaCungCapPanel());
+            case "CÔNG NỢ KHÁCH HÀNG" -> showTouchPanel(new TouchCongNoKhachHangPanel(this::showDashboard));
+            case "CÔNG NỢ NHÀ CUNG CẤP" -> showTouchPanel(new TouchCongNoNhaCungCapPanel(this::showDashboard));
             case "CÔNG NỢ KHÁCH HÀNG BAN ĐẦU" -> new CongNoKhachHangBanDauDialog(this).setVisible(true);
             case "CÔNG NỢ NHÀ CUNG CẤP BAN ĐẦU" -> new CongNoNhaCungCapBanDauDialog(this).setVisible(true);
 
             // NHÂN SỰ
-            case "DANH MỤC NHÂN VIÊN" -> new NhanVienDialog(this).setVisible(true);
-            case "DANH MỤC CA LÀM VIỆC" -> new CaLamViecDialog(this).setVisible(true);
+            case "DANH MỤC NHÂN VIÊN" -> showTouchPanel(new TouchNhanVienPanel(this::showDashboard));
+            case "DANH MỤC CA LÀM VIỆC" -> showTouchPanel(new TouchCaLamViecPanel(this::showDashboard));
             case "TẠM ỨNG LƯƠNG" -> showBusinessPanel(key, new TamUngLuongPanel());
             case "THƯỞNG PHẠT" -> showBusinessPanel(key, new ThuongPhatPanel());
             case "CHẤM CÔNG" -> showBusinessPanel(key, new ChamCongPanel());

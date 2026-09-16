@@ -31,6 +31,17 @@ public class SystemConfigDAO {
         if (f3.exists()) {
             return f3;
         }
+        // 4. Relative to application directory parent (e.g. when run from target/ or outside project)
+        try {
+            java.nio.file.Path appDir = kazuko.ex.config.EmbeddedFirebird.getApplicationDirectory();
+            if (appDir != null && appDir.getParent() != null) {
+                File appParentCfg = appDir.getParent().resolve(CONFIG_FILE_NAME).toFile();
+                if (appParentCfg.exists()) {
+                    return appParentCfg;
+                }
+            }
+        } catch (Exception ignored) {
+        }
         // Fallback: If QLBH_Clone directory exists, use QLBH_Clone/system_config.properties
         if (new File("QLBH_Clone").isDirectory()) {
             return f2;

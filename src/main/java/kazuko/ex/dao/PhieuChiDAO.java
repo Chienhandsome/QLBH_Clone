@@ -197,7 +197,11 @@ public class PhieuChiDAO extends BaseDAO {
             maxSeq = Math.max(maxSeq, numberPattern.extractSequence(pc.getSoPhieu()));
         }
 
-        return numberPattern.format(maxSeq + 1);
+        try {
+            return numberPattern.format(maxSeq + 1);
+        } catch (IllegalStateException e) {
+            return "PC" + new SimpleDateFormat("yy").format(date) + "/" + (maxSeq + 1);
+        }
     }
 
     public boolean insert(PhieuChi pc) {

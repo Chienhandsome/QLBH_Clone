@@ -1,0 +1,170 @@
+{
+  "usedColumns": [
+    {
+      "key": "NUMBER",
+      "title": "SỐ PHIẾU",
+      "prefix": "Số phiếu: ",
+      "colorHex": "#FFFFFF",
+      "bold": true,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 16
+    },
+    {
+      "key": "DATE",
+      "title": "NGÀY",
+      "prefix": "Ngày: ",
+      "colorHex": "#FFFFFF",
+      "bold": true,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 16
+    },
+    {
+      "key": "SUBJECT_TYPE",
+      "title": "LOẠI ĐỐI TƯỢNG",
+      "prefix": "Loại ĐT: ",
+      "colorHex": "#FFFFFF",
+      "bold": true,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 16
+    },
+    {
+      "key": "SUBJECT_NAME",
+      "title": "TÊN ĐỐI TƯỢNG",
+      "prefix": "Đối tượng: ",
+      "colorHex": "#FFFFFF",
+      "bold": true,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 16
+    },
+    {
+      "key": "REASON",
+      "title": "LÝ DO CHI",
+      "prefix": "Lý do: ",
+      "colorHex": "#FFFFFF",
+      "bold": true,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 16
+    },
+    {
+      "key": "AMOUNT",
+      "title": "SỐ TIỀN",
+      "prefix": "Số tiền: ",
+      "colorHex": "#FFE600",
+      "bold": true,
+      "italic": false,
+      "rightAligned": true,
+      "fontSize": 17
+    },
+    {
+      "key": "STORE",
+      "title": "CỬA HÀNG",
+      "prefix": "Cửa hàng: ",
+      "colorHex": "#FFFFFF",
+      "bold": true,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 16
+    },
+    {
+      "key": "NOTE",
+      "title": "GHI CHÚ",
+      "prefix": "Ghi chú: ",
+      "colorHex": "#FFFFFF",
+      "bold": true,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 16
+    }
+  ],
+  "unusedColumns": [
+    {
+      "key": "ADDRESS",
+      "title": "ĐỊA CHỈ",
+      "prefix": "Địa chỉ: ",
+      "colorHex": "#FFFFFF",
+      "bold": true,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 16
+    },
+    {
+      "key": "EMPLOYEE",
+      "title": "NHÂN VIÊN",
+      "prefix": "Nhân viên: ",
+      "colorHex": "#FFFFFF",
+      "bold": true,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 16
+    },
+    {
+      "key": "CUSTOMER",
+      "title": "KHÁCH HÀNG",
+      "prefix": "Khách hàng: ",
+      "colorHex": "#FFFFFF",
+      "bold": true,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 16
+    },
+    {
+      "key": "SUPPLIER",
+      "title": "NHÀ CUNG CẤP",
+      "prefix": "Nhà CC: ",
+      "colorHex": "#FFFFFF",
+      "bold": true,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 16
+    },
+    {
+      "key": "ORIGINAL_DOC",
+      "title": "CHỨNG TỪ GỐC",
+      "prefix": "Chứng từ: ",
+      "colorHex": "#FFFFFF",
+      "bold": true,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 16
+    },
+    {
+      "key": "TRANSFER",
+      "title": "CHUYỂN KHOẢN",
+      "prefix": "Chuyển khoản: ",
+      "colorHex": "#FFFFFF",
+      "bold": true,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 16
+    },
+    {
+      "key": "CREATOR",
+      "title": "NGƯỜI TẠO",
+      "prefix": "Người tạo: ",
+      "colorHex": "#FFFFFF",
+      "bold": true,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 16
+    },
+    {
+      "key": "TIME_CREATED",
+      "title": "THỜI GIAN TẠO",
+      "prefix": "Tạo lúc: ",
+      "colorHex": "#FFFFFF",
+      "bold": true,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 16
+    }
+  ],
+  "cardBgColorHex": "#004F4C",
+  "gridColumns": 3,
+  "gridRows": 6,
+  "showTitle": true
+}

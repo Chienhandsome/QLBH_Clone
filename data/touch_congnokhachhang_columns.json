@@ -1,0 +1,90 @@
+{
+  "usedColumns": [
+    {
+      "key": "NAME",
+      "title": "TÊN KHÁCH HÀNG",
+      "prefix": "",
+      "colorHex": "#FFFFFF",
+      "bold": true,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 18
+    },
+    {
+      "key": "DEBT",
+      "title": "CÒN NỢ",
+      "prefix": "Nợ: ",
+      "colorHex": "#FFE600",
+      "bold": true,
+      "italic": false,
+      "rightAligned": true,
+      "fontSize": 17
+    },
+    {
+      "key": "PHONE",
+      "title": "SỐ ĐIỆN THOẠI",
+      "prefix": "",
+      "colorHex": "#FFFFFF",
+      "bold": false,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 16
+    }
+  ],
+  "unusedColumns": [
+    {
+      "key": "CODE",
+      "title": "MÃ KHÁCH",
+      "prefix": "Mã: ",
+      "colorHex": "#FFFFFF",
+      "bold": true,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 16
+    },
+    {
+      "key": "ADDRESS",
+      "title": "ĐỊA CHỈ",
+      "prefix": "ĐC: ",
+      "colorHex": "#FFFFFF",
+      "bold": true,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 16
+    },
+    {
+      "key": "GROUP",
+      "title": "NHÓM KHÁCH",
+      "prefix": "Nhóm: ",
+      "colorHex": "#FFFFFF",
+      "bold": true,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 16
+    },
+    {
+      "key": "TOTAL_BUY",
+      "title": "TỔNG MUA",
+      "prefix": "Mua: ",
+      "colorHex": "#FFFFFF",
+      "bold": true,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 16
+    },
+    {
+      "key": "PAID",
+      "title": "ĐÃ TRẢ",
+      "prefix": "Đã trả: ",
+      "colorHex": "#FFFFFF",
+      "bold": true,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 16
+    }
+  ],
+  "cardBgColorHex": "#004F4C",
+  "gridColumns": 2,
+  "gridRows": 7,
+  "showTitle": true
+}

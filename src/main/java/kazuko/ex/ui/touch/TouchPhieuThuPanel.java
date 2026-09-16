@@ -28,7 +28,7 @@ import java.util.Locale;
 import java.util.regex.Pattern;
 
 /** Màn hình tạo và cập nhật phiếu thu dành cho giao diện cảm ứng. */
-final class TouchPhieuThuPanel extends JPanel {
+public final class TouchPhieuThuPanel extends JPanel {
     private static final Color BACKGROUND = new Color(0, 67, 86);
     private static final Color HEADER = new Color(105, 143, 31);
     private static final Color SELECT_HEADER = new Color(79, 139, 169);
@@ -37,6 +37,8 @@ final class TouchPhieuThuPanel extends JPanel {
     private static final Color GREEN = new Color(0, 100, 25);
     private static final Color RED = new Color(165, 0, 0);
     private static final Color GRAY = new Color(145, 145, 145);
+    private static final Color TEAL = new Color(0, 82, 91);
+    private static final Color DISABLED_FIELD = new Color(238, 238, 238);
     private static final Color YELLOW_FIELD = new Color(245, 255, 188);
     private static final Color CYAN_FIELD = new Color(220, 250, 252);
     private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("dd/MM/yyyy");
@@ -50,6 +52,7 @@ final class TouchPhieuThuPanel extends JPanel {
     private final CuaHangDAO storeDAO = new CuaHangDAO();
     private final Runnable exit;
 
+    private JLabel titleLabel;
     private final CardLayout navigation = new CardLayout();
     private final JPanel screens = new JPanel(navigation);
     private final JTextField dateField = field(YELLOW_FIELD);
@@ -67,8 +70,14 @@ final class TouchPhieuThuPanel extends JPanel {
     private final JCheckBox transferCheck = new JCheckBox("CHUYỂN KHOẢN");
     private final JButton subjectTypeButton = button("ĐỐI TƯỢNG KHÁC", Color.WHITE, Color.BLACK, 360, 50);
 
-    private final JLabel searchTitle = headerLabel("TÌM KIẾM", SELECT_HEADER, 65);
-    private final JLabel searchBadge = new JLabel("", SwingConstants.CENTER);
+    private final JButton employeeSearch = iconButton("⌕");
+    private final JButton customerSearch = iconButton("⌕");
+    private final JButton supplierSearch = iconButton("⌕");
+    private JButton subjectNameKb;
+    private JButton addressKb;
+
+    private final JLabel searchTitle = headerLabel("TÌM KIẾM DỮ LIỆU", SELECT_HEADER, 65);
+    private final JLabel searchBadge = headerLabel("", GREEN, 45);
     private final TouchScrollableRowsPanel searchCards = new TouchScrollableRowsPanel();
     private final StringBuilder searchBuffer = new StringBuilder();
 
@@ -87,7 +96,16 @@ final class TouchPhieuThuPanel extends JPanel {
     private List<NhaCungCap> suppliers = new ArrayList<>();
     private List<CuaHang> stores = new ArrayList<>();
 
-    TouchPhieuThuPanel(Runnable exit) {
+    public TouchPhieuThuPanel(Runnable exit) {
+        this(exit, null);
+    }
+
+    public TouchPhieuThuPanel(Runnable exit, String customerId, String customerName, String address, Double debtAmount) {
+        this(exit, null);
+        setPreselectedCustomer(customerId, customerName, address, debtAmount);
+    }
+
+    public TouchPhieuThuPanel(Runnable exit, PhieuThu receiptToEdit) {
         this.exit = exit;
         DATE_FORMAT.setLenient(false);
         setLayout(new BorderLayout());
@@ -96,7 +114,12 @@ final class TouchPhieuThuPanel extends JPanel {
         screens.add(createSearchScreen(), "search");
         add(screens, BorderLayout.CENTER);
         loadLookups();
-        resetForNew();
+        setupFieldSync();
+        if (receiptToEdit != null) {
+            loadReceipt(receiptToEdit);
+        } else {
+            resetForNew();
+        }
     }
 
     private JPanel createMainScreen() {
@@ -131,7 +154,8 @@ final class TouchPhieuThuPanel extends JPanel {
 
         addLabel(form, gbc, "TÊN ĐỐI TƯỢNG", 0, 3);
         addComponent(form, gbc, subjectNameField, 1, 3, 1, 0.5);
-        addComponent(form, gbc, keyboardButton(subjectNameField, "NHẬP TÊN ĐỐI TƯỢNG"), 2, 3, 1, 0);
+        subjectNameKb = keyboardButton(subjectNameField, "NHẬP TÊN ĐỐI TƯỢNG");
+        addComponent(form, gbc, subjectNameKb, 2, 3, 1, 0);
         addLabel(form, gbc, "LOẠI ĐỐI TƯỢNG", 3, 3);
         subjectTypeButton.addActionListener(e -> navigation.show(screens, "subjectType"));
         addComponent(form, gbc, subjectTypeButton, 4, 3, 1, 0.5);
@@ -141,23 +165,21 @@ final class TouchPhieuThuPanel extends JPanel {
 
         addLabel(form, gbc, "ĐỊA CHỈ", 0, 4);
         addComponent(form, gbc, addressField, 1, 4, 1, 0.5);
-        addComponent(form, gbc, keyboardButton(addressField, "NHẬP ĐỊA CHỈ"), 2, 4, 1, 0);
+        addressKb = keyboardButton(addressField, "NHẬP ĐỊA CHỈ");
+        addComponent(form, gbc, addressKb, 2, 4, 1, 0);
 
         addLabel(form, gbc, "NHÂN VIÊN", 0, 5);
         addComponent(form, gbc, employeeField, 1, 5, 1, 0.5);
-        JButton employeeSearch = iconButton("⌕");
         employeeSearch.addActionListener(e -> openSearch(SearchKind.EMPLOYEE));
         addComponent(form, gbc, employeeSearch, 2, 5, 1, 0);
 
         addLabel(form, gbc, "KHÁCH HÀNG", 0, 6);
         addComponent(form, gbc, customerField, 1, 6, 1, 0.5);
-        JButton customerSearch = iconButton("⌕");
         customerSearch.addActionListener(e -> openSearch(SearchKind.CUSTOMER));
         addComponent(form, gbc, customerSearch, 2, 6, 1, 0);
 
         addLabel(form, gbc, "NHÀ CUNG CẤP", 0, 7);
         addComponent(form, gbc, supplierField, 1, 7, 1, 0.5);
-        JButton supplierSearch = iconButton("⌕");
         supplierSearch.addActionListener(e -> openSearch(SearchKind.SUPPLIER));
         addComponent(form, gbc, supplierSearch, 2, 7, 1, 0);
 
@@ -199,11 +221,11 @@ final class TouchPhieuThuPanel extends JPanel {
         header.setBorder(new LineBorder(new Color(70, 110, 20), 2, true));
         header.setPreferredSize(new Dimension(0, 80));
 
-        JLabel title = new JLabel("PHIẾU THU");
-        title.setForeground(Color.WHITE);
-        title.setFont(new Font("Segoe UI", Font.BOLD, 28));
-        title.setBorder(new EmptyBorder(0, 8, 0, 0));
-        header.add(title, BorderLayout.WEST);
+        titleLabel = new JLabel("PHIẾU THU");
+        titleLabel.setForeground(Color.WHITE);
+        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 28));
+        titleLabel.setBorder(new EmptyBorder(0, 8, 0, 0));
+        header.add(titleLabel, BorderLayout.WEST);
 
         JPanel actions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 7, 4));
         actions.setOpaque(false);
@@ -375,7 +397,10 @@ final class TouchPhieuThuPanel extends JPanel {
         if (!stores.isEmpty() && selectedStore == null) selectedStore = stores.get(0);
     }
 
-    private void resetForNew() {
+    public void resetForNew() {
+        if (titleLabel != null) {
+            titleLabel.setText("PHIẾU THU");
+        }
         currentReceipt = new PhieuThu();
         dateField.setText(DATE_FORMAT.format(new Date()));
         voucherField.setText(phieuThuDAO.generateNextSoPhieu(new Date()));
@@ -396,6 +421,52 @@ final class TouchPhieuThuPanel extends JPanel {
         transferCheck.setSelected(false);
         chooseSubjectType("Đối tượng khác");
         navigation.show(screens, "main");
+    }
+
+    /**
+     * Chọn sẵn khách hàng cho phiếu thu, cập nhật loại đối tượng thành "Khách hàng"
+     * và điền tên, địa chỉ, số tiền nếu có.
+     */
+    public void setPreselectedCustomer(String customerId, String customerName, String address, Double debtAmount) {
+        KhachHang customer = findCustomer(customerId);
+        if (customer == null && customerName != null) {
+            customer = customers.stream()
+                    .filter(c -> customerName.equalsIgnoreCase(c.getName()))
+                    .findFirst().orElse(null);
+        }
+        if (customer != null) {
+            selectedCustomer = customer;
+            customerField.setText(safe(customer.getName()));
+        } else {
+            selectedCustomer = new KhachHang();
+            selectedCustomer.setId(customerId);
+            selectedCustomer.setName(customerName);
+            selectedCustomer.setDiaChi(address);
+            customerField.setText(safe(customerName));
+        }
+
+        chooseSubjectType("Khách hàng");
+
+        if (address != null && !address.isBlank()) {
+            addressField.setText(address.trim());
+        }
+
+        // Ưu tiên chọn lý do thu nợ khách hàng nếu có
+        for (LyDoThuChi r : reasons) {
+            if (r.getName() != null) {
+                String rName = r.getName().toLowerCase(Locale.ROOT);
+                if (rName.contains("thu nợ") || rName.contains("nợ khách")) {
+                    selectedReason = r;
+                    reasonField.setText(r.getName());
+                    purposeField.setText(r.getName());
+                    break;
+                }
+            }
+        }
+
+        if (debtAmount != null && debtAmount > 0) {
+            amountField.setText(CurrencyUtil.format(debtAmount));
+        }
     }
 
     private LyDoThuChi findDefaultReason() {
@@ -426,6 +497,7 @@ final class TouchPhieuThuPanel extends JPanel {
     private JButton keyboardButton(JTextField target, String title) {
         JButton keyboard = iconButton("⌨");
         keyboard.addActionListener(e -> {
+            if (!target.isEditable() || !keyboard.isEnabled()) return;
             String value = TouchTextKeyboardDialog.showDialog(
                     SwingUtilities.getWindowAncestor(this), title, target.getText());
             if (value != null) target.setText(value);
@@ -435,8 +507,92 @@ final class TouchPhieuThuPanel extends JPanel {
 
     private void chooseSubjectType(String type) {
         subjectTypeButton.setText(type.toUpperCase(Locale.ROOT));
-        subjectNameField.setEditable("Đối tượng khác".equals(type));
+        updateSubjectFieldsState(type);
         applySelectedSubject(type);
+    }
+
+    private void updateSubjectFieldsState(String type) {
+        boolean isCustomer = "Khách hàng".equalsIgnoreCase(type);
+        boolean isEmployee = "Nhân viên".equalsIgnoreCase(type);
+        boolean isSupplier = "Nhà cung cấp".equalsIgnoreCase(type);
+        boolean isOther = !isCustomer && !isEmployee && !isSupplier;
+
+        // 1. Customer field & search button
+        customerField.setEditable(isCustomer);
+        customerField.setBackground(isCustomer ? Color.WHITE : DISABLED_FIELD);
+        updateButtonState(customerSearch, isCustomer);
+
+        // 2. Employee field & search button
+        employeeField.setEditable(isEmployee);
+        employeeField.setBackground(isEmployee ? Color.WHITE : DISABLED_FIELD);
+        updateButtonState(employeeSearch, isEmployee);
+
+        // 3. Supplier field & search button
+        supplierField.setEditable(isSupplier);
+        supplierField.setBackground(isSupplier ? Color.WHITE : DISABLED_FIELD);
+        updateButtonState(supplierSearch, isSupplier);
+
+        // 4. Subject name field & keyboard button
+        subjectNameField.setEditable(isOther);
+        subjectNameField.setBackground(isOther ? YELLOW_FIELD : DISABLED_FIELD);
+        if (subjectNameKb != null) {
+            updateButtonState(subjectNameKb, isOther);
+        }
+
+        // 5. Address field & keyboard button
+        addressField.setEditable(isOther);
+        addressField.setBackground(isOther ? Color.WHITE : DISABLED_FIELD);
+        if (addressKb != null) {
+            updateButtonState(addressKb, isOther);
+        }
+
+        // Clear non-active fields when switching type
+        if (isCustomer) {
+            employeeField.setText("");
+            supplierField.setText("");
+            selectedEmployee = null;
+            selectedSupplier = null;
+        } else if (isEmployee) {
+            customerField.setText("");
+            supplierField.setText("");
+            selectedCustomer = null;
+            selectedSupplier = null;
+        } else if (isSupplier) {
+            customerField.setText("");
+            employeeField.setText("");
+            selectedCustomer = null;
+            selectedEmployee = null;
+        } else {
+            customerField.setText("");
+            employeeField.setText("");
+            supplierField.setText("");
+            selectedCustomer = null;
+            selectedEmployee = null;
+            selectedSupplier = null;
+        }
+    }
+
+    private void updateButtonState(JButton button, boolean active) {
+        button.setEnabled(active);
+        button.setBackground(active ? TEAL : GRAY);
+    }
+
+    private void setupFieldSync() {
+        customerField.getDocument().addDocumentListener(new SimpleDocumentListener(() -> {
+            if ("Khách hàng".equalsIgnoreCase(selectedSubjectType()) && customerField.isEditable()) {
+                subjectNameField.setText(customerField.getText());
+            }
+        }));
+        employeeField.getDocument().addDocumentListener(new SimpleDocumentListener(() -> {
+            if ("Nhân viên".equalsIgnoreCase(selectedSubjectType()) && employeeField.isEditable()) {
+                subjectNameField.setText(employeeField.getText());
+            }
+        }));
+        supplierField.getDocument().addDocumentListener(new SimpleDocumentListener(() -> {
+            if ("Nhà cung cấp".equalsIgnoreCase(selectedSubjectType()) && supplierField.isEditable()) {
+                subjectNameField.setText(supplierField.getText());
+            }
+        }));
     }
 
     private void applySelectedSubject(String type) {
@@ -445,18 +601,30 @@ final class TouchPhieuThuPanel extends JPanel {
                 if (selectedEmployee != null) {
                     subjectNameField.setText(safe(selectedEmployee.getName()));
                     addressField.setText(safe(selectedEmployee.getDiaChi()));
+                } else if (!employeeField.getText().isBlank()) {
+                    if (subjectNameField.getText().isBlank()) {
+                        subjectNameField.setText(employeeField.getText().trim());
+                    }
                 }
             }
             case "Khách hàng" -> {
                 if (selectedCustomer != null) {
                     subjectNameField.setText(safe(selectedCustomer.getName()));
                     addressField.setText(safe(selectedCustomer.getDiaChi()));
+                } else if (!customerField.getText().isBlank()) {
+                    if (subjectNameField.getText().isBlank()) {
+                        subjectNameField.setText(customerField.getText().trim());
+                    }
                 }
             }
             case "Nhà cung cấp" -> {
                 if (selectedSupplier != null) {
                     subjectNameField.setText(safe(selectedSupplier.getName()));
                     addressField.setText(safe(selectedSupplier.getDiaChi()));
+                } else if (!supplierField.getText().isBlank()) {
+                    if (subjectNameField.getText().isBlank()) {
+                        subjectNameField.setText(supplierField.getText().trim());
+                    }
                 }
             }
             default -> {
@@ -655,18 +823,45 @@ final class TouchPhieuThuPanel extends JPanel {
         currentReceipt.setLoaiDoiTuong(selectedSubjectType());
         currentReceipt.setTenDoiTuong(subjectNameField.getText().trim());
         currentReceipt.setDiaChi(addressField.getText().trim());
-        currentReceipt.setNhanVienId("Nhân viên".equals(selectedSubjectType()) && selectedEmployee != null
-                ? selectedEmployee.getId() : null);
-        currentReceipt.setTenNhanVien("Nhân viên".equals(selectedSubjectType()) && selectedEmployee != null
-                ? selectedEmployee.getName() : null);
-        currentReceipt.setKhachHangId("Khách hàng".equals(selectedSubjectType()) && selectedCustomer != null
-                ? selectedCustomer.getId() : null);
-        currentReceipt.setTenKhachHang("Khách hàng".equals(selectedSubjectType()) && selectedCustomer != null
-                ? selectedCustomer.getName() : null);
-        currentReceipt.setNhaCungCapId("Nhà cung cấp".equals(selectedSubjectType()) && selectedSupplier != null
-                ? selectedSupplier.getId() : null);
-        currentReceipt.setTenNhaCungCap("Nhà cung cấp".equals(selectedSubjectType()) && selectedSupplier != null
-                ? selectedSupplier.getName() : null);
+
+        if ("Nhân viên".equals(selectedSubjectType())) {
+            String empName = employeeField.getText().trim();
+            currentReceipt.setTenNhanVien(empName.isEmpty() ? null : empName);
+            currentReceipt.setNhanVienId(selectedEmployee != null && empName.equalsIgnoreCase(safe(selectedEmployee.getName()))
+                    ? selectedEmployee.getId() : null);
+            if (currentReceipt.getTenDoiTuong().isEmpty()) {
+                currentReceipt.setTenDoiTuong(empName);
+            }
+        } else {
+            currentReceipt.setNhanVienId(null);
+            currentReceipt.setTenNhanVien(null);
+        }
+
+        if ("Khách hàng".equals(selectedSubjectType())) {
+            String custName = customerField.getText().trim();
+            currentReceipt.setTenKhachHang(custName.isEmpty() ? null : custName);
+            currentReceipt.setKhachHangId(selectedCustomer != null && custName.equalsIgnoreCase(safe(selectedCustomer.getName()))
+                    ? selectedCustomer.getId() : null);
+            if (currentReceipt.getTenDoiTuong().isEmpty()) {
+                currentReceipt.setTenDoiTuong(custName);
+            }
+        } else {
+            currentReceipt.setKhachHangId(null);
+            currentReceipt.setTenKhachHang(null);
+        }
+
+        if ("Nhà cung cấp".equals(selectedSubjectType())) {
+            String supName = supplierField.getText().trim();
+            currentReceipt.setTenNhaCungCap(supName.isEmpty() ? null : supName);
+            currentReceipt.setNhaCungCapId(selectedSupplier != null && supName.equalsIgnoreCase(safe(selectedSupplier.getName()))
+                    ? selectedSupplier.getId() : null);
+            if (currentReceipt.getTenDoiTuong().isEmpty()) {
+                currentReceipt.setTenDoiTuong(supName);
+            }
+        } else {
+            currentReceipt.setNhaCungCapId(null);
+            currentReceipt.setTenNhaCungCap(null);
+        }
         currentReceipt.setSoTien(parseAmount());
         currentReceipt.setChuyenVaoTaiKhoan(transferCheck.isSelected());
         currentReceipt.setTaiKhoanNganHangId(null);
@@ -700,7 +895,7 @@ final class TouchPhieuThuPanel extends JPanel {
         if (saveReceipt(false, false)) {
             String action = directPrint ? "Đang gửi lệnh in phiếu thu " : "Mở bản xem trước in phiếu thu ";
             JOptionPane.showMessageDialog(this, action + currentReceipt.getSoPhieu(),
-                    "In phiếu thu", JOptionPane.INFORMATION_MESSAGE);
+                "In phiếu thu", JOptionPane.INFORMATION_MESSAGE);
         }
     }
 
@@ -737,7 +932,10 @@ final class TouchPhieuThuPanel extends JPanel {
         loadReceipt(target);
     }
 
-    private void loadReceipt(PhieuThu receipt) {
+    public void loadReceipt(PhieuThu receipt) {
+        if (titleLabel != null && receipt != null) {
+            titleLabel.setText(receipt.getId() != null ? "CHỈNH SỬA PHIẾU THU" : "PHIẾU THU");
+        }
         currentReceipt = receipt;
         dateField.setText(DATE_FORMAT.format(receipt.getNgay() != null ? receipt.getNgay() : new Date()));
         voucherField.setText(safe(receipt.getSoPhieu()));
@@ -749,17 +947,17 @@ final class TouchPhieuThuPanel extends JPanel {
         selectedEmployee = findEmployee(receipt.getNhanVienId());
         selectedCustomer = findCustomer(receipt.getKhachHangId());
         selectedSupplier = findSupplier(receipt.getNhaCungCapId());
-        employeeField.setText(selectedEmployee != null ? safe(selectedEmployee.getName()) : "");
-        customerField.setText(selectedCustomer != null ? safe(selectedCustomer.getName()) : "");
-        supplierField.setText(selectedSupplier != null ? safe(selectedSupplier.getName()) : "");
+        String type = receipt.getLoaiDoiTuong() != null ? receipt.getLoaiDoiTuong() : "Đối tượng khác";
+        chooseSubjectType(type);
+        employeeField.setText(selectedEmployee != null ? safe(selectedEmployee.getName()) : safe(receipt.getTenNhanVien()));
+        customerField.setText(selectedCustomer != null ? safe(selectedCustomer.getName()) : safe(receipt.getTenKhachHang()));
+        supplierField.setText(selectedSupplier != null ? safe(selectedSupplier.getName()) : safe(receipt.getTenNhaCungCap()));
         subjectNameField.setText(safe(receipt.getTenDoiTuong()));
         addressField.setText(safe(receipt.getDiaChi()));
         amountField.setText(CurrencyUtil.format(receipt.getSoTien()));
         transferCheck.setSelected(receipt.isChuyenVaoTaiKhoan());
         noteField.setText(safe(receipt.getGhiChu()));
         selectedStore = findStore(receipt.getCuaHangId());
-        chooseSubjectType(receipt.getLoaiDoiTuong() != null
-                ? receipt.getLoaiDoiTuong() : "Đối tượng khác");
         navigation.show(screens, "main");
     }
 
@@ -916,6 +1114,29 @@ final class TouchPhieuThuPanel extends JPanel {
         @Override
         public int getIconHeight() {
             return 39;
+        }
+    }
+
+    private static final class SimpleDocumentListener implements javax.swing.event.DocumentListener {
+        private final Runnable action;
+
+        SimpleDocumentListener(Runnable action) {
+            this.action = action;
+        }
+
+        @Override
+        public void insertUpdate(javax.swing.event.DocumentEvent e) {
+            action.run();
+        }
+
+        @Override
+        public void removeUpdate(javax.swing.event.DocumentEvent e) {
+            action.run();
+        }
+
+        @Override
+        public void changedUpdate(javax.swing.event.DocumentEvent e) {
+            action.run();
         }
     }
 }

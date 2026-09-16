@@ -1,0 +1,80 @@
+{
+  "usedColumns": [
+    {
+      "key": "DATE",
+      "title": "NGÀY",
+      "prefix": "Ngày: ",
+      "colorHex": "#FFFFFF",
+      "bold": true,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 16
+    },
+    {
+      "key": "THU",
+      "title": "THU",
+      "prefix": "Thu: ",
+      "colorHex": "#FFFFFF",
+      "bold": true,
+      "italic": false,
+      "rightAligned": true,
+      "fontSize": 16
+    },
+    {
+      "key": "NUMBER",
+      "title": "SỐ PHIẾU",
+      "prefix": "Số phiếu: ",
+      "colorHex": "#FFFFFF",
+      "bold": true,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 16
+    },
+    {
+      "key": "CHI",
+      "title": "CHI",
+      "prefix": "Chi: ",
+      "colorHex": "#FFFFFF",
+      "bold": true,
+      "italic": false,
+      "rightAligned": true,
+      "fontSize": 16
+    },
+    {
+      "key": "DIEN_GIAI",
+      "title": "DIỄN GIẢI",
+      "prefix": "Diễn giải: ",
+      "colorHex": "#FFFFFF",
+      "bold": true,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 16
+    }
+  ],
+  "unusedColumns": [
+    {
+      "key": "NGUON_TIEN",
+      "title": "NGUỒN TIỀN",
+      "prefix": "Nguồn: ",
+      "colorHex": "#FFFFFF",
+      "bold": true,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 16
+    },
+    {
+      "key": "LOAI_PHIEU",
+      "title": "LOẠI PHIẾU",
+      "prefix": "Loại: ",
+      "colorHex": "#FFFFFF",
+      "bold": true,
+      "italic": false,
+      "rightAligned": false,
+      "fontSize": 16
+    }
+  ],
+  "cardBgColorHex": "#E24F05",
+  "gridColumns": 2,
+  "gridRows": 6,
+  "showTitle": true
+}

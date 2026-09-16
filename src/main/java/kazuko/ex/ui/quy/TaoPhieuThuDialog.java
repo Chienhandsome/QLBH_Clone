@@ -525,6 +525,10 @@ public class TaoPhieuThuDialog extends JDialog {
         String loai = (String) cbLoaiDoiTuong.getSelectedItem();
         if (loai == null) loai = "Đối tượng khác";
 
+        boolean isOther = "Đối tượng khác".equals(loai);
+        txtTenDoiTuong.setEditable(isOther);
+        txtTenDoiTuong.setBackground(isOther ? BG_YELLOW : new Color(240, 240, 240));
+
         switch (loai) {
             case "Khách hàng":
                 cbKhachHang.setEnabled(true);

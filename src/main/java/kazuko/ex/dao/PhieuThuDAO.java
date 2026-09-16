@@ -138,7 +138,11 @@ public class PhieuThuDAO extends BaseDAO {
             maxSeq = Math.max(maxSeq, numberPattern.extractSequence(pt.getSoPhieu()));
         }
 
-        return numberPattern.format(maxSeq + 1);
+        try {
+            return numberPattern.format(maxSeq + 1);
+        } catch (IllegalStateException e) {
+            return "PT" + new SimpleDateFormat("yy").format(date) + "/" + (maxSeq + 1);
+        }
     }
 
     public boolean insert(PhieuThu pt) {

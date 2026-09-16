@@ -19,7 +19,9 @@
       "italic": false,
       "rightAligned": true,
       "fontSize": 14
-    },
+    }
+  ],
+  "unusedColumns": [
     {
       "key": "DVT",
       "title": "ĐVT",
@@ -29,9 +31,7 @@
       "italic": false,
       "rightAligned": false,
       "fontSize": 13
-    }
-  ],
-  "unusedColumns": [
+    },
     {
       "key": "MA_HANG",
       "title": "MÃ HÀNG",
